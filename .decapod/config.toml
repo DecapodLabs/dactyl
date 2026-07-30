@@ -1,0 +1,39 @@
+schema_version = "1.0.0"
+
+[init]
+specs = true
+ci = true
+diagram_style = "mermaid"
+entrypoints = [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "CODEX.md",
+]
+
+[repo]
+product_name = "dactyl"
+product_summary = "Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals."
+architecture_direction = "library"
+done_criteria = "The outcome is complete when equivalent queries across all nine Decapod stores produce equivalent row projections through both adapters, compile-time query analysis works for literal queries, runtime analysis works for dynamic queries, inline datastore directives are honored, and the full formatting, linting, and conformance suite passes."
+base_branch = "main"
+primary_languages = ["Rust"]
+external_tracker = false
+container_workspaces = true
+backend = "local"
+
+[governance]
+protected_paths = []
+approval_categories = ["destructive_operations"]
+
+[proof]
+commands = []
+
+[custody]
+isolation = "container"
+
+[tracker]
+provider = "decapod"
+
+[context]
+declared_sources = ["AGENTS.md"]

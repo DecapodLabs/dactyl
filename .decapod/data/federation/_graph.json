@@ -1,0 +1,13 @@
+{
+  "edges": [],
+  "nodes": [
+    {
+      "id": "F_01KYTNRKXFBSQJ4DNMM0JCDN21",
+      "node_type": "commitment",
+      "priority": "notable",
+      "status": "active",
+      "title": "Task: feat(dactyl): bootstrap crate with read/write facade, both adapters, query! macro, conformance harness"
+    }
+  ],
+  "version": "1"
+}

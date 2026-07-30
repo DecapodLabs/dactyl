@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "entries": [
+    {
+      "id": "todo.events.reconstruct.v001",
+      "sequence": 100,
+      "scope": "todo",
+      "kind": "rust",
+      "script_path": null,
+      "min_version": "0.1.7",
+      "target_version": "0.1.7",
+      "applied_at": "1785453574Z",
+      "applied_by_version": "0.88.0"
+    },
+    {
+      "id": "db.consolidate.core_bins.v001",
+      "sequence": 200,
+      "scope": "global",
+      "kind": "rust",
+      "script_path": null,
+      "min_version": "0.27.0",
+      "target_version": "0.27.0",
+      "applied_at": "1785453574Z",
+      "applied_by_version": "0.88.0"
+    },
+    {
+      "id": "todo.ids.typed.v015",
+      "sequence": 300,
+      "scope": "todo",
+      "kind": "sql",
+      "script_path": "src/decapod/core/sql/todo_task_id_v15_migration.sql",
+      "min_version": "0.41.1",
+      "target_version": "0.41.1",
+      "applied_at": "1785453574Z",
+      "applied_by_version": "0.88.0"
+    },
+    {
+      "id": "todo.one_shot.column.v001",
+      "sequence": 400,
+      "scope": "todo",
+      "kind": "sql",
+      "script_path": "src/decapod/core/sql/todo_one_shot_column_migration.sql",
+      "min_version": "0.42.0",
+      "target_version": "0.42.0",
+      "applied_at": "1785453574Z",
+      "applied_by_version": "0.88.0"
+    }
+  ]
+}
