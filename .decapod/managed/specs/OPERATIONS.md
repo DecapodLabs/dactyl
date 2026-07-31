@@ -5,7 +5,18 @@
 - [ ] Runbooks linked for all Sev1/Sev2 alerts.
 - [ ] Rollback plan validated.
 - [ ] Capacity guardrails documented.## Deployment Model
-Describe the operational runtime model, scheduling, and system deployment architecture.
+Describe the operational runtime model, scheduling, and system deployment architecture.## Service Level Objectives
+| SLI | SLO Target | Measurement Window | Owner |
+|---|---|---|---|
+| Availability | 99.9% | 30d | TBD |
+| P95 latency | TBD | 7d | TBD |
+| Error rate | < 1% | 7d | TBD |## Monitoring
+| Signal | Metric | Threshold | Alert |
+|---|---|---|---|
+| Traffic | requests/sec | baseline drift | warn |
+| Latency | p95/p99 | threshold breach | page |
+| Reliability | error ratio | threshold breach | page |
+| Saturation | cpu/memory/queue depth | sustained high | page |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -43,21 +54,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Service Level Objectives
-| SLI | SLO Target | Measurement Window | Owner |
-|---|---|---|---|
-| Availability | 99.9% | 30d | TBD |
-| P95 latency | TBD | 7d | TBD |
-| Error rate | < 1% | 7d | TBD |
-
-## Monitoring
-| Signal | Metric | Threshold | Alert |
-|---|---|---|---|
-| Traffic | requests/sec | baseline drift | warn |
-| Latency | p95/p99 | threshold breach | page |
-| Reliability | error ratio | threshold breach | page |
-| Saturation | cpu/memory/queue depth | sustained high | page |
 
 ## Health Checks
 - Liveness:
@@ -113,7 +109,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82280c21838750f39dee2409145c223d4264bbdce3412458c1b03ec9a370fc88`
+- Repository signal fingerprint: `470a7a990e6e7e4903cd694b2c38fc58717d81290eed1cfb531172a335f088c4`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
