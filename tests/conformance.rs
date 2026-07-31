@@ -1,10 +1,15 @@
 //! Conformance harness: same query, two adapters, identical row projections.
 //!
 //! Each test boots the SQLite adapter against an in-tempdir `.decapod/data/`
-//! layout (booting the schema via `adapter/sqlite/schema.rs`) and the Neon
+//! layout (boots the schema via `adapter/sqlite/schema.rs`) and the Neon
 //! adapter against an in-process axum mock server that serves the same
 //! JSON shape. Row projections must match column-for-column for both
 //! `optimize = true` and `optimize = false`.
+//!
+//! Adapter selection is controlled via env vars:
+//!   - `DACTYL_SQLITE_PATH`  → path to the SQLite file
+//!   - `DACTYL_NEON_ENDPOINT` → mock neon URL (when set, neon wins)
+//!   - `DACTYL_NEON_BEARER`  → optional bearer token
 
 #![cfg(all(feature = "sqlite", feature = "neon"))]
 
@@ -17,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use tempfile::TempDir;
 use tokio::sync::Mutex;
 
-use dactyl::{DactylConfig, DactylError, Rows};
+use dactyl::{DactylError, Rows};
 
 /// Mock neon-server state, shared across all tests.
 #[derive(Default)]
@@ -31,7 +36,6 @@ impl MockState {
         Json(req): Json<MockRequest>,
     ) -> Json<MockResponse> {
         let rows = state.rows.lock().await;
-        // Extract the table name by looking for `from <name>` (lowercased).
         let sql_lc = req.sql.to_ascii_lowercase();
         let table = sql_lc
             .split_whitespace()
@@ -113,8 +117,6 @@ fn sqlite_path(tmp: &TempDir, store: &str) -> std::path::PathBuf {
     dir.join(format!("{store}.db"))
 }
 
-/// Seed the SQLite file by opening it (which triggers `schema::bootstrap`)
-/// and inserting a couple of rows into the per-store table.
 fn seed_sqlite(path: &std::path::Path, store: &str, rows: &[serde_json::Value]) {
     use rusqlite::Connection;
     let conn = Connection::open(path).expect("open");
@@ -142,14 +144,28 @@ fn seed_sqlite(path: &std::path::Path, store: &str, rows: &[serde_json::Value]) 
     }
 }
 
+fn project(rows: &Rows) -> Vec<(String, serde_json::Value)> {
+    rows.iter()
+        .flat_map(|r| {
+            r.columns
+                .iter()
+                .zip(r.values.iter())
+                .map(|(c, v)| (c.clone(), v.clone()))
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+/// Conformance: every store, every adapter, every optimize value.
+///
+/// We run this in a single `#[test]` rather than per-store so the sqlite
+/// tempfile and the neon mock server are spun up exactly once.
 #[test]
 fn conformance_all_stores() {
+    dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let state = Arc::new(MockState::default());
 
-    // Coordinate: a tokio oneshot signals when the test is done so the
-    // background mock runtime can shut down. We use tokio channels (async)
-    // because the runtime polls them instead of blocking the worker thread.
     let (done_tx, done_rx) = tokio::sync::oneshot::channel::<()>();
     let (ready_tx, ready_rx) = std::sync::mpsc::channel::<String>();
 
@@ -169,8 +185,6 @@ fn conformance_all_stores() {
                 }
                 let addr = spawn_mock(state.clone()).await;
                 let _ = ready_tx.send(format!("http://{addr}"));
-                // Park until done — async, so the runtime keeps polling
-                // spawned tasks.
                 let _ = done_rx.await;
             });
         }
@@ -182,10 +196,15 @@ fn conformance_all_stores() {
         let path = sqlite_path(&tmp, store);
         seed_sqlite(&path, store, &seed_rows(store));
 
-        dactyl::init(DactylConfig::sqlite(path.to_str().unwrap())).expect("init sqlite");
+        // ---- SQLite pass: DACTYL_SQLITE_PATH = <this store's db> ----
+        // SAFETY: tests in this file run with --test-threads=1; no other
+        // thread is reading env vars concurrently.
+        unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+        unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+
         let query = format!("select id, title, status from {store}");
         for optimize in [true, false] {
-            let sqlite_rows = dactyl::read("sqlite", &query, optimize).expect("sqlite read");
+            let sqlite_rows = dactyl::read(&query, optimize).expect("sqlite read");
             assert_eq!(
                 sqlite_rows.len(),
                 2,
@@ -197,15 +216,12 @@ fn conformance_all_stores() {
             }
         }
 
-        dactyl::init(DactylConfig::neon(
-            endpoint.clone(),
-            Some("test-token".into()),
-            None,
-        ))
-        .expect("init neon");
+        // ---- Neon pass: DACTYL_NEON_ENDPOINT = mock ----
+        unsafe { std::env::set_var("DACTYL_NEON_ENDPOINT", &endpoint) };
+        unsafe { std::env::set_var("DACTYL_NEON_BEARER", "test-token") };
 
         for optimize in [true, false] {
-            let neon_rows = dactyl::read("neon", &query, optimize).expect("neon read");
+            let neon_rows = dactyl::read(&query, optimize).expect("neon read");
             assert_eq!(
                 neon_rows.len(),
                 2,
@@ -216,60 +232,40 @@ fn conformance_all_stores() {
                 assert_eq!(row.values.len(), 3);
             }
 
-            let sqlite_rows =
-                dactyl::read("sqlite", &query, optimize).expect("sqlite read for compare");
+            // Compare with sqlite projection shape.
+            unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+            let sqlite_rows = dactyl::read(&query, optimize).expect("sqlite read for compare");
             assert_eq!(
                 project(&neon_rows),
                 project(&sqlite_rows),
                 "store {store} optimize={optimize}: projection mismatch"
             );
+            unsafe { std::env::set_var("DACTYL_NEON_ENDPOINT", &endpoint) };
         }
     }
 
-    // Signal the mock runtime to shut down and wait for the thread.
+    // Signal mock runtime to shut down, then wait for the thread.
     let _ = done_tx.send(());
     let _ = mock_thread.join();
 }
 
-fn project(rows: &Rows) -> Vec<(String, serde_json::Value)> {
-    rows.iter()
-        .flat_map(|r| {
-            r.columns
-                .iter()
-                .zip(r.values.iter())
-                .map(|(c, v)| (c.clone(), v.clone()))
-                .collect::<Vec<_>>()
-        })
-        .collect()
-}
-
 #[test]
-fn unknown_datastore_errors() {
+fn unsupported_construct_rejected_when_optimize_false() {
+    dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    dactyl::init(DactylConfig::sqlite(path.to_str().unwrap())).expect("init");
+    // SAFETY: see conformance_all_stores.
+    unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+    unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
 
-    let res: Result<Rows, DactylError> = dactyl::read("nosuch", "select 1", true);
-    assert!(matches!(res, Err(DactylError::UnknownDatastore(_))));
-}
+    // Postgres-only construct (`now()`) on sqlite with optimize=false →
+    // Unsupported. With optimize=true it gets past the analyzer and the
+    // SQLite adapter rejects it.
+    let res = dactyl::read("select now()", false);
+    assert!(matches!(res, Err(DactylError::Unsupported { .. })));
 
-#[test]
-fn dialect_mismatch_rejected_when_optimize_false() {
-    let tmp = TempDir::new().expect("tempdir");
-    let path = sqlite_path(&tmp, "todos");
-    seed_sqlite(&path, "todos", &seed_rows("todos"));
-    dactyl::init(DactylConfig::sqlite(path.to_str().unwrap())).expect("init");
-
-    // Postgres-only construct (`now()`) against sqlite, optimize = false →
-    // dialect mismatch.
-    let res = dactyl::read("sqlite", "select now()", false);
-    assert!(matches!(res, Err(DactylError::DialectMismatch { .. })));
-
-    // optimize = true → proceeds past the dialect check; the SQLite adapter
-    // may still fail to parse `now()` (it has no such function), which is
-    // fine — the assertion is that we got past the analyzer.
-    let res = dactyl::read("sqlite", "select now()", true);
+    let res = dactyl::read("select now()", true);
     match res {
         Ok(_) => {}
         Err(DactylError::Adapter(_)) => {}
@@ -279,31 +275,33 @@ fn dialect_mismatch_rejected_when_optimize_false() {
 
 #[test]
 fn inline_directive_routes_dialect_check() {
+    dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    dactyl::init(DactylConfig::sqlite(path.to_str().unwrap())).expect("init");
+    // SAFETY: see conformance_all_stores.
+    unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+    unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
 
-    // sqlite-only construct; the inline directive flips dialect to neon →
-    // mismatch.
+    // SQLite is the inferred dialect (no neon env), so the construct is
+    // accepted at optimize=true and fails the analyzer at optimize=false.
     let q = "-- dactyl: neon\nselect id from todos where id in (select id from json_each('[1]'))";
-    let res = dactyl::read("sqlite", q, false);
-    assert!(matches!(res, Err(DactylError::DialectMismatch { .. })));
+    let res = dactyl::read(q, false);
+    assert!(matches!(res, Err(DactylError::Unsupported { .. })));
 }
 
 #[test]
-fn query_macro_lexical_analysis_runs_at_compile_time() {
-    // The literal below is analyzed at compile time by `query!`. A SQLite-only
-    // construct (json_each) against the active SQLite datastore under
-    // optimize=false would fail to compile; we keep it portable here.
+fn query_macro_returns_rewritten_sql() {
+    dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    dactyl::init(DactylConfig::sqlite(path.to_str().unwrap())).expect("init");
+    // SAFETY: see conformance_all_stores.
+    unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+    unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
 
-    let (sql, ds) = dactyl::query!("select id, title, status from todos");
+    let sql: String = dactyl::query!("select id, title, status from todos");
     assert_eq!(sql, "select id, title, status from todos");
-    assert_eq!(ds, "sqlite");
-    // The macro runs the runtime analyzer; reading should succeed.
-    let _ = dactyl::read("sqlite", "select id, title, status from todos", true).expect("read");
+    let rows = dactyl::read(&sql, true).expect("read");
+    assert_eq!(rows.len(), 2);
 }

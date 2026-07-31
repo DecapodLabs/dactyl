@@ -1,20 +1,18 @@
 //! Tiny runnable example referenced from README.
 //!
-//! Boots dactyl against an in-tempdir SQLite file and runs a universal query
-//! through the `read` facade. Run with:
+//! Run with:
 //!
 //! ```text
 //! cargo run --features sqlite --example readme_example
 //! ```
+//!
+//! Boots dactyl against `.decapod/data/todos.db` (auto-derived from the
+//! `from todos` clause in the query) and prints the rows.
 
-use dactyl::{DactylConfig, DactylError, Row};
+use dactyl::Row;
 
-fn main() -> Result<(), DactylError> {
-    let tmp = tempfile::tempdir().expect("tempdir");
-    let db = tmp.path().join("todos.db");
-    dactyl::init(DactylConfig::sqlite(db.to_str().unwrap()))?;
-
-    for row in dactyl::read("sqlite", "select id, title from todos", true)?.iter() {
+fn main() -> Result<(), dactyl::DactylError> {
+    for row in dactyl::read("select id, title, status from todos", true)?.iter() {
         print_row(row);
     }
     Ok(())

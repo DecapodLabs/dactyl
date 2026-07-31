@@ -78,10 +78,6 @@ impl NeonAdapter {
 }
 
 impl Adapter for NeonAdapter {
-    fn name(&self) -> &'static str {
-        "neon"
-    }
-
     fn execute(
         &self,
         query: &str,
