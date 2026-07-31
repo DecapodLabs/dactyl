@@ -42,10 +42,6 @@ impl SqliteAdapter {
 }
 
 impl Adapter for SqliteAdapter {
-    fn name(&self) -> &'static str {
-        "sqlite"
-    }
-
     fn execute(
         &self,
         query: &str,

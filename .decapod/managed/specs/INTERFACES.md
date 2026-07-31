@@ -69,3 +69,13 @@ pub enum ApiError {
 - Version strategy (`v1`, date-based, semver):
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
+
+## Dactyl — API Contract (design-time note)
+
+- Public surface (crate root): `read(query: &str, optimize: bool) -> Result<Rows, DactylError>` and `write(query: &str, optimize: bool) -> Result<Rows, DactylError>` plus the `query!("...")` macro and the `Rows` / `Row` / `DactylError` result types.
+- There is no `init` / `active_datastore` at the crate root. The first `read` or `write` call lazily establishes the connection.
+- Adapter selection is env-driven:
+  - `DACTYL_NEON_ENDPOINT` set -> Neon adapter; `DACTYL_NEON_BEARER` optional.
+  - Otherwise SQLite adapter; `DACTYL_SQLITE_PATH` is honored when set, otherwise `.decapod/data/<store>.db` derived from the first `from <name>` clause in the query.
+- `optimize = true` allows the analyzer to rewrite the query; `optimize = false` rejects the call with `DactylError::Unsupported { construct }` when any construct is not native to the inferred adapter.
+- `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `read` / `write`.
