@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "1785454166Z",
-  "latest_sequence": 400,
-  "count": 4,
+  "generated_at": "1785523238Z",
+  "latest_sequence": 500,
+  "count": 5,
   "migrations": [
     {
       "id": "todo.events.reconstruct.v001",
@@ -43,6 +43,16 @@
       "min_version": "0.42.0",
       "target_version": "0.42.0",
       "description": "Add one_shot column to tasks table for 1-shot task tracking"
+    },
+    {
+      "id": "db.consolidate.single_datastore.v001",
+      "sequence": 500,
+      "scope": "global",
+      "kind": "rust",
+      "script_path": null,
+      "min_version": "0.89.1",
+      "target_version": "0.89.1",
+      "description": "Consolidate every local SQLite store into decapod.db"
     }
   ]
 }

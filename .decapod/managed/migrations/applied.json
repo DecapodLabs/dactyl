@@ -44,6 +44,17 @@
       "target_version": "0.42.0",
       "applied_at": "1785453574Z",
       "applied_by_version": "0.88.0"
+    },
+    {
+      "id": "db.consolidate.single_datastore.v001",
+      "sequence": 500,
+      "scope": "global",
+      "kind": "rust",
+      "script_path": null,
+      "min_version": "0.89.1",
+      "target_version": "0.89.1",
+      "applied_at": "1785490415Z",
+      "applied_by_version": "0.89.2"
     }
   ]
 }
