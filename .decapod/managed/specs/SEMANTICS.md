@@ -12,7 +12,14 @@ stateDiagram-v2
 |---|---|---|
 | No promoted change without proof | System | validation gate |
 | Canonical source-of-truth per entity | Data | interface/spec review |
-| Mutation events are replayable | Data | deterministic replay |
+| Mutation events are replayable | Data | deterministic replay |## Event Sourcing Schema
+| Field | Type | Description |
+|---|---|---|
+| event_id | string | globally unique event id |
+| aggregate_id | string | entity/workflow id |
+| event_type | string | semantic transition |
+| payload | object | transition data |
+| recorded_at | timestamp | append time |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -54,15 +61,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Event Sourcing Schema
-| Field | Type | Description |
-|---|---|---|
-| event_id | string | globally unique event id |
-| aggregate_id | string | entity/workflow id |
-| event_type | string | semantic transition |
-| payload | object | transition data |
-| recorded_at | timestamp | append time |
-
 ## Replay Semantics
 - Replay order:
 - Conflict resolution:
@@ -91,7 +89,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82280c21838750f39dee2409145c223d4264bbdce3412458c1b03ec9a370fc88`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `df3abebb51ba4ab8cae8237c8ac9402b33cafcd191db6cd2115c61d95e071d63`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

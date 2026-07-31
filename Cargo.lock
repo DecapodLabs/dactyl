@@ -153,11 +153,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "dactyl"
-version = "0.1.0"
+name = "dactyl-db"
+version = "0.1.1"
 dependencies = [
  "axum",
- "dactyl_macros",
+ "dactyl-db-macros",
  "once_cell",
  "reqwest",
  "rusqlite",
@@ -170,8 +170,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "dactyl_macros"
-version = "0.1.0"
+name = "dactyl-db-macros"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
