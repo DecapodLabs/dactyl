@@ -98,7 +98,7 @@ pub enum ApiError {
 - Adapter selection is env-driven:
   - `DATASTORE` set to `"sqlite"` or `"neon"`.
   - `DATASTORE_ROUTE` specifies the database path (SQLite) or the endpoint URL (Neon).
-  - `DATASTORE_TOKEN` is the optional bearer token for Neon.
+  - `DATASTORE_TOKEN` is the optional auth token for Neon.
   - Legacy variables (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`) are supported as fallbacks.
 - `optimize = true` allows the analyzer to rewrite the query; `optimize = false` rejects the call with `DactylError::Unsupported { construct }` when any construct is not native to the inferred adapter.
 - `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `read` / `write`.
@@ -106,7 +106,7 @@ pub enum ApiError {
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6033080803b961609456175565ff491f07215efd1975fb8c90fbfcdac75d60bc`
+- Repository signal fingerprint: `3a0b313828eeaf26583fbb0b4c31944adb5da2ec0333a92ac975f8bc942a1e6f`
 - Significant implementation surfaces: `.github/` (1 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

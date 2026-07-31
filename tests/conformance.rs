@@ -9,7 +9,7 @@
 //! Adapter selection is controlled via env vars:
 //!   - `DATASTORE`       → "sqlite" or "neon"
 //!   - `DATASTORE_ROUTE` → path or mock neon URL
-//!   - `DATASTORE_TOKEN` → optional bearer token
+//!   - `DATASTORE_TOKEN` → optional auth token
 
 #![cfg(all(feature = "sqlite", feature = "neon"))]
 

@@ -36,7 +36,7 @@ Adapter selection is configured via two environment variables:
 
 - `DATASTORE` — set to `"sqlite"` or `"neon"`.
 - `DATASTORE_ROUTE` — when `DATASTORE` is `"sqlite"`, this is the path to the SQLite file. When `DATASTORE` is `"neon"`, this is the Propodus endpoint URL.
-- `DATASTORE_TOKEN` — optional bearer token for the Neon adapter.
+- `DATASTORE_TOKEN` — optional auth token for the Neon adapter.
 
 For backwards compatibility, dactyl also supports legacy environment variables (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`).
 
