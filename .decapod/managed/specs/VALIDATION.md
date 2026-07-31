@@ -5,6 +5,18 @@ Key features:
 - **Automated Tests**: Unit and integration test suites.
 - **Linting & Formatting**: Static analysis tools and checkers.
 - **CI/CD Integration**: Automatic execution of validation gates on push.
+Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
+
+Refresh-capable paths:
+- `decapod validate --refresh-specs`
+- `decapod rpc --op specs.refresh`
+- fresh initialization only: scaffold `.decapod/managed/specs/*.md` when the directory is absent
+
+Refresh output requirements:
+- Preserve all authored canonical spec content.
+- Re-evaluate repo surfaces and update codebase-derived attestation blocks.
+- Update `.decapod/managed/specs/.manifest.json` after writing files.
+- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -61,20 +73,6 @@ Key features:
 - Rate limit enforcement tests
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
-
-## Generated Spec Refresh Gates
-Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
-
-Refresh-capable paths:
-- `decapod validate --refresh-specs`
-- `decapod rpc --op specs.refresh`
-- fresh initialization only: scaffold `.decapod/managed/specs/*.md` when the directory is absent
-
-Refresh output requirements:
-- Preserve all authored canonical spec content.
-- Re-evaluate repo surfaces and update codebase-derived attestation blocks.
-- Update `.decapod/managed/specs/.manifest.json` after writing files.
-- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
@@ -158,7 +156,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3a0b313828eeaf26583fbb0b4c31944adb5da2ec0333a92ac975f8bc942a1e6f`
-- Significant implementation surfaces: `.github/` (1 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `82280c21838750f39dee2409145c223d4264bbdce3412458c1b03ec9a370fc88`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
