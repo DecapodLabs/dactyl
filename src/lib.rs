@@ -12,15 +12,14 @@
 //!
 //! ## How dactyl picks the adapter
 //!
-//! On the first call, dactyl inspects the query for dialect-specific
-//! constructs to infer intent, and consults the environment for the
-//! endpoint / path:
+//! On the first call, dactyl consults the environment for the target adapter:
 //!
-//! - If `DACTYL_NEON_ENDPOINT` is set, dactyl targets the Neon (Postgres)
-//!   adapter and uses `DACTYL_NEON_BEARER` (optional) for auth.
-//! - Otherwise dactyl targets the local SQLite adapter and uses
-//!   `DACTYL_SQLITE_PATH` (default: `.decapod/data/<store>.db`) where
-//!   `<store>` is the first `from <name>` in the query.
+//! - `DATASTORE` — must be set to either `"sqlite"` or `"neon"`.
+//! - `DATASTORE_ROUTE` — when `DATASTORE` is `"sqlite"`, this is the path to the SQLite file.
+//!   When `DATASTORE` is `"neon"`, this is the Propodus endpoint URL.
+//!
+//! If the new `DATASTORE` variable is not set, dactyl falls back to the legacy environment variables
+//! (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`) for backwards compatibility.
 //!
 //! The connection is held in a `OnceLock` for the lifetime of the process.
 
@@ -73,7 +72,33 @@ pub fn write(query: &str, optimize: bool) -> Result<Rows, DactylError> {
     dispatch(query, optimize, true)
 }
 
+fn validate_env() -> Result<(), DactylError> {
+    if let Ok(ds) = std::env::var("DATASTORE") {
+        if ds != "sqlite" && ds != "neon" {
+            return Err(DactylError::Adapter(
+                "invalid DATASTORE value: must be 'sqlite' or 'neon'".to_string(),
+            ));
+        }
+        if std::env::var("DATASTORE_ROUTE").is_err() {
+            return Err(DactylError::Adapter(
+                "DATASTORE_ROUTE is required when DATASTORE is set".into(),
+            ));
+        }
+    } else {
+        let has_legacy = std::env::var("DACTYL_NEON_ENDPOINT").is_ok()
+            || std::env::var("DACTYL_SQLITE_PATH").is_ok();
+        if !has_legacy {
+            return Err(DactylError::Adapter(
+                "no adapter configured: set DATASTORE and DATASTORE_ROUTE".into(),
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn dispatch(query: &str, optimize: bool, write: bool) -> Result<Rows, DactylError> {
+    validate_env()?;
+
     let analyzer = query::QueryAnalyzer::new();
     let analyzed = analyzer.analyze(query);
 
@@ -84,9 +109,7 @@ fn dispatch(query: &str, optimize: bool, write: bool) -> Result<Rows, DactylErro
 
     // Pick the adapter up-front so we can enforce the dialect check.
     let key = connection_key().ok_or_else(|| {
-        DactylError::Adapter(
-            "no adapter configured: set DACTYL_NEON_ENDPOINT or DACTYL_SQLITE_PATH".into(),
-        )
+        DactylError::Adapter("no adapter configured: set DATASTORE and DATASTORE_ROUTE".into())
     })?;
     let adapter = connection(&key, query, &analyzed)?;
     if !optimize {
@@ -106,6 +129,12 @@ fn infer_dialect(analyzed: &query::Analyzed) -> query::Dialect {
     // we fall back to whichever adapter is configured in the environment.
     if let Some(override_ds) = analyzed.inline_override {
         return match override_ds {
+            "neon" => query::Dialect::Postgres,
+            _ => query::Dialect::Sqlite,
+        };
+    }
+    if let Ok(ds) = std::env::var("DATASTORE") {
+        return match ds.as_str() {
             "neon" => query::Dialect::Postgres,
             _ => query::Dialect::Sqlite,
         };
@@ -145,6 +174,11 @@ fn connection(
 /// Compute the cache key for the current env config. SQLite paths use the
 /// resolved file path; neon uses the endpoint URL.
 fn connection_key() -> Option<String> {
+    if let Ok(ds) = std::env::var("DATASTORE") {
+        if let Ok(route) = std::env::var("DATASTORE_ROUTE") {
+            return Some(format!("{ds}:{route}"));
+        }
+    }
     if let Ok(endpoint) = std::env::var("DACTYL_NEON_ENDPOINT") {
         return Some(format!("neon:{endpoint}"));
     }
@@ -165,9 +199,7 @@ fn sqlite_adapter(path: &str) -> Result<Arc<dyn Adapter>, DactylError> {
 #[cfg(feature = "neon")]
 fn neon_adapter() -> Result<Arc<dyn Adapter>, DactylError> {
     use crate::adapter::neon::NeonAdapter;
-    let endpoint = std::env::var("DACTYL_NEON_ENDPOINT")
-        .map_err(|_| DactylError::Adapter("DACTYL_NEON_ENDPOINT not set".into()))?;
-    let bearer = std::env::var("DACTYL_NEON_BEARER").ok();
+    let (endpoint, bearer) = resolve_neon_config()?;
     let adapter = NeonAdapter::new(&endpoint, bearer, None);
     Ok(Arc::new(adapter))
 }
@@ -186,8 +218,47 @@ fn neon_adapter() -> Result<Arc<dyn Adapter>, DactylError> {
     ))
 }
 
+#[cfg(feature = "neon")]
+fn resolve_neon_config() -> Result<(String, Option<String>), DactylError> {
+    if let Ok(ds) = std::env::var("DATASTORE") {
+        if ds == "neon" {
+            let route = std::env::var("DATASTORE_ROUTE")
+                .map_err(|_| DactylError::Adapter("DATASTORE_ROUTE not set".into()))?;
+            let token = std::env::var("DATASTORE_TOKEN")
+                .ok()
+                .or_else(|| std::env::var("DACTYL_NEON_BEARER").ok());
+            return Ok((route, token));
+        }
+    }
+    let endpoint = std::env::var("DACTYL_NEON_ENDPOINT")
+        .map_err(|_| DactylError::Adapter("DACTYL_NEON_ENDPOINT not set".into()))?;
+    let bearer = std::env::var("DACTYL_NEON_BEARER").ok();
+    Ok((endpoint, bearer))
+}
+
+fn resolve_sqlite_path(query: &str) -> Result<String, DactylError> {
+    if let Ok(ds) = std::env::var("DATASTORE") {
+        if ds == "sqlite" {
+            let route = std::env::var("DATASTORE_ROUTE")
+                .map_err(|_| DactylError::Adapter("DATASTORE_ROUTE not set".into()))?;
+            return Ok(route);
+        }
+    }
+    if let Ok(p) = std::env::var("DACTYL_SQLITE_PATH") {
+        return Ok(p);
+    }
+    let default_root =
+        std::env::var("DACTYL_SQLITE_ROOT").unwrap_or_else(|_| ".decapod/data".to_string());
+    let store = infer_store(query).unwrap_or_else(|| "dactyl".to_string());
+    Ok(format!("{default_root}/{store}.db"))
+}
+
 fn build_adapter(query: &str, analyzed: &query::Analyzed) -> Result<Arc<dyn Adapter>, DactylError> {
-    let neon_env = std::env::var("DACTYL_NEON_ENDPOINT").is_ok();
+    let neon_env = if let Ok(ds) = std::env::var("DATASTORE") {
+        ds == "neon"
+    } else {
+        std::env::var("DACTYL_NEON_ENDPOINT").is_ok()
+    };
     let sqlite_only = !analyzed.constructs.is_empty()
         && analyzed
             .constructs
@@ -205,20 +276,10 @@ fn build_adapter(query: &str, analyzed: &query::Analyzed) -> Result<Arc<dyn Adap
         // Caller is asking for postgres but hasn't configured the endpoint.
         // Fall back to sqlite (which will fail at the adapter); the caller
         // gets a clear error rather than a silent success.
-        sqlite_adapter(&sqlite_path(query))
+        sqlite_adapter(&resolve_sqlite_path(query)?)
     } else {
-        sqlite_adapter(&sqlite_path(query))
+        sqlite_adapter(&resolve_sqlite_path(query)?)
     }
-}
-
-fn sqlite_path(query: &str) -> String {
-    if let Ok(p) = std::env::var("DACTYL_SQLITE_PATH") {
-        return p;
-    }
-    let default_root =
-        std::env::var("DACTYL_SQLITE_ROOT").unwrap_or_else(|_| ".decapod/data".to_string());
-    let store = infer_store(query).unwrap_or_else(|| "dactyl".to_string());
-    format!("{default_root}/{store}.db")
 }
 
 /// Extract the first `from <name>` (or first table-shaped identifier) from
