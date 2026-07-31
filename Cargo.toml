@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 license = "MIT"
+repository = "https://github.com/DecapodLabs/dactyl"
 description = "Governed datastore boundary for Decapod. Routes queries to SQLite or Neon adapters behind a single read/write facade."
 readme = "README.md"
 keywords = ["decapod", "datastore", "sql", "sqlite", "postgres"]
