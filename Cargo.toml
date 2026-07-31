@@ -1,0 +1,30 @@
+[package]
+name = "dactyl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "Governed datastore boundary for Decapod. Routes queries to SQLite or Neon adapters behind a single read/write facade."
+readme = "README.md"
+keywords = ["decapod", "datastore", "sql", "sqlite", "postgres"]
+categories = ["database", "api-bindings"]
+
+[features]
+default = []
+sqlite = ["dep:rusqlite"]
+neon = ["dep:reqwest"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+once_cell = "1"
+tracing = "0.1"
+rusqlite = { version = "0.31", optional = true, features = ["bundled"] }
+reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
+dactyl_macros = { path = "dactyl_macros", version = "0.1" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = "0.7"
+tempfile = "3"

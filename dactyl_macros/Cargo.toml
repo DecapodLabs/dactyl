@@ -1,0 +1,15 @@
+[package]
+name = "dactyl_macros"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "Proc macros for dactyl. Implements the `query!` compile-time analyzer."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"
