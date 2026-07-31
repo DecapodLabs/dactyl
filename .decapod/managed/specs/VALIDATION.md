@@ -1,14 +1,66 @@
-# Validation
-
-## Validation Philosophy
-> Validation is a release gate, not documentation theater.
-
-## Validation Harness
+# Validation## Validation Philosophy
+> Validation is a release gate, not documentation theater.## Validation Harness
 Define the test and verification harness used by this project.
 Key features:
 - **Automated Tests**: Unit and integration test suites.
 - **Linting & Formatting**: Static analysis tools and checkers.
 - **CI/CD Integration**: Automatic execution of validation gates on push.
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:capability-overlay:public-api:start -->
+
+## Public API Validation Overlay
+
+### Contract Tests
+- All public endpoints MUST have contract tests
+- Request/response schema validation on every request
+- Compatibility regression tests for each version
+
+### Security Tests
+- Authentication bypass tests
+- Malformed input handling tests
+- Rate limit enforcement tests
+- Token expiry/revocation tests
+<!-- decapod:capability-overlay:public-api:end -->
 
 ## Generated Spec Refresh Gates
 Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
@@ -102,3 +154,11 @@ flowchart LR
 - [ ] Integration tests cover key user flows.
 - [ ] Failure-path tests cover retries/timeouts.
 - [ ] Docs/diagram/changelog updates included.
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `3a0b313828eeaf26583fbb0b4c31944adb5da2ec0333a92ac975f8bc942a1e6f`
+- Significant implementation surfaces: `.github/` (1 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->

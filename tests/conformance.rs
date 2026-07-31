@@ -7,9 +7,9 @@
 //! `optimize = true` and `optimize = false`.
 //!
 //! Adapter selection is controlled via env vars:
-//!   - `DACTYL_SQLITE_PATH`  → path to the SQLite file
-//!   - `DACTYL_NEON_ENDPOINT` → mock neon URL (when set, neon wins)
-//!   - `DACTYL_NEON_BEARER`  → optional bearer token
+//!   - `DATASTORE`       → "sqlite" or "neon"
+//!   - `DATASTORE_ROUTE` → path or mock neon URL
+//!   - `DATASTORE_TOKEN` → optional auth token
 
 #![cfg(all(feature = "sqlite", feature = "neon"))]
 
@@ -23,6 +23,15 @@ use tempfile::TempDir;
 use tokio::sync::Mutex;
 
 use dactyl::{DactylError, Rows};
+
+static ENV_MUTEX: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
+
+fn lock_env() -> std::sync::MutexGuard<'static, ()> {
+    ENV_MUTEX
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap()
+}
 
 /// Mock neon-server state, shared across all tests.
 #[derive(Default)]
@@ -162,6 +171,7 @@ fn project(rows: &Rows) -> Vec<(String, serde_json::Value)> {
 /// tempfile and the neon mock server are spun up exactly once.
 #[test]
 fn conformance_all_stores() {
+    let _guard = lock_env();
     dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let state = Arc::new(MockState::default());
@@ -196,11 +206,12 @@ fn conformance_all_stores() {
         let path = sqlite_path(&tmp, store);
         seed_sqlite(&path, store, &seed_rows(store));
 
-        // ---- SQLite pass: DACTYL_SQLITE_PATH = <this store's db> ----
-        // SAFETY: tests in this file run with --test-threads=1; no other
-        // thread is reading env vars concurrently.
-        unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+        // ---- SQLite pass: DATASTORE = sqlite, DATASTORE_ROUTE = path ----
+        unsafe { std::env::set_var("DATASTORE", "sqlite") };
+        unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
+        unsafe { std::env::remove_var("DATASTORE_TOKEN") };
         unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+        unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
 
         let query = format!("select id, title, status from {store}");
         for optimize in [true, false] {
@@ -216,9 +227,10 @@ fn conformance_all_stores() {
             }
         }
 
-        // ---- Neon pass: DACTYL_NEON_ENDPOINT = mock ----
-        unsafe { std::env::set_var("DACTYL_NEON_ENDPOINT", &endpoint) };
-        unsafe { std::env::set_var("DACTYL_NEON_BEARER", "test-token") };
+        // ---- Neon pass: DATASTORE = neon, DATASTORE_ROUTE = mock ----
+        unsafe { std::env::set_var("DATASTORE", "neon") };
+        unsafe { std::env::set_var("DATASTORE_ROUTE", &endpoint) };
+        unsafe { std::env::set_var("DATASTORE_TOKEN", "test-token") };
 
         for optimize in [true, false] {
             let neon_rows = dactyl::read(&query, optimize).expect("neon read");
@@ -233,16 +245,23 @@ fn conformance_all_stores() {
             }
 
             // Compare with sqlite projection shape.
-            unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+            unsafe { std::env::set_var("DATASTORE", "sqlite") };
+            unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
             let sqlite_rows = dactyl::read(&query, optimize).expect("sqlite read for compare");
             assert_eq!(
                 project(&neon_rows),
                 project(&sqlite_rows),
                 "store {store} optimize={optimize}: projection mismatch"
             );
-            unsafe { std::env::set_var("DACTYL_NEON_ENDPOINT", &endpoint) };
+            unsafe { std::env::set_var("DATASTORE", "neon") };
+            unsafe { std::env::set_var("DATASTORE_ROUTE", &endpoint) };
         }
     }
+
+    // Clean up env vars at end of test.
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
+    unsafe { std::env::remove_var("DATASTORE_TOKEN") };
 
     // Signal mock runtime to shut down, then wait for the thread.
     let _ = done_tx.send(());
@@ -251,13 +270,15 @@ fn conformance_all_stores() {
 
 #[test]
 fn unsupported_construct_rejected_when_optimize_false() {
+    let _guard = lock_env();
     dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    // SAFETY: see conformance_all_stores.
-    unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+    unsafe { std::env::set_var("DATASTORE", "sqlite") };
+    unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
     unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+    unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
 
     // Postgres-only construct (`now()`) on sqlite with optimize=false →
     // Unsupported. With optimize=true it gets past the analyzer and the
@@ -271,37 +292,50 @@ fn unsupported_construct_rejected_when_optimize_false() {
         Err(DactylError::Adapter(_)) => {}
         Err(e) => panic!("expected Ok or Adapter error, got {e:?}"),
     }
+
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
 }
 
 #[test]
 fn inline_directive_routes_dialect_check() {
+    let _guard = lock_env();
     dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    // SAFETY: see conformance_all_stores.
-    unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+    unsafe { std::env::set_var("DATASTORE", "sqlite") };
+    unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
     unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+    unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
 
     // SQLite is the inferred dialect (no neon env), so the construct is
     // accepted at optimize=true and fails the analyzer at optimize=false.
     let q = "-- dactyl: neon\nselect id from todos where id in (select id from json_each('[1]'))";
     let res = dactyl::read(q, false);
     assert!(matches!(res, Err(DactylError::Unsupported { .. })));
+
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
 }
 
 #[test]
 fn query_macro_returns_rewritten_sql() {
+    let _guard = lock_env();
     dactyl::__reset_for_tests();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    // SAFETY: see conformance_all_stores.
-    unsafe { std::env::set_var("DACTYL_SQLITE_PATH", path.to_str().unwrap()) };
+    unsafe { std::env::set_var("DATASTORE", "sqlite") };
+    unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
     unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
+    unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
 
     let sql: String = dactyl::query!("select id, title, status from todos");
     assert_eq!(sql, "select id, title, status from todos");
     let rows = dactyl::read(&sql, true).expect("read");
     assert_eq!(rows.len(), 2);
+
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
 }

@@ -32,15 +32,13 @@ Nothing else is exported at the crate root.
 
 ## How dactyl picks the adapter
 
-| Env var | Effect |
-|---|---|
-| `DACTYL_NEON_ENDPOINT` | Set → Neon adapter. Uses `DACTYL_NEON_BEARER` if present. |
-| `DACTYL_SQLITE_PATH` | Set → path to the SQLite file. |
-| `DACTYL_SQLITE_ROOT` | Optional default root for per-store SQLite paths (default: `.decapod/data`). |
+Adapter selection is configured via two environment variables:
 
-When neither is set, dactyl defaults to the SQLite adapter and derives a
-per-store path from the first `from <name>` clause in the query
-(`.decapod/data/<store>.db`).
+- `DATASTORE` — set to `"sqlite"` or `"neon"`.
+- `DATASTORE_ROUTE` — when `DATASTORE` is `"sqlite"`, this is the path to the SQLite file. When `DATASTORE` is `"neon"`, this is the Propodus endpoint URL.
+- `DATASTORE_TOKEN` — optional auth token for the Neon adapter.
+
+For backwards compatibility, dactyl also supports legacy environment variables (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`).
 
 ## References
 

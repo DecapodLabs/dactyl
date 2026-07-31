@@ -1,5 +1,20 @@
 # Intent
 
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+- `authentication`
+- `background-processing`
+- `event-driven`
+- `external-integrations`
+- `infrastructure-management`
+- `persistent-state`
+- `public-api`
+- `scheduled-jobs`
+- `secrets-handling`
+
+<!-- decapod:declared-capabilities:end -->
 ## Product Outcome
 - Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals.
 
@@ -96,3 +111,11 @@ flowchart LR
 |---|---|---|---|
 | Which interfaces are versioned at launch? | TBD | YYYY-MM-DD | |
 | Which non-functional target is hardest to hit? | TBD | YYYY-MM-DD | |
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `3a0b313828eeaf26583fbb0b4c31944adb5da2ec0333a92ac975f8bc942a1e6f`
+- Significant implementation surfaces: `.github/` (1 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->

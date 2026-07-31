@@ -1,5 +1,26 @@
 # Interfaces
 
+<!-- decapod:capability-overlay:public-api:start -->
+
+## Public API Capability Overlay
+
+### API Contract Requirements
+- All public endpoints MUST define explicit request/response schemas
+- Versioning strategy MUST be documented (URL path or header-based)
+- All public endpoints MUST implement idempotency for mutating operations
+- Rate limiting and pagination MUST be implemented for list endpoints
+
+### Compatibility Guarantees
+- Backward-compatible changes ONLY within a version
+- Breaking changes require new version (v1, v2, etc.)
+- Deprecation and removal policy MUST be selected for this project and proven against its consumers
+
+### Security Requirements
+- All public endpoints MUST implement authentication
+- Abuse-control enforcement point MUST be a documented project decision
+- Input validation MUST reject malformed requests with typed errors
+<!-- decapod:capability-overlay:public-api:end -->
+
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
@@ -75,7 +96,17 @@ pub enum ApiError {
 - Public surface (crate root): `read(query: &str, optimize: bool) -> Result<Rows, DactylError>` and `write(query: &str, optimize: bool) -> Result<Rows, DactylError>` plus the `query!("...")` macro and the `Rows` / `Row` / `DactylError` result types.
 - There is no `init` / `active_datastore` at the crate root. The first `read` or `write` call lazily establishes the connection.
 - Adapter selection is env-driven:
-  - `DACTYL_NEON_ENDPOINT` set -> Neon adapter; `DACTYL_NEON_BEARER` optional.
-  - Otherwise SQLite adapter; `DACTYL_SQLITE_PATH` is honored when set, otherwise `.decapod/data/<store>.db` derived from the first `from <name>` clause in the query.
+  - `DATASTORE` set to `"sqlite"` or `"neon"`.
+  - `DATASTORE_ROUTE` specifies the database path (SQLite) or the endpoint URL (Neon).
+  - `DATASTORE_TOKEN` is the optional auth token for Neon.
+  - Legacy variables (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`) are supported as fallbacks.
 - `optimize = true` allows the analyzer to rewrite the query; `optimize = false` rejects the call with `DactylError::Unsupported { construct }` when any construct is not native to the inferred adapter.
 - `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `read` / `write`.
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `3a0b313828eeaf26583fbb0b4c31944adb5da2ec0333a92ac975f8bc942a1e6f`
+- Significant implementation surfaces: `.github/` (1 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
