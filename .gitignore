@@ -1,3 +1,78 @@
-/target/
+# Decapod - Robust Git Ignore
+
+# --- Build Artifacts ---
+target/
+dist/
+/build/
+!assets/build/
+!assets/build/*.rs
+!assets/benches/
+!assets/benches/*.rs
+dev/
+*.o
+*.so
+*.a
+*.dll
+*.exe
+*.dylib
+
+# --- Rust/Cargo ---
+# Note: We keep Cargo.lock for the binary crate decapod
+# but if we had workspace member crates that were libraries,
+# we might ignore their local locks.
+# /crates/*/Cargo.lock
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
 *.swp
+*.swo
+*~
 .DS_Store
+.helix/
+
+# --- Decapod Sidecar (State) ---
+# Keep runtime state ignored by default, then allowlist deterministic artifacts.
+.decapod/data
+.decapod/data/*
+!.decapod/data/
+!.decapod/data/knowledge.promotions.jsonl
+.decapod/.stfolder
+.decapod/workspaces
+# Managed runtime outputs are non-canonical. Git history plus the trajectory
+# cookie are the durable governance record; these paths are current-run state.
+.decapod/managed/*
+# Keep only the deterministic managed container build baseline and living specs tracked.
+!.decapod/data/
+!.decapod/data/knowledge.promotions.jsonl
+!.decapod/managed/
+!.decapod/managed/Dockerfile.decapod
+!.decapod/managed/specs/
+!.decapod/managed/specs/*.md
+!.decapod/managed/specs/.manifest.json
+# Durable governance cookies under `.decapod/governance/` are tracked; workunit
+# manifests remain ignored current-run execution state.
+.decapod/governance/workunits/
+# Allowlist skills - imported skill cards for reproducibility
+!.decapod/skills/
+
+# --- Environment & Secrets ---
+.env
+.env.*
+!.env.example
+*.pat
+*.token
+*.key
+
+# --- Temp / Debug ---
+*.log
+*.tmp
+debug/
+out.log
+err.log
+
+# --- Claude Code Hooks ---
+.claude/
+
+# --- Bazel ---
+/bazel-*
