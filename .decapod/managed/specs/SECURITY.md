@@ -103,7 +103,7 @@ Describe the security primitives and security controls implemented in this repos
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8fa1a9caf5650553dd941c284bfae79132aa03d49b0d507db539bca41190dbee`
+- Repository signal fingerprint: `6dd8b3c79c837b3e6becc59eba4275a56b9e951432a979b9f4f65b34a4b26e45`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
