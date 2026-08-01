@@ -26,7 +26,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapter::Adapter;
 use crate::error::DactylError;
-use crate::rows::{Row, Rows};
+use crate::rows::{Parameter, Row, Rows};
+use crate::Statement;
 
 /// Opaque handle to the Neon adapter.
 #[derive(Clone)]
@@ -44,7 +45,7 @@ struct Inner {
 struct QueryRequest<'a> {
     sql: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    params: Option<&'a serde_json::Value>,
+    params: Option<&'a [Parameter]>,
     optimize: bool,
     write: bool,
 }
@@ -55,6 +56,17 @@ struct QueryResponse {
     columns: Vec<String>,
     #[serde(default)]
     rows: Vec<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize)]
+struct BatchRequest<'a> {
+    statements: &'a [Statement],
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct BatchResponse {
+    #[serde(default)]
+    results: Vec<QueryResponse>,
 }
 
 impl NeonAdapter {
@@ -81,7 +93,7 @@ impl Adapter for NeonAdapter {
     fn execute(
         &self,
         query: &str,
-        params: Option<&serde_json::Value>,
+        params: &[Parameter],
         optimize: bool,
         write: bool,
     ) -> Result<Rows, DactylError> {
@@ -89,7 +101,7 @@ impl Adapter for NeonAdapter {
         let url = format!("{}{}", self.inner.endpoint, path);
         let req = QueryRequest {
             sql: query,
-            params,
+            params: Some(params),
             optimize,
             write,
         };
@@ -139,5 +151,64 @@ impl Adapter for NeonAdapter {
             }
         }
         Ok(Rows(out))
+    }
+
+    fn execute_raw(&self, query: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+        let rows = self.execute(query, params, true, true)?;
+        Ok(rows.len() as u64)
+    }
+
+    fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
+        let url = format!("{}/batch", self.inner.endpoint);
+        let req = BatchRequest { statements };
+        let mut rb = self.inner.client.post(&url).json(&req);
+        if let Some(b) = &self.inner.bearer {
+            rb = rb.bearer_auth(b);
+        }
+        let resp = rb
+            .send()
+            .map_err(|e| DactylError::Adapter(format!("neon batch send: {e}")))?;
+        let status = resp.status();
+        let body: BatchResponse = resp
+            .json()
+            .map_err(|e| DactylError::Adapter(format!("neon batch decode: {e}")))?;
+        if !status.is_success() {
+            return Err(DactylError::Adapter(format!(
+                "neon batch status {status}: {}",
+                serde_json::to_string(&body).unwrap_or_default()
+            )));
+        }
+        let mut results = Vec::with_capacity(body.results.len());
+        for res in body.results {
+            let mut out = Vec::with_capacity(res.rows.len());
+            for r in res.rows {
+                let obj = r
+                    .as_object()
+                    .ok_or_else(|| DactylError::Adapter("neon row is not a JSON object".into()))?;
+                if res.columns.is_empty() {
+                    let cols: Vec<String> = obj.keys().cloned().collect();
+                    let vals: Vec<serde_json::Value> = cols
+                        .iter()
+                        .map(|c| obj.get(c).cloned().unwrap_or(serde_json::Value::Null))
+                        .collect();
+                    out.push(Row {
+                        columns: cols,
+                        values: vals,
+                    });
+                } else {
+                    let vals: Vec<serde_json::Value> = res
+                        .columns
+                        .iter()
+                        .map(|c| obj.get(c).cloned().unwrap_or(serde_json::Value::Null))
+                        .collect();
+                    out.push(Row {
+                        columns: res.columns.clone(),
+                        values: vals,
+                    });
+                }
+            }
+            results.push(Rows(out));
+        }
+        Ok(results)
     }
 }

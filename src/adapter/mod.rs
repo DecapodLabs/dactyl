@@ -6,22 +6,25 @@
 //! the underlying types.
 
 use crate::error::DactylError;
-use crate::rows::Rows;
+use crate::rows::{Parameter, Rows};
+use crate::Statement;
 
 /// Internal trait every adapter implements.
-///
-/// `name()` is for diagnostics and the (currently unused) registry. The
-/// public read/write facade constructs adapters lazily and never inspects
-/// the name.
 pub trait Adapter: Send + Sync {
     /// Execute a query against the backing datastore.
     fn execute(
         &self,
         query: &str,
-        params: Option<&serde_json::Value>,
+        params: &[Parameter],
         optimize: bool,
         write: bool,
     ) -> Result<Rows, DactylError>;
+
+    /// Execute a raw schema/DDL/migration operation.
+    fn execute_raw(&self, query: &str, params: &[Parameter]) -> Result<u64, DactylError>;
+
+    /// Execute an atomic batch of statements.
+    fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError>;
 }
 
 #[cfg(feature = "sqlite")]

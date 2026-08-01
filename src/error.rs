@@ -22,4 +22,12 @@ pub enum DactylError {
     /// Adapter-level failure. Wraps the underlying error message.
     #[error("adapter error: {0}")]
     Adapter(String),
+
+    /// Requested column or index was not found in the row.
+    #[error("column not found: {0}")]
+    ColumnNotFound(String),
+
+    /// Type conversion of column value failed.
+    #[error("conversion error: {0}")]
+    Conversion(String),
 }
