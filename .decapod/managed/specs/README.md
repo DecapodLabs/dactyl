@@ -47,7 +47,7 @@ These files are the project-local contract for humans and agents.
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `470a7a990e6e7e4903cd694b2c38fc58717d81290eed1cfb531172a335f088c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `7f9dc0e543ee42dfa94ced01e04f11d103ed77f425cf7e24f1c5e91418426530`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

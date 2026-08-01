@@ -9,10 +9,10 @@
 //! Boots dactyl against `.decapod/data/todos.db` (auto-derived from the
 //! `from todos` clause in the query) and prints the rows.
 
-use dactyl::Row;
+use dactyl_db::Row;
 
-fn main() -> Result<(), dactyl::DactylError> {
-    for row in dactyl::read("select id, title, status from todos", true)?.iter() {
+fn main() -> Result<(), dactyl_db::DactylError> {
+    for row in dactyl_db::read("select id, title, status from todos", true)?.iter() {
         print_row(row);
     }
     Ok(())

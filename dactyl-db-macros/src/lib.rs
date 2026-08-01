@@ -38,7 +38,7 @@ pub fn query(input: TokenStream) -> TokenStream {
         // call is a no-op identity rewrite, kept so the contract is uniform
         // with non-literal queries.
         let __text: &str = #rewritten;
-        ::dactyl::__private::analyze(__text).sql
+        ::dactyl_db::__private::analyze(__text).sql
     }};
 
     expanded.into()
