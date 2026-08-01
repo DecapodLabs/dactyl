@@ -106,7 +106,7 @@ pub enum ApiError {
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `006be8c481c5ba8e530b273bf1ebb6c65daf989ce9739118874f094fd67b0f05`
+- Repository signal fingerprint: `64345e9a4aeb452ab836313e2cfc83e33d479e10ee48203fe5a16058a39baf0d`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -20,7 +20,12 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Liveness:
 - Readiness:
 - Dependency health:
-- Synthetic transaction:
+- Synthetic transaction:## Incident Response
+- Detection:
+- Triage:
+- Mitigation:
+- Communication:
+- Post-mortem:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -58,13 +63,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Incident Response
-- Detection:
-- Triage:
-- Mitigation:
-- Communication:
-- Post-mortem:
 
 ## Rollout Strategy
 - Blue/green deployment:
@@ -107,7 +105,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `006be8c481c5ba8e530b273bf1ebb6c65daf989ce9739118874f094fd67b0f05`
+- Repository signal fingerprint: `64345e9a4aeb452ab836313e2cfc83e33d479e10ee48203fe5a16058a39baf0d`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
