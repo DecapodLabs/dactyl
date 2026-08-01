@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/DecapodLabs/dactyl/compare/v0.1.6...v0.2.1) - 2026-08-01
+
+### Added
+
+- *(dactyl)* slim ambient-env query/execute/transaction API, caller-owned schema, typed rows, conformance + injection regression tests
+
 ### Added
 
 - *(dactyl)* safe parameterized execution: `Parameter` (Null/Bool/Integer/Real/Text), `query(sql, params)`, `execute(sql, params)`, and `transaction(&[Statement])`. References DecapodLabs/dactyl#23, #24.
