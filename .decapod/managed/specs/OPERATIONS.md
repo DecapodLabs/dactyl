@@ -37,7 +37,12 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 | Secret | Source | Rotation | Consumer |
 |---|---|---|---|
 | External service auth material | managed runtime configuration | periodic | runtime services |
-| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |
+| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |## Security Testing
+| Test Type | Cadence | Tooling |
+|---|---|---|
+| SAST | each PR | language linters/scanners |
+| Dependency scan | each PR + weekly | supply-chain tools |
+| DAST/pentest | scheduled | external/internal |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -75,13 +80,6 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Security Testing
-| Test Type | Cadence | Tooling |
-|---|---|---|
-| SAST | each PR | language linters/scanners |
-| Dependency scan | each PR + weekly | supply-chain tools |
-| DAST/pentest | scheduled | external/internal |
 
 ## Compliance and Audit
 - Regulatory scope:

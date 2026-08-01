@@ -6,8 +6,15 @@
 changelog_update = true
 # Changelog path
 changelog_path = "CHANGELOG.md"
-# Git tag format
-git_tag_name = "v{{ version }}"
+# Publish only after a release PR is merged. Ordinary main-branch pushes may
+# prepare a release PR, but must not publish packages directly.
+release_always = false
+# Release commits are generated as `chore(...): release ...`; restricting
+# release preparation to version-bearing conventional commits prevents those
+# commits from recursively opening another release PR.
+release_commits = '^(feat|fix)(\([^)]*\))?!?:'
+# Every public workspace package needs its own tag namespace.
+git_tag_name = "{{ package }}-v{{ version }}"
 # Release PR labels
 pr_labels = ["release"]
 # Allow release-pr computation even if runtime-generated files make tree dirty

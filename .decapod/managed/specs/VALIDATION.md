@@ -60,7 +60,12 @@ flowchart LR
 | Changelog entry | `CHANGELOG.md` | Promotion |## Regression Guardrails
 - Baseline references:
 - Statistical thresholds (if non-deterministic):
-- Rollback criteria:
+- Rollback criteria:## Bounded Execution
+| Operation | Timeout | Failure Mode |
+|---|---|---|
+| Validation | 30s | timeout or lock |
+| Unit test suite | project-defined | non-zero exit |
+| Integration suite | project-defined | non-zero exit |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -117,13 +122,6 @@ flowchart LR
 - Rate limit enforcement tests
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
-
-## Bounded Execution
-| Operation | Timeout | Failure Mode |
-|---|---|---|
-| Validation | 30s | timeout or lock |
-| Unit test suite | project-defined | non-zero exit |
-| Integration suite | project-defined | non-zero exit |
 
 ## Coverage Checklist
 - [ ] Unit tests cover critical branches.
