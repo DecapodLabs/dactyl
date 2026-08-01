@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
+- release v0.1.6
+- *(dactyl)* refresh specs footprint
+
+## [0.2.0](https://github.com/DecapodLabs/dactyl/compare/v0.1.6...v0.2.0) - 2026-08-01
+
+### Added
+
+- *(dactyl)* implement Parameter, transaction/batch, raw DDL execution, and named column row extraction
+
+### Other
+
 - *(dactyl)* refresh specs footprint
 
 ## [0.1.4](https://github.com/DecapodLabs/dactyl/releases/tag/v0.1.4) - 2026-08-01
