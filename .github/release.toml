@@ -20,6 +20,19 @@ pr_labels = ["release"]
 # Allow release-pr computation even if runtime-generated files make tree dirty
 allow_dirty = true
 
+# The facade and proc-macro crate ship as one compatibility unit. Include each
+# package's commits in the other's release calculation so version grouping is
+# effective even when a change touches only one package.
+[[package]]
+name = "dactyl-db"
+version_group = "dactyl"
+changelog_include = ["dactyl-db-macros"]
+
+[[package]]
+name = "dactyl-db-macros"
+version_group = "dactyl"
+changelog_include = ["dactyl-db"]
+
 # Semantic versioning based on conventional commits:
 # - feat: minor version bump
 # - fix: patch version bump
