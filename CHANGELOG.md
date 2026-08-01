@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.2.1...dactyl-db-v0.2.2) - 2026-08-01
+
+### Fixed
+
+- *(release)* prevent recursive releases and tag collisions ([#36](https://github.com/DecapodLabs/dactyl/pull/36))
+
+### Other
+
+- release v0.2.1
+
 ## [0.2.1](https://github.com/DecapodLabs/dactyl/compare/v0.1.6...v0.2.1) - 2026-08-01
 
 ### Added
