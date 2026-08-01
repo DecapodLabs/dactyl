@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.1...dactyl-db-macros-v0.2.3) - 2026-08-01
+
+### Fixed
+
+- *(release)* synchronize facade and macros versions ([#38](https://github.com/DecapodLabs/dactyl/pull/38))
+
+### Other
+
+- *(release)* keep alignment check version agnostic ([#40](https://github.com/DecapodLabs/dactyl/pull/40))
+
 ## [0.2.2](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.2.1...dactyl-db-v0.2.2) - 2026-08-01
 
 ### Fixed
