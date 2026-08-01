@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/DecapodLabs/dactyl/compare/v0.2.1...v0.2.2) - 2026-08-01
+
+### Other
+
+- release v0.2.1
+
 ## [0.2.1](https://github.com/DecapodLabs/dactyl/compare/v0.1.6...v0.2.1) - 2026-08-01
 
 ### Added
