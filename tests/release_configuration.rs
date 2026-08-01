@@ -107,10 +107,13 @@ fn workspace_packages_render_distinct_tags_at_the_same_version() {
 
 #[test]
 fn workspace_package_manifests_and_dependency_are_aligned() {
-    assert_eq!(manifest_package_version(DATABASE_MANIFEST), "0.2.2");
-    assert_eq!(manifest_package_version(MACROS_MANIFEST), "0.2.2");
-    assert!(DATABASE_MANIFEST
-        .contains(r#"dactyl-db-macros = { path = "dactyl-db-macros", version = "0.2.2" }"#));
+    let database_version = manifest_package_version(DATABASE_MANIFEST);
+    let macros_version = manifest_package_version(MACROS_MANIFEST);
+
+    assert_eq!(database_version, macros_version);
+    assert!(DATABASE_MANIFEST.contains(&format!(
+        r#"dactyl-db-macros = {{ path = "dactyl-db-macros", version = "{macros_version}" }}"#
+    )));
 }
 
 #[test]
