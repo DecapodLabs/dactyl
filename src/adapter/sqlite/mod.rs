@@ -1,11 +1,16 @@
 //! SQLite adapter.
 //!
-//! Holds a `rusqlite::Connection` opened against the configured path.
-//! Schemas are managed by the caller.
+//! Holds a `rusqlite::Connection` opened against the configured path. The
+//! adapter is constructed per call from [`crate::build_adapter`] and lives
+//! for the duration of that call, so there is no shared connection cache and
+//! the connection is never mutated across threads.
+//!
+//! Schemas are managed by the caller — [`SqliteAdapter::open`] opens (or
+//! creates) the file but never bootstraps any tables. Callers own and version
+//! their schema through explicit [`crate::execute`] / DDL statements
+//! (dactyl #27).
 
-mod schema;
-
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use rusqlite::{params_from_iter, types::Value as SqlValue, Connection};
 
@@ -16,41 +21,27 @@ use crate::Statement;
 
 /// Opaque handle to the SQLite adapter.
 ///
-/// The handle is intentionally `Arc<Inner>` so the adapter can be cloned into
-/// the global registry without taking ownership of the caller's connection.
-/// `rusqlite::Connection` is `!Sync`, so we serialize execution through a
-/// `Mutex`.
-#[derive(Clone)]
+/// `rusqlite::Connection` is `!Sync`, so execution is serialized through an
+/// internal `Mutex`. The mutex is harmless in practice because each call
+/// constructs and drops its own adapter, but it keeps the type `Send + Sync`
+/// for callers that choose to hold an adapter longer.
 pub struct SqliteAdapter {
-    inner: Arc<Inner>,
-}
-
-struct Inner {
     conn: Mutex<Connection>,
 }
 
 impl SqliteAdapter {
-    /// Open (or create) the SQLite file at `path`.
+    /// Open (or create) the SQLite file at `path`. No tables are created.
     pub fn open(path: &str) -> rusqlite::Result<Self> {
         let conn = Connection::open(path)?;
         Ok(Self {
-            inner: Arc::new(Inner {
-                conn: Mutex::new(conn),
-            }),
+            conn: Mutex::new(conn),
         })
     }
 }
 
 impl Adapter for SqliteAdapter {
-    fn execute(
-        &self,
-        query: &str,
-        params: &[Parameter],
-        _optimize: bool,
-        _write: bool,
-    ) -> Result<Rows, DactylError> {
+    fn execute(&self, query: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
         let conn = self
-            .inner
             .conn
             .lock()
             .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
@@ -93,7 +84,6 @@ impl Adapter for SqliteAdapter {
 
     fn execute_raw(&self, query: &str, params: &[Parameter]) -> Result<u64, DactylError> {
         let conn = self
-            .inner
             .conn
             .lock()
             .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
@@ -114,7 +104,6 @@ impl Adapter for SqliteAdapter {
 
     fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
         let mut conn = self
-            .inner
             .conn
             .lock()
             .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;

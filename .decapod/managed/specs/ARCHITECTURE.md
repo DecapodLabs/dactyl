@@ -24,13 +24,13 @@
 library
 
 ## What This Project Is
-dactyl-db is a to be confirmed project built using Rust.
-library
+dactyl-db is the single SQL-vendor-agnostic Rust persistence framework: one `query(sql, params)` surface over any structured-query-language backend. SQLite and Neon ship today; Redis, MySQL, and Cassandra are planned behind the same facade.
 
 Architectural principles:
 - **Simplicity**: Keep components focused and reusable.
 - **Modularity**: Clearly defined interface boundaries and dependency separation.
 - **Reliability**: Graceful failure handling and thorough verification.
+- **Backend-neutrality**: The public API never changes per backend; a new backend is one `Adapter` module plus one `DATASTORE` match arm.
 
 ## Current Facts
 - Runtime/languages: Rust
@@ -102,27 +102,29 @@ sequenceDiagram
 - Verification and artifact emission:
 
 ## Concurrency and Runtime Model
-- Execution model:
-- Isolation boundaries:
-- Backpressure strategy:
-- Shared state synchronization:
+- Execution model: each `query` / `execute` / `transaction` call constructs a fresh short-lived adapter for the ambient `DATASTORE` selection and drops it on return.
+- Isolation boundaries: no process-global connection cache, so workspace/session isolation is automatic and the public surface is `Send + Sync` without locks.
+- Backpressure strategy: N/A at the facade level; Neon adapter relies on the underlying HTTP client.
+- Shared state synchronization: none — adapters own their connections for the duration of a call; SQLite serializes its connection behind an internal `Mutex` only because `rusqlite::Connection` is `!Sync`.
 
 ## Deployment Topology
-- Runtime units:
-- Region/zone model:
-- Rollout strategy (blue/green/canary):
-- Rollback trigger and blast-radius scope:
+- Runtime units: none (library).
+- Region/zone model: n/a.
+- Rollout strategy: library releases via release-plz.
+- Rollback trigger and blast-radius scope: callers pin a dactyl version; breaking changes are recorded in CHANGELOG.md.
 
 ## Data and Contracts
-- Inbound contracts (CLI/API/events):
-- Outbound dependencies (datastores/queues/external APIs):
-- Data ownership boundaries:
-- Schema evolution + migration policy:
+- Inbound contracts (CLI/API/events): `query(sql, params)`, `execute(sql, params)`, `transaction(&[Statement])`, `query!` macro.
+- Outbound dependencies (datastores/queues/external APIs): SQLite (rusqlite, bundled) and Neon/Propodus (reqwest, blocking+rustls-tls).
+- Data ownership boundaries: callers own all schema. dactyl never silently creates tables; `execute` is the only DDL surface.
+- Schema evolution + migration policy: callers version their schema through explicit `execute` DDL statements and `transaction` batches. dactyl records no schema of its own.
 
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
-| ADR-001 | Initial topology choice | Proposed | Define first stable architecture | YYYY-MM-DD |
+| ADR-001 | Ambient-env routing contract (DATASTORE/DATASTORE_ROUTE/DATASTORE_TOKEN) | Accepted | Single authoritative selector; no init(); per-call adapters for session isolation (dactyl #26) | 2026-08-01 |
+| ADR-002 | Slim single-entry API: query(sql, params) + execute + transaction | Accepted | One uniform surface across all current and planned SQL backends (dactyl #23, #24) | 2026-08-01 |
+| ADR-003 | Backend-neutral Adapter trait | Proposed | New backends (redis, mysql, cassandra) add one module + one DATASTORE arm; public surface unchanged | 2026-08-01 |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):

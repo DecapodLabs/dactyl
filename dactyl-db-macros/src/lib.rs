@@ -9,10 +9,10 @@
 //!   3. Empty literals fail to compile with a clear message.
 //!
 //! The expanded form returns a `String` containing the (rewritten) SQL.
-//! Callers wire it into `dactyl::read` / `dactyl::write` directly:
+//! Callers wire it into `dactyl::query` directly:
 //!
 //! ```ignore
-//! let rows = dactyl::read(&dactyl::query!("select id, title from todos"), true)?;
+//! let rows = dactyl_db::query(&dactyl_db::query!("select id, title from todos"), &[])?;
 //! ```
 
 use proc_macro::TokenStream;

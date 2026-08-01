@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- *(dactyl)* safe parameterized execution: `Parameter` (Null/Bool/Integer/Real/Text), `query(sql, params)`, `execute(sql, params)`, and `transaction(&[Statement])`. References DecapodLabs/dactyl#23, #24.
+- *(dactyl)* typed named-column projection: strict `Row::get<T>` plus lenient `get_bool`/`get_int`/`get_real`/`get_str`/`get_json` with explicit NULL, missing-column, and conversion-error semantics. References DecapodLabs/dactyl#25.
+- *(dactyl)* caller-owned schema: dactyl never bootstraps tables; `execute` is the DDL/migration surface. References DecapodLabs/dactyl#27.
+- *(dactyl)* ambient-env routing contract: `DATASTORE`, `DATASTORE_ROUTE`, `DATASTORE_TOKEN`; no `init()`, no `read`/`write` split, no `optimize` flag, no legacy `DACTYL_*` vars. References DecapodLabs/dactyl#26.
+
+### Changed
+
+- *(dactyl)* BREAKING: `read(query, params, optimize)` / `write(query, params, optimize)` replaced by a single `query(sql, params)` entry point plus `execute` and `transaction`. The process-global connection cache is removed; each call builds a short-lived adapter. Records the routing-contract decision from DecapodLabs/dactyl#26.
+
 ## [0.2.0](https://github.com/DecapodLabs/dactyl/compare/v0.1.6...v0.2.0) - 2026-08-01
 
 ### Added
@@ -17,87 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - release v0.1.6
 - *(dactyl)* refresh specs footprint
-
-## [0.2.0](https://github.com/DecapodLabs/dactyl/compare/v0.1.6...v0.2.0) - 2026-08-01
-
-### Added
-
-- *(dactyl)* implement Parameter, transaction/batch, raw DDL execution, and named column row extraction
-
-### Other
-
-- *(dactyl)* refresh specs footprint
-
-## [0.1.4](https://github.com/DecapodLabs/dactyl/releases/tag/v0.1.4) - 2026-08-01
-
-### Added
-
-- *(dactyl)* simplify adapter selection to DATASTORE and DATASTORE_ROUTE. Reference DecapodLabs/dactyl#1.
-- *(dactyl)* bootstrap crate with read/write facade, both adapters, query! macro, conformance harness
-
-### Other
-
-- release
-- Merge branch 'main' into release-plz-2026-08-01T00-04-08Z
-- *(dactyl)* configure release environment in Release workflow to resolve CARGO_REGISTRY_TOKEN
-- *(dactyl)* add workspace section to Cargo.toml to register members
-- *(dactyl)* stage updated Cargo.lock for 0.1.3
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve version conflict to 0.1.3
-- *(dactyl)* stage updated specs and lockfile after merge reconciliation
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve conflicts
-- *(dactyl)* rewrite README to describe dactyl-db package features generalise from decapod
-- *(dactyl)* rename package to dactyl-db and macros to dactyl-db-macros
-- *(dactyl)* configure release-plz for GitOps release management
-- *(dactyl)* add crates.io publishing configuration and release scripts
-- *(dactyl)* refresh specs fingerprint and update documentation for simplified adapter selection
-- automated container updates
-- *(dactyl)* read/write are the only public API; first call auto-bootstraps the adapter
-- ignore .decapod runtime artifacts in .gitignore
-- automated container updates
-- Initial commit
-
-## [0.1.3](https://github.com/DecapodLabs/dactyl/releases/tag/v0.1.3) - 2026-08-01
-
-### Other
-
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve version conflict to 0.1.3
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve conflicts
-- *(dactyl)* rename package to dactyl-db and macros to dactyl-db-macros
-
-## [0.1.4](https://github.com/DecapodLabs/dactyl/releases/tag/v0.1.4) - 2026-08-01
-
-### Added
-
-- *(dactyl)* simplify adapter selection to DATASTORE and DATASTORE_ROUTE. Reference DecapodLabs/dactyl#1.
-- *(dactyl)* bootstrap crate with read/write facade, both adapters, query! macro, conformance harness
-
-### Other
-
-- Merge branch 'main' into release-plz-2026-08-01T00-04-08Z
-- *(dactyl)* configure release environment in Release workflow to resolve CARGO_REGISTRY_TOKEN
-- *(dactyl)* add workspace section to Cargo.toml to register members
-- *(dactyl)* stage updated Cargo.lock for 0.1.3
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve version conflict to 0.1.3
-- *(dactyl)* stage updated specs and lockfile after merge reconciliation
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve conflicts
-- *(dactyl)* rewrite README to describe dactyl-db package features generalise from decapod
-- *(dactyl)* rename package to dactyl-db and macros to dactyl-db-macros
-- *(dactyl)* configure release-plz for GitOps release management
-- *(dactyl)* add crates.io publishing configuration and release scripts
-- *(dactyl)* refresh specs fingerprint and update documentation for simplified adapter selection
-- automated container updates
-- *(dactyl)* read/write are the only public API; first call auto-bootstraps the adapter
-- ignore .decapod runtime artifacts in .gitignore
-- automated container updates
-- Initial commit
-
-## [0.1.3](https://github.com/DecapodLabs/dactyl/releases/tag/v0.1.3) - 2026-08-01
-
-### Other
-
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve version conflict to 0.1.3
-- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve conflicts
-- *(dactyl)* rename package to dactyl-db and macros to dactyl-db-macros
 
 ## [0.1.4](https://github.com/DecapodLabs/dactyl/compare/v0.1.3...v0.1.4) - 2026-08-01
 
@@ -117,28 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - automated container updates
 - *(dactyl)* read/write are the only public API; first call auto-bootstraps the adapter
 - ignore .decapod runtime artifacts in .gitignore
-- automated container updates
 - Initial commit
 
 ## [0.1.3](https://github.com/DecapodLabs/dactyl/compare/v0.1.2...v0.1.3) - 2026-08-01
 
-### Added
-
-- *(dactyl)* simplify adapter selection to DATASTORE and DATASTORE_ROUTE. Reference DecapodLabs/dactyl#1.
-- *(dactyl)* bootstrap crate with read/write facade, both adapters, query! macro, conformance harness
-
 ### Other
 
-- release v0.1.1
-- *(dactyl)* bump dactyl_macros and dactyl package versions to 0.1.1 to fix crates.io bootstrap dependency
-- *(dactyl)* configure release-plz for GitOps release management
-- *(dactyl)* add crates.io publishing configuration and release scripts
-- *(dactyl)* refresh specs fingerprint and update documentation for simplified adapter selection
-- automated container updates
-- *(dactyl)* read/write are the only public API; first call auto-bootstraps the adapter
-- ignore .decapod runtime artifacts in .gitignore
-- automated container updates
-- Initial commit
+- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve version conflict to 0.1.3
+- *(dactyl)* merge origin/main into chore/rename-to-dactyl-db and resolve conflicts
+- *(dactyl)* rename package to dactyl-db and macros to dactyl-db-macros
 
 ## [0.1.2](https://github.com/DecapodLabs/dactyl/compare/v0.1.1...v0.1.2) - 2026-07-31
 
@@ -156,5 +73,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - automated container updates
 - *(dactyl)* read/write are the only public API; first call auto-bootstraps the adapter
 - ignore .decapod runtime artifacts in .gitignore
-- automated container updates
 - Initial commit
