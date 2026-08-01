@@ -41,7 +41,13 @@ flowchart LR
 - `decapod validate`
 - Required test commands:
 - `cargo test`
-- Required integration/e2e commands:## Promotion Gates
+- Required integration/e2e commands:## Promotion Gates## Blocking Gates
+| Gate | Command | Evidence |
+|---|---|---|
+| Architecture + interface drift check | `decapod validate` | Gate output |
+| Tests pass | project test command | CI + local logs |
+| Docs + changelog current | repo docs checks | PR diff |
+| Security critical checks pass | security scanner suite | scanner reports |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -99,14 +105,6 @@ flowchart LR
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
 
-## Blocking Gates
-| Gate | Command | Evidence |
-|---|---|---|
-| Architecture + interface drift check | `decapod validate` | Gate output |
-| Tests pass | project test command | CI + local logs |
-| Docs + changelog current | repo docs checks | PR diff |
-| Security critical checks pass | security scanner suite | scanner reports |
-
 ## Warning Gates
 | Gate | Trigger | Follow-up SLA |
 |---|---|---|
@@ -142,7 +140,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `64345e9a4aeb452ab836313e2cfc83e33d479e10ee48203fe5a16058a39baf0d`
+- Repository signal fingerprint: `48db38f13f1f7a674a0de5687c02d626ba7ab7ec13ebe68a4f204d4762aecf69`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
