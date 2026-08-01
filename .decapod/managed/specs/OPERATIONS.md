@@ -10,7 +10,13 @@ Describe the operational runtime model, scheduling, and system deployment archit
 |---|---|---|---|
 | Availability | 99.9% | 30d | TBD |
 | P95 latency | TBD | 7d | TBD |
-| Error rate | < 1% | 7d | TBD |
+| Error rate | < 1% | 7d | TBD |## Monitoring
+| Signal | Metric | Threshold | Alert |
+|---|---|---|---|
+| Traffic | requests/sec | baseline drift | warn |
+| Latency | p95/p99 | threshold breach | page |
+| Reliability | error ratio | threshold breach | page |
+| Saturation | cpu/memory/queue depth | sustained high | page |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -48,14 +54,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Monitoring
-| Signal | Metric | Threshold | Alert |
-|---|---|---|---|
-| Traffic | requests/sec | baseline drift | warn |
-| Latency | p95/p99 | threshold breach | page |
-| Reliability | error ratio | threshold breach | page |
-| Saturation | cpu/memory/queue depth | sustained high | page |
 
 ## Health Checks
 - Liveness:
@@ -111,7 +109,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `296e7d59f138c1847b2b8bb98046ffe2b3256fa830781daaea19a0ddbefbab00`
+- Repository signal fingerprint: `8fa1a9caf5650553dd941c284bfae79132aa03d49b0d507db539bca41190dbee`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

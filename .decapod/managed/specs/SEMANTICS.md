@@ -23,7 +23,13 @@ stateDiagram-v2
 - Replay order:
 - Conflict resolution:
 - Snapshot cadence:
-- Determinism proof strategy:
+- Determinism proof strategy:## Error Code Semantics
+- Namespace:
+- Stable compatibility window:
+- Mapping to retry/degrade behavior:## Domain Rules
+- Business rule 1:
+- Business rule 2:
+- Business rule 3:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -65,16 +71,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Error Code Semantics
-- Namespace:
-- Stable compatibility window:
-- Mapping to retry/degrade behavior:
-
-## Domain Rules
-- Business rule 1:
-- Business rule 2:
-- Business rule 3:
-
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
 |---|---|---|
@@ -87,7 +83,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `296e7d59f138c1847b2b8bb98046ffe2b3256fa830781daaea19a0ddbefbab00`
+- Repository signal fingerprint: `8fa1a9caf5650553dd941c284bfae79132aa03d49b0d507db539bca41190dbee`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
