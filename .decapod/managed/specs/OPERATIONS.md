@@ -32,7 +32,12 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Feature flags:## Capacity Planning
 - Traffic patterns:
 - Resource utilization:
-- Scaling triggers:
+- Scaling triggers:## Logging
+Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.## Secrets Management
+| Secret | Source | Rotation | Consumer |
+|---|---|---|---|
+| External service auth material | managed runtime configuration | periodic | runtime services |
+| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -71,15 +76,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Logging
-Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.
-
-## Secrets Management
-| Secret | Source | Rotation | Consumer |
-|---|---|---|---|
-| External service auth material | managed runtime configuration | periodic | runtime services |
-| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |
-
 ## Security Testing
 | Test Type | Cadence | Tooling |
 |---|---|---|
@@ -101,7 +97,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `31e32edfa91b0d5ca1f637c033367689bea51fb00c077fa756df3af239a320c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

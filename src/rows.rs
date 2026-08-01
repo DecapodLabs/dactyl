@@ -239,26 +239,99 @@ impl RowIndex for String {
 }
 
 impl Row {
-    /// Extract named column value type-safely.
+    /// Strict typed extraction via `serde`. Returns a `Conversion` error on
+    /// any type mismatch (e.g. reading an integer column as `bool` when the
+    /// stored JSON is `1` rather than `true`). For lenient portable shapes
+    /// use [`Self::get_bool`] / [`Self::get_int`] / [`Self::get_real`] /
+    /// [`Self::get_str`] / [`Self::get_json`].
+    ///
+    /// Missing column → [`DactylError::ColumnNotFound`].
     pub fn get<I: RowIndex, T: serde::de::DeserializeOwned>(
         &self,
         index: I,
     ) -> Result<T, DactylError> {
-        let idx = index
-            .idx(self)
-            .ok_or_else(|| DactylError::ColumnNotFound(format!("{:?}", index)))?;
-        if idx >= self.values.len() {
-            return Err(DactylError::ColumnNotFound(format!(
-                "index {} out of bounds",
-                idx
-            )));
-        }
-        let val = &self.values[idx];
+        let i = self.idx(&index)?;
+        let val = &self.values[i];
         serde_json::from_value(val.clone()).map_err(|e| {
             DactylError::Conversion(format!(
                 "failed to convert column {:?} to target type: {}",
                 index, e
             ))
         })
+    }
+
+    /// Lenient `bool` accessor: accepts `true`/`false` or `0`/`1` integer.
+    pub fn get_bool<I: RowIndex>(&self, index: I) -> Result<bool, DactylError> {
+        let i = self.idx(&index)?;
+        match &self.values[i] {
+            serde_json::Value::Bool(b) => Ok(*b),
+            serde_json::Value::Number(n) if n.as_i64() == Some(0) => Ok(false),
+            serde_json::Value::Number(n) if n.as_i64() == Some(1) => Ok(true),
+            other => Err(DactylError::Conversion(format!(
+                "cannot read {other:?} as bool at column {:?}",
+                index
+            ))),
+        }
+    }
+
+    /// Lenient `i64` accessor: accepts JSON integer.
+    pub fn get_int<I: RowIndex>(&self, index: I) -> Result<i64, DactylError> {
+        let i = self.idx(&index)?;
+        match &self.values[i] {
+            serde_json::Value::Number(n) => n.as_i64().ok_or_else(|| {
+                DactylError::Conversion(format!("value is not i64 at column {:?}", index))
+            }),
+            other => Err(DactylError::Conversion(format!(
+                "cannot read {other:?} as i64 at column {:?}",
+                index
+            ))),
+        }
+    }
+
+    /// Lenient `f64` accessor: accepts JSON number.
+    pub fn get_real<I: RowIndex>(&self, index: I) -> Result<f64, DactylError> {
+        let i = self.idx(&index)?;
+        match &self.values[i] {
+            serde_json::Value::Number(n) => n.as_f64().ok_or_else(|| {
+                DactylError::Conversion(format!("value is not f64 at column {:?}", index))
+            }),
+            other => Err(DactylError::Conversion(format!(
+                "cannot read {other:?} as f64 at column {:?}",
+                index
+            ))),
+        }
+    }
+
+    /// Lenient `String` accessor: accepts JSON string.
+    pub fn get_str<I: RowIndex>(&self, index: I) -> Result<String, DactylError> {
+        let i = self.idx(&index)?;
+        match &self.values[i] {
+            serde_json::Value::String(s) => Ok(s.clone()),
+            other => Err(DactylError::Conversion(format!(
+                "cannot read {other:?} as String at column {:?}",
+                index
+            ))),
+        }
+    }
+
+    /// Raw JSON value accessor at the given column.
+    pub fn get_json<I: RowIndex>(&self, index: I) -> Result<serde_json::Value, DactylError> {
+        let i = self.idx(&index)?;
+        Ok(self.values[i].clone())
+    }
+
+    fn idx<I: RowIndex>(&self, index: &I) -> Result<usize, DactylError> {
+        index
+            .idx(self)
+            .ok_or_else(|| DactylError::ColumnNotFound(format!("{:?}", index)))
+            .and_then(|i| {
+                if i < self.values.len() {
+                    Ok(i)
+                } else {
+                    Err(DactylError::ColumnNotFound(format!(
+                        "index {i} out of bounds"
+                    )))
+                }
+            })
     }
 }

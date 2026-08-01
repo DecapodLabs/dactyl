@@ -53,6 +53,9 @@ dev/
 # Durable governance cookies under `.decapod/governance/` are tracked; workunit
 # manifests remain ignored current-run execution state.
 .decapod/governance/workunits/
+# plan.json / trajectory.json are current-run state, not durable records.
+.decapod/governance/plan.json
+.decapod/governance/trajectory.json
 # Allowlist skills - imported skill cards for reproducibility
 !.decapod/skills/
 

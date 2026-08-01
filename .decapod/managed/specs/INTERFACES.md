@@ -93,20 +93,27 @@ pub enum ApiError {
 
 ## Dactyl — API Contract (design-time note)
 
-- Public surface (crate root): `read(query: &str, optimize: bool) -> Result<Rows, DactylError>` and `write(query: &str, optimize: bool) -> Result<Rows, DactylError>` plus the `query!("...")` macro and the `Rows` / `Row` / `DactylError` result types.
-- There is no `init` / `active_datastore` at the crate root. The first `read` or `write` call lazily establishes the connection.
-- Adapter selection is env-driven:
-  - `DATASTORE` set to `"sqlite"` or `"neon"`.
+- Public surface (crate root): `query(sql: &str, params: &[Parameter]) -> Result<Rows, DactylError>`, `execute(sql: &str, params: &[Parameter]) -> Result<u64, DactylError>`, and `transaction(statements: &[Statement]) -> Result<Vec<Rows>, DactylError>`, plus the `query!("...")` macro and the `Parameter` / `Statement` / `Rows` / `Row` / `DactylError` result types.
+- There is no `init` / `active_datastore` and no process-global connection cache. Each call builds a short-lived adapter for the ambient selection and drops it on return, so session isolation is automatic.
+- Adapter selection is ambient-env-driven only:
+  - `DATASTORE` set to `"sqlite"` or `"neon"` (any other value is a typed error).
   - `DATASTORE_ROUTE` specifies the database path (SQLite) or the endpoint URL (Neon).
   - `DATASTORE_TOKEN` is the optional auth token for Neon.
-  - Legacy variables (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`) are supported as fallbacks.
-- `optimize = true` allows the analyzer to rewrite the query; `optimize = false` rejects the call with `DactylError::Unsupported { construct }` when any construct is not native to the inferred adapter.
-- `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `read` / `write`.
+  - No legacy `DACTYL_*` variables are honored.
+- Parameters are always adapter-bound, never interpolated into SQL. `Parameter` enumerates `Null` / `Bool` / `Integer` / `Real` / `Text`.
+- `execute` is the caller-owned schema surface: dactyl never silently creates tables.
+- `Row` provides strict `get<T: DeserializeOwned>` plus lenient `get_bool` / `get_int` / `get_real` / `get_str` / `get_json` with explicit `ColumnNotFound` / `Conversion` error semantics.
+- `transaction` is atomic: any per-statement failure rolls back the whole unit on SQLite and is rejected by the Neon `/batch` endpoint.
+- `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `query`.
+
+### Multi-backend vision
+
+dactyl-db is the single SQL-vendor-agnostic persistence framework. The `Adapter` trait is backend-neutral and SQL-focused; new backends (Redis, MySQL, Cassandra, and other structured query languages) slot in as one module plus one `DATASTORE` match arm. The public `query` / `execute` / `transaction` surface never changes per backend.
 
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `31e32edfa91b0d5ca1f637c033367689bea51fb00c077fa756df3af239a320c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
