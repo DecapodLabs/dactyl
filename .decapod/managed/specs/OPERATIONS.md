@@ -5,7 +5,12 @@
 - [ ] Runbooks linked for all Sev1/Sev2 alerts.
 - [ ] Rollback plan validated.
 - [ ] Capacity guardrails documented.## Deployment Model
-Describe the operational runtime model, scheduling, and system deployment architecture.
+Describe the operational runtime model, scheduling, and system deployment architecture.## Service Level Objectives
+| SLI | SLO Target | Measurement Window | Owner |
+|---|---|---|---|
+| Availability | 99.9% | 30d | TBD |
+| P95 latency | TBD | 7d | TBD |
+| Error rate | < 1% | 7d | TBD |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -43,13 +48,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Service Level Objectives
-| SLI | SLO Target | Measurement Window | Owner |
-|---|---|---|---|
-| Availability | 99.9% | 30d | TBD |
-| P95 latency | TBD | 7d | TBD |
-| Error rate | < 1% | 7d | TBD |
 
 ## Monitoring
 | Signal | Metric | Threshold | Alert |
@@ -113,7 +111,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `df3abebb51ba4ab8cae8237c8ac9402b33cafcd191db6cd2115c61d95e071d63`
+- Repository signal fingerprint: `296e7d59f138c1847b2b8bb98046ffe2b3256fa830781daaea19a0ddbefbab00`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
