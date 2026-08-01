@@ -1,27 +1,7 @@
 //! Dactyl — the governed datastore boundary for Decapod.
 //!
-//! The public API is intentionally tiny. There is no `init`. There is no
-//! configuration step. The first call to [`read`] or [`write`] establishes
-//! the connection.
-//!
-//! ```ignore
-//! use dactyl::Rows;
-//!
-//! let rows: Rows = dactyl::read("select id, title from todos", true)?;
-//! ```
-//!
-//! ## How dactyl picks the adapter
-//!
-//! On the first call, dactyl consults the environment for the target adapter:
-//!
-//! - `DATASTORE` — must be set to either `"sqlite"` or `"neon"`.
-//! - `DATASTORE_ROUTE` — when `DATASTORE` is `"sqlite"`, this is the path to the SQLite file.
-//!   When `DATASTORE` is `"neon"`, this is the Propodus endpoint URL.
-//!
-//! If the new `DATASTORE` variable is not set, dactyl falls back to the legacy environment variables
-//! (`DACTYL_NEON_ENDPOINT`, `DACTYL_NEON_BEARER`, `DACTYL_SQLITE_PATH`, `DACTYL_SQLITE_ROOT`) for backwards compatibility.
-//!
-//! The connection is held in a `OnceLock` for the lifetime of the process.
+//! Interchangeably read and write to local SQLite or cloud-hosted Vercel Neon
+//! instances behind a single unified facade.
 
 pub mod adapter;
 pub mod error;
@@ -34,14 +14,31 @@ pub mod __private;
 pub use dactyl_db_macros::query;
 
 pub use crate::error::DactylError;
-pub use crate::rows::{Row, Rows};
+pub use crate::rows::{Parameter, Row, Rows};
 
 use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::adapter::Adapter;
 
+/// A parameterized SQL statement for batch execution.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+pub struct Statement {
+    pub sql: String,
+    pub params: Vec<Parameter>,
+}
+
+impl Statement {
+    /// Construct a new parameter-bound statement.
+    pub fn new(sql: &str, params: Vec<Parameter>) -> Self {
+        Self {
+            sql: sql.to_string(),
+            params,
+        }
+    }
+}
+
 /// Lazy connections, keyed by the connection string. Populated by the first
-/// `read` / `write` call for a given key. Tests may reset it.
+/// datastore call for a given key.
 static CONNECTIONS: OnceLock<Mutex<std::collections::HashMap<String, Arc<dyn Adapter>>>> =
     OnceLock::new();
 
@@ -59,17 +56,75 @@ pub fn __reset_for_tests() {
     guard.clear();
 }
 
-/// Execute a read against the dactyl connection.
+/// Explicitly configure the active datastore and route.
 ///
-/// The first call lazily establishes the connection (see module docs for the
-/// selection rules). Subsequent calls reuse it.
-pub fn read(query: &str, optimize: bool) -> Result<Rows, DactylError> {
-    dispatch(query, optimize, false)
+/// Sets the `DATASTORE` and `DATASTORE_ROUTE` environment variables,
+/// and optionally `DATASTORE_TOKEN`.
+pub fn init(datastore: &str, route: &str, token: Option<&str>) {
+    std::env::set_var("DATASTORE", datastore);
+    std::env::set_var("DATASTORE_ROUTE", route);
+    if let Some(t) = token {
+        std::env::set_var("DATASTORE_TOKEN", t);
+    } else {
+        std::env::remove_var("DATASTORE_TOKEN");
+    }
 }
 
-/// Execute a write against the dactyl connection.
-pub fn write(query: &str, optimize: bool) -> Result<Rows, DactylError> {
-    dispatch(query, optimize, true)
+/// Reset/clear all cached connections.
+pub fn reset() {
+    __reset_for_tests();
+}
+
+/// Execute a parameterized read query.
+pub fn read(query: &str, params: &[Parameter], optimize: bool) -> Result<Rows, DactylError> {
+    dispatch(query, params, optimize, false)
+}
+
+/// Execute a parameterized write query.
+pub fn write(query: &str, params: &[Parameter], optimize: bool) -> Result<Rows, DactylError> {
+    dispatch(query, params, optimize, true)
+}
+
+/// Execute a raw schema/DDL/migration operation.
+pub fn execute(query: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+    validate_env()?;
+    let analyzer = query::QueryAnalyzer::new();
+    let analyzed = analyzer.analyze(query);
+    let key = connection_key().ok_or_else(|| {
+        DactylError::Adapter("no adapter configured: set DATASTORE and DATASTORE_ROUTE".into())
+    })?;
+    let adapter = connection(&key, query, &analyzed)?;
+    let sql = analyzed.rewrite.apply(query);
+    adapter.execute_raw(&sql, params)
+}
+
+/// Execute an atomic batch of statements.
+pub fn transaction(statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
+    if statements.is_empty() {
+        return Ok(Vec::new());
+    }
+    validate_env()?;
+    let analyzer = query::QueryAnalyzer::new();
+    // Analyze first query to decide which connection/dialect to use
+    let analyzed = analyzer.analyze(&statements[0].sql);
+    let key = connection_key().ok_or_else(|| {
+        DactylError::Adapter("no adapter configured: set DATASTORE and DATASTORE_ROUTE".into())
+    })?;
+    let adapter = connection(&key, &statements[0].sql, &analyzed)?;
+
+    // We apply rewrites to all statements in the batch
+    let rewritten: Vec<Statement> = statements
+        .iter()
+        .map(|s| {
+            let a = analyzer.analyze(&s.sql);
+            Statement {
+                sql: a.rewrite.apply(&s.sql),
+                params: s.params.clone(),
+            }
+        })
+        .collect();
+
+    adapter.execute_batch(&rewritten)
 }
 
 fn validate_env() -> Result<(), DactylError> {
@@ -96,18 +151,19 @@ fn validate_env() -> Result<(), DactylError> {
     Ok(())
 }
 
-fn dispatch(query: &str, optimize: bool, write: bool) -> Result<Rows, DactylError> {
+fn dispatch(
+    query: &str,
+    params: &[Parameter],
+    optimize: bool,
+    write: bool,
+) -> Result<Rows, DactylError> {
     validate_env()?;
 
     let analyzer = query::QueryAnalyzer::new();
     let analyzed = analyzer.analyze(query);
 
-    // Dialect for the mismatch check. The inline `-- dactyl: <store>`
-    // directive overrides the env-derived dialect so a single query can
-    // target a different adapter for routing-only purposes.
     let inferred_dialect = infer_dialect(&analyzed);
 
-    // Pick the adapter up-front so we can enforce the dialect check.
     let key = connection_key().ok_or_else(|| {
         DactylError::Adapter("no adapter configured: set DATASTORE and DATASTORE_ROUTE".into())
     })?;
@@ -119,14 +175,10 @@ fn dispatch(query: &str, optimize: bool, write: bool) -> Result<Rows, DactylErro
     }
 
     let sql = analyzed.rewrite.apply(query);
-    let params = serde_json::Value::Null;
-    adapter.execute(&sql, Some(&params), optimize, write)
+    adapter.execute(&sql, params, optimize, write)
 }
 
 fn infer_dialect(analyzed: &query::Analyzed) -> query::Dialect {
-    // The dialect we treat as "native" for the dialect-mismatch check.
-    // The inline `-- dactyl: <store>` directive wins when present; otherwise
-    // we fall back to whichever adapter is configured in the environment.
     if let Some(override_ds) = analyzed.inline_override {
         return match override_ds {
             "neon" => query::Dialect::Postgres,
@@ -146,7 +198,6 @@ fn infer_dialect(analyzed: &query::Analyzed) -> query::Dialect {
     }
 }
 
-/// Establish (or return) the adapter for the given key.
 fn connection(
     key: &str,
     query: &str,
@@ -171,8 +222,6 @@ fn connection(
     Ok(adapter)
 }
 
-/// Compute the cache key for the current env config. SQLite paths use the
-/// resolved file path; neon uses the endpoint URL.
 fn connection_key() -> Option<String> {
     if let Ok(ds) = std::env::var("DATASTORE") {
         if let Ok(route) = std::env::var("DATASTORE_ROUTE") {
@@ -264,27 +313,14 @@ fn build_adapter(query: &str, analyzed: &query::Analyzed) -> Result<Arc<dyn Adap
             .constructs
             .iter()
             .all(|c| c.dialect() == query::Dialect::Sqlite);
-    let postgres_only = !analyzed.constructs.is_empty()
-        && analyzed
-            .constructs
-            .iter()
-            .all(|c| c.dialect() == query::Dialect::Postgres);
 
     if neon_env && !sqlite_only {
         neon_adapter()
-    } else if !neon_env && postgres_only {
-        // Caller is asking for postgres but hasn't configured the endpoint.
-        // Fall back to sqlite (which will fail at the adapter); the caller
-        // gets a clear error rather than a silent success.
-        sqlite_adapter(&resolve_sqlite_path(query)?)
     } else {
         sqlite_adapter(&resolve_sqlite_path(query)?)
     }
 }
 
-/// Extract the first `from <name>` (or first table-shaped identifier) from
-/// the query. Used to pick a default SQLite path when the caller hasn't
-/// supplied one.
 fn infer_store(query: &str) -> Option<String> {
     let lower = query.to_ascii_lowercase();
     let mut iter = lower.split_whitespace();

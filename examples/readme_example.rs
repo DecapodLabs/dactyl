@@ -9,18 +9,12 @@
 //! Boots dactyl against `.decapod/data/todos.db` (auto-derived from the
 //! `from todos` clause in the query) and prints the rows.
 
-use dactyl_db::Row;
-
 fn main() -> Result<(), dactyl_db::DactylError> {
-    for row in dactyl_db::read("select id, title, status from todos", true)?.iter() {
-        print_row(row);
+    for row in dactyl_db::read("select id, title, status from todos", &[], true)?.iter() {
+        let id: i64 = row.get("id")?;
+        let title: String = row.get("title")?;
+        let status: String = row.get("status")?;
+        println!("todo {id}: {title} [{status}]");
     }
     Ok(())
-}
-
-fn print_row(r: &Row) {
-    for (c, v) in r.columns.iter().zip(r.values.iter()) {
-        println!("{c} = {v}");
-    }
-    println!("---");
 }

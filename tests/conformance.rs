@@ -1,15 +1,8 @@
 //! Conformance harness: same query, two adapters, identical row projections.
 //!
 //! Each test boots the SQLite adapter against an in-tempdir `.decapod/data/`
-//! layout (boots the schema via `adapter/sqlite/schema.rs`) and the Neon
-//! adapter against an in-process axum mock server that serves the same
-//! JSON shape. Row projections must match column-for-column for both
-//! `optimize = true` and `optimize = false`.
-//!
-//! Adapter selection is controlled via env vars:
-//!   - `DATASTORE`       → "sqlite" or "neon"
-//!   - `DATASTORE_ROUTE` → path or mock neon URL
-//!   - `DATASTORE_TOKEN` → optional auth token
+//! layout and the Neon adapter against an in-process axum mock server.
+//! Row projections must match column-for-column.
 
 #![cfg(all(feature = "sqlite", feature = "neon"))]
 
@@ -22,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use tempfile::TempDir;
 use tokio::sync::Mutex;
 
-use dactyl_db::{DactylError, Rows};
+use dactyl_db::{DactylError, Parameter, Rows, Statement};
 
 static ENV_MUTEX: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
 
@@ -62,11 +55,37 @@ impl MockState {
             rows: data,
         })
     }
+
+    async fn handle_batch(
+        State(state): State<Arc<MockState>>,
+        Json(req): Json<MockBatchRequest>,
+    ) -> Json<MockBatchResponse> {
+        let rows = state.rows.lock().await;
+        let mut results = Vec::new();
+        for stmt in req.statements {
+            let sql_lc = stmt.sql.to_ascii_lowercase();
+            let table = sql_lc
+                .split_whitespace()
+                .skip_while(|w| *w != "from")
+                .nth(1)
+                .map(|s| {
+                    s.chars()
+                        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+                        .collect::<String>()
+                })
+                .unwrap_or_default();
+            let data = rows.get(&table).cloned().unwrap_or_default();
+            results.push(MockResponse {
+                columns: vec!["id".into(), "title".into(), "status".into()],
+                rows: data,
+            });
+        }
+        Json(MockBatchResponse { results })
+    }
 }
 
 #[derive(Debug, Deserialize)]
 struct MockRequest {
-    #[allow(dead_code)]
     sql: String,
     #[serde(default)]
     #[allow(dead_code)]
@@ -79,10 +98,28 @@ struct MockRequest {
     write: bool,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct MockResponse {
     columns: Vec<String>,
     rows: Vec<serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MockBatchRequest {
+    statements: Vec<MockStatement>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MockStatement {
+    sql: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    params: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize)]
+struct MockBatchResponse {
+    results: Vec<MockResponse>,
 }
 
 /// Spin up the in-process axum mock on a random port.
@@ -90,6 +127,7 @@ async fn spawn_mock(state: Arc<MockState>) -> SocketAddr {
     let app = Router::new()
         .route("/read", post(MockState::handle))
         .route("/write", post(MockState::handle))
+        .route("/batch", post(MockState::handle_batch))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
         .await
@@ -166,13 +204,10 @@ fn project(rows: &Rows) -> Vec<(String, serde_json::Value)> {
 }
 
 /// Conformance: every store, every adapter, every optimize value.
-///
-/// We run this in a single `#[test]` rather than per-store so the sqlite
-/// tempfile and the neon mock server are spun up exactly once.
 #[test]
 fn conformance_all_stores() {
     let _guard = lock_env();
-    dactyl_db::__reset_for_tests();
+    dactyl_db::reset();
     let tmp = TempDir::new().expect("tempdir");
     let state = Arc::new(MockState::default());
 
@@ -207,15 +242,11 @@ fn conformance_all_stores() {
         seed_sqlite(&path, store, &seed_rows(store));
 
         // ---- SQLite pass: DATASTORE = sqlite, DATASTORE_ROUTE = path ----
-        unsafe { std::env::set_var("DATASTORE", "sqlite") };
-        unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
-        unsafe { std::env::remove_var("DATASTORE_TOKEN") };
-        unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
-        unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
+        dactyl_db::init("sqlite", path.to_str().unwrap(), None);
 
         let query = format!("select id, title, status from {store}");
         for optimize in [true, false] {
-            let sqlite_rows = dactyl_db::read(&query, optimize).expect("sqlite read");
+            let sqlite_rows = dactyl_db::read(&query, &[], optimize).expect("sqlite read");
             assert_eq!(
                 sqlite_rows.len(),
                 2,
@@ -228,12 +259,10 @@ fn conformance_all_stores() {
         }
 
         // ---- Neon pass: DATASTORE = neon, DATASTORE_ROUTE = mock ----
-        unsafe { std::env::set_var("DATASTORE", "neon") };
-        unsafe { std::env::set_var("DATASTORE_ROUTE", &endpoint) };
-        unsafe { std::env::set_var("DATASTORE_TOKEN", "test-token") };
+        dactyl_db::init("neon", &endpoint, Some("test-token"));
 
         for optimize in [true, false] {
-            let neon_rows = dactyl_db::read(&query, optimize).expect("neon read");
+            let neon_rows = dactyl_db::read(&query, &[], optimize).expect("neon read");
             assert_eq!(
                 neon_rows.len(),
                 2,
@@ -245,16 +274,15 @@ fn conformance_all_stores() {
             }
 
             // Compare with sqlite projection shape.
-            unsafe { std::env::set_var("DATASTORE", "sqlite") };
-            unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
-            let sqlite_rows = dactyl_db::read(&query, optimize).expect("sqlite read for compare");
+            dactyl_db::init("sqlite", path.to_str().unwrap(), None);
+            let sqlite_rows =
+                dactyl_db::read(&query, &[], optimize).expect("sqlite read for compare");
             assert_eq!(
                 project(&neon_rows),
                 project(&sqlite_rows),
                 "store {store} optimize={optimize}: projection mismatch"
             );
-            unsafe { std::env::set_var("DATASTORE", "neon") };
-            unsafe { std::env::set_var("DATASTORE_ROUTE", &endpoint) };
+            dactyl_db::init("neon", &endpoint, Some("test-token"));
         }
     }
 
@@ -271,22 +299,19 @@ fn conformance_all_stores() {
 #[test]
 fn unsupported_construct_rejected_when_optimize_false() {
     let _guard = lock_env();
-    dactyl_db::__reset_for_tests();
+    dactyl_db::reset();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    unsafe { std::env::set_var("DATASTORE", "sqlite") };
-    unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
-    unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
-    unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
+    dactyl_db::init("sqlite", path.to_str().unwrap(), None);
 
     // Postgres-only construct (`now()`) on sqlite with optimize=false →
     // Unsupported. With optimize=true it gets past the analyzer and the
     // SQLite adapter rejects it.
-    let res = dactyl_db::read("select now()", false);
+    let res = dactyl_db::read("select now()", &[], false);
     assert!(matches!(res, Err(DactylError::Unsupported { .. })));
 
-    let res = dactyl_db::read("select now()", true);
+    let res = dactyl_db::read("select now()", &[], true);
     match res {
         Ok(_) => {}
         Err(DactylError::Adapter(_)) => {}
@@ -300,19 +325,16 @@ fn unsupported_construct_rejected_when_optimize_false() {
 #[test]
 fn inline_directive_routes_dialect_check() {
     let _guard = lock_env();
-    dactyl_db::__reset_for_tests();
+    dactyl_db::reset();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    unsafe { std::env::set_var("DATASTORE", "sqlite") };
-    unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
-    unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
-    unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
+    dactyl_db::init("sqlite", path.to_str().unwrap(), None);
 
     // SQLite is the inferred dialect (no neon env), so the construct is
     // accepted at optimize=true and fails the analyzer at optimize=false.
     let q = "-- dactyl: neon\nselect id from todos where id in (select id from json_each('[1]'))";
-    let res = dactyl_db::read(q, false);
+    let res = dactyl_db::read(q, &[], false);
     assert!(matches!(res, Err(DactylError::Unsupported { .. })));
 
     unsafe { std::env::remove_var("DATASTORE") };
@@ -322,19 +344,145 @@ fn inline_directive_routes_dialect_check() {
 #[test]
 fn query_macro_returns_rewritten_sql() {
     let _guard = lock_env();
-    dactyl_db::__reset_for_tests();
+    dactyl_db::reset();
     let tmp = TempDir::new().expect("tempdir");
     let path = sqlite_path(&tmp, "todos");
     seed_sqlite(&path, "todos", &seed_rows("todos"));
-    unsafe { std::env::set_var("DATASTORE", "sqlite") };
-    unsafe { std::env::set_var("DATASTORE_ROUTE", path.to_str().unwrap()) };
-    unsafe { std::env::remove_var("DACTYL_NEON_ENDPOINT") };
-    unsafe { std::env::remove_var("DACTYL_SQLITE_PATH") };
+    dactyl_db::init("sqlite", path.to_str().unwrap(), None);
 
     let sql: String = dactyl_db::query!("select id, title, status from todos");
     assert_eq!(sql, "select id, title, status from todos");
-    let rows = dactyl_db::read(&sql, true).expect("read");
+    let rows = dactyl_db::read(&sql, &[], true).expect("read");
     assert_eq!(rows.len(), 2);
+
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
+}
+
+#[test]
+fn test_parameterized_queries_and_type_safety() {
+    let _guard = lock_env();
+    dactyl_db::reset();
+    let tmp = TempDir::new().expect("tempdir");
+    let path = sqlite_path(&tmp, "todos");
+    seed_sqlite(&path, "todos", &seed_rows("todos"));
+    dactyl_db::init("sqlite", path.to_str().unwrap(), None);
+
+    // Query with positional parameter
+    let rows = dactyl_db::read(
+        "select id, title, status from todos where id = $1",
+        &[Parameter::Integer(2)],
+        true,
+    )
+    .expect("read");
+    assert_eq!(rows.len(), 1);
+    let row = &rows.as_slice()[0];
+    let id: i64 = row.get("id").expect("id");
+    let title: String = row.get("title").expect("title");
+    let status: String = row.get("status").expect("status");
+    assert_eq!(id, 2);
+    assert_eq!(title, "todos-b");
+    assert_eq!(status, "done");
+
+    // Missing column returns ColumnNotFound error
+    let missing_res: Result<String, _> = row.get("missing_col");
+    assert!(matches!(missing_res, Err(DactylError::ColumnNotFound(_))));
+
+    // Invalid type casting returns Conversion error
+    let invalid_cast: Result<bool, _> = row.get("title");
+    assert!(matches!(invalid_cast, Err(DactylError::Conversion(_))));
+
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
+}
+
+#[test]
+fn test_raw_execution_and_schema() {
+    let _guard = lock_env();
+    dactyl_db::reset();
+    let tmp = TempDir::new().expect("tempdir");
+    let path = tmp.path().join("test_schema.db");
+    dactyl_db::init("sqlite", path.to_str().unwrap(), None);
+
+    // Create table using execute
+    dactyl_db::execute(
+        "create table test_table (id integer primary key, name text not null)",
+        &[],
+    )
+    .expect("create table");
+
+    // Insert row using execute
+    let affected = dactyl_db::execute(
+        "insert into test_table (id, name) values ($1, $2)",
+        &[Parameter::Integer(42), Parameter::Text("hello".to_string())],
+    )
+    .expect("insert");
+    assert_eq!(affected, 1);
+
+    // Verify row
+    let rows = dactyl_db::read("select id, name from test_table", &[], true).expect("read");
+    assert_eq!(rows.len(), 1);
+    let name: String = rows.as_slice()[0].get("name").expect("name");
+    assert_eq!(name, "hello");
+
+    unsafe { std::env::remove_var("DATASTORE") };
+    unsafe { std::env::remove_var("DATASTORE_ROUTE") };
+}
+
+#[test]
+fn test_atomic_transactions() {
+    let _guard = lock_env();
+    dactyl_db::reset();
+    let tmp = TempDir::new().expect("tempdir");
+    let path = tmp.path().join("test_tx.db");
+    dactyl_db::init("sqlite", path.to_str().unwrap(), None);
+
+    dactyl_db::execute(
+        "create table test_tx (id integer primary key, value text)",
+        &[],
+    )
+    .expect("create");
+
+    // Successful transaction batch
+    let stmts = vec![
+        Statement::new(
+            "insert into test_tx (id, value) values ($1, $2)",
+            vec![Parameter::Integer(1), Parameter::Text("val1".to_string())],
+        ),
+        Statement::new(
+            "insert into test_tx (id, value) values ($1, $2)",
+            vec![Parameter::Integer(2), Parameter::Text("val2".to_string())],
+        ),
+    ];
+    dactyl_db::transaction(&stmts).expect("transaction success");
+
+    // Verify both exist
+    let rows = dactyl_db::read("select count(*) as cnt from test_tx", &[], true).expect("read");
+    let cnt: i64 = rows.as_slice()[0].get("cnt").expect("cnt");
+    assert_eq!(cnt, 2);
+
+    // Failing transaction batch (duplicate key) -> should roll back!
+    let failing_stmts = vec![
+        Statement::new(
+            "insert into test_tx (id, value) values ($1, $2)",
+            vec![Parameter::Integer(3), Parameter::Text("val3".to_string())],
+        ),
+        Statement::new(
+            "insert into test_tx (id, value) values ($1, $2)",
+            vec![
+                Parameter::Integer(1),
+                Parameter::Text("duplicate".to_string()),
+            ],
+        ),
+    ];
+    let tx_res = dactyl_db::transaction(&failing_stmts);
+    assert!(tx_res.is_err());
+
+    // Verify row 3 was rolled back and does not exist!
+    let rows_after =
+        dactyl_db::read("select count(*) as cnt from test_tx", &[], true).expect("read");
+    let cnt_after: i64 = rows_after.as_slice()[0].get("cnt").expect("cnt");
+    assert_eq!(cnt_after, 2);
 
     unsafe { std::env::remove_var("DATASTORE") };
     unsafe { std::env::remove_var("DATASTORE_ROUTE") };

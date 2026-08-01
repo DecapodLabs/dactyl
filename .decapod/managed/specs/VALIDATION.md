@@ -47,7 +47,11 @@ flowchart LR
 | Architecture + interface drift check | `decapod validate` | Gate output |
 | Tests pass | project test command | CI + local logs |
 | Docs + changelog current | repo docs checks | PR diff |
-| Security critical checks pass | security scanner suite | scanner reports |
+| Security critical checks pass | security scanner suite | scanner reports |## Warning Gates
+| Gate | Trigger | Follow-up SLA |
+|---|---|---|
+| Coverage regression warning | Coverage drops below target | 48h |
+| Non-blocking perf drift | P95 regression below hard threshold | 72h |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -105,12 +109,6 @@ flowchart LR
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
 
-## Warning Gates
-| Gate | Trigger | Follow-up SLA |
-|---|---|---|
-| Coverage regression warning | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 regression below hard threshold | 72h |
-
 ## Evidence Artifacts
 | Artifact | Path | Required For |
 |---|---|---|
@@ -140,7 +138,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `48db38f13f1f7a674a0de5687c02d626ba7ab7ec13ebe68a4f204d4762aecf69`
+- Repository signal fingerprint: `31e32edfa91b0d5ca1f637c033367689bea51fb00c077fa756df3af239a320c4`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
