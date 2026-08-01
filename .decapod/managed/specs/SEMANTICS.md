@@ -12,7 +12,24 @@ stateDiagram-v2
 |---|---|---|
 | No promoted change without proof | System | validation gate |
 | Canonical source-of-truth per entity | Data | interface/spec review |
-| Mutation events are replayable | Data | deterministic replay |
+| Mutation events are replayable | Data | deterministic replay |## Event Sourcing Schema
+| Field | Type | Description |
+|---|---|---|
+| event_id | string | globally unique event id |
+| aggregate_id | string | entity/workflow id |
+| event_type | string | semantic transition |
+| payload | object | transition data |
+| recorded_at | timestamp | append time |## Replay Semantics
+- Replay order:
+- Conflict resolution:
+- Snapshot cadence:
+- Determinism proof strategy:## Error Code Semantics
+- Namespace:
+- Stable compatibility window:
+- Mapping to retry/degrade behavior:## Domain Rules
+- Business rule 1:
+- Business rule 2:
+- Business rule 3:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -54,31 +71,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Event Sourcing Schema
-| Field | Type | Description |
-|---|---|---|
-| event_id | string | globally unique event id |
-| aggregate_id | string | entity/workflow id |
-| event_type | string | semantic transition |
-| payload | object | transition data |
-| recorded_at | timestamp | append time |
-
-## Replay Semantics
-- Replay order:
-- Conflict resolution:
-- Snapshot cadence:
-- Determinism proof strategy:
-
-## Error Code Semantics
-- Namespace:
-- Stable compatibility window:
-- Mapping to retry/degrade behavior:
-
-## Domain Rules
-- Business rule 1:
-- Business rule 2:
-- Business rule 3:
-
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
 |---|---|---|
@@ -91,7 +83,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `470a7a990e6e7e4903cd694b2c38fc58717d81290eed1cfb531172a335f088c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `8fa1a9caf5650553dd941c284bfae79132aa03d49b0d507db539bca41190dbee`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

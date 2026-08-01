@@ -31,7 +31,7 @@ mod rows;
 #[doc(hidden)]
 pub mod __private;
 
-pub use dactyl_macros::query;
+pub use dactyl_db_macros::query;
 
 pub use crate::error::DactylError;
 pub use crate::rows::{Row, Rows};

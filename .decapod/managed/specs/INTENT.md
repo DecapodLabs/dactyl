@@ -19,7 +19,7 @@
 - Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals.
 
 ## What This Project Is
-dactyl is a not classified yet project built using Rust.
+dactyl-db is a not classified yet project built using Rust.
 Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals.
 
 Key operating facts:
@@ -29,14 +29,14 @@ Key operating facts:
 ## Product View
 ```mermaid
 flowchart LR
-  U[Primary User] --> P[dactyl]
+  U[Primary User] --> P[dactyl-db]
   P --> O[User-visible Outcome]
   P --> G[Proof Gates]
   G --> E[Evidence Artifacts]
 ```
 
 ## Inferred Baseline
-- Repository: dactyl
+- Repository: dactyl-db
 - Product type: not classified yet
 - Primary languages: Rust
 - Detected surfaces: not detected yet
@@ -115,7 +115,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `470a7a990e6e7e4903cd694b2c38fc58717d81290eed1cfb531172a335f088c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl_macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `8fa1a9caf5650553dd941c284bfae79132aa03d49b0d507db539bca41190dbee`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
