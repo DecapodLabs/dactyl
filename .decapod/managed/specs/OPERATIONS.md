@@ -32,7 +32,8 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Feature flags:## Capacity Planning
 - Traffic patterns:
 - Resource utilization:
-- Scaling triggers:
+- Scaling triggers:## Logging
+Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -71,9 +72,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Logging
-Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.
-
 ## Secrets Management
 | Secret | Source | Rotation | Consumer |
 |---|---|---|---|
@@ -101,7 +99,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `31e32edfa91b0d5ca1f637c033367689bea51fb00c077fa756df3af239a320c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `d068dccfbc3a812ff052efe74af1b64e9da5960f0418f001602d14940579b22e`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

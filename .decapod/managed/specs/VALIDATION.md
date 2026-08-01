@@ -51,7 +51,13 @@ flowchart LR
 | Gate | Trigger | Follow-up SLA |
 |---|---|---|
 | Coverage regression warning | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 regression below hard threshold | 72h |
+| Non-blocking perf drift | P95 regression below hard threshold | 72h |## Evidence Artifacts
+| Artifact | Path | Required For |
+|---|---|---|
+| Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
+| Test logs | CI artifact store | Promotion |
+| Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
+| Changelog entry | `CHANGELOG.md` | Promotion |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -109,14 +115,6 @@ flowchart LR
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
 
-## Evidence Artifacts
-| Artifact | Path | Required For |
-|---|---|---|
-| Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
-| Test logs | CI artifact store | Promotion |
-| Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |
-
 ## Regression Guardrails
 - Baseline references:
 - Statistical thresholds (if non-deterministic):
@@ -138,7 +136,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `31e32edfa91b0d5ca1f637c033367689bea51fb00c077fa756df3af239a320c4`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (11 files)
+- Repository signal fingerprint: `d068dccfbc3a812ff052efe74af1b64e9da5960f0418f001602d14940579b22e`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
