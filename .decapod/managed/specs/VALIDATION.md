@@ -57,7 +57,10 @@ flowchart LR
 | Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |
+| Changelog entry | `CHANGELOG.md` | Promotion |## Regression Guardrails
+- Baseline references:
+- Statistical thresholds (if non-deterministic):
+- Rollback criteria:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -115,11 +118,6 @@ flowchart LR
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
 
-## Regression Guardrails
-- Baseline references:
-- Statistical thresholds (if non-deterministic):
-- Rollback criteria:
-
 ## Bounded Execution
 | Operation | Timeout | Failure Mode |
 |---|---|---|
@@ -136,7 +134,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d068dccfbc3a812ff052efe74af1b64e9da5960f0418f001602d14940579b22e`
+- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
