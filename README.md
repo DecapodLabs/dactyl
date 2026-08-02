@@ -51,10 +51,12 @@ fn main() -> Result<(), dactyl_db::DactylError> {
 
     let sql = query!("select id, title, status from todos");
     for row in dactyl_db::query(&sql, &[])?.iter() {
-        let id: i64 = row.get("id")?;
+        // Strict typed projection (owned). Prefer try_get if you like Result style.
+        let id: i64 = row.try_get("id")?;
         let title: String = row.get("title")?;
-        let status: String = row.get("status")?;
-        println!("todo {id}: {title} [{status}]");
+        // Nullable columns use Option<T>; missing columns are ColumnNotFound.
+        let status: Option<String> = row.get("status")?;
+        println!("todo {id}: {title} [{status:?}]");
     }
     Ok(())
 }
@@ -66,6 +68,21 @@ Run it:
 DATASTORE=sqlite DATASTORE_ROUTE=/tmp/dactyl-example.db \
   cargo run --features sqlite --example readme_example
 ```
+
+## Named-column projections (`Row`)
+
+This is the stable contract for typed and NULL-safe extraction (dactyl [#25](https://github.com/DecapodLabs/dactyl/issues/25), conformance [#2](https://github.com/DecapodLabs/dactyl/issues/2); also DecapodLabs/decapod#1111):
+
+| Concern | Semantics |
+|---|---|
+| Integer / real / bool / text | `get_int`, `get_real`, `get_bool`, `get_str` (owned) or strict `get::<T>` / `try_get::<T>` via serde |
+| Portable bool | `get_bool` accepts JSON `true`/`false` **or** integer `0`/`1` (SQLite stores bools as integers) |
+| JSON / text | `get_json` / `get_json_ref` return the raw cell. Text payloads stay strings until the caller parses them; Neon may surface structured JSON objects. |
+| SQL NULL | `get::<Option<T>>` → `None`; non-`Option` getters → `Conversion` mentioning NULL; `is_null` / `get_json` surface null without converting |
+| Missing column | `DactylError::ColumnNotFound` |
+| Duplicate aliases | **First match** left-to-right. `select a as x, b as x` → `get("x")` is `a`. Use a positional index for later duplicates. |
+| Owned vs borrowed | `get` / `get_*` return owned values that outlive the row. `get_str_ref` / `get_json_ref` borrow from `&Row` for the row lifetime. A `Row` outlives the adapter connection. |
+| Conversion failure | `DactylError::Conversion` with the column key and a reason |
 
 ## How dactyl selects the backend
 
@@ -87,6 +104,8 @@ The active backend is chosen by ambient environment variables — no `init()` ca
 | `query!("sql")` macro | Compile-time SQL-literal analysis. |
 
 `Parameter` enumerates the typed binding set: `Null`, `Bool`, `Integer`, `Real`, `Text`. The adapter forwards the values verbatim — never as interpolated SQL.
+
+`Row` provides `get` / `try_get`, lenient scalar getters, `is_null`, and borrowed `get_str_ref` / `get_json_ref` under the projection contract above.
 
 ## License
 

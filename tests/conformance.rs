@@ -9,7 +9,9 @@
 //! - #2  every store × every adapter × parameterized reads/writes
 //! - #23 parameter binding, NULL/bool/int/real/text + injection attempt
 //! - #24 atomic transaction + rollback-on-failure
-//! - #25 typed named extraction, NULL, missing column, conversion error
+//! - #25 typed named extraction, NULL, missing column, conversion error,
+//!   duplicate aliases, full scalar matrix through both adapters, and
+//!   borrowed-vs-owned accessors (also DecapodLabs/decapod#1111)
 //! - #26 session isolation via per-call adapter construction
 //! - #27 caller-owned schema; dactyl never silently bootstraps tables
 
@@ -70,10 +72,17 @@ fn clear_env() {
 // Mock neon server: a tiny in-process axum app that stores rows per table.
 // ---------------------------------------------------------------------------
 
+/// One mock table: explicit column order plus row objects.
+#[derive(Clone, Default)]
+struct MockTable {
+    columns: Vec<String>,
+    rows: Vec<serde_json::Value>,
+}
+
 /// Mock neon-server state, shared across all tests.
 #[derive(Default)]
 struct MockState {
-    rows: Mutex<HashMap<String, Vec<serde_json::Value>>>,
+    tables: Mutex<HashMap<String, MockTable>>,
 }
 
 impl MockState {
@@ -81,12 +90,17 @@ impl MockState {
         State(state): State<Arc<MockState>>,
         Json(req): Json<MockRequest>,
     ) -> Json<MockResponse> {
-        let rows = state.rows.lock().await;
+        let tables = state.tables.lock().await;
         let table = table_of(&req.sql);
-        let data = rows.get(&table).cloned().unwrap_or_default();
+        let data = tables.get(&table).cloned().unwrap_or_default();
+        let columns = if data.columns.is_empty() {
+            vec!["id".into(), "title".into(), "status".into()]
+        } else {
+            data.columns
+        };
         Json(MockResponse {
-            columns: vec!["id".into(), "title".into(), "status".into()],
-            rows: data,
+            columns,
+            rows: data.rows,
         })
     }
 
@@ -94,14 +108,19 @@ impl MockState {
         State(state): State<Arc<MockState>>,
         Json(req): Json<MockBatchRequest>,
     ) -> Json<MockBatchResponse> {
-        let rows = state.rows.lock().await;
+        let tables = state.tables.lock().await;
         let mut results = Vec::new();
         for stmt in &req.statements {
             let table = table_of(&stmt.sql);
-            let data = rows.get(&table).cloned().unwrap_or_default();
+            let data = tables.get(&table).cloned().unwrap_or_default();
+            let columns = if data.columns.is_empty() {
+                vec!["id".into(), "title".into(), "status".into()]
+            } else {
+                data.columns
+            };
             results.push(MockResponse {
-                columns: vec!["id".into(), "title".into(), "status".into()],
-                rows: data,
+                columns,
+                rows: data.rows,
             });
         }
         Json(MockBatchResponse { results })
@@ -277,9 +296,15 @@ fn conformance_all_stores() {
                 .expect("mock rt");
             rt.block_on(async {
                 {
-                    let mut rows = state.rows.lock().await;
+                    let mut tables = state.tables.lock().await;
                     for store in STORES {
-                        rows.insert(store.to_string(), seed_rows(store));
+                        tables.insert(
+                            store.to_string(),
+                            MockTable {
+                                columns: vec!["id".into(), "title".into(), "status".into()],
+                                rows: seed_rows(store),
+                            },
+                        );
                     }
                 }
                 let addr = spawn_mock(state.clone()).await;
@@ -471,7 +496,314 @@ fn typed_row_extraction_and_error_semantics() {
         "type mismatch must be Conversion"
     );
 
+    // try_get is an alias for get.
+    let id2: i64 = row.try_get("id").expect("try_get id");
+    assert_eq!(id2, 2);
+
+    // NULL on non-Option surfaces a Conversion that mentions NULL.
+    let null_int: Result<i64, _> = row.get("status");
+    assert!(
+        matches!(null_int, Err(DactylError::Conversion(ref m)) if m.contains("NULL")),
+        "NULL into non-Option must mention NULL: {null_int:?}"
+    );
+
     clear_env();
+}
+
+/// #25: full scalar / NULL conversion matrix through SQLite, including
+/// duplicate-alias first-match and borrowed accessors.
+#[test]
+fn typed_projection_matrix_sqlite() {
+    let _guard = lock_env();
+    let tmp = TempDir::new().expect("tempdir");
+    let path = tmp.path().join("matrix.db");
+    select_sqlite(path.to_str().unwrap());
+
+    dactyl_db::execute(
+        "create table matrix (
+            id integer primary key,
+            flag integer not null,
+            ratio real not null,
+            label text not null,
+            note text,
+            payload text not null
+        )",
+        &[],
+    )
+    .expect("create");
+    dactyl_db::execute(
+        "insert into matrix (id, flag, ratio, label, note, payload) values ($1, $2, $3, $4, $5, $6)",
+        &[
+            Parameter::Integer(7),
+            Parameter::Bool(true),
+            Parameter::Real(2.25),
+            Parameter::Text("alpha".into()),
+            Parameter::Null,
+            Parameter::Text(r#"{"k":9}"#.into()),
+        ],
+    )
+    .expect("insert");
+
+    let rows = dactyl_db::query(
+        "select id, flag, ratio, label, note, payload from matrix where id = $1",
+        &[Parameter::Integer(7)],
+    )
+    .expect("select");
+    let row = &rows.as_slice()[0];
+
+    assert_eq!(row.get_int("id").expect("id"), 7);
+    assert_eq!(row.get::<_, i64>("id").expect("id strict"), 7);
+    assert!(row.get_bool("flag").expect("flag"), "sqlite bool as 0/1");
+    assert_eq!(row.get_real("ratio").expect("ratio"), 2.25);
+    assert_eq!(row.get_str("label").expect("label"), "alpha");
+    assert_eq!(row.get_str_ref("label").expect("label ref"), "alpha");
+    assert!(row.is_null("note").expect("note null"));
+    assert!(row
+        .get::<_, Option<String>>("note")
+        .expect("note opt")
+        .is_none());
+    // JSON/text: payload remains a string cell until the caller parses it.
+    assert_eq!(row.get_str("payload").expect("payload text"), r#"{"k":9}"#);
+    assert_eq!(
+        row.get_json_ref("payload").expect("payload json").as_str(),
+        Some(r#"{"k":9}"#)
+    );
+
+    // Duplicate aliases: first match wins; positional reaches the later one.
+    let alias_rows = dactyl_db::query(
+        "select id as name, label as name from matrix where id = $1",
+        &[Parameter::Integer(7)],
+    )
+    .expect("alias select");
+    let a = &alias_rows.as_slice()[0];
+    assert_eq!(a.columns, vec!["name", "name"]);
+    assert_eq!(a.get_int("name").expect("first name is id"), 7);
+    assert_eq!(a.get_str(1usize).expect("second name is label"), "alpha");
+
+    // Missing + conversion still typed through the adapter path.
+    assert!(matches!(
+        a.get_str("missing"),
+        Err(DactylError::ColumnNotFound(_))
+    ));
+    assert!(matches!(
+        a.get_bool("name"),
+        Err(DactylError::Conversion(_))
+    ));
+
+    clear_env();
+}
+
+/// #25: same projection matrix through the Neon adapter path (mock server).
+/// Proves typed getters, NULL, missing columns, and conversion errors are
+/// adapter-agnostic once cells are normalized to JSON.
+#[test]
+fn typed_projection_matrix_neon() {
+    let _guard = lock_env();
+    let state = Arc::new(MockState::default());
+    let (done_tx, done_rx) = tokio::sync::oneshot::channel::<()>();
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel::<String>();
+
+    let mock_thread = std::thread::spawn({
+        let state = state.clone();
+        move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("mock rt");
+            rt.block_on(async {
+                {
+                    let mut tables = state.tables.lock().await;
+                    tables.insert(
+                        "matrix".into(),
+                        MockTable {
+                            columns: vec![
+                                "id".into(),
+                                "flag".into(),
+                                "ratio".into(),
+                                "label".into(),
+                                "note".into(),
+                                "payload".into(),
+                                "name".into(),
+                                "name".into(),
+                            ],
+                            rows: vec![serde_json::json!({
+                                "id": 7,
+                                "flag": true,
+                                "ratio": 2.25,
+                                "label": "alpha",
+                                "note": null,
+                                "payload": {"k": 9},
+                                // JSON objects cannot hold two "name" keys; the
+                                // columns list still carries the duplicate
+                                // alias pair and both map to the same wire key.
+                                "name": "first",
+                            })],
+                        },
+                    );
+                }
+                let addr = spawn_mock(state.clone()).await;
+                let _ = ready_tx.send(format!("http://{addr}"));
+                let _ = done_rx.await;
+            });
+        }
+    });
+
+    let endpoint = ready_rx.recv().expect("ready");
+    select_neon(&endpoint);
+
+    let rows = dactyl_db::query(
+        "select id, flag, ratio, label, note, payload, name from matrix",
+        &[],
+    )
+    .expect("neon select");
+    assert_eq!(rows.len(), 1);
+    let row = &rows.as_slice()[0];
+
+    assert_eq!(row.get_int("id").expect("id"), 7);
+    assert_eq!(row.try_get::<_, i64>("id").expect("try_get"), 7);
+    assert!(row.get_bool("flag").expect("flag"));
+    assert!(row.get::<_, bool>("flag").expect("strict bool"));
+    assert_eq!(row.get_real("ratio").expect("ratio"), 2.25);
+    assert_eq!(row.get_str("label").expect("label"), "alpha");
+    assert_eq!(row.get_str_ref("label").expect("label ref"), "alpha");
+    assert!(row.is_null("note").expect("note"));
+    assert!(row
+        .get::<_, Option<String>>("note")
+        .expect("note opt")
+        .is_none());
+    // Neon can surface structured JSON objects directly.
+    assert_eq!(row.get_json("payload").expect("payload")["k"], 9);
+    #[derive(serde::Deserialize)]
+    struct Payload {
+        k: i64,
+    }
+    assert_eq!(row.get::<_, Payload>("payload").expect("typed json").k, 9);
+
+    // Duplicate alias names: first-match semantics still hold.
+    assert_eq!(row.columns.iter().filter(|c| *c == "name").count(), 2);
+    assert_eq!(row.get_str("name").expect("first name"), "first");
+    assert_eq!(
+        row.get_str(row.columns.len() - 1).expect("last name col"),
+        "first",
+        "JSON wire loses distinct duplicate values; both aliases map to the key"
+    );
+
+    assert!(matches!(
+        row.get_int("missing"),
+        Err(DactylError::ColumnNotFound(_))
+    ));
+    assert!(matches!(
+        row.get_int("label"),
+        Err(DactylError::Conversion(_))
+    ));
+    assert!(matches!(
+        row.get::<_, i64>("note"),
+        Err(DactylError::Conversion(ref m)) if m.contains("NULL")
+    ));
+
+    clear_env();
+    let _ = done_tx.send(());
+    let _ = mock_thread.join();
+}
+
+/// #25 + #2: cross-adapter equality of typed projections for the same logical
+/// scalar row (integer, bool-as-portable, real, text, null).
+#[test]
+fn typed_projection_cross_adapter_parity() {
+    let _guard = lock_env();
+    let tmp = TempDir::new().expect("tempdir");
+    let path = tmp.path().join("parity.db");
+    select_sqlite(path.to_str().unwrap());
+
+    dactyl_db::execute(
+        "create table parity (id integer primary key, flag integer, ratio real, label text, note text)",
+        &[],
+    )
+    .expect("create");
+    dactyl_db::execute(
+        "insert into parity (id, flag, ratio, label, note) values ($1, $2, $3, $4, $5)",
+        &[
+            Parameter::Integer(1),
+            Parameter::Bool(false),
+            Parameter::Real(0.5),
+            Parameter::Text("parity".into()),
+            Parameter::Null,
+        ],
+    )
+    .expect("insert");
+
+    select_sqlite(path.to_str().unwrap());
+    let sqlite_rows = dactyl_db::query(
+        "select id, flag, ratio, label, note from parity where id = $1",
+        &[Parameter::Integer(1)],
+    )
+    .expect("sqlite");
+    let s = &sqlite_rows.as_slice()[0];
+
+    let state = Arc::new(MockState::default());
+    let (done_tx, done_rx) = tokio::sync::oneshot::channel::<()>();
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel::<String>();
+    let mock_thread = std::thread::spawn({
+        let state = state.clone();
+        // Neon bool as true JSON bool; SQLite stores 0/1. Lenient get_bool
+        // unifies both.
+        let neon_row = serde_json::json!({
+            "id": 1,
+            "flag": false,
+            "ratio": 0.5,
+            "label": "parity",
+            "note": null,
+        });
+        move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("mock rt");
+            rt.block_on(async {
+                {
+                    let mut tables = state.tables.lock().await;
+                    tables.insert(
+                        "parity".into(),
+                        MockTable {
+                            columns: vec![
+                                "id".into(),
+                                "flag".into(),
+                                "ratio".into(),
+                                "label".into(),
+                                "note".into(),
+                            ],
+                            rows: vec![neon_row],
+                        },
+                    );
+                }
+                let addr = spawn_mock(state.clone()).await;
+                let _ = ready_tx.send(format!("http://{addr}"));
+                let _ = done_rx.await;
+            });
+        }
+    });
+    let endpoint = ready_rx.recv().expect("ready");
+    select_neon(&endpoint);
+    let neon_rows = dactyl_db::query(
+        "select id, flag, ratio, label, note from parity where id = $1",
+        &[Parameter::Integer(1)],
+    )
+    .expect("neon");
+    let n = &neon_rows.as_slice()[0];
+
+    assert_eq!(s.get_int("id").unwrap(), n.get_int("id").unwrap());
+    assert_eq!(s.get_bool("flag").unwrap(), n.get_bool("flag").unwrap());
+    assert_eq!(s.get_real("ratio").unwrap(), n.get_real("ratio").unwrap());
+    assert_eq!(s.get_str("label").unwrap(), n.get_str("label").unwrap());
+    assert_eq!(s.is_null("note").unwrap(), n.is_null("note").unwrap());
+    assert_eq!(
+        s.get::<_, Option<String>>("note").unwrap(),
+        n.get::<_, Option<String>>("note").unwrap()
+    );
+
+    clear_env();
+    let _ = done_tx.send(());
+    let _ = mock_thread.join();
 }
 
 /// #24: atomic transaction batch commits on success and rolls back fully on

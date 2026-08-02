@@ -27,10 +27,12 @@ fn main() -> Result<(), dactyl_db::DactylError> {
 
     let sql = dactyl_db::query!("select id, title, status from todos");
     for row in dactyl_db::query(&sql, &[])?.iter() {
-        let id: i64 = row.get("id")?;
+        let id: i64 = row.try_get("id")?;
         let title: String = row.get("title")?;
-        let status: String = row.get("status")?;
-        println!("todo {id}: {title} [{status}]");
+        let status: String = row.get_str("status")?;
+        // Borrowed accessor is valid for the row lifetime.
+        let title_ref: &str = row.get_str_ref("title")?;
+        println!("todo {id}: {title} ({title_ref}) [{status}]");
     }
     Ok(())
 }
