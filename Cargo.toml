@@ -1,6 +1,6 @@
 [package]
 name = "dactyl-db"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 rust-version = "1.75"
 license = "MIT"
@@ -22,7 +22,7 @@ thiserror = "1"
 tracing = "0.1"
 rusqlite = { version = "0.31", optional = true, features = ["bundled"] }
 reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
-dactyl-db-macros = { path = "dactyl-db-macros", version = "0.2.3" }
+dactyl-db-macros = { path = "dactyl-db-macros", version = "0.2.4" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
