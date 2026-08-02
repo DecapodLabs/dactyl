@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.3...dactyl-db-macros-v0.2.4) - 2026-08-02
+
+### Added
+
+- *(dactyl)* complete typed/NULL-safe named row projections ([#25](https://github.com/DecapodLabs/dactyl/pull/25)) ([#41](https://github.com/DecapodLabs/dactyl/pull/41))
+
 ### Added
 
 - *(dactyl)* complete typed/NULL-safe named row projections for [#25](https://github.com/DecapodLabs/dactyl/issues/25): `try_get`, `is_null`, borrowed `get_str_ref` / `get_json_ref`, explicit first-match duplicate-alias semantics, NULL conversion messages, unit + SQLite/Neon matrix conformance (also DecapodLabs/decapod#1111, dactyl #2).
