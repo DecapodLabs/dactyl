@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.4...dactyl-db-macros-v0.2.5) - 2026-08-02
+
+### Added
+
+- *(dactyl)* complete atomic transaction/batch contract ([#24](https://github.com/DecapodLabs/dactyl/pull/24)) ([#43](https://github.com/DecapodLabs/dactyl/pull/43))
+- *(dactyl)* complete typed/NULL-safe named row projections ([#25](https://github.com/DecapodLabs/dactyl/pull/25)) ([#41](https://github.com/DecapodLabs/dactyl/pull/41))
+
+### Other
+
+- release v0.2.4 ([#42](https://github.com/DecapodLabs/dactyl/pull/42))
+
 ## [0.2.4](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.3...dactyl-db-macros-v0.2.4) - 2026-08-02
 
 ### Added
