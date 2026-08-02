@@ -8,7 +8,8 @@
 //! Covers dactyl issues:
 //! - #2  every store × every adapter × parameterized reads/writes
 //! - #23 parameter binding, NULL/bool/int/real/text + injection attempt
-//! - #24 atomic transaction + rollback-on-failure
+//! - #24 atomic transaction + rollback-on-failure (SQLite + Neon mock),
+//!   event-plus-state fixture, nesting/retry/timeout/idempotency contract
 //! - #25 typed named extraction, NULL, missing column, conversion error,
 //!   duplicate aliases, full scalar matrix through both adapters, and
 //!   borrowed-vs-owned accessors (also DecapodLabs/decapod#1111)
@@ -21,6 +22,8 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use axum::{extract::State, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
 use tempfile::TempDir;
@@ -80,51 +83,254 @@ struct MockTable {
 }
 
 /// Mock neon-server state, shared across all tests.
+///
+/// `/batch` is **atomic**: statements apply against a snapshot; any error
+/// restores the snapshot so no partial writes remain (mirrors Propodus
+/// all-or-nothing batch contract for dactyl #24).
 #[derive(Default)]
 struct MockState {
     tables: Mutex<HashMap<String, MockTable>>,
 }
 
 impl MockState {
-    async fn handle(
-        State(state): State<Arc<MockState>>,
-        Json(req): Json<MockRequest>,
-    ) -> Json<MockResponse> {
-        let tables = state.tables.lock().await;
-        let table = table_of(&req.sql);
-        let data = tables.get(&table).cloned().unwrap_or_default();
-        let columns = if data.columns.is_empty() {
-            vec!["id".into(), "title".into(), "status".into()]
-        } else {
-            data.columns
-        };
-        Json(MockResponse {
-            columns,
-            rows: data.rows,
-        })
+    async fn handle(State(state): State<Arc<MockState>>, Json(req): Json<MockRequest>) -> Response {
+        let mut tables = state.tables.lock().await;
+        match apply_statement(&mut tables, &req.sql, req.params.as_ref()) {
+            Ok(resp) => Json(resp).into_response(),
+            Err(msg) => (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({ "error": msg })),
+            )
+                .into_response(),
+        }
     }
 
     async fn handle_batch(
         State(state): State<Arc<MockState>>,
         Json(req): Json<MockBatchRequest>,
-    ) -> Json<MockBatchResponse> {
-        let tables = state.tables.lock().await;
+    ) -> Response {
+        let mut tables = state.tables.lock().await;
+        // Snapshot for full rollback on any per-statement failure.
+        let snapshot = tables.clone();
         let mut results = Vec::new();
         for stmt in &req.statements {
-            let table = table_of(&stmt.sql);
-            let data = tables.get(&table).cloned().unwrap_or_default();
-            let columns = if data.columns.is_empty() {
-                vec!["id".into(), "title".into(), "status".into()]
-            } else {
-                data.columns
-            };
-            results.push(MockResponse {
-                columns,
-                rows: data.rows,
-            });
+            match apply_statement(&mut tables, &stmt.sql, stmt.params.as_ref()) {
+                Ok(resp) => results.push(resp),
+                Err(msg) => {
+                    *tables = snapshot;
+                    return (
+                        StatusCode::CONFLICT,
+                        Json(serde_json::json!({
+                            "error": format!("batch aborted: {msg}"),
+                        })),
+                    )
+                        .into_response();
+                }
+            }
         }
-        Json(MockBatchResponse { results })
+        (StatusCode::OK, Json(MockBatchResponse { results })).into_response()
     }
+}
+
+/// Apply one SQL statement against the mock table map.
+///
+/// Supports a small dialect used by conformance tests: `CREATE TABLE`,
+/// `INSERT INTO … VALUES ($n,…)`, and `SELECT` (including `count(*)`).
+fn apply_statement(
+    tables: &mut HashMap<String, MockTable>,
+    sql: &str,
+    params: Option<&serde_json::Value>,
+) -> Result<MockResponse, String> {
+    let lower = sql.to_ascii_lowercase();
+    let trimmed = lower.trim();
+    if trimmed.starts_with("create table") {
+        return apply_create(tables, &lower);
+    }
+    if trimmed.starts_with("insert into") {
+        return apply_insert(tables, sql, params);
+    }
+    if trimmed.starts_with("select") {
+        return apply_select(tables, &lower);
+    }
+    // Fallback: treat as a read of `FROM <table>` if present.
+    apply_select(tables, &lower)
+}
+
+fn apply_create(
+    tables: &mut HashMap<String, MockTable>,
+    lower_sql: &str,
+) -> Result<MockResponse, String> {
+    // create table [if not exists] name (
+    let after = lower_sql
+        .split_once("table")
+        .map(|(_, rest)| rest.trim())
+        .ok_or_else(|| "create table: missing name".to_string())?;
+    let after = after
+        .strip_prefix("if not exists")
+        .map(str::trim)
+        .unwrap_or(after);
+    let name: String = after
+        .chars()
+        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+        .collect();
+    if name.is_empty() {
+        return Err("create table: empty name".into());
+    }
+    let cols = parse_create_columns(lower_sql);
+    tables.entry(name).or_insert_with(|| MockTable {
+        columns: cols,
+        rows: Vec::new(),
+    });
+    Ok(MockResponse {
+        columns: vec![],
+        rows: vec![],
+    })
+}
+
+fn parse_create_columns(lower_sql: &str) -> Vec<String> {
+    let Some(start) = lower_sql.find('(') else {
+        return vec![];
+    };
+    let Some(end) = lower_sql.rfind(')') else {
+        return vec![];
+    };
+    if end <= start {
+        return vec![];
+    }
+    lower_sql[start + 1..end]
+        .split(',')
+        .filter_map(|part| {
+            let col = part
+                .split_whitespace()
+                .next()
+                .unwrap_or("")
+                .trim_matches('"');
+            if col.is_empty() || col == "primary" {
+                None
+            } else {
+                Some(col.to_string())
+            }
+        })
+        .collect()
+}
+
+fn apply_insert(
+    tables: &mut HashMap<String, MockTable>,
+    sql: &str,
+    params: Option<&serde_json::Value>,
+) -> Result<MockResponse, String> {
+    let lower = sql.to_ascii_lowercase();
+    let after = lower
+        .split_once("insert into")
+        .map(|(_, r)| r.trim())
+        .ok_or_else(|| "insert: parse failed".to_string())?;
+    let table: String = after
+        .chars()
+        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+        .collect();
+    if table.is_empty() {
+        return Err("insert: empty table".into());
+    }
+    let cols = parse_insert_columns(sql).unwrap_or_else(|| {
+        tables
+            .get(&table)
+            .map(|t| t.columns.clone())
+            .unwrap_or_default()
+    });
+    let p = params_list(params);
+    if cols.is_empty() {
+        return Err(format!("insert into {table}: no columns"));
+    }
+    if p.len() < cols.len() {
+        return Err(format!(
+            "insert into {table}: expected {} params, got {}",
+            cols.len(),
+            p.len()
+        ));
+    }
+    let mut obj = serde_json::Map::new();
+    for (i, c) in cols.iter().enumerate() {
+        obj.insert(c.clone(), p[i].clone());
+    }
+    let entry = tables.entry(table.clone()).or_insert_with(|| MockTable {
+        columns: cols.clone(),
+        rows: Vec::new(),
+    });
+    if entry.columns.is_empty() {
+        entry.columns = cols.clone();
+    }
+    // Primary-key style uniqueness on `id` when present.
+    if let Some(id) = obj.get("id") {
+        if entry.rows.iter().any(|r| r.get("id") == Some(id)) {
+            return Err(format!("duplicate key id={id} in {table}"));
+        }
+    }
+    entry.rows.push(serde_json::Value::Object(obj));
+    Ok(MockResponse {
+        columns: entry.columns.clone(),
+        rows: vec![],
+    })
+}
+
+fn parse_insert_columns(sql: &str) -> Option<Vec<String>> {
+    let lower = sql.to_ascii_lowercase();
+    let after_table = lower.split_once("insert into")?.1.trim();
+    let rest = after_table.find('(').map(|i| &after_table[i..])?;
+    let end = rest.find(')')?;
+    let inner = &rest[1..end];
+    // Only the column list before VALUES.
+    if !lower.contains("values") {
+        return None;
+    }
+    let cols: Vec<String> = inner
+        .split(',')
+        .map(|c| c.trim().trim_matches('"').to_string())
+        .filter(|c| !c.is_empty())
+        .collect();
+    if cols.is_empty() {
+        None
+    } else {
+        Some(cols)
+    }
+}
+
+fn params_list(params: Option<&serde_json::Value>) -> Vec<serde_json::Value> {
+    match params {
+        Some(serde_json::Value::Array(a)) => a.clone(),
+        Some(other) => vec![other.clone()],
+        None => vec![],
+    }
+}
+
+fn apply_select(
+    tables: &mut HashMap<String, MockTable>,
+    lower_sql: &str,
+) -> Result<MockResponse, String> {
+    let table = table_of(lower_sql);
+    let data = tables.get(&table).cloned().unwrap_or_default();
+    let columns = if data.columns.is_empty() {
+        // Legacy default for seeded store fixtures.
+        vec!["id".into(), "title".into(), "status".into()]
+    } else {
+        data.columns.clone()
+    };
+
+    if lower_sql.contains("count(*)") {
+        let alias = if lower_sql.contains(" as cnt") {
+            "cnt"
+        } else {
+            "count(*)"
+        };
+        return Ok(MockResponse {
+            columns: vec![alias.into()],
+            rows: vec![serde_json::json!({ alias: data.rows.len() as i64 })],
+        });
+    }
+
+    Ok(MockResponse {
+        columns,
+        rows: data.rows,
+    })
 }
 
 fn table_of(sql: &str) -> String {
@@ -144,7 +350,6 @@ fn table_of(sql: &str) -> String {
 struct MockRequest {
     sql: String,
     #[serde(default)]
-    #[allow(dead_code)]
     params: Option<serde_json::Value>,
 }
 
@@ -163,7 +368,6 @@ struct MockBatchRequest {
 struct MockStatement {
     sql: String,
     #[serde(default)]
-    #[allow(dead_code)]
     params: Option<serde_json::Value>,
 }
 
@@ -186,6 +390,36 @@ async fn spawn_mock(state: Arc<MockState>) -> SocketAddr {
         axum::serve(listener, app).await.expect("axum serve");
     });
     addr
+}
+
+/// Helper: run a closure against a live mock Neon endpoint, then shut it down.
+fn with_neon_mock<F>(seed: HashMap<String, MockTable>, f: F)
+where
+    F: FnOnce(&str),
+{
+    let state = Arc::new(MockState {
+        tables: Mutex::new(seed),
+    });
+    let (done_tx, done_rx) = tokio::sync::oneshot::channel::<()>();
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel::<String>();
+    let mock_thread = std::thread::spawn({
+        let state = state.clone();
+        move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("mock rt");
+            rt.block_on(async {
+                let addr = spawn_mock(state).await;
+                let _ = ready_tx.send(format!("http://{addr}"));
+                let _ = done_rx.await;
+            });
+        }
+    });
+    let endpoint = ready_rx.recv().expect("ready");
+    f(&endpoint);
+    let _ = done_tx.send(());
+    let _ = mock_thread.join();
 }
 
 // ---------------------------------------------------------------------------
@@ -807,7 +1041,7 @@ fn typed_projection_cross_adapter_parity() {
 }
 
 /// #24: atomic transaction batch commits on success and rolls back fully on
-/// any per-statement failure. No partial state remains.
+/// any per-statement failure (SQLite). No partial state remains.
 #[test]
 fn atomic_transaction_rollback_on_failure() {
     let _guard = lock_env();
@@ -854,6 +1088,254 @@ fn atomic_transaction_rollback_on_failure() {
         cnt_after, 2,
         "row id=3 must NOT have been committed: full rollback"
     );
+
+    // Empty batch is a successful no-op.
+    let empty = dactyl_db::transaction(&[]).expect("empty batch");
+    assert!(empty.is_empty());
+
+    clear_env();
+}
+
+/// #24: Neon/mock failure-injection — a multi-statement `/batch` that fails
+/// mid-way leaves no partial state (mirrors SQLite rollback proof).
+#[test]
+fn atomic_transaction_rollback_neon_mock() {
+    let _guard = lock_env();
+
+    let mut seed = HashMap::new();
+    seed.insert(
+        "tx".into(),
+        MockTable {
+            columns: vec!["id".into(), "value".into()],
+            rows: vec![
+                serde_json::json!({"id": 1, "value": "val1"}),
+                serde_json::json!({"id": 2, "value": "val2"}),
+            ],
+        },
+    );
+
+    with_neon_mock(seed, |endpoint| {
+        select_neon(endpoint);
+
+        // Successful batch appends id=3.
+        dactyl_db::transaction(&[Statement::new(
+            "insert into tx (id, value) values ($1, $2)",
+            vec![Parameter::Integer(3), Parameter::Text("val3".into())],
+        )])
+        .expect("neon batch success");
+
+        let rows = dactyl_db::query("select count(*) as cnt from tx", &[]).expect("count");
+        let cnt: i64 = rows.as_slice()[0].get("cnt").expect("cnt");
+        assert_eq!(cnt, 3, "successful batch must persist");
+
+        // Failing batch: first insert would add id=4, second hits duplicate id=1.
+        // The whole unit must abort — id=4 must not remain.
+        let res = dactyl_db::transaction(&[
+            Statement::new(
+                "insert into tx (id, value) values ($1, $2)",
+                vec![Parameter::Integer(4), Parameter::Text("val4".into())],
+            ),
+            Statement::new(
+                "insert into tx (id, value) values ($1, $2)",
+                vec![Parameter::Integer(1), Parameter::Text("duplicate".into())],
+            ),
+        ]);
+        assert!(
+            matches!(res, Err(DactylError::Adapter(_))),
+            "neon batch failure must be Adapter error: {res:?}"
+        );
+
+        let after = dactyl_db::query("select count(*) as cnt from tx", &[]).expect("count after");
+        let cnt_after: i64 = after.as_slice()[0].get("cnt").expect("cnt");
+        assert_eq!(
+            cnt_after, 3,
+            "row id=4 must NOT have been committed on neon mock rollback"
+        );
+    });
+
+    clear_env();
+}
+
+/// #24: event-plus-state atomicity fixture (SQLite).
+///
+/// A domain-shaped unit of work updates durable state and appends an event
+/// in one `transaction`. Mid-batch failure leaves neither side committed.
+#[test]
+fn atomic_event_plus_state_sqlite() {
+    let _guard = lock_env();
+    let tmp = TempDir::new().expect("tempdir");
+    let path = tmp.path().join("event_state.db");
+    select_sqlite(path.to_str().unwrap());
+
+    dactyl_db::execute(
+        "create table state (id integer primary key, value text not null)",
+        &[],
+    )
+    .expect("create state");
+    dactyl_db::execute(
+        "create table events (
+            id integer primary key,
+            kind text not null,
+            payload text not null
+        )",
+        &[],
+    )
+    .expect("create events");
+
+    // Success path: state row + event row commit together.
+    dactyl_db::transaction(&[
+        Statement::new(
+            "insert into state (id, value) values ($1, $2)",
+            vec![Parameter::Integer(1), Parameter::Text("ready".into())],
+        ),
+        Statement::new(
+            "insert into events (id, kind, payload) values ($1, $2, $3)",
+            vec![
+                Parameter::Integer(1),
+                Parameter::Text("state.changed".into()),
+                Parameter::Text(r#"{"id":1,"value":"ready"}"#.into()),
+            ],
+        ),
+    ])
+    .expect("event+state success");
+
+    let state_cnt: i64 = dactyl_db::query("select count(*) as cnt from state", &[])
+        .unwrap()
+        .as_slice()[0]
+        .get("cnt")
+        .unwrap();
+    let event_cnt: i64 = dactyl_db::query("select count(*) as cnt from events", &[])
+        .unwrap()
+        .as_slice()[0]
+        .get("cnt")
+        .unwrap();
+    assert_eq!(state_cnt, 1);
+    assert_eq!(event_cnt, 1);
+
+    // Failure path: state insert would succeed, event hits duplicate PK → both roll back.
+    let res = dactyl_db::transaction(&[
+        Statement::new(
+            "insert into state (id, value) values ($1, $2)",
+            vec![Parameter::Integer(2), Parameter::Text("partial".into())],
+        ),
+        Statement::new(
+            "insert into events (id, kind, payload) values ($1, $2, $3)",
+            vec![
+                Parameter::Integer(1), // duplicate event id
+                Parameter::Text("state.changed".into()),
+                Parameter::Text(r#"{"id":2}"#.into()),
+            ],
+        ),
+    ]);
+    assert!(res.is_err(), "duplicate event key must fail batch: {res:?}");
+
+    let state_after: i64 = dactyl_db::query("select count(*) as cnt from state", &[])
+        .unwrap()
+        .as_slice()[0]
+        .get("cnt")
+        .unwrap();
+    let event_after: i64 = dactyl_db::query("select count(*) as cnt from events", &[])
+        .unwrap()
+        .as_slice()[0]
+        .get("cnt")
+        .unwrap();
+    assert_eq!(
+        state_after, 1,
+        "state id=2 must not commit when event side fails"
+    );
+    assert_eq!(
+        event_after, 1,
+        "events must stay at the successful batch only"
+    );
+
+    clear_env();
+}
+
+/// #24: event-plus-state atomicity fixture (Neon mock).
+#[test]
+fn atomic_event_plus_state_neon_mock() {
+    let _guard = lock_env();
+
+    let mut seed = HashMap::new();
+    seed.insert(
+        "state".into(),
+        MockTable {
+            columns: vec!["id".into(), "value".into()],
+            rows: vec![],
+        },
+    );
+    seed.insert(
+        "events".into(),
+        MockTable {
+            columns: vec!["id".into(), "kind".into(), "payload".into()],
+            rows: vec![],
+        },
+    );
+
+    with_neon_mock(seed, |endpoint| {
+        select_neon(endpoint);
+
+        dactyl_db::transaction(&[
+            Statement::new(
+                "insert into state (id, value) values ($1, $2)",
+                vec![Parameter::Integer(1), Parameter::Text("ready".into())],
+            ),
+            Statement::new(
+                "insert into events (id, kind, payload) values ($1, $2, $3)",
+                vec![
+                    Parameter::Integer(1),
+                    Parameter::Text("state.changed".into()),
+                    Parameter::Text(r#"{"id":1}"#.into()),
+                ],
+            ),
+        ])
+        .expect("neon event+state success");
+
+        let state_cnt: i64 = dactyl_db::query("select count(*) as cnt from state", &[])
+            .unwrap()
+            .as_slice()[0]
+            .get("cnt")
+            .unwrap();
+        let event_cnt: i64 = dactyl_db::query("select count(*) as cnt from events", &[])
+            .unwrap()
+            .as_slice()[0]
+            .get("cnt")
+            .unwrap();
+        assert_eq!(state_cnt, 1);
+        assert_eq!(event_cnt, 1);
+
+        let res = dactyl_db::transaction(&[
+            Statement::new(
+                "insert into state (id, value) values ($1, $2)",
+                vec![Parameter::Integer(2), Parameter::Text("partial".into())],
+            ),
+            Statement::new(
+                "insert into events (id, kind, payload) values ($1, $2, $3)",
+                vec![
+                    Parameter::Integer(1),
+                    Parameter::Text("state.changed".into()),
+                    Parameter::Text(r#"{"id":2}"#.into()),
+                ],
+            ),
+        ]);
+        assert!(
+            matches!(res, Err(DactylError::Adapter(_))),
+            "neon event+state failure: {res:?}"
+        );
+
+        let state_after: i64 = dactyl_db::query("select count(*) as cnt from state", &[])
+            .unwrap()
+            .as_slice()[0]
+            .get("cnt")
+            .unwrap();
+        let event_after: i64 = dactyl_db::query("select count(*) as cnt from events", &[])
+            .unwrap()
+            .as_slice()[0]
+            .get("cnt")
+            .unwrap();
+        assert_eq!(state_after, 1, "no partial state on neon mock");
+        assert_eq!(event_after, 1, "no partial events on neon mock");
+    });
 
     clear_env();
 }

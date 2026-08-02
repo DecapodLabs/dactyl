@@ -103,7 +103,7 @@ pub enum ApiError {
 - Parameters are always adapter-bound, never interpolated into SQL. `Parameter` enumerates `Null` / `Bool` / `Integer` / `Real` / `Text`.
 - `execute` is the caller-owned schema surface: dactyl never silently creates tables.
 - `Row` provides strict `get` / `try_get<T: DeserializeOwned>`, lenient `get_bool` / `get_int` / `get_real` / `get_str` / `get_json`, borrowed `get_str_ref` / `get_json_ref`, and `is_null`, with explicit `ColumnNotFound` / `Conversion` errors. Named lookup is left-to-right first-match for duplicate aliases. SQL NULL maps to `Option<T>` or a `Conversion` that mentions NULL for non-Option targets. Rows own their cells; borrowed accessors are tied to `&Row` only (dactyl #25 / #2; DecapodLabs/decapod#1111).
-- `transaction` is atomic: any per-statement failure rolls back the whole unit on SQLite and is rejected by the Neon `/batch` endpoint.
+- `transaction` is atomic: any per-statement failure rolls back the whole unit on SQLite and is rejected by the Neon `/batch` endpoint (dactyl #24). Nesting is not supported (no SAVEPOINT). dactyl does not retry and exposes no deadline parameter; callers own retry/idempotency after ambiguous transport failures. Empty batch → `Ok([])`. Conformance proves failure-injection on SQLite and Neon mock plus an event-plus-state fixture.
 - `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `query`.
 
 ### Multi-backend vision

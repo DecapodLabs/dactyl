@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - *(dactyl)* complete typed/NULL-safe named row projections for [#25](https://github.com/DecapodLabs/dactyl/issues/25): `try_get`, `is_null`, borrowed `get_str_ref` / `get_json_ref`, explicit first-match duplicate-alias semantics, NULL conversion messages, unit + SQLite/Neon matrix conformance (also DecapodLabs/decapod#1111, dactyl #2).
+- *(dactyl)* complete atomic batch contract for [#24](https://github.com/DecapodLabs/dactyl/issues/24): Neon-mock failure-injection, event-plus-state fixture on both adapters, nesting/retry/timeout/idempotency docs; neon adapter surfaces non-2xx batch bodies without requiring a success-shaped decode.
 
 ### Documentation
 
 - *(dactyl)* document the full `Row` projection contract (scalars, NULL, missing columns, aliases, ownership/lifetime) in the README and crate docs.
+- *(dactyl)* document `transaction` atomicity, nesting, retry, timeout, and idempotency semantics in README and crate docs.
 
 ## [0.2.3](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.1...dactyl-db-macros-v0.2.3) - 2026-08-01
 

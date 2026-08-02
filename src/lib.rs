@@ -121,9 +121,55 @@ pub fn execute(sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
 
 /// Execute an atomic batch of parameterized statements.
 ///
+/// # Atomicity (dactyl #24)
+///
 /// On any per-statement error the whole unit rolls back and the function
-/// returns the error; no partial state is committed. Equivalent semantics
-/// are provided for SQLite (transaction) and Neon (`/batch` endpoint).
+/// returns [`DactylError`]; **no partial state is committed**. Semantics:
+///
+/// | Backend | Mechanism |
+/// |---|---|
+/// | SQLite | Single rusqlite transaction: begin → statements → commit, or drop = rollback |
+/// | Neon | One `POST {endpoint}/batch` request; the server must accept/reject the batch as a unit |
+///
+/// An empty `statements` slice is a successful no-op and returns `Ok(vec![])`.
+///
+/// # Nesting
+///
+/// **Not supported.** Each call builds a fresh short-lived adapter. There is no
+/// SAVEPOINT API and no nesting of `transaction` inside another open unit.
+/// Independent concurrent `transaction` calls are separate atomic units, not
+/// nested subtransactions. Callers that need multi-step atomicity must put
+/// every statement in a **single** `transaction(&[...])` slice.
+///
+/// # Retry
+///
+/// **dactyl does not retry.** A failed batch leaves no committed partial state
+/// on either adapter (when the Neon transport returns a definitive error).
+/// Callers own retry policy. After a **transport timeout or dropped connection**,
+/// the client cannot distinguish “never applied” from “applied but response
+/// lost”; retries must use **idempotent** statement design (deterministic keys,
+/// upserts) if re-execution is possible.
+///
+/// # Timeout
+///
+/// **No public deadline parameter.** SQLite is process-local. Neon uses the
+/// reqwest client’s default timeouts. Callers that need tighter bounds should
+/// enforce them outside dactyl (process supervisor, HTTP proxy, or a future
+/// env-based client config — not part of this surface).
+///
+/// # Idempotency
+///
+/// `transaction` itself is **not** idempotent. Replaying a previously
+/// successful batch may insert duplicates or hit primary-key conflicts.
+/// Design statements for safe replay when the caller’s retry policy may
+/// re-submit after ambiguous failures.
+///
+/// # Returns
+///
+/// On success, one [`Rows`] per input statement (writes often yield empty
+/// row sets; `SELECT` statements yield projections). On failure, an
+/// [`DactylError::Adapter`] (or conversion error while decoding Neon rows)
+/// and no committed partial state.
 pub fn transaction(statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
     if statements.is_empty() {
         return Ok(Vec::new());

@@ -19,6 +19,11 @@
 //! }
 //! ```
 //!
+//! `/batch` is the Neon half of [`crate::transaction`]: the server must apply
+//! the statement list as one atomic unit (all commit or all reject). Non-2xx
+//! responses are surfaced as [`DactylError::Adapter`] with the response body;
+//! dactyl does not partially apply a failed batch client-side.
+//!
 //! Propodus owns auth; dactyl only forwards the opaque `bearer` token.
 
 use serde::{Deserialize, Serialize};
@@ -151,15 +156,19 @@ impl Adapter for NeonAdapter {
             .send()
             .map_err(|e| DactylError::Adapter(format!("neon batch send: {e}")))?;
         let status = resp.status();
-        let body: BatchResponse = resp
-            .json()
-            .map_err(|e| DactylError::Adapter(format!("neon batch decode: {e}")))?;
+        // Read bytes first so non-2xx error bodies (often not BatchResponse)
+        // still surface as Adapter errors with the server payload.
+        let bytes = resp
+            .bytes()
+            .map_err(|e| DactylError::Adapter(format!("neon batch body: {e}")))?;
         if !status.is_success() {
             return Err(DactylError::Adapter(format!(
                 "neon batch status {status}: {}",
-                serde_json::to_string(&body).unwrap_or_default()
+                String::from_utf8_lossy(&bytes)
             )));
         }
+        let body: BatchResponse = serde_json::from_slice(&bytes)
+            .map_err(|e| DactylError::Adapter(format!("neon batch decode: {e}")))?;
         let mut results = Vec::with_capacity(body.results.len());
         for res in body.results {
             results.push(rows_from_response(res)?);

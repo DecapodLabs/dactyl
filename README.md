@@ -9,7 +9,7 @@ The same SQL string produces the same logical rows regardless of the active back
 - **One import, many backends** — SQLite and Neon ship today; Redis, MySQL, and Cassandra are planned behind the same `query` surface.
 - **Ambient selection** — `DATASTORE` env var picks the active backend at runtime. No `init()`, no per-call datastore argument, no global connection cache.
 - **Safe parameter binding** — `query(sql, &[params])` binds typed values; SQL injection via parameter values is structurally impossible.
-- **Atomic batches** — `transaction(&[Statement])` commits all-or-nothing on every backend.
+- **Atomic batches** — `transaction(&[Statement])` commits all-or-nothing on every backend (no nesting; caller-owned retry/idempotency; see contract below).
 - **Caller-owned schema** — dactyl never silently creates tables. `execute("create table ...")` is the only way dactyl touches schema.
 
 ## Quick Start
@@ -106,6 +106,19 @@ The active backend is chosen by ambient environment variables — no `init()` ca
 `Parameter` enumerates the typed binding set: `Null`, `Bool`, `Integer`, `Real`, `Text`. The adapter forwards the values verbatim — never as interpolated SQL.
 
 `Row` provides `get` / `try_get`, lenient scalar getters, `is_null`, and borrowed `get_str_ref` / `get_json_ref` under the projection contract above.
+
+## Atomic batches (`transaction`)
+
+Stable contract for multi-statement units of work ([#24](https://github.com/DecapodLabs/dactyl/issues/24); prerequisite for DecapodLabs/decapod#1111 / #1120):
+
+| Concern | Semantics |
+|---|---|
+| Atomicity | Any per-statement failure aborts the whole unit. SQLite uses a real transaction; Neon uses one `POST /batch` that the server accepts or rejects as a unit. Empty slice → `Ok([])`. |
+| Nesting | **Not supported.** No SAVEPOINTs. Each call uses a fresh adapter; put every statement in one slice. |
+| Retry | **dactyl does not retry.** Callers own retry policy. |
+| Timeout | **No public deadline.** Neon uses reqwest defaults; SQLite is local. |
+| Idempotency | **Not idempotent.** Replays may conflict or double-write. Design deterministic keys / upserts if retrying after ambiguous transport failures. |
+| Proof | Conformance covers SQLite + Neon-mock failure injection and an event-plus-state fixture (state row + event row in one batch; mid-batch failure leaves neither). |
 
 ## License
 
