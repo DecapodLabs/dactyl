@@ -1,44 +1,49 @@
-//! Public error type for dactyl.
+//! Errors returned by the Dactyl driver.
 
 use thiserror::Error;
 
-use crate::query::Construct;
+/// Coarse operational categories stable enough for callers to branch on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AdapterErrorKind {
+    Busy,
+    Locked,
+    Constraint,
+    Query,
+    ReadOnly,
+    Storage,
+    Transport,
+    Protocol,
+    Unknown,
+}
 
-/// All errors dactyl can raise on its public surface.
+/// The backend-neutral public error surface.
 #[derive(Debug, Error)]
 pub enum DactylError {
-    /// The query contains a dialect-specific construct the active adapter
-    /// does not support and `optimize = false` was passed.
-    #[error("dialect mismatch: construct `{construct:?}` not supported")]
-    Unsupported {
-        /// The unsupported construct.
-        construct: Construct,
+    #[error("configuration error: {0}")]
+    Config(String),
+
+    #[error("adapter error ({kind:?}): {message}")]
+    Adapter {
+        kind: AdapterErrorKind,
+        message: String,
     },
 
-    /// The query selected a datastore that does not match the connection
-    /// route, or an inline override could not be resolved to a configured
-    /// route.
-    #[error("datastore routing error: {0}")]
-    Routing(String),
-
-    /// The requested backend-neutral operation is not available for the
-    /// selected adapter.
     #[error("unsupported datastore operation: {0}")]
     UnsupportedOperation(String),
 
-    /// The query string failed to parse under the analyzer's lexical rules.
-    #[error("invalid query: {0}")]
-    InvalidQuery(String),
-
-    /// Adapter-level failure. Wraps the underlying error message.
-    #[error("adapter error: {0}")]
-    Adapter(String),
-
-    /// Requested column or index was not found in the row.
     #[error("column not found: {0}")]
     ColumnNotFound(String),
 
-    /// Type conversion of column value failed.
     #[error("conversion error: {0}")]
     Conversion(String),
+}
+
+impl DactylError {
+    #[allow(dead_code)]
+    pub(crate) fn adapter(kind: AdapterErrorKind, message: impl Into<String>) -> Self {
+        Self::Adapter {
+            kind,
+            message: message.into(),
+        }
+    }
 }

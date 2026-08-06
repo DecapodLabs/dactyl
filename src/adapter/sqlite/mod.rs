@@ -1,310 +1,279 @@
-//! SQLite adapter.
+//! Small SQLite C-API driver.
 //!
-//! Holds a `rusqlite::Connection` opened against the configured path. The
-//! adapter is constructed per public [`crate::Connection`] and lives for that
-//! connection's duration. There is no process-wide connection cache.
-//!
-//! Schemas are managed by the caller — [`SqliteAdapter::open`] opens (or
-//! creates) the file but never bootstraps any tables. Callers own and version
-//! their schema through explicit [`crate::execute`] / DDL statements
-//! (dactyl #27).
+//! This module intentionally talks to SQLite through `libsqlite3-sys` rather
+//! than exposing or depending on the high-level `rusqlite` API. The safe
+//! wrapper below contains only the primitives Dactyl needs: open, bind,
+//! step, read cells, execute, and finalize.
 
-use std::sync::Mutex;
-use std::time::Duration;
+use std::ffi::{CStr, CString};
+use std::os::raw::{c_char, c_int, c_void};
+use std::ptr;
+use std::slice;
 
-use rusqlite::{params_from_iter, types::Value as SqlValue, Connection, OpenFlags};
+use libsqlite3_sys as ffi;
 
 use crate::adapter::Adapter;
-use crate::error::DactylError;
+use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
-use crate::SqliteJournalMode;
-use crate::Statement;
 
-/// Opaque handle to the SQLite adapter.
-///
-/// `rusqlite::Connection` is `!Sync`, so execution is serialized through an
-/// internal `Mutex`. The mutex is harmless in practice because each call
-/// constructs and drops its own adapter, but it keeps the type `Send + Sync`
-/// for callers that choose to hold an adapter longer.
+/// A private SQLite connection. No SQLite handle or C type crosses the public
+/// Dactyl API boundary.
 pub struct SqliteAdapter {
-    conn: Mutex<Connection>,
+    db: *mut ffi::sqlite3,
 }
 
 impl SqliteAdapter {
-    /// Open SQLite with the connection policy supplied by the public dactyl
-    /// connection boundary.
-    pub fn open_with_options(
-        path: &str,
-        read_only: bool,
-        busy_timeout: Duration,
-        foreign_keys: bool,
-        journal_mode: Option<SqliteJournalMode>,
-    ) -> rusqlite::Result<Self> {
-        if !read_only && path != ":memory:" {
+    pub fn open(path: &str) -> Result<Self, DactylError> {
+        if path != ":memory:" {
             if let Some(parent) = std::path::Path::new(path).parent() {
                 if !parent.as_os_str().is_empty() {
-                    std::fs::create_dir_all(parent)
-                        .map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
+                    std::fs::create_dir_all(parent).map_err(|error| {
+                        DactylError::adapter(AdapterErrorKind::Storage, error.to_string())
+                    })?;
                 }
             }
         }
-        let conn = if read_only {
-            Connection::open_with_flags(
-                path,
-                OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
-            )?
-        } else {
-            Connection::open(path)?
+
+        let filename = CString::new(path)
+            .map_err(|_| DactylError::Config("SQLite path contains NUL".into()))?;
+        let flags = ffi::SQLITE_OPEN_READWRITE | ffi::SQLITE_OPEN_CREATE;
+        let mut db = ptr::null_mut();
+        let code = unsafe { ffi::sqlite3_open_v2(filename.as_ptr(), &mut db, flags, ptr::null()) };
+        if code != ffi::SQLITE_OK {
+            let error = sqlite_error(db, code, "open");
+            if !db.is_null() {
+                unsafe { ffi::sqlite3_close(db) };
+            }
+            return Err(error);
+        }
+
+        Ok(Self { db })
+    }
+
+    fn prepare(&self, sql: &str) -> Result<StatementHandle, DactylError> {
+        let sql = CString::new(sql)
+            .map_err(|_| DactylError::adapter(AdapterErrorKind::Query, "SQL contains NUL"))?;
+        let mut statement = ptr::null_mut();
+        let code = unsafe {
+            ffi::sqlite3_prepare_v2(self.db, sql.as_ptr(), -1, &mut statement, ptr::null_mut())
         };
-        conn.busy_timeout(busy_timeout)?;
-        if foreign_keys {
-            conn.execute_batch("PRAGMA foreign_keys=ON;")?;
+        if code != ffi::SQLITE_OK {
+            return Err(sqlite_error(self.db, code, "prepare"));
         }
-        if !read_only {
-            if let Some(mode) = journal_mode {
-                let requested = format!("PRAGMA journal_mode={};", mode.as_sql());
-                if conn.query_row(&requested, [], |_| Ok(())).is_err()
-                    && mode == SqliteJournalMode::Wal
-                {
-                    conn.query_row("PRAGMA journal_mode=DELETE;", [], |_| Ok(()))?;
+        Ok(StatementHandle { ptr: statement })
+    }
+
+    fn bind(
+        &self,
+        statement: *mut ffi::sqlite3_stmt,
+        params: &[Parameter],
+    ) -> Result<(), DactylError> {
+        let expected = unsafe { ffi::sqlite3_bind_parameter_count(statement) } as usize;
+        if expected != params.len() {
+            return Err(DactylError::adapter(
+                AdapterErrorKind::Query,
+                format!("expected {expected} parameters, received {}", params.len()),
+            ));
+        }
+        for (index, parameter) in params.iter().enumerate() {
+            let index = (index + 1) as c_int;
+            let code = unsafe {
+                match parameter {
+                    Parameter::Null => ffi::sqlite3_bind_null(statement, index),
+                    Parameter::Bool(value) => {
+                        ffi::sqlite3_bind_int(statement, index, i32::from(*value))
+                    }
+                    Parameter::Integer(value) => ffi::sqlite3_bind_int64(statement, index, *value),
+                    Parameter::Real(value) => ffi::sqlite3_bind_double(statement, index, *value),
+                    Parameter::Text(value) => bind_bytes(statement, index, value.as_bytes(), true),
+                    Parameter::Blob(value) => bind_bytes(statement, index, value, false),
                 }
+            };
+            if code != ffi::SQLITE_OK {
+                return Err(sqlite_error(self.db, code, "bind"));
             }
         }
-        Ok(Self {
-            conn: Mutex::new(conn),
-        })
+        Ok(())
+    }
+
+    fn run(&self, sql: &str, params: &[Parameter]) -> Result<(Rows, u64), DactylError> {
+        let statement = self.prepare(sql)?;
+        self.bind(statement.ptr, params)?;
+        let column_count = unsafe { ffi::sqlite3_column_count(statement.ptr) } as usize;
+        let columns = (0..column_count)
+            .map(|index| unsafe { column_name(statement.ptr, index as c_int) })
+            .collect::<Vec<_>>();
+        let mut rows = Vec::new();
+        loop {
+            let code = unsafe { ffi::sqlite3_step(statement.ptr) };
+            match code {
+                ffi::SQLITE_ROW => {
+                    let values = (0..column_count)
+                        .map(|index| unsafe { column_value(statement.ptr, index as c_int) })
+                        .collect();
+                    rows.push(Row {
+                        columns: columns.clone(),
+                        values,
+                    });
+                }
+                ffi::SQLITE_DONE => break,
+                code => return Err(sqlite_error(self.db, code, "step")),
+            }
+        }
+        let affected = unsafe { ffi::sqlite3_changes(self.db) } as u64;
+        Ok((Rows(rows), affected))
+    }
+}
+
+impl Drop for SqliteAdapter {
+    fn drop(&mut self) {
+        if !self.db.is_null() {
+            unsafe { ffi::sqlite3_close(self.db) };
+        }
     }
 }
 
 impl Adapter for SqliteAdapter {
-    fn execute(&self, query: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
-        let translated_sql = translate_placeholders_to_sqlite(query);
-        let mapped = map_params(params);
-        let param_refs: Vec<&dyn rusqlite::types::ToSql> = mapped
-            .iter()
-            .map(|x| x as &dyn rusqlite::types::ToSql)
-            .collect();
-        let mut stmt = conn
-            .prepare(&translated_sql)
-            .map_err(|e| DactylError::Adapter(format!("sqlite prepare: {e}")))?;
-
-        let column_count = stmt.column_count();
-        let column_names: Vec<String> = (0..column_count)
-            .map(|i| stmt.column_name(i).unwrap_or("").to_string())
-            .collect();
-
-        let rows_iter = stmt
-            .query_map(params_from_iter(param_refs.iter().copied()), |row| {
-                let mut cells = Vec::with_capacity(column_count);
-                for i in 0..column_count {
-                    let v = row.get::<_, SqlValue>(i)?;
-                    cells.push(sql_to_json(v));
-                }
-                Ok(cells)
-            })
-            .map_err(|e| DactylError::Adapter(format!("sqlite query: {e}")))?;
-
-        let mut rows = Vec::new();
-        for row in rows_iter {
-            let cells = row.map_err(|e| DactylError::Adapter(format!("sqlite row: {e}")))?;
-            rows.push(Row {
-                columns: column_names.clone(),
-                values: cells,
-            });
-        }
-        Ok(Rows(rows))
+    fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
+        self.run(sql, params).map(|(rows, _)| rows)
     }
 
-    fn execute_raw(&self, query: &str, params: &[Parameter]) -> Result<u64, DactylError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
-        let translated_sql = translate_placeholders_to_sqlite(query);
-        let mapped = map_params(params);
-        let param_refs: Vec<&dyn rusqlite::types::ToSql> = mapped
-            .iter()
-            .map(|x| x as &dyn rusqlite::types::ToSql)
-            .collect();
-        let affected = conn
-            .execute(
-                &translated_sql,
-                params_from_iter(param_refs.iter().copied()),
+    fn write(&self, sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+        self.run(sql, params).map(|(_, affected)| affected)
+    }
+}
+
+struct StatementHandle {
+    ptr: *mut ffi::sqlite3_stmt,
+}
+
+impl Drop for StatementHandle {
+    fn drop(&mut self) {
+        if !self.ptr.is_null() {
+            unsafe { ffi::sqlite3_finalize(self.ptr) };
+        }
+    }
+}
+
+unsafe fn bind_bytes(
+    statement: *mut ffi::sqlite3_stmt,
+    index: c_int,
+    bytes: &[u8],
+    text: bool,
+) -> c_int {
+    let length = match c_int::try_from(bytes.len()) {
+        Ok(length) => length,
+        Err(_) => return ffi::SQLITE_TOOBIG,
+    };
+    let pointer = if bytes.is_empty() {
+        ptr::null()
+    } else {
+        bytes.as_ptr()
+    };
+    if text {
+        ffi::sqlite3_bind_text(
+            statement,
+            index,
+            pointer.cast::<c_char>(),
+            length,
+            ffi::SQLITE_TRANSIENT(),
+        )
+    } else {
+        ffi::sqlite3_bind_blob(
+            statement,
+            index,
+            pointer.cast::<c_void>(),
+            length,
+            ffi::SQLITE_TRANSIENT(),
+        )
+    }
+}
+
+unsafe fn column_name(statement: *mut ffi::sqlite3_stmt, index: c_int) -> String {
+    let pointer = ffi::sqlite3_column_name(statement, index);
+    if pointer.is_null() {
+        String::new()
+    } else {
+        CStr::from_ptr(pointer).to_string_lossy().into_owned()
+    }
+}
+
+unsafe fn column_value(statement: *mut ffi::sqlite3_stmt, index: c_int) -> serde_json::Value {
+    match ffi::sqlite3_column_type(statement, index) {
+        ffi::SQLITE_NULL => serde_json::Value::Null,
+        ffi::SQLITE_INTEGER => {
+            serde_json::Value::Number((ffi::sqlite3_column_int64(statement, index) as i64).into())
+        }
+        ffi::SQLITE_FLOAT => {
+            serde_json::Number::from_f64(ffi::sqlite3_column_double(statement, index))
+                .map(serde_json::Value::Number)
+                .unwrap_or(serde_json::Value::Null)
+        }
+        ffi::SQLITE_TEXT => {
+            let pointer = ffi::sqlite3_column_text(statement, index);
+            let length = ffi::sqlite3_column_bytes(statement, index).max(0) as usize;
+            if pointer.is_null() {
+                serde_json::Value::String(String::new())
+            } else {
+                let bytes = slice::from_raw_parts(pointer, length);
+                serde_json::Value::String(String::from_utf8_lossy(bytes).into_owned())
+            }
+        }
+        ffi::SQLITE_BLOB => {
+            let pointer = ffi::sqlite3_column_blob(statement, index);
+            let length = ffi::sqlite3_column_bytes(statement, index).max(0) as usize;
+            let bytes = if pointer.is_null() || length == 0 {
+                &[]
+            } else {
+                slice::from_raw_parts(pointer.cast::<u8>(), length)
+            };
+            serde_json::Value::Array(
+                bytes
+                    .iter()
+                    .map(|byte| serde_json::Value::Number((*byte as u64).into()))
+                    .collect(),
             )
-            .map_err(|e| DactylError::Adapter(format!("sqlite execute_raw: {e}")))?;
-        Ok(affected as u64)
-    }
-
-    fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
-        let mut conn = self
-            .conn
-            .lock()
-            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
-        let tx = conn
-            .transaction()
-            .map_err(|e| DactylError::Adapter(format!("sqlite transaction begin: {e}")))?;
-
-        let mut results = Vec::with_capacity(statements.len());
-        for stmt_info in statements {
-            let translated_sql = translate_placeholders_to_sqlite(&stmt_info.sql);
-            let mapped = map_params(&stmt_info.params);
-            let param_refs: Vec<&dyn rusqlite::types::ToSql> = mapped
-                .iter()
-                .map(|x| x as &dyn rusqlite::types::ToSql)
-                .collect();
-            let mut stmt = tx
-                .prepare(&translated_sql)
-                .map_err(|e| DactylError::Adapter(format!("sqlite prepare: {e}")))?;
-
-            let column_count = stmt.column_count();
-            let column_names: Vec<String> = (0..column_count)
-                .map(|i| stmt.column_name(i).unwrap_or("").to_string())
-                .collect();
-
-            let rows_iter = stmt
-                .query_map(params_from_iter(param_refs.iter().copied()), |row| {
-                    let mut cells = Vec::with_capacity(column_count);
-                    for i in 0..column_count {
-                        let v = row.get::<_, SqlValue>(i)?;
-                        cells.push(sql_to_json(v));
-                    }
-                    Ok(cells)
-                })
-                .map_err(|e| DactylError::Adapter(format!("sqlite query: {e}")))?;
-
-            let mut rows = Vec::new();
-            for row in rows_iter {
-                let cells = row.map_err(|e| DactylError::Adapter(format!("sqlite row: {e}")))?;
-                rows.push(Row {
-                    columns: column_names.clone(),
-                    values: cells,
-                });
-            }
-            results.push(Rows(rows));
         }
-        tx.commit()
-            .map_err(|e| DactylError::Adapter(format!("sqlite transaction commit: {e}")))?;
-        Ok(results)
-    }
-
-    fn execute_script(&self, query: &str) -> Result<(), DactylError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
-        conn.execute_batch(query)
-            .map_err(|e| DactylError::Adapter(format!("sqlite execute script: {e}")))
-    }
-
-    fn last_insert_id(&self) -> Result<i64, DactylError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
-        Ok(conn.last_insert_rowid())
+        _ => serde_json::Value::Null,
     }
 }
 
-fn map_params(params: &[Parameter]) -> Vec<SqlValue> {
-    params
-        .iter()
-        .map(|p| match p {
-            Parameter::Null => SqlValue::Null,
-            Parameter::Bool(b) => SqlValue::Integer(if *b { 1 } else { 0 }),
-            Parameter::Integer(i) => SqlValue::Integer(*i),
-            Parameter::Real(f) => SqlValue::Real(*f),
-            Parameter::Text(s) => SqlValue::Text(s.clone()),
-            Parameter::Blob(b) => SqlValue::Blob(b.clone()),
-        })
-        .collect()
+fn sqlite_error(db: *mut ffi::sqlite3, code: c_int, operation: &str) -> DactylError {
+    sqlite_error_with_detail(db, code, operation, None)
 }
 
-fn translate_placeholders_to_sqlite(query: &str) -> String {
-    let mut out = String::new();
-    let bytes = query.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        let c = bytes[i] as char;
-
-        // A PostgreSQL-style placeholder is data when it appears inside a
-        // string or comment. Keep those regions byte-for-byte intact.
-        if c == '\'' || c == '"' {
-            let quote = bytes[i];
-            out.push(c);
-            i += 1;
-            while i < bytes.len() {
-                out.push(bytes[i] as char);
-                if bytes[i] == quote {
-                    if i + 1 < bytes.len() && bytes[i + 1] == quote {
-                        out.push(bytes[i + 1] as char);
-                        i += 2;
-                        continue;
-                    }
-                    i += 1;
-                    break;
-                }
-                i += 1;
-            }
-            continue;
+fn sqlite_error_with_detail(
+    db: *mut ffi::sqlite3,
+    code: c_int,
+    operation: &str,
+    detail: Option<String>,
+) -> DactylError {
+    let primary = code & 0xff;
+    let kind = match primary {
+        ffi::SQLITE_BUSY => AdapterErrorKind::Busy,
+        ffi::SQLITE_LOCKED => AdapterErrorKind::Locked,
+        ffi::SQLITE_CONSTRAINT => AdapterErrorKind::Constraint,
+        ffi::SQLITE_READONLY => AdapterErrorKind::ReadOnly,
+        ffi::SQLITE_IOERR | ffi::SQLITE_CANTOPEN | ffi::SQLITE_CORRUPT | ffi::SQLITE_NOTADB => {
+            AdapterErrorKind::Storage
         }
-        if c == '-' && i + 1 < bytes.len() && bytes[i + 1] == b'-' {
-            while i < bytes.len() {
-                let ch = bytes[i] as char;
-                out.push(ch);
-                i += 1;
-                if ch == '\n' {
-                    break;
-                }
+        ffi::SQLITE_ERROR | ffi::SQLITE_SCHEMA | ffi::SQLITE_AUTH => AdapterErrorKind::Query,
+        _ => AdapterErrorKind::Unknown,
+    };
+    let message = detail.unwrap_or_else(|| {
+        if db.is_null() {
+            format!("{operation} failed with SQLite code {code}")
+        } else {
+            let pointer = unsafe { ffi::sqlite3_errmsg(db) };
+            if pointer.is_null() {
+                format!("{operation} failed with SQLite code {code}")
+            } else {
+                format!(
+                    "{operation}: {}",
+                    unsafe { CStr::from_ptr(pointer) }.to_string_lossy()
+                )
             }
-            continue;
         }
-        if c == '/' && i + 1 < bytes.len() && bytes[i + 1] == b'*' {
-            out.push('/');
-            out.push('*');
-            i += 2;
-            while i < bytes.len() {
-                out.push(bytes[i] as char);
-                if bytes[i] == b'*' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
-                    out.push('/');
-                    i += 2;
-                    break;
-                }
-                i += 1;
-            }
-            continue;
-        }
-
-        if c == '$' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() {
-            out.push('?');
-            i += 1;
-            while i < bytes.len() && bytes[i].is_ascii_digit() {
-                i += 1;
-            }
-            continue;
-        }
-
-        out.push(c);
-        i += 1;
-    }
-    out
-}
-
-fn sql_to_json(v: SqlValue) -> serde_json::Value {
-    match v {
-        SqlValue::Null => serde_json::Value::Null,
-        SqlValue::Integer(i) => serde_json::Value::Number(i.into()),
-        SqlValue::Real(f) => serde_json::Number::from_f64(f)
-            .map(serde_json::Value::Number)
-            .unwrap_or(serde_json::Value::Null),
-        SqlValue::Text(s) => serde_json::Value::String(s),
-        SqlValue::Blob(b) => serde_json::Value::Array(
-            b.into_iter()
-                .map(|byte| serde_json::Value::Number((byte as u64).into()))
-                .collect(),
-        ),
-    }
+    });
+    DactylError::adapter(kind, message)
 }

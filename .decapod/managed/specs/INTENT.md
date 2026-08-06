@@ -16,11 +16,11 @@
 
 <!-- decapod:declared-capabilities:end -->
 ## Product Outcome
-- Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals.
+- Establish Dactyl as the small application-layer database provider for read/write-heavy apps. The same `read(sql, params)` and `write(sql, params)` calls must work against local SQLite and remote Vercel Neon without exposing backend handles or adding database administration behavior.
 
 ## What This Project Is
 dactyl-db is a not classified yet project built using Rust.
-Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals.
+Provide a minimal application driver over local SQLite and remote Vercel Neon. Dactyl selects the route, binds application values, forwards raw SQL unchanged, and normalizes rows and affected counts. Database administration, schema ownership, query planning, analytics, retries, and business intelligence remain outside the crate.
 
 Key operating facts:
 - **Primary languages**: Rust
@@ -61,7 +61,7 @@ flowchart LR
 - Security/compliance: sensitive data handling and authz are mandatory.
 
 ## Acceptance Criteria (must be objectively testable)
-- [ ] The outcome is complete when equivalent queries across all nine Decapod stores produce equivalent row projections through both adapters, compile-time query analysis works for literal queries, runtime analysis works for dynamic queries, inline datastore directives are honored, and the full formatting, linting, and conformance suite passes.
+- [ ] The outcome is complete when equivalent application reads and writes produce congruent row projections, bound-value handling, affected counts, and typed error categories through both SQLite and Neon, and the full formatting, linting, and conformance suite passes.
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
 - [ ] `cargo test` passes for unit/integration coverage
@@ -102,9 +102,9 @@ flowchart LR
 | Strict gates vs dev speed | Higher confidence | More upfront discipline | Lead time regressions |
 
 ## First Implementation Slice
-- [ ] Define the smallest user-visible workflow to ship first.
-- [ ] Define required data/contracts for that workflow.
-- [ ] Define what is intentionally postponed until v2.
+- [x] Define the smallest user-visible workflow: one parameterized application read and one parameterized application write.
+- [x] Define the shared route, parameter, row, affected-count, and error contracts.
+- [x] Postpone schema administration, migrations, transactions, query analysis, retries, and business intelligence.
 
 ## Open Questions (with decision deadlines)
 | Question | Owner | Deadline | Decision |
@@ -115,7 +115,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
+- Repository signal fingerprint: `4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
