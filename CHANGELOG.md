@@ -144,6 +144,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial commit
 ## Unreleased
 
+## [0.4.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.3.0...dactyl-db-v0.4.0) - 2026-08-06
+
+### Added
+
+- make dactyl a thin application read write driver ([#48](https://github.com/DecapodLabs/dactyl/pull/48))
+
+### Other
+
+- Update Decapod version in README
+
 - *(dactyl-db)* reduce the public contract to congruent application `read` /
   `write` operations for SQLite and Neon, remove the proc-macro/query-analysis
   layer, and replace the rusqlite facade with a private SQLite C-API driver
