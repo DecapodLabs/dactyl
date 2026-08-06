@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.96.13",
-  "git_revision": "71e468e720e32cdc0a349837b6d47d6ac0ee62b3",
+  "git_revision": "f625af5c5ab11be9325f1715e33b08bf1b26e5c5",
   "repo_signal_fingerprint": "4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b",
   "trajectory_run_id": "validation_01KZB2S1AFQ708TDRS6BAR17TH",
-  "trajectory_artifact_hash": "sha256:d977cc6ed5f7674ab4b1a685a0227391eaa712d0d53723aa9c4f29dc057d7217",
+  "trajectory_artifact_hash": "sha256:29be254e0d8124eeed6b0522b83978dc186078370eae86ac9e05c9d22bfa8413",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_df73bc67cd796539",
@@ -44,55 +44,54 @@
     }
   },
   "status": "ok",
-  "pass_count": 182,
+  "pass_count": 183,
   "fail_count": 0,
-  "warn_count": 4,
-  "elapsed_ms": 1271,
+  "warn_count": 3,
+  "elapsed_ms": 3996,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
-    "Failed to prune stale Decapod images: Validation error: Failed to list container images: Failed to obtain podman configuration: set sticky bit on: chmod /run/user/1000/libpod: read-only file system",
     "Risk map missing (run `decapod riskmap init`)",
     "Watcher audit trail missing (run `decapod govern watcher run`)",
     "Workspace branch 'agent/unknown/code-01kzb14pzzgekyfs' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/code-01kzb14pzzgekyfs`."
   ],
   "gate_timings": [
     {
-      "name": "validate_machine_contract",
-      "elapsed_ms": 501
-    },
-    {
-      "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 262
-    },
-    {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 92
-    },
-    {
-      "name": "validate_project_specs_docs",
-      "elapsed_ms": 89
-    },
-    {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 63
+      "elapsed_ms": 1936
+    },
+    {
+      "name": "validate_machine_contract",
+      "elapsed_ms": 1189
     },
     {
       "name": "validate_control_plane_contract",
-      "elapsed_ms": 42
+      "elapsed_ms": 254
     },
     {
-      "name": "validate_obligations",
-      "elapsed_ms": 41
+      "name": "validate_markdown_primitives_roundtrip_gate",
+      "elapsed_ms": 247
+    },
+    {
+      "name": "validate_project_specs_docs",
+      "elapsed_ms": 85
+    },
+    {
+      "name": "validate_federation_gates",
+      "elapsed_ms": 76
     },
     {
       "name": "validate_git_workspace_context",
-      "elapsed_ms": 40
+      "elapsed_ms": 35
     },
     {
       "name": "validate_schema_determinism",
       "elapsed_ms": 33
+    },
+    {
+      "name": "validate_obligations",
+      "elapsed_ms": 31
     },
     {
       "name": "validate_archive_integrity",
@@ -139,15 +138,11 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_watcher_audit",
-      "elapsed_ms": 1
-    },
-    {
       "name": "validate_lcm_immutability",
       "elapsed_ms": 1
     },
     {
-      "name": "validate_lcm_rebuild_gate",
+      "name": "validate_watcher_audit",
       "elapsed_ms": 1
     },
     {
@@ -159,6 +154,10 @@
       "elapsed_ms": 1
     },
     {
+      "name": "validate_lcm_rebuild_gate",
+      "elapsed_ms": 1
+    },
+    {
       "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 0
     },
@@ -167,11 +166,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_no_legacy_namespaces",
+      "name": "validate_health_purity",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_health_purity",
+      "name": "validate_no_legacy_namespaces",
       "elapsed_ms": 0
     },
     {
@@ -191,11 +190,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_heartbeat_invocation_gate",
+      "name": "validate_risk_map_violations",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_risk_map_violations",
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
@@ -223,15 +222,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_context_capsule_policy_contract",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_docs_templates_bucket",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_workunit_manifests_if_present",
+      "name": "validate_state_commit_gate",
       "elapsed_ms": 0
     },
     {
@@ -239,11 +234,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_embedded_self_contained",
+      "name": "validate_context_capsule_policy_contract",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_state_commit_gate",
+      "name": "validate_workunit_manifests_if_present",
       "elapsed_ms": 0
     },
     {
@@ -259,11 +254,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_recursive_improvement_passes_if_present",
+      "name": "validate_context_capsules_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_context_capsules_if_present",
+      "name": "validate_recursive_improvement_passes_if_present",
       "elapsed_ms": 0
     },
     {
@@ -272,6 +267,10 @@
     },
     {
       "name": "validate_interface_contract_bootstrap",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_embedded_self_contained",
       "elapsed_ms": 0
     },
     {
@@ -284,7 +283,6 @@
     "result": "review",
     "confidence": "medium",
     "reasons": [
-      "Failed to prune stale Decapod images: Validation error: Failed to list container images: Failed to obtain podman configuration: set sticky bit on: chmod /run/user/1000/libpod: read-only file system",
       "Risk map missing (run `decapod riskmap init`)",
       "Watcher audit trail missing (run `decapod govern watcher run`)",
       "Workspace branch 'agent/unknown/code-01kzb14pzzgekyfs' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/code-01kzb14pzzgekyfs`."
@@ -294,5 +292,5 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:8c5edb99eb1a9ddf1c00f6a32e3eacab793a285742846cec91e53b6865cb4138"
+  "receipt_hash": "sha256:4d601a81e72299a5548ae57fae7c7afdabe34635a8a213e384d1911fcc0e0dd5"
 }
