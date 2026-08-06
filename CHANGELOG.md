@@ -142,3 +142,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *(dactyl)* read/write are the only public API; first call auto-bootstraps the adapter
 - ignore .decapod runtime artifacts in .gitignore
 - Initial commit
+## Unreleased
+
+- *(dactyl-db)* reduce the public contract to congruent application `read` /
+  `write` operations for SQLite and Neon, remove the proc-macro/query-analysis
+  layer, and replace the rusqlite facade with a private SQLite C-API driver
+  ([#47](https://github.com/DecapodLabs/dactyl/issues/47)).

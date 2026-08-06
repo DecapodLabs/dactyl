@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Thin Dactyl SQLite and Neon application driver",
+  "intent": "Ship one congruent read(sql, params) and write(sql, params) facade for read/write-heavy applications over local SQLite and Vercel Neon. Use private adapters, typed values, normalized rows, affected counts, and typed errors; exclude schema administration, transactions, query analysis or rewriting, retries, analytics, and business intelligence.",
+  "state": "APPROVED",
+  "todo_ids": [
+    "code_01kzb14pzzgekyfs"
+  ],
+  "proof_hooks": [
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo test --all-features",
+    "cargo test"
+  ],
+  "unknowns": [],
+  "human_questions": [],
+  "stop_conditions": [
+    "Stop if the SQLite and Neon read/write contracts cannot remain congruent without adding backend administration or query intelligence."
+  ],
+  "unresolved_contradictions": [],
+  "deferred_questions": [],
+  "constraints": {
+    "forbidden_paths": [],
+    "file_touch_budget": null
+  },
+  "phases": [],
+  "updated_at": "1786003599Z"
+}

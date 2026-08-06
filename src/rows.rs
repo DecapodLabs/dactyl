@@ -1,4 +1,4 @@
-//! Row projection returned by [`crate::query`] and [`crate::transaction`].
+//! Row projection returned by [`crate::read`].
 //!
 //! # Named-column projection contract (dactyl #25)
 //!
@@ -59,7 +59,7 @@ impl IntoIterator for Rows {
 
 /// One result row. Carries the column names plus the per-cell JSON values.
 ///
-/// The row **owns** both vectors. After `query` / `transaction` returns, the
+/// The row **owns** both vectors. After `read` returns, the
 /// short-lived adapter is dropped; callers may keep `Row` values indefinitely.
 /// Borrowed accessors (`get_str_ref`, `get_json_ref`) are tied to `&self` only.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

@@ -1,39 +1,13 @@
-//! Neon HTTP adapter.
-//!
-//! Thin SQL-over-HTTP client targeting Propodus. The adapter is constructed
-//! per public [`crate::Connection`]. The request shape is the contract for the
-//! conformance mock server:
-//!
-//! ```text
-//! POST {endpoint}/query  { "sql": "...", "params": [...] }
-//! POST {endpoint}/batch  { "statements": [...] }
-//! ```
-//!
-//! ```json
-//! {
-//!   "columns": ["id", "title", "status"],
-//!   "rows": [
-//!     {"id": 1, "title": "...", "status": "..."},
-//!     ...
-//!   ]
-//! }
-//! ```
-//!
-//! `/batch` is the Neon half of [`crate::transaction`]: the server must apply
-//! the statement list as one atomic unit (all commit or all reject). Non-2xx
-//! responses are surfaced as [`DactylError::Adapter`] with the response body;
-//! dactyl does not partially apply a failed batch client-side.
-//!
-//! Propodus owns auth; dactyl only forwards the opaque `bearer` token.
+//! Minimal SQL-over-HTTP transport for Neon.
 
 use serde::{Deserialize, Serialize};
 
 use crate::adapter::Adapter;
-use crate::error::DactylError;
+use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
-use crate::Statement;
 
-/// Opaque handle to the Neon adapter.
+/// A short-lived Neon adapter. The endpoint owns SQL execution and business
+/// logic; Dactyl only sends the request and normalizes the response.
 pub struct NeonAdapter {
     endpoint: String,
     bearer: Option<String>,
@@ -41,14 +15,14 @@ pub struct NeonAdapter {
 }
 
 #[derive(Debug, Serialize)]
-struct QueryRequest<'a> {
+struct Request<'a> {
     sql: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     params: Option<&'a [Parameter]>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct QueryResponse {
+#[derive(Debug, Deserialize)]
+struct Response {
     #[serde(default)]
     columns: Vec<String>,
     #[serde(default)]
@@ -57,161 +31,80 @@ struct QueryResponse {
     affected_rows: Option<u64>,
 }
 
-#[derive(Debug, Serialize)]
-struct BatchRequest<'a> {
-    statements: &'a [Statement],
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct BatchResponse {
-    #[serde(default)]
-    results: Vec<QueryResponse>,
-}
-
 impl NeonAdapter {
-    /// Construct a Neon adapter pointed at the given Propodus endpoint.
-    ///
-    /// `bearer` is an opaque token forwarded in the `Authorization` header.
     pub fn new(endpoint: &str, bearer: Option<String>) -> Self {
-        let client = reqwest::blocking::Client::builder()
-            .build()
-            .expect("reqwest blocking client");
         Self {
-            endpoint: endpoint.trim_end_matches('/').to_string(),
+            endpoint: endpoint.trim_end_matches('/').to_owned(),
             bearer,
-            client,
+            client: reqwest::blocking::Client::new(),
         }
     }
-}
 
-fn rows_from_response(body: QueryResponse) -> Result<Rows, DactylError> {
-    let mut out = Vec::with_capacity(body.rows.len());
-    for r in body.rows {
-        let obj = r
-            .as_object()
-            .ok_or_else(|| DactylError::Adapter("neon row is not a JSON object".into()))?;
-        if body.columns.is_empty() {
-            let cols: Vec<String> = obj.keys().cloned().collect();
-            let vals: Vec<serde_json::Value> = cols
-                .iter()
-                .map(|c| obj.get(c).cloned().unwrap_or(serde_json::Value::Null))
-                .collect();
-            out.push(Row {
-                columns: cols,
-                values: vals,
-            });
-        } else {
-            let vals: Vec<serde_json::Value> = body
-                .columns
-                .iter()
-                .map(|c| obj.get(c).cloned().unwrap_or(serde_json::Value::Null))
-                .collect();
-            out.push(Row {
-                columns: body.columns.clone(),
-                values: vals,
-            });
+    fn request(&self, sql: &str, params: &[Parameter]) -> Result<Response, DactylError> {
+        let mut request = self.client.post(format!("{}/query", self.endpoint));
+        if let Some(token) = &self.bearer {
+            request = request.bearer_auth(token);
         }
+        let response = request
+            .json(&Request {
+                sql,
+                params: Some(params),
+            })
+            .send()
+            .map_err(|error| {
+                DactylError::adapter(AdapterErrorKind::Transport, format!("neon send: {error}"))
+            })?;
+        let status = response.status();
+        let body = response.bytes().map_err(|error| {
+            DactylError::adapter(
+                AdapterErrorKind::Transport,
+                format!("neon response: {error}"),
+            )
+        })?;
+        if !status.is_success() {
+            return Err(DactylError::adapter(
+                AdapterErrorKind::Query,
+                format!("neon status {status}: {}", String::from_utf8_lossy(&body)),
+            ));
+        }
+        serde_json::from_slice(&body).map_err(|error| {
+            DactylError::adapter(AdapterErrorKind::Protocol, format!("neon decode: {error}"))
+        })
     }
-    Ok(Rows(out))
 }
 
 impl Adapter for NeonAdapter {
-    fn execute(&self, query: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
-        let url = format!("{}/query", self.inner_endpoint());
-        let req = QueryRequest {
-            sql: query,
-            params: Some(params),
-        };
-        let mut rb = self.client.post(&url).json(&req);
-        if let Some(b) = &self.bearer {
-            rb = rb.bearer_auth(b);
-        }
-        let resp = rb
-            .send()
-            .map_err(|e| DactylError::Adapter(format!("neon send: {e}")))?;
-        let status = resp.status();
-        let body: QueryResponse = resp
-            .json()
-            .map_err(|e| DactylError::Adapter(format!("neon decode: {e}")))?;
-        if !status.is_success() {
-            return Err(DactylError::Adapter(format!(
-                "neon status {status}: {}",
-                serde_json::to_string(&body).unwrap_or_default()
-            )));
-        }
-        rows_from_response(body)
+    fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
+        rows_from_response(self.request(sql, params)?)
     }
 
-    fn execute_raw(&self, query: &str, params: &[Parameter]) -> Result<u64, DactylError> {
-        let url = format!("{}/query", self.inner_endpoint());
-        let req = QueryRequest {
-            sql: query,
-            params: Some(params),
-        };
-        let mut rb = self.client.post(&url).json(&req);
-        if let Some(b) = &self.bearer {
-            rb = rb.bearer_auth(b);
-        }
-        let resp = rb
-            .send()
-            .map_err(|e| DactylError::Adapter(format!("neon send: {e}")))?;
-        let status = resp.status();
-        let body: QueryResponse = resp
-            .json()
-            .map_err(|e| DactylError::Adapter(format!("neon decode: {e}")))?;
-        if !status.is_success() {
-            return Err(DactylError::Adapter(format!(
-                "neon status {status}: {}",
-                serde_json::to_string(&body).unwrap_or_default()
-            )));
-        }
-        Ok(body.affected_rows.unwrap_or(body.rows.len() as u64))
-    }
-
-    fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
-        let url = format!("{}/batch", self.inner_endpoint());
-        let req = BatchRequest { statements };
-        let mut rb = self.client.post(&url).json(&req);
-        if let Some(b) = &self.bearer {
-            rb = rb.bearer_auth(b);
-        }
-        let resp = rb
-            .send()
-            .map_err(|e| DactylError::Adapter(format!("neon batch send: {e}")))?;
-        let status = resp.status();
-        // Read bytes first so non-2xx error bodies (often not BatchResponse)
-        // still surface as Adapter errors with the server payload.
-        let bytes = resp
-            .bytes()
-            .map_err(|e| DactylError::Adapter(format!("neon batch body: {e}")))?;
-        if !status.is_success() {
-            return Err(DactylError::Adapter(format!(
-                "neon batch status {status}: {}",
-                String::from_utf8_lossy(&bytes)
-            )));
-        }
-        let body: BatchResponse = serde_json::from_slice(&bytes)
-            .map_err(|e| DactylError::Adapter(format!("neon batch decode: {e}")))?;
-        let mut results = Vec::with_capacity(body.results.len());
-        for res in body.results {
-            results.push(rows_from_response(res)?);
-        }
-        Ok(results)
-    }
-
-    fn execute_script(&self, query: &str) -> Result<(), DactylError> {
-        self.execute_raw(query, &[]).map(|_| ())
-    }
-
-    fn last_insert_id(&self) -> Result<i64, DactylError> {
-        Err(DactylError::UnsupportedOperation(
-            "last_insert_id is not part of the Neon HTTP response contract".into(),
-        ))
+    fn write(&self, sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+        let response = self.request(sql, params)?;
+        Ok(response.affected_rows.unwrap_or(response.rows.len() as u64))
     }
 }
 
-impl NeonAdapter {
-    fn inner_endpoint(&self) -> &str {
-        &self.endpoint
+fn rows_from_response(response: Response) -> Result<Rows, DactylError> {
+    let mut rows = Vec::with_capacity(response.rows.len());
+    for value in response.rows {
+        let object = value.as_object().ok_or_else(|| {
+            DactylError::adapter(AdapterErrorKind::Protocol, "neon row is not an object")
+        })?;
+        let columns = if response.columns.is_empty() {
+            object.keys().cloned().collect::<Vec<_>>()
+        } else {
+            response.columns.clone()
+        };
+        let values = columns
+            .iter()
+            .map(|column| {
+                object
+                    .get(column)
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null)
+            })
+            .collect();
+        rows.push(Row { columns, values });
     }
+    Ok(Rows(rows))
 }

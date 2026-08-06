@@ -71,22 +71,18 @@ pub enum ApiError {
 
 ## Dactyl — API Contract (design-time note)
 
-- Public surface (crate root): `query(sql: &str, params: &[Parameter]) -> Result<Rows, DactylError>`, `execute(sql: &str, params: &[Parameter]) -> Result<u64, DactylError>`, and `transaction(statements: &[Statement]) -> Result<Vec<Rows>, DactylError>`, plus the `query!("...")` macro and the `Parameter` / `Statement` / `Rows` / `Row` / `DactylError` result types.
-- There is no `init` / `active_datastore` and no process-global connection cache. Each call builds a short-lived adapter for the ambient selection and drops it on return, so session isolation is automatic.
-- Adapter selection is ambient-env-driven only:
-  - `DATASTORE` set to `"sqlite"` or `"neon"` (any other value is a typed error).
-  - `DATASTORE_ROUTE` specifies the database path (SQLite) or the endpoint URL (Neon).
-  - `DATASTORE_TOKEN` is the optional auth token for Neon.
-  - No legacy `DACTYL_*` variables are honored.
-- Parameters are always adapter-bound, never interpolated into SQL. `Parameter` enumerates `Null` / `Bool` / `Integer` / `Real` / `Text`.
-- `execute` is the caller-owned schema surface: dactyl never silently creates tables.
-- `Row` provides strict `get` / `try_get<T: DeserializeOwned>`, lenient `get_bool` / `get_int` / `get_real` / `get_str` / `get_json`, borrowed `get_str_ref` / `get_json_ref`, and `is_null`, with explicit `ColumnNotFound` / `Conversion` errors. Named lookup is left-to-right first-match for duplicate aliases. SQL NULL maps to `Option<T>` or a `Conversion` that mentions NULL for non-Option targets. Rows own their cells; borrowed accessors are tied to `&Row` only (dactyl #25 / #2; DecapodLabs/decapod#1111).
-- `transaction` is atomic: any per-statement failure rolls back the whole unit on SQLite and is rejected by the Neon `/batch` endpoint (dactyl #24). Nesting is not supported (no SAVEPOINT). dactyl does not retry and exposes no deadline parameter; callers own retry/idempotency after ambiguous transport failures. Empty batch → `Ok([])`. Conformance proves failure-injection on SQLite and Neon mock plus an event-plus-state fixture.
-- `query!("sql")` lexically analyzes the literal at compile time and returns the rewritten SQL as a `String` for the caller to pass to `query`.
+- Public application surface: `read(sql: &str, params: &[Parameter]) -> Result<Rows, DactylError>` and `write(sql: &str, params: &[Parameter]) -> Result<u64, DactylError>`, plus `Connection::open` for an explicit route.
+- Adapter selection is ambient-env-driven for free functions: `DATASTORE` is `sqlite` or `neon`, `DATASTORE_ROUTE` is the SQLite path or Neon endpoint, and `DATASTORE_TOKEN` is the optional Neon bearer token.
+- Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`.
+- `Rows` owns normalized `Row` values. SQLite and Neon use the same column/value representation and typed row accessors, including explicit NULL and conversion failures.
+- Raw SQL is forwarded unchanged. Dactyl has no query parser, dialect rewriter, schema bootstrap, migration API, transaction API, retry policy, analytics, or business-intelligence behavior.
+- Operational adapter errors expose typed categories so application code does not parse backend error strings.
 
-### Multi-backend vision
+### Multi-backend boundary
 
-dactyl-db is the single SQL-vendor-agnostic persistence framework. The `Adapter` trait is backend-neutral and SQL-focused; new backends (Redis, MySQL, Cassandra, and other structured query languages) slot in as one module plus one `DATASTORE` match arm. The public `query` / `execute` / `transaction` surface never changes per backend.
+SQLite and Neon are the current supported application stores. Any future
+backend must preserve the same read/write request and response contract; adding
+database administration or business-intelligence features is out of scope.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
@@ -112,7 +108,7 @@ dactyl-db is the single SQL-vendor-agnostic persistence framework. The `Adapter`
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
+- Repository signal fingerprint: `4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

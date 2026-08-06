@@ -7,22 +7,20 @@ license = "MIT"
 repository = "https://github.com/DecapodLabs/dactyl"
 description = "Interchangeably read and write to local SQLite or cloud-hosted Vercel Neon instances behind a single unified facade."
 readme = "README.md"
-keywords = ["decapod", "datastore", "sql", "sqlite", "postgres"]
+keywords = ["datastore", "vercel", "postgres", "sql", "sqlite"]
 categories = ["database", "api-bindings"]
 
 [features]
 default = []
-sqlite = ["dep:rusqlite"]
+sqlite = ["dep:libsqlite3-sys"]
 neon = ["dep:reqwest"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
-tracing = "0.1"
-rusqlite = { version = "0.31", optional = true, features = ["bundled"] }
+libsqlite3-sys = { version = "0.28", optional = true, features = ["bundled"] }
 reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
-dactyl-db-macros = { path = "dactyl-db-macros", version = "0.3.0" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -33,5 +31,4 @@ tempfile = "3"
 resolver = "2"
 members = [
     ".",
-    "dactyl-db-macros",
 ]

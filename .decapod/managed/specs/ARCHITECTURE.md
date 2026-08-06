@@ -3,13 +3,13 @@
 library
 
 ## What This Project Is
-dactyl-db is the single SQL-vendor-agnostic Rust persistence framework: one `query(sql, params)` surface over any structured-query-language backend. SQLite and Neon ship today; Redis, MySQL, and Cassandra are planned behind the same facade.
+dactyl-db is a small Rust application driver: one `read(sql, params)` and one `write(sql, params)` surface over SQLite and Vercel Neon. It is not a general SQL framework or database-administration layer.
 
 Architectural principles:
 - **Simplicity**: Keep components focused and reusable.
 - **Modularity**: Clearly defined interface boundaries and dependency separation.
 - **Reliability**: Graceful failure handling and thorough verification.
-- **Backend-neutrality**: The public API never changes per backend; a new backend is one `Adapter` module plus one `DATASTORE` match arm.
+- **Backend-neutrality**: SQLite and Neon receive the same SQL and parameter shapes and return congruent rows/counts; backend-specific handles remain private.
 
 ## Current Facts
 - Runtime/languages: Rust
@@ -22,9 +22,9 @@ This project's architecture consists of the following key layers/directories:
 - `tests/`: Integration and unit test suite.
 
 ## Data Flows
-- Inbound request/command parses and validates at the entrypoint.
-- Core runtime handles business logic and initiates queries or state changes.
-- Storage adapter reads or writes data to the underlying persistence layers.
+- The application supplies SQL and bound values.
+- Dactyl selects SQLite or Neon and forwards the request.
+- The adapter returns normalized rows for reads or an affected count for writes.
 
 ## Strongest Existing Primitives
 - Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
@@ -56,8 +56,8 @@ sequenceDiagram
   participant DB as Datastore
   C->>G: Request
   G->>D: Validate + execute
-  D->>DB: Commit transaction
-  DB-->>D: Commit ok
+  D->>DB: Read or write SQL
+  DB-->>D: Rows or affected count
   D-->>G: Domain result
   G-->>C: Response + trace_id
 ```
@@ -81,10 +81,10 @@ sequenceDiagram
 - Verification and artifact emission:
 
 ## Concurrency and Runtime Model
-- Execution model: each `query` / `execute` / `transaction` call constructs a fresh short-lived adapter for the ambient `DATASTORE` selection and drops it on return.
-- Isolation boundaries: no process-global connection cache, so workspace/session isolation is automatic and the public surface is `Send + Sync` without locks.
-- Backpressure strategy: N/A at the facade level; Neon adapter relies on the underlying HTTP client.
-- Shared state synchronization: none — adapters own their connections for the duration of a call; SQLite serializes its connection behind an internal `Mutex` only because `rusqlite::Connection` is `!Sync`.
+- Execution model: each free `read` / `write` call constructs a short-lived adapter for the ambient route and drops it on return; explicit `Connection` scopes several application operations to one route.
+- Isolation boundaries: Dactyl keeps no process-global cache and exposes no backend handle.
+- Backpressure strategy: owned by the backend or Neon service; Dactyl does not retry or schedule work.
+- Shared state synchronization: none at the Dactyl layer.
 
 ## Deployment Topology
 - Runtime units: none (library).
@@ -93,16 +93,16 @@ sequenceDiagram
 - Rollback trigger and blast-radius scope: callers pin a dactyl version; breaking changes are recorded in CHANGELOG.md.
 
 ## Data and Contracts
-- Inbound contracts (CLI/API/events): `query(sql, params)`, `execute(sql, params)`, `transaction(&[Statement])`, `query!` macro.
-- Outbound dependencies (datastores/queues/external APIs): SQLite (rusqlite, bundled) and Neon/Propodus (reqwest, blocking+rustls-tls).
-- Data ownership boundaries: callers own all schema. dactyl never silently creates tables; `execute` is the only DDL surface.
-- Schema evolution + migration policy: callers version their schema through explicit `execute` DDL statements and `transaction` batches. dactyl records no schema of its own.
+- Inbound contracts (application calls): `read(sql, params)` and `write(sql, params)`.
+- Outbound dependencies (datastores/queues/external APIs): private SQLite C-API wrapper and Neon/Propodus HTTP transport.
+- Data ownership boundaries: the backend owns schema and database intelligence; Dactyl only moves application reads and writes.
+- Schema evolution + migration policy: outside Dactyl's scope.
 
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
 | ADR-001 | Ambient-env routing contract (DATASTORE/DATASTORE_ROUTE/DATASTORE_TOKEN) | Accepted | Single authoritative selector; no init(); per-call adapters for session isolation (dactyl #26) | 2026-08-01 |
-| ADR-002 | Slim single-entry API: query(sql, params) + execute + transaction | Accepted | One uniform surface across all current and planned SQL backends (dactyl #23, #24) | 2026-08-01 |
+| ADR-002 | Thin application API: read(sql, params) + write(sql, params) | Accepted | One uniform read/write surface for SQLite and Neon; administration remains outside the crate (dactyl #47) | 2026-08-01 |
 | ADR-003 | Backend-neutral Adapter trait | Proposed | New backends (redis, mysql, cassandra) add one module + one DATASTORE arm; public surface unchanged | 2026-08-01 |
 
 ## Delivery Plan (first 3 slices)
@@ -139,7 +139,7 @@ sequenceDiagram
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
+- Repository signal fingerprint: `4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
