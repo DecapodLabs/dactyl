@@ -1,9 +1,8 @@
 //! SQLite adapter.
 //!
 //! Holds a `rusqlite::Connection` opened against the configured path. The
-//! adapter is constructed per call from [`crate::build_adapter`] and lives
-//! for the duration of that call, so there is no shared connection cache and
-//! the connection is never mutated across threads.
+//! adapter is constructed per public [`crate::Connection`] and lives for that
+//! connection's duration. There is no process-wide connection cache.
 //!
 //! Schemas are managed by the caller — [`SqliteAdapter::open`] opens (or
 //! creates) the file but never bootstraps any tables. Callers own and version
@@ -11,12 +10,14 @@
 //! (dactyl #27).
 
 use std::sync::Mutex;
+use std::time::Duration;
 
-use rusqlite::{params_from_iter, types::Value as SqlValue, Connection};
+use rusqlite::{params_from_iter, types::Value as SqlValue, Connection, OpenFlags};
 
 use crate::adapter::Adapter;
 use crate::error::DactylError;
 use crate::rows::{Parameter, Row, Rows};
+use crate::SqliteJournalMode;
 use crate::Statement;
 
 /// Opaque handle to the SQLite adapter.
@@ -30,9 +31,45 @@ pub struct SqliteAdapter {
 }
 
 impl SqliteAdapter {
-    /// Open (or create) the SQLite file at `path`. No tables are created.
-    pub fn open(path: &str) -> rusqlite::Result<Self> {
-        let conn = Connection::open(path)?;
+    /// Open SQLite with the connection policy supplied by the public dactyl
+    /// connection boundary.
+    pub fn open_with_options(
+        path: &str,
+        read_only: bool,
+        busy_timeout: Duration,
+        foreign_keys: bool,
+        journal_mode: Option<SqliteJournalMode>,
+    ) -> rusqlite::Result<Self> {
+        if !read_only && path != ":memory:" {
+            if let Some(parent) = std::path::Path::new(path).parent() {
+                if !parent.as_os_str().is_empty() {
+                    std::fs::create_dir_all(parent)
+                        .map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
+                }
+            }
+        }
+        let conn = if read_only {
+            Connection::open_with_flags(
+                path,
+                OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+            )?
+        } else {
+            Connection::open(path)?
+        };
+        conn.busy_timeout(busy_timeout)?;
+        if foreign_keys {
+            conn.execute_batch("PRAGMA foreign_keys=ON;")?;
+        }
+        if !read_only {
+            if let Some(mode) = journal_mode {
+                let requested = format!("PRAGMA journal_mode={};", mode.as_sql());
+                if conn.query_row(&requested, [], |_| Ok(())).is_err()
+                    && mode == SqliteJournalMode::Wal
+                {
+                    conn.query_row("PRAGMA journal_mode=DELETE;", [], |_| Ok(()))?;
+                }
+            }
+        }
         Ok(Self {
             conn: Mutex::new(conn),
         })
@@ -153,6 +190,23 @@ impl Adapter for SqliteAdapter {
             .map_err(|e| DactylError::Adapter(format!("sqlite transaction commit: {e}")))?;
         Ok(results)
     }
+
+    fn execute_script(&self, query: &str) -> Result<(), DactylError> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
+        conn.execute_batch(query)
+            .map_err(|e| DactylError::Adapter(format!("sqlite execute script: {e}")))
+    }
+
+    fn last_insert_id(&self) -> Result<i64, DactylError> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| DactylError::Adapter(format!("sqlite lock poisoned: {e}")))?;
+        Ok(conn.last_insert_rowid())
+    }
 }
 
 fn map_params(params: &[Parameter]) -> Vec<SqlValue> {
@@ -164,23 +218,77 @@ fn map_params(params: &[Parameter]) -> Vec<SqlValue> {
             Parameter::Integer(i) => SqlValue::Integer(*i),
             Parameter::Real(f) => SqlValue::Real(*f),
             Parameter::Text(s) => SqlValue::Text(s.clone()),
+            Parameter::Blob(b) => SqlValue::Blob(b.clone()),
         })
         .collect()
 }
 
 fn translate_placeholders_to_sqlite(query: &str) -> String {
     let mut out = String::new();
-    let mut chars = query.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '$' {
-            if let Some(next_c) = chars.peek() {
-                if next_c.is_ascii_digit() {
-                    out.push('?');
-                    continue;
+    let bytes = query.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = bytes[i] as char;
+
+        // A PostgreSQL-style placeholder is data when it appears inside a
+        // string or comment. Keep those regions byte-for-byte intact.
+        if c == '\'' || c == '"' {
+            let quote = bytes[i];
+            out.push(c);
+            i += 1;
+            while i < bytes.len() {
+                out.push(bytes[i] as char);
+                if bytes[i] == quote {
+                    if i + 1 < bytes.len() && bytes[i + 1] == quote {
+                        out.push(bytes[i + 1] as char);
+                        i += 2;
+                        continue;
+                    }
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        if c == '-' && i + 1 < bytes.len() && bytes[i + 1] == b'-' {
+            while i < bytes.len() {
+                let ch = bytes[i] as char;
+                out.push(ch);
+                i += 1;
+                if ch == '\n' {
+                    break;
                 }
             }
+            continue;
         }
+        if c == '/' && i + 1 < bytes.len() && bytes[i + 1] == b'*' {
+            out.push('/');
+            out.push('*');
+            i += 2;
+            while i < bytes.len() {
+                out.push(bytes[i] as char);
+                if bytes[i] == b'*' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+                    out.push('/');
+                    i += 2;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+
+        if c == '$' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() {
+            out.push('?');
+            i += 1;
+            while i < bytes.len() && bytes[i].is_ascii_digit() {
+                i += 1;
+            }
+            continue;
+        }
+
         out.push(c);
+        i += 1;
     }
     out
 }
@@ -193,6 +301,10 @@ fn sql_to_json(v: SqlValue) -> serde_json::Value {
             .map(serde_json::Value::Number)
             .unwrap_or(serde_json::Value::Null),
         SqlValue::Text(s) => serde_json::Value::String(s),
-        SqlValue::Blob(b) => serde_json::Value::String(format!("<blob {} bytes>", b.len())),
+        SqlValue::Blob(b) => serde_json::Value::Array(
+            b.into_iter()
+                .map(|byte| serde_json::Value::Number((byte as u64).into()))
+                .collect(),
+        ),
     }
 }

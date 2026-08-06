@@ -1,8 +1,8 @@
 //! Neon HTTP adapter.
 //!
 //! Thin SQL-over-HTTP client targeting Propodus. The adapter is constructed
-//! per call from [`crate::build_adapter`] and lives for the duration of that
-//! call. The request shape is the contract for the conformance mock server:
+//! per public [`crate::Connection`]. The request shape is the contract for the
+//! conformance mock server:
 //!
 //! ```text
 //! POST {endpoint}/query  { "sql": "...", "params": [...] }
@@ -53,6 +53,8 @@ struct QueryResponse {
     columns: Vec<String>,
     #[serde(default)]
     rows: Vec<serde_json::Value>,
+    #[serde(default)]
+    affected_rows: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -141,8 +143,29 @@ impl Adapter for NeonAdapter {
     }
 
     fn execute_raw(&self, query: &str, params: &[Parameter]) -> Result<u64, DactylError> {
-        let rows = self.execute(query, params)?;
-        Ok(rows.len() as u64)
+        let url = format!("{}/query", self.inner_endpoint());
+        let req = QueryRequest {
+            sql: query,
+            params: Some(params),
+        };
+        let mut rb = self.client.post(&url).json(&req);
+        if let Some(b) = &self.bearer {
+            rb = rb.bearer_auth(b);
+        }
+        let resp = rb
+            .send()
+            .map_err(|e| DactylError::Adapter(format!("neon send: {e}")))?;
+        let status = resp.status();
+        let body: QueryResponse = resp
+            .json()
+            .map_err(|e| DactylError::Adapter(format!("neon decode: {e}")))?;
+        if !status.is_success() {
+            return Err(DactylError::Adapter(format!(
+                "neon status {status}: {}",
+                serde_json::to_string(&body).unwrap_or_default()
+            )));
+        }
+        Ok(body.affected_rows.unwrap_or(body.rows.len() as u64))
     }
 
     fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError> {
@@ -174,6 +197,16 @@ impl Adapter for NeonAdapter {
             results.push(rows_from_response(res)?);
         }
         Ok(results)
+    }
+
+    fn execute_script(&self, query: &str) -> Result<(), DactylError> {
+        self.execute_raw(query, &[]).map(|_| ())
+    }
+
+    fn last_insert_id(&self) -> Result<i64, DactylError> {
+        Err(DactylError::UnsupportedOperation(
+            "last_insert_id is not part of the Neon HTTP response contract".into(),
+        ))
     }
 }
 

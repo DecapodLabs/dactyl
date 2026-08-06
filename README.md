@@ -1,6 +1,8 @@
 # dactyl-db
 
-`dactyl-db` is a single SQL-vendor-agnostic Rust persistence framework. One crate, one `query(sql, params)` API, one ambient env-var selector — talk to SQLite, Neon/Postgres, and (planned) Redis, MySQL, Cassandra from one import, instead of pulling a per-database library for each backend.
+[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.96.12-dc2626)](https://github.com/DecapodLabs/decapod)
+
+`dactyl-db` is a single SQL-vendor-agnostic Rust persistence framework. One crate, one backend-neutral operation contract, and one ambient env-var selector — talk to SQLite, Neon/Postgres, and (planned) Redis, MySQL, Cassandra from one import, instead of pulling a per-database library for each backend.
 
 The same SQL string produces the same logical rows regardless of the active backend. Parameters are always bound, never interpolated, so dynamic values cannot become SQL.
 
@@ -10,6 +12,7 @@ The same SQL string produces the same logical rows regardless of the active back
 - **Ambient selection** — `DATASTORE` env var picks the active backend at runtime. No `init()`, no per-call datastore argument, no global connection cache.
 - **Safe parameter binding** — `query(sql, &[params])` binds typed values; SQL injection via parameter values is structurally impossible.
 - **Atomic batches** — `transaction(&[Statement])` commits all-or-nothing on every backend (no nesting; caller-owned retry/idempotency; see contract below).
+- **Connection-scoped integration** — `Connection` and `StorageOp` provide the thin waist needed by Decapod without exposing `rusqlite`, HTTP clients, or adapter types.
 - **Caller-owned schema** — dactyl never silently creates tables. `execute("create table ...")` is the only way dactyl touches schema.
 
 ## Quick Start
@@ -93,6 +96,33 @@ The active backend is chosen by ambient environment variables — no `init()` ca
 | `DATASTORE` | `"sqlite"` or `"neon"` | yes | Selects the active backend. Any other value is a typed error. |
 | `DATASTORE_ROUTE` | SQLite filepath OR Neon endpoint URL | yes | Connection route for the selected backend. |
 | `DATASTORE_TOKEN` | Opaque string | no | Bearer token forwarded to Neon. Ignored by SQLite. |
+| `DATASTORE_REWRITE` | `1`, `true`, `yes`, or `on` | no | Enables only dactyl's explicitly safe dialect rewrites. Disabled by default. |
+| `DATASTORE_SQLITE_ROUTE` | SQLite filepath | no | Optional alternate route for a `-- dactyl: sqlite` inline directive when the active datastore is Neon. |
+| `DATASTORE_NEON_ROUTE` | Neon endpoint URL | no | Optional alternate route for a `-- dactyl: neon` inline directive when the active datastore is SQLite. |
+
+## Connection-scoped integration boundary
+
+Use an explicit connection when several operations must share one configured
+route, such as schema setup, validation, migrations, or a sequence of reads and
+writes:
+
+```rust
+use dactyl_db::{Connection, DatastoreRoute, Parameter, Statement};
+
+let db = Connection::open(DatastoreRoute::sqlite(".decapod/data/decapod.db"))?;
+db.execute_batch("PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY, value TEXT);")?;
+db.transaction(&[Statement::new(
+    "INSERT INTO state(value) VALUES ($1)",
+    vec![Parameter::Text("ready".into())],
+)])?;
+```
+
+`Connection::open_with_options` additionally controls read-only SQLite access,
+busy timeout, foreign-key enforcement, journal mode (WAL falls back to DELETE),
+and safe dialect rewrites. The
+operation-based `StorageOp` / `StorageResult` pair is the integration surface
+for code that cannot accept a closure tied to a SQLite connection. Dactyl's
+public API intentionally does not expose `rusqlite` types.
 
 ## Public surface
 
@@ -100,10 +130,13 @@ The active backend is chosen by ambient environment variables — no `init()` ca
 |---|---|
 | `query(sql, params)` | One entry point for any SQL (read or write). Returns `Rows`. |
 | `execute(sql, params)` | DDL / migration / affected-row operations. Returns affected count. |
+| `execute_batch(sql)` | Caller-owned multi-statement DDL or migration script. |
 | `transaction(&[Statement])` | Atomic batch; full rollback on any per-statement failure. |
 | `query!("sql")` macro | Compile-time SQL-literal analysis. |
+| `Connection` | Connection-scoped backend-neutral operations and configuration. |
+| `StorageOp` | Operation-based thin waist for adapter-independent callers. |
 
-`Parameter` enumerates the typed binding set: `Null`, `Bool`, `Integer`, `Real`, `Text`. The adapter forwards the values verbatim — never as interpolated SQL.
+`Parameter` enumerates the typed binding set: `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`. The adapter forwards the values verbatim — never as interpolated SQL.
 
 `Row` provides `get` / `try_get`, lenient scalar getters, `is_null`, and borrowed `get_str_ref` / `get_json_ref` under the projection contract above.
 

@@ -1,26 +1,4 @@
 # Interfaces
-
-<!-- decapod:capability-overlay:public-api:start -->
-
-## Public API Capability Overlay
-
-### API Contract Requirements
-- All public endpoints MUST define explicit request/response schemas
-- Versioning strategy MUST be documented (URL path or header-based)
-- All public endpoints MUST implement idempotency for mutating operations
-- Rate limiting and pagination MUST be implemented for list endpoints
-
-### Compatibility Guarantees
-- Backward-compatible changes ONLY within a version
-- Breaking changes require new version (v1, v2, etc.)
-- Deprecation and removal policy MUST be selected for this project and proven against its consumers
-
-### Security Requirements
-- All public endpoints MUST implement authentication
-- Abuse-control enforcement point MUST be a documented project decision
-- Input validation MUST reject malformed requests with typed errors
-<!-- decapod:capability-overlay:public-api:end -->
-
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
@@ -110,10 +88,31 @@ pub enum ApiError {
 
 dactyl-db is the single SQL-vendor-agnostic persistence framework. The `Adapter` trait is backend-neutral and SQL-focused; new backends (Redis, MySQL, Cassandra, and other structured query languages) slot in as one module plus one `DATASTORE` match arm. The public `query` / `execute` / `transaction` surface never changes per backend.
 
+<!-- decapod:capability-overlay:public-api:start -->
+
+## Public API Capability Overlay
+
+### API Contract Requirements
+- All public endpoints MUST define explicit request/response schemas
+- Versioning strategy MUST be documented (URL path or header-based)
+- All public endpoints MUST implement idempotency for mutating operations
+- Rate limiting and pagination MUST be implemented for list endpoints
+
+### Compatibility Guarantees
+- Backward-compatible changes ONLY within a version
+- Breaking changes require new version (v1, v2, etc.)
+- Deprecation and removal policy MUST be selected for this project and proven against its consumers
+
+### Security Requirements
+- All public endpoints MUST implement authentication
+- Abuse-control enforcement point MUST be a documented project decision
+- Input validation MUST reject malformed requests with typed errors
+<!-- decapod:capability-overlay:public-api:end -->
+
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
+- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

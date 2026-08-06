@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Prepare Dactyl as Decapod's datastore replacement boundary",
+  "intent": "Extend dactyl-db into a first-class backend-neutral datastore boundary capable of replacing Decapod's direct SQLite/rusqlite needs without modifying Decapod: expose connection-scoped operations, parameterized queries, transactions, stable row projections, runtime and compile-time SQL analysis, inline datastore directives, and adapter-independent proof.",
+  "state": "APPROVED",
+  "todo_ids": [
+    "code_01kzax19ft3t0757"
+  ],
+  "proof_hooks": [
+    "cargo fmt --check",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo test --all-features",
+    "decapod validate"
+  ],
+  "unknowns": [],
+  "human_questions": [],
+  "stop_conditions": [
+    "Do not modify /home/arx/src/decapod or expose rusqlite types from dactyl's public contract"
+  ],
+  "unresolved_contradictions": [],
+  "deferred_questions": [],
+  "constraints": {
+    "forbidden_paths": [
+      "/home/arx/src/decapod",
+      ".decapod/*"
+    ],
+    "file_touch_budget": 20
+  },
+  "phases": [],
+  "updated_at": "1785999952Z"
+}

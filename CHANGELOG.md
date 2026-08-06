@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- *(dactyl)* add the backend-neutral `Connection` and `StorageOp`/`StorageResult` integration boundary, including caller-owned SQL scripts, connection policy, last-insert-id support, blob parameters, and read-only SQLite configuration.
+- *(dactyl)* enforce runtime dialect analysis and inline datastore directives; unsafe constructs fail closed and only explicitly bounded rewrites are available through `ConnectionOptions` or `DATASTORE_REWRITE`.
+
+### Changed
+
+- *(dactyl)* keep SQLite and Neon adapter implementations private so the public contract no longer exposes `rusqlite` or transport-specific types.
+
 ## [0.2.5](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.4...dactyl-db-macros-v0.2.5) - 2026-08-02
 
 ### Added

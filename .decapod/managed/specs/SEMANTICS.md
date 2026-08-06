@@ -1,4 +1,6 @@
-# Semantics## State Machines
+# Semantics
+
+## State Machines
 ```mermaid
 stateDiagram-v2
   [*] --> Draft
@@ -7,29 +9,47 @@ stateDiagram-v2
   InProgress --> Blocked
   Blocked --> InProgress
   Verified --> [*]
-```## Invariants
+```
+
+## Invariants
 | Invariant | Type | Validation |
 |---|---|---|
 | No promoted change without proof | System | validation gate |
 | Canonical source-of-truth per entity | Data | interface/spec review |
-| Mutation events are replayable | Data | deterministic replay |## Event Sourcing Schema
+| Mutation events are replayable | Data | deterministic replay |
+
+## Event Sourcing Schema
 | Field | Type | Description |
 |---|---|---|
 | event_id | string | globally unique event id |
 | aggregate_id | string | entity/workflow id |
 | event_type | string | semantic transition |
 | payload | object | transition data |
-| recorded_at | timestamp | append time |## Replay Semantics
+| recorded_at | timestamp | append time |
+
+## Replay Semantics
 - Replay order:
 - Conflict resolution:
 - Snapshot cadence:
-- Determinism proof strategy:## Error Code Semantics
+- Determinism proof strategy:
+
+## Error Code Semantics
 - Namespace:
 - Stable compatibility window:
-- Mapping to retry/degrade behavior:## Domain Rules
+- Mapping to retry/degrade behavior:
+
+## Domain Rules
 - Business rule 1:
 - Business rule 2:
 - Business rule 3:
+## Idempotency Contracts
+| Operation | Idempotency Key | Duplicate Behavior |
+|---|---|---|
+| create/update mutation | request_id | return original result |
+| async enqueue | event_id | ignore duplicate enqueue |
+
+## Language Note
+- Primary language inferred: Rust
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -71,19 +91,10 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Idempotency Contracts
-| Operation | Idempotency Key | Duplicate Behavior |
-|---|---|---|
-| create/update mutation | request_id | return original result |
-| async enqueue | event_id | ignore duplicate enqueue |
-
-## Language Note
-- Primary language inferred: Rust
-
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
+- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
