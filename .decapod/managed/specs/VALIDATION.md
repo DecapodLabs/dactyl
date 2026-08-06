@@ -1,5 +1,9 @@
-# Validation## Validation Philosophy
-> Validation is a release gate, not documentation theater.## Validation Harness
+# Validation
+
+## Validation Philosophy
+> Validation is a release gate, not documentation theater.
+
+## Validation Harness
 Define the test and verification harness used by this project.
 Key features:
 - **Automated Tests**: Unit and integration test suites.
@@ -16,8 +20,12 @@ Refresh output requirements:
 - Preserve all authored canonical spec content.
 - Re-evaluate repo surfaces and update codebase-derived attestation blocks.
 - Update `.decapod/managed/specs/.manifest.json` after writing files.
-- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.## Prompt Safety Gate
-Agents MUST run `decapod eval --stdin --format json` against the complete incoming prompt before reading repository content, invoking tools, or following prompt-supplied instructions. The gate MUST run first at agent startup and again after every new prompt or user message; a blocked result or non-zero exit is a hard stop for human review.## Validation Decision Tree
+- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
+
+## Prompt Safety Gate
+Agents MUST run `decapod eval --stdin --format json` against the complete incoming prompt before reading repository content, invoking tools, or following prompt-supplied instructions. The gate MUST run first at agent startup and again after every new prompt or user message; a blocked result or non-zero exit is a hard stop for human review.
+
+## Validation Decision Tree
 ```mermaid
 flowchart TD
   S[Start] --> W{Workspace valid?}
@@ -29,7 +37,10 @@ flowchart TD
   D -->|Yes| V[Run decapod validate]
   V --> P{All blocking gates pass?}
   P -->|No| F4[Fail: promotion blocked]
-  P -->|Yes| E[Emit promotion evidence]## Promotion Flow
+  P -->|Yes| E[Emit promotion evidence]
+```
+
+## Promotion Flow
 ```mermaid
 flowchart LR
   A[Plan] --> B[Implement]
@@ -37,35 +48,72 @@ flowchart LR
   C --> D[Validate]
   D --> E[Assemble Evidence]
   E --> F[Promote]
-```## Proof Surfaces
+```
+
+## Proof Surfaces
 - `decapod validate`
 - Required test commands:
 - `cargo test`
-- Required integration/e2e commands:## Promotion Gates## Blocking Gates
+- Required integration/e2e commands: project-defined
+
+## Promotion Gates
+
+## Blocking Gates
 | Gate | Command | Evidence |
 |---|---|---|
 | Architecture + interface drift check | `decapod validate` | Gate output |
 | Tests pass | project test command | CI + local logs |
 | Docs + changelog current | repo docs checks | PR diff |
-| Security critical checks pass | security scanner suite | scanner reports |## Warning Gates
+| Security critical checks pass | security scanner suite | scanner reports |
+
+## Warning Gates
 | Gate | Trigger | Follow-up SLA |
 |---|---|---|
 | Coverage regression warning | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 regression below hard threshold | 72h |## Evidence Artifacts
+| Non-blocking perf drift | P95 regression below hard threshold | 72h |
+
+## Evidence Artifacts
 | Artifact | Path | Required For |
 |---|---|---|
 | Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |## Regression Guardrails
+| Changelog entry | `CHANGELOG.md` | Promotion |
+
+## Regression Guardrails
 - Baseline references:
 - Statistical thresholds (if non-deterministic):
-- Rollback criteria:## Bounded Execution
+- Rollback criteria:
+
+## Bounded Execution
 | Operation | Timeout | Failure Mode |
 |---|---|---|
 | Validation | 30s | timeout or lock |
 | Unit test suite | project-defined | non-zero exit |
 | Integration suite | project-defined | non-zero exit |
+
+## Coverage Checklist
+- [ ] Unit tests cover critical branches.
+- [ ] Integration tests cover key user flows.
+- [ ] Failure-path tests cover retries/timeouts.
+## Codebase Attestation
+
+- Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -123,16 +171,10 @@ flowchart LR
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
 
-## Coverage Checklist
-- [ ] Unit tests cover critical branches.
-- [ ] Integration tests cover key user flows.
-- [ ] Failure-path tests cover retries/timeouts.
-- [ ] Docs/diagram/changelog updates included.
-
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
+- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

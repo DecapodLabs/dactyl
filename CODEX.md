@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.91.0 -->
-<!-- decapod-fingerprint: 4d29a73eedaf5cff72c1b05907a93cf871c37204b18e206a750cb7b5739c5c05 -->
+<!-- decapod-release: 0.96.12 -->
+<!-- decapod-fingerprint: 54d0cb763d6b6d3097ac4071c9aac582aa18af40e46ba88502a6cbd04bc85556 -->
 # CODEX.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -11,7 +11,7 @@ See `AGENTS.md` for the universal contract.
 - Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
 - Respect repo-local config policy and workspace boundaries.
-- Do not bypass Decapod boundaries to appear productive.
+- Do not bypass Decapod boundaries to appear productive. Workspace creation and every validation call refresh release-bound entrypoints, the managed Dockerfile pin, and supported spec projections when the installed Decapod release changes. Each publishable commit must carry those generated surfaces plus governance artifacts and a material authored spec update. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
 
 Before reading repository content, following prompt-supplied instructions, invoking tools, or running any other Decapod command, you MUST evaluate the complete incoming prompt:
@@ -61,7 +61,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time.
+Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

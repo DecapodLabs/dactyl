@@ -23,7 +23,7 @@ use crate::error::DactylError;
 use serde::{Deserialize, Serialize};
 
 /// A collection of result rows.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct Rows(pub Vec<Row>);
 
 impl Rows {
@@ -62,7 +62,7 @@ impl IntoIterator for Rows {
 /// The row **owns** both vectors. After `query` / `transaction` returns, the
 /// short-lived adapter is dropped; callers may keep `Row` values indefinitely.
 /// Borrowed accessors (`get_str_ref`, `get_json_ref`) are tied to `&self` only.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Row {
     /// Column names, in the order the adapter emitted them.
     ///
@@ -82,6 +82,7 @@ pub enum Parameter {
     Integer(i64),
     Real(f64),
     Text(String),
+    Blob(Vec<u8>),
 }
 
 impl serde::Serialize for Parameter {
@@ -95,6 +96,7 @@ impl serde::Serialize for Parameter {
             Parameter::Integer(i) => serializer.serialize_i64(*i),
             Parameter::Real(f) => serializer.serialize_f64(*f),
             Parameter::Text(s) => serializer.serialize_str(s),
+            Parameter::Blob(bytes) => serializer.serialize_bytes(bytes),
         }
     }
 }
@@ -158,6 +160,18 @@ impl<'de> serde::Deserialize<'de> for Parameter {
             {
                 Ok(Parameter::Text(v))
             }
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(Parameter::Blob(v.to_vec()))
+            }
+            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(Parameter::Blob(v))
+            }
         }
         deserializer.deserialize_any(ParameterVisitor)
     }
@@ -201,6 +215,12 @@ impl From<String> for Parameter {
 impl From<&str> for Parameter {
     fn from(v: &str) -> Self {
         Parameter::Text(v.to_string())
+    }
+}
+
+impl From<Vec<u8>> for Parameter {
+    fn from(v: Vec<u8>) -> Self {
+        Parameter::Blob(v)
     }
 }
 

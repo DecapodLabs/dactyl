@@ -1,13 +1,15 @@
 //! Dialect detection for the lexical analyzer.
 //!
-//! This is the *first-pass* scope: the analyzer recognizes the explicit list of
-//! constructs the project ships with and treats anything else as portable SQL.
-//! A full SQL parser is intentionally out of scope — see the issue tracker for
-//! the follow-up that adds the rewriter.
+//! The analyzer recognizes the explicit list of constructs the project ships
+//! with and treats anything else as portable SQL. A full SQL parser is
+//! intentionally out of scope; unsafe constructs fail closed instead of being
+//! guessed into a rewrite.
 
 /// SQL dialect an adapter speaks natively.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dialect {
+    /// Constructs supported by both shipped SQL adapters.
+    Portable,
     /// Local file-backed SQLite.
     Sqlite,
     /// Remote Postgres via Neon HTTP (Propodus).
@@ -25,7 +27,7 @@ pub enum Construct {
     JsonTree,
     WithoutRowId,
     Strict,
-    // Postgres-only
+    // Portable or Postgres-only
     JsonArrowText,
     JsonArrow,
     JsonContains,
@@ -66,13 +68,16 @@ impl Construct {
             | Construct::JsonTree
             | Construct::WithoutRowId
             | Construct::Strict => Dialect::Sqlite,
+            Construct::JsonArrowText | Construct::JsonArrow | Construct::Returning => {
+                Dialect::Portable
+            }
             _ => Dialect::Postgres,
         }
     }
 
     /// Whether the dialect natively supports this construct.
     pub fn supported_by(self, dialect: Dialect) -> bool {
-        self.dialect() == dialect
+        self.dialect() == Dialect::Portable || self.dialect() == dialect
     }
 }
 

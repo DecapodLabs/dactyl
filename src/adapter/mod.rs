@@ -1,9 +1,8 @@
 //! Adapter trait — internal to dactyl.
 //!
 //! Both `SqliteAdapter` and `NeonAdapter` live behind their respective
-//! feature gates and are reachable as `dactyl::adapter::sqlite::*` /
-//! `dactyl::adapter::neon::*`. Nothing else at the crate root re-exports
-//! the underlying types.
+//! feature gates and are intentionally private to the crate. The public
+//! integration boundary is `crate::Connection` and `crate::StorageOp`.
 
 use crate::error::DactylError;
 use crate::rows::{Parameter, Rows};
@@ -26,6 +25,16 @@ pub trait Adapter: Send + Sync {
 
     /// Execute an atomic batch of statements.
     fn execute_batch(&self, statements: &[Statement]) -> Result<Vec<Rows>, DactylError>;
+
+    /// Execute a caller-owned SQL script containing zero or more statements.
+    ///
+    /// This is separate from `execute_raw`: migration scripts commonly contain
+    /// multiple DDL statements, while `execute_raw` preserves affected-row
+    /// semantics for one statement.
+    fn execute_script(&self, query: &str) -> Result<(), DactylError>;
+
+    /// Return the last generated local insert id when the adapter exposes one.
+    fn last_insert_id(&self) -> Result<i64, DactylError>;
 }
 
 #[cfg(feature = "sqlite")]

@@ -36,7 +36,6 @@ dev/
 .decapod/data
 .decapod/data/*
 !.decapod/data/
-!.decapod/data/knowledge.promotions.jsonl
 .decapod/.stfolder
 .decapod/workspaces
 # Managed runtime outputs are non-canonical. Git history plus the trajectory
@@ -44,7 +43,6 @@ dev/
 .decapod/managed/*
 # Keep only the deterministic managed container build baseline and living specs tracked.
 !.decapod/data/
-!.decapod/data/knowledge.promotions.jsonl
 !.decapod/managed/
 !.decapod/managed/Dockerfile.decapod
 !.decapod/managed/specs/

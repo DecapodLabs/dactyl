@@ -15,6 +15,17 @@ pub enum DactylError {
         construct: Construct,
     },
 
+    /// The query selected a datastore that does not match the connection
+    /// route, or an inline override could not be resolved to a configured
+    /// route.
+    #[error("datastore routing error: {0}")]
+    Routing(String),
+
+    /// The requested backend-neutral operation is not available for the
+    /// selected adapter.
+    #[error("unsupported datastore operation: {0}")]
+    UnsupportedOperation(String),
+
     /// The query string failed to parse under the analyzer's lexical rules.
     #[error("invalid query: {0}")]
     InvalidQuery(String),

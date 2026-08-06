@@ -1,25 +1,4 @@
 # Architecture
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Architecture Overlay
-
-### State Ownership
-- Each entity type MUST have a designated state owner
-- State ownership boundaries MUST be explicitly documented
-- Cross-boundary state access MUST go through defined interfaces
-
-### Transaction Boundaries
-- All multi-entity mutations MUST occur within explicit transactions
-- Transaction boundaries MUST be documented in ARCHITECTURE.md
-- Compensating transactions for distributed operations
-
-### Storage Abstraction
-- Storage ownership, consistency behavior, and access boundaries MUST be explicit
-- Portability or swappable implementations are project decisions, not universal requirements
-- Migration and rollback treatment MUST match the selected storage technology
-<!-- decapod:capability-overlay:persistent-state:end -->
-
 ## Direction
 library
 
@@ -137,10 +116,30 @@ sequenceDiagram
 | Contract drift across components | Medium | High | Spec + schema checks in CI |
 | Runtime saturation under peak load | Medium | High | Capacity model + load tests |
 
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Architecture Overlay
+
+### State Ownership
+- Each entity type MUST have a designated state owner
+- State ownership boundaries MUST be explicitly documented
+- Cross-boundary state access MUST go through defined interfaces
+
+### Transaction Boundaries
+- All multi-entity mutations MUST occur within explicit transactions
+- Transaction boundaries MUST be documented in ARCHITECTURE.md
+- Compensating transactions for distributed operations
+
+### Storage Abstraction
+- Storage ownership, consistency behavior, and access boundaries MUST be explicit
+- Portability or swappable implementations are project decisions, not universal requirements
+- Migration and rollback treatment MUST match the selected storage technology
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3e97603d56159f5f37a8856b93961904220dd5b18190b52f3f7896f1bf3e65f`
+- Repository signal fingerprint: `63442fb00abe0f0d6d0bc4e4603e1a6f021dee36c9c2119d42c2314f5d1256bc`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
