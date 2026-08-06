@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.5...dactyl-db-macros-v0.3.0) - 2026-08-06
+
+### Added
+
+- prepare dactyl as Decapod datastore boundary ([#45](https://github.com/DecapodLabs/dactyl/pull/45))
+
 ### Added
 
 - *(dactyl)* add the backend-neutral `Connection` and `StorageOp`/`StorageResult` integration boundary, including caller-owned SQL scripts, connection policy, last-insert-id support, blob parameters, and read-only SQLite configuration.

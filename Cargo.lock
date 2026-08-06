@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [
  "axum",
  "dactyl-db-macros",
@@ -170,7 +170,7 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db-macros"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
