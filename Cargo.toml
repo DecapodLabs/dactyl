@@ -5,21 +5,20 @@ edition = "2021"
 rust-version = "1.75"
 license = "MIT"
 repository = "https://github.com/DecapodLabs/dactyl"
-description = "Interchangeably read and write to local SQLite or cloud-hosted Vercel Neon instances behind a single unified facade."
+description = "Interchangeably read and write to a lightweight Rust local store or cloud-hosted Vercel Neon instances behind one facade."
 readme = "README.md"
 keywords = ["datastore", "vercel", "postgres", "sql", "sqlite"]
 categories = ["database", "api-bindings"]
 
 [features]
 default = []
-sqlite = ["dep:libsqlite3-sys"]
+sqlite = []
 neon = ["dep:reqwest"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
-libsqlite3-sys = { version = "0.28", optional = true, features = ["bundled"] }
 reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
 [dev-dependencies]
