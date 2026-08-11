@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.98.0",
-  "git_revision": "b323902459c6389ecbde959fdea4c5718022c06f",
+  "git_revision": "dc2aea611481d97b054612e70bd1b083135efe01",
   "repo_signal_fingerprint": "30258e46e1bd3dd972ed0a29daf9aa4831458737a8df70a5bd9de2093905738c",
   "trajectory_run_id": "validation_01KZSJPWAWA92RY78SMZ8MF07X",
-  "trajectory_artifact_hash": "sha256:da390d5cc7022c16333f37968d65ca09fa1026288bc51614913389cf280e7800",
+  "trajectory_artifact_hash": "sha256:78f507327f6a79b43c0a7165b8832aa02d73e9b63bd51f7c47baa26d50ebc974",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_19b140e1d150b548",
@@ -44,42 +44,59 @@
     }
   },
   "status": "ok",
-  "pass_count": 171,
+  "pass_count": 184,
   "fail_count": 0,
-  "warn_count": 3,
-  "elapsed_ms": 1201,
+  "warn_count": 4,
+  "elapsed_ms": 1271,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Risk map missing (run `decapod riskmap init`)",
     "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v3' while current scaffolding is 'scaffold-v4'; living spec content remains authoritative.",
-    "Watcher audit trail missing (run `decapod govern watcher run`)"
+    "Watcher audit trail missing (run `decapod govern watcher run`)",
+    "Workspace branch 'agent/unknown/code-01kzshbzn88a0cjw' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/code-01kzshbzn88a0cjw`."
   ],
   "gate_timings": [
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 924
+      "elapsed_ms": 910
+    },
+    {
+      "name": "validate_project_specs_docs",
+      "elapsed_ms": 83
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 85
-    },
-    {
-      "name": "validate_obligations",
-      "elapsed_ms": 36
+      "elapsed_ms": 72
     },
     {
       "name": "validate_schema_determinism",
       "elapsed_ms": 32
     },
     {
-      "name": "validate_project_specs_docs",
+      "name": "validate_obligations",
       "elapsed_ms": 27
+    },
+    {
+      "name": "validate_git_workspace_context",
+      "elapsed_ms": 14
     },
     {
       "name": "validate_archive_integrity",
       "elapsed_ms": 10
+    },
+    {
+      "name": "validate_gatekeeper_gate",
+      "elapsed_ms": 6
+    },
+    {
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 5
+    },
+    {
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 5
     },
     {
       "name": "validate_control_plane_contract",
@@ -94,6 +111,10 @@
       "elapsed_ms": 3
     },
     {
+      "name": "validate_stale_workspaces",
+      "elapsed_ms": 2
+    },
+    {
       "name": "validate_override_authority",
       "elapsed_ms": 2
     },
@@ -103,11 +124,7 @@
     },
     {
       "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 1
+      "elapsed_ms": 2
     },
     {
       "name": "validate_repomap_determinism",
@@ -122,10 +139,6 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_knowledge_promotions_if_present",
-      "elapsed_ms": 1
-    },
-    {
       "name": "validate_lcm_immutability",
       "elapsed_ms": 1
     },
@@ -134,11 +147,19 @@
       "elapsed_ms": 1
     },
     {
+      "name": "validate_knowledge_promotions_if_present",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_lcm_rebuild_gate",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_health_cache_integrity",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_lcm_rebuild_gate",
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 0
     },
     {
@@ -158,15 +179,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_research_claims_if_present",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_canon_mutation",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_heartbeat_invocation_gate",
+      "name": "validate_research_claims_if_present",
       "elapsed_ms": 0
     },
     {
@@ -175,6 +192,10 @@
     },
     {
       "name": "validate_entrypoint_invariants",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
@@ -214,22 +235,6 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_eval_gate_if_required",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_internalization_artifacts_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_embedded_self_contained",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_risk_map",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_state_commit_gate",
       "elapsed_ms": 0
     },
@@ -238,11 +243,27 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_embedded_self_contained",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_eval_gate_if_required",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_context_capsules_if_present",
       "elapsed_ms": 0
     },
     {
+      "name": "validate_risk_map",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_root_dockerfile_seed_detection",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_internalization_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -254,27 +275,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_git_workspace_context",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_plan_governed_execution_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_stale_workspaces",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_tooling_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_push_pr_gate",
       "elapsed_ms": 0
     }
   ],
@@ -285,12 +286,13 @@
     "reasons": [
       "Risk map missing (run `decapod riskmap init`)",
       "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v3' while current scaffolding is 'scaffold-v4'; living spec content remains authoritative.",
-      "Watcher audit trail missing (run `decapod govern watcher run`)"
+      "Watcher audit trail missing (run `decapod govern watcher run`)",
+      "Workspace branch 'agent/unknown/code-01kzshbzn88a0cjw' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/code-01kzshbzn88a0cjw`."
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:18e4b9a775fcab6b64f98d8f552c64d178d47652a10520ea63d659fb1b2442d8"
+  "receipt_hash": "sha256:801576db67a94f8ca69a6f6f6f92ce1b04455d6a1c3a403beeb2f3d3fa271f52"
 }
