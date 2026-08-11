@@ -11,22 +11,42 @@
   "repo_scope": [
     "src/, tests/, Cargo.toml, Cargo.lock, README.md, CHANGELOG.md"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    "Cargo.toml",
+    "src/adapter/neon/mod.rs",
+    "src/adapter/sqlite/mod.rs",
+    "src/contract.rs",
+    "tests/conformance.rs",
+    "tests/storage_contract.rs"
+  ],
   "modified_files": [],
   "declared_commands": [],
   "tool_calls": [],
-  "checks": [],
+  "checks": [
+    {
+      "name": "cargo-clippy-all-targets-all-features",
+      "status": "passed"
+    },
+    {
+      "name": "cargo-test-all-features",
+      "status": "passed"
+    },
+    {
+      "name": "cargo-tree-no-sqlite-c",
+      "status": "passed"
+    }
+  ],
   "evidence": [],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "no_checks_run",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:01b2d8e125c63ae81baba49ae005f7813f7cdaf6b22eabf543e84fee3aad851d",
+  "artifact_hash": "sha256:d09be46fa3e32fa73367a1a44ab443d1ee7e918b72a8b804e3ed6706edfba21e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -61,11 +81,48 @@
         "event_id": "event:3",
         "intent_id": "intent:dactyl-51-57-run",
         "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:dactyl-51-57-run",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:dactyl-51-57-run"
       }
     ],
-    "trajectories": {},
+    "trajectories": {
+      "dactyl-51-57-run": {
+        "id": "dactyl-51-57-run",
+        "intent_id": "intent:dactyl-51-57-run",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "trajectory.record",
+            "scope": [
+              "src/, tests/, Cargo.toml, Cargo.lock, README.md, CHANGELOG.md"
+            ],
+            "observations": [
+              "Cargo.toml",
+              "src/contract.rs",
+              "src/adapter/sqlite/mod.rs",
+              "src/adapter/neon/mod.rs",
+              "tests/storage_contract.rs",
+              "tests/conformance.rs"
+            ],
+            "proof_refs": [
+              "cargo-test-all-features",
+              "cargo-clippy-all-targets-all-features",
+              "cargo-tree-no-sqlite-c"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          }
+        ]
+      }
+    },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 3
+    "next_sequence": 4
   }
 }
