@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.1.0",
+  "run_id": "dactyl-51-57-run",
+  "intent_id": "intent:dactyl-51-57-run",
+  "original_intent": "Address GitHub issues #51-#57 and create Dactyl 0-to-1.",
+  "derived_intent": "Implement a lightweight trait-based Rust datastore boundary with missing local/Neon primitives and bounded conformance proof.",
+  "current_phase": "engine and contract implementation",
+  "active_boundaries": [
+    "No SQLite C, rusqlite, subprocess, Turso runtime dependency, or heavyweight engine; Dactyl owns only storage primitives and normalization."
+  ],
+  "repo_scope": [
+    "src/, tests/, Cargo.toml, Cargo.lock, README.md, CHANGELOG.md"
+  ],
+  "inspected_files": [],
+  "modified_files": [],
+  "declared_commands": [],
+  "tool_calls": [],
+  "checks": [],
+  "evidence": [],
+  "shortcut_risk_signals": [],
+  "unresolved_assumptions": [],
+  "proof_status": "no_checks_run",
+  "verdicts": {
+    "intent_alignment": "supported",
+    "boundary_discipline": "supported",
+    "shortcut_risk": "supported",
+    "completion_proof": "unsupported"
+  },
+  "artifact_hash": "sha256:01b2d8e125c63ae81baba49ae005f7813f7cdaf6b22eabf543e84fee3aad851d",
+  "custody": {
+    "schema_version": "1.0.0",
+    "intents": {
+      "intent:dactyl-51-57-run": {
+        "id": "intent:dactyl-51-57-run",
+        "raw_intent": "Address GitHub issues #51-#57 and create Dactyl 0-to-1.",
+        "refined_intent": "Implement a lightweight trait-based Rust datastore boundary with missing local/Neon primitives and bounded conformance proof.",
+        "acceptance_criteria": [],
+        "constraints": [
+          "src/, tests/, Cargo.toml, Cargo.lock, README.md, CHANGELOG.md"
+        ],
+        "assumptions": [],
+        "boundaries": [
+          "No SQLite C, rusqlite, subprocess, Turso runtime dependency, or heavyweight engine; Dactyl owns only storage primitives and normalization."
+        ],
+        "out_of_scope": [],
+        "proof_requirements": [],
+        "status": "refined",
+        "created_sequence": 1,
+        "updated_sequence": 3
+      }
+    },
+    "events": [
+      {
+        "sequence": 2,
+        "event_id": "event:2",
+        "intent_id": "intent:dactyl-51-57-run",
+        "kind": "created"
+      },
+      {
+        "sequence": 3,
+        "event_id": "event:3",
+        "intent_id": "intent:dactyl-51-57-run",
+        "kind": "refined"
+      }
+    ],
+    "trajectories": {},
+    "summaries": {},
+    "knowledge_candidates": [],
+    "next_sequence": 3
+  }
+}

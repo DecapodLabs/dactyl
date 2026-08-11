@@ -116,6 +116,14 @@ flowchart LR
 - Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
 
 ## Codebase Attestation
 
