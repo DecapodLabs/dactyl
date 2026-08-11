@@ -167,6 +167,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
+- release v0.5.0 ([#59](https://github.com/DecapodLabs/dactyl/pull/59))
+- release v0.4.0 ([#50](https://github.com/DecapodLabs/dactyl/pull/50))
+
+## [0.5.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.4.0...dactyl-db-v0.5.0) - 2026-08-11
+
+### Added
+
+- add lightweight pure-Rust datastore primitives (#51-#57) ([#58](https://github.com/DecapodLabs/dactyl/pull/58))
+
+### Other
+
 - release v0.4.0 ([#50](https://github.com/DecapodLabs/dactyl/pull/50))
 
 ## [0.4.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.3.0...dactyl-db-v0.4.0) - 2026-08-06
