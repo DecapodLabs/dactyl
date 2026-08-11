@@ -44,7 +44,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:78f507327f6a79b43c0a7165b8832aa02d73e9b63bd51f7c47baa26d50ebc974",
+  "artifact_hash": "sha256:5c368d286df0892371285399e0d94a011b40076adae0785b8ee65b1420f56e54",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -112,6 +112,20 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:validation_01KZSJPWAWA92RY78SMZ8MF07X",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZSJPWAWA92RY78SMZ8MF07X"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:validation_01KZSJPWAWA92RY78SMZ8MF07X",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZSJPWAWA92RY78SMZ8MF07X"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
         "intent_id": "intent:validation_01KZSJPWAWA92RY78SMZ8MF07X",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZSJPWAWA92RY78SMZ8MF07X"
@@ -217,12 +231,50 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_19b140e1d150b548 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_19b140e1d150b548 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 10
   }
 }
