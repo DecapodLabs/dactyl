@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- implement the lightweight local datastore in Rust with no SQLite C binding,
+  rusqlite dependency, SQLite subprocess, or Turso runtime dependency
+  ([#51](https://github.com/DecapodLabs/dactyl/issues/51)).
+- add caller-supplied atomic schema/data batches, explicit generated-key
+  results, typed contention/read-only errors, and local durable reopen tests
+  ([#52](https://github.com/DecapodLabs/dactyl/issues/52),
+  [#53](https://github.com/DecapodLabs/dactyl/issues/53),
+  [#54](https://github.com/DecapodLabs/dactyl/issues/54),
+  [#55](https://github.com/DecapodLabs/dactyl/issues/55),
+  [#56](https://github.com/DecapodLabs/dactyl/issues/56)).
+- add the backend-neutral contract and deterministic local conformance
+  fixtures used to validate the Neon-shaped boundary ([#57](https://github.com/DecapodLabs/dactyl/issues/57)).
+
 ## [0.3.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-macros-v0.2.5...dactyl-db-macros-v0.3.0) - 2026-08-06
 
 ### Added

@@ -42,6 +42,7 @@ stateDiagram-v2
 - Business rule 1:
 - Business rule 2:
 - Business rule 3:
+
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
 |---|---|---|
@@ -92,9 +93,10 @@ stateDiagram-v2
 <!-- decapod:capability-overlay:persistent-state:end -->
 
 <!-- decapod:codebase-attestation:start -->
+
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
+- Repository signal fingerprint: `30258e46e1bd3dd972ed0a29daf9aa4831458737a8df70a5bd9de2093905738c`
+- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

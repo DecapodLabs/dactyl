@@ -7,12 +7,19 @@ use thiserror::Error;
 pub enum AdapterErrorKind {
     Busy,
     Locked,
+    Timeout,
     Constraint,
+    Conflict,
     Query,
+    InvalidOperation,
     ReadOnly,
+    Capability,
+    Value,
     Storage,
     Transport,
     Protocol,
+    Unavailable,
+    Cancellation,
     Unknown,
 }
 
@@ -45,5 +52,19 @@ impl DactylError {
             kind,
             message: message.into(),
         }
+    }
+
+    pub fn adapter_kind(&self) -> Option<AdapterErrorKind> {
+        match self {
+            Self::Adapter { kind, .. } => Some(*kind),
+            _ => None,
+        }
+    }
+
+    pub fn is_retryable(&self) -> bool {
+        matches!(
+            self.adapter_kind(),
+            Some(AdapterErrorKind::Busy | AdapterErrorKind::Locked | AdapterErrorKind::Timeout)
+        )
     }
 }

@@ -1,15 +1,19 @@
-//! Dactyl — the application-layer read/write driver for SQLite and Neon.
+//! Dactyl — a lightweight Rust storage driver for local and Neon routes.
 //!
-//! Dactyl owns only backend selection, parameter binding, and response
-//! normalization. It forwards raw application SQL to the selected database;
-//! schema administration, migrations, transactions, analytics, retries, and
-//! business intelligence stay outside this crate.
+//! Dactyl owns backend selection, parameter binding, response normalization,
+//! physical atomic batches, access mode, and local durability. It does not own
+//! schema policy, migration ids/order, retries, analytics, or business logic.
 
 mod adapter;
+mod contract;
 mod rows;
 
 pub mod error;
 
+pub use crate::contract::{
+    AccessMode, AtomicResult, GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult,
+    WriteResult,
+};
 pub use crate::error::{AdapterErrorKind, DactylError};
 pub use crate::rows::{Parameter, Row, Rows};
 
@@ -83,7 +87,14 @@ pub struct Connection {
 
 impl Connection {
     pub fn open(route: DatastoreRoute) -> Result<Self, DactylError> {
-        let adapter = build_adapter(&route)?;
+        Self::open_with_options(route, OpenOptions::default())
+    }
+
+    pub fn open_with_options(
+        route: DatastoreRoute,
+        options: OpenOptions,
+    ) -> Result<Self, DactylError> {
+        let adapter = build_adapter(&route, options)?;
         Ok(Self { adapter, route })
     }
 
@@ -104,9 +115,26 @@ impl Connection {
         self.adapter.read(sql, params)
     }
 
-    /// Write application data and return the backend-reported affected count.
-    pub fn write(&self, sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+    /// Write application data and return the explicit physical result.
+    pub fn write_result(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+    ) -> Result<WriteResult, DactylError> {
         self.adapter.write(sql, params)
+    }
+
+    /// Write application data and return the affected count for compatibility.
+    pub fn write(&self, sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+        Ok(self.write_result(sql, params)?.affected_rows)
+    }
+
+    pub fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DactylError> {
+        self.adapter.atomic(operations)
+    }
+
+    pub fn access_mode(&self) -> AccessMode {
+        self.adapter.access_mode()
     }
 }
 
@@ -131,14 +159,20 @@ pub fn execute(sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
     write(sql, params)
 }
 
-fn build_adapter(route: &DatastoreRoute) -> Result<Box<dyn Adapter>, DactylError> {
+fn build_adapter(
+    route: &DatastoreRoute,
+    options: OpenOptions,
+) -> Result<Box<dyn Adapter>, DactylError> {
     match route.datastore {
         Datastore::Sqlite => {
             #[cfg(feature = "sqlite")]
             {
-                Ok(Box::new(crate::adapter::sqlite::SqliteAdapter::open(
-                    &route.route,
-                )?))
+                Ok(Box::new(
+                    crate::adapter::sqlite::SqliteAdapter::open_with_options(
+                        &route.route,
+                        options,
+                    )?,
+                ))
             }
             #[cfg(not(feature = "sqlite"))]
             {
@@ -150,10 +184,13 @@ fn build_adapter(route: &DatastoreRoute) -> Result<Box<dyn Adapter>, DactylError
         Datastore::Neon => {
             #[cfg(feature = "neon")]
             {
-                Ok(Box::new(crate::adapter::neon::NeonAdapter::new(
-                    &route.route,
-                    route.token.clone(),
-                )))
+                Ok(Box::new(
+                    crate::adapter::neon::NeonAdapter::new_with_options(
+                        &route.route,
+                        route.token.clone(),
+                        options,
+                    ),
+                ))
             }
             #[cfg(not(feature = "neon"))]
             {
