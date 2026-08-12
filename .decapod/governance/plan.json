@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Synchronize Dactyl with origin/main v0.6.1",
+  "intent": "Publish one reviewable commit on top of the freshly fetched origin/main 4556d60, carrying the reconciled Decapod governance/spec changes from the prior v0.6.1 synchronization; leave the protected root checkout untouched.",
+  "state": "APPROVED",
+  "todo_ids": [
+    "code_01kzvesmf739fm0d"
+  ],
+  "proof_hooks": [
+    "git merge origin/main",
+    "decapod validate",
+    "cargo test --all-features"
+  ],
+  "unknowns": [],
+  "human_questions": [],
+  "stop_conditions": [
+    "Do not modify or discard protected-root changes",
+    "Do not rewrite shared history or force-push"
+  ],
+  "unresolved_contradictions": [],
+  "deferred_questions": [],
+  "constraints": {
+    "forbidden_paths": [
+      ".decapod/data"
+    ],
+    "file_touch_budget": null
+  },
+  "phases": [],
+  "updated_at": "1786557027Z"
+}
