@@ -176,6 +176,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
+- release v0.6.0 ([#62](https://github.com/DecapodLabs/dactyl/pull/62))
+- release v0.5.0 ([#60](https://github.com/DecapodLabs/dactyl/pull/60))
+
+## [0.6.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.5.0...dactyl-db-v0.6.0) - 2026-08-12
+
+### Added
+
+- complete pure-rust storage parity for Decapod ([#61](https://github.com/DecapodLabs/dactyl/pull/61))
+
+### Other
+
 - release v0.5.0 ([#60](https://github.com/DecapodLabs/dactyl/pull/60))
 
 ## [0.5.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.4.0...dactyl-db-v0.5.0) - 2026-08-11
