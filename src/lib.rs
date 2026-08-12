@@ -12,7 +12,7 @@ pub mod error;
 
 pub use crate::contract::{
     AccessMode, AtomicResult, GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult,
-    WriteResult,
+    StorageContext, WriteResult, STORAGE_CONTEXT_VERSION,
 };
 pub use crate::error::{AdapterErrorKind, DactylError};
 pub use crate::rows::{Parameter, Row, Rows};
@@ -83,19 +83,46 @@ impl DatastoreRoute {
 pub struct Connection {
     adapter: Box<dyn Adapter>,
     route: DatastoreRoute,
+    context: Option<StorageContext>,
 }
 
 impl Connection {
     pub fn open(route: DatastoreRoute) -> Result<Self, DactylError> {
-        Self::open_with_options(route, OpenOptions::default())
+        Self::open_with_options_and_context(route, OpenOptions::default(), None)
     }
 
     pub fn open_with_options(
         route: DatastoreRoute,
         options: OpenOptions,
     ) -> Result<Self, DactylError> {
-        let adapter = build_adapter(&route, options)?;
-        Ok(Self { adapter, route })
+        Self::open_with_options_and_context(route, options, None)
+    }
+
+    /// Open a route with an optional caller-owned storage context.
+    ///
+    /// Local routes ignore the context. Neon routes require it for every
+    /// operation and forward it without interpreting its payload.
+    pub fn open_with_context(
+        route: DatastoreRoute,
+        context: Option<StorageContext>,
+    ) -> Result<Self, DactylError> {
+        Self::open_with_options_and_context(route, OpenOptions::default(), context)
+    }
+
+    pub fn open_with_options_and_context(
+        route: DatastoreRoute,
+        options: OpenOptions,
+        context: Option<StorageContext>,
+    ) -> Result<Self, DactylError> {
+        if let Some(context) = &context {
+            context.validate()?;
+        }
+        let adapter = build_adapter(&route, options, context.clone())?;
+        Ok(Self {
+            adapter,
+            route,
+            context,
+        })
     }
 
     pub fn from_env() -> Result<Self, DactylError> {
@@ -108,6 +135,10 @@ impl Connection {
 
     pub fn route(&self) -> &DatastoreRoute {
         &self.route
+    }
+
+    pub fn context(&self) -> Option<&StorageContext> {
+        self.context.as_ref()
     }
 
     /// Read application rows from the selected backend.
@@ -145,8 +176,24 @@ pub fn read(sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
     Connection::from_env()?.read(sql, params)
 }
 
+pub fn read_with_context(
+    context: Option<StorageContext>,
+    sql: &str,
+    params: &[Parameter],
+) -> Result<Rows, DactylError> {
+    Connection::open_with_context(DatastoreRoute::from_env()?, context)?.read(sql, params)
+}
+
 pub fn write(sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
     Connection::from_env()?.write(sql, params)
+}
+
+pub fn write_with_context(
+    context: Option<StorageContext>,
+    sql: &str,
+    params: &[Parameter],
+) -> Result<u64, DactylError> {
+    Connection::open_with_context(DatastoreRoute::from_env()?, context)?.write(sql, params)
 }
 
 #[deprecated(note = "use dactyl_db::read")]
@@ -162,6 +209,7 @@ pub fn execute(sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
 fn build_adapter(
     route: &DatastoreRoute,
     _options: OpenOptions,
+    _context: Option<StorageContext>,
 ) -> Result<Box<dyn Adapter>, DactylError> {
     match route.datastore {
         Datastore::Sqlite => {
@@ -189,6 +237,7 @@ fn build_adapter(
                         &route.route,
                         route.token.clone(),
                         _options,
+                        _context,
                     ),
                 ))
             }

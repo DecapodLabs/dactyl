@@ -10,6 +10,60 @@ use serde::{Deserialize, Serialize};
 
 use crate::rows::{Parameter, Rows};
 
+/// The first version of the opaque storage-context envelope.
+pub const STORAGE_CONTEXT_VERSION: u16 = 1;
+
+/// Caller-owned context forwarded to a remote storage service.
+///
+/// Dactyl validates only the envelope: the version must be non-zero and the
+/// payload must be a JSON object. The payload's fields and meaning belong to
+/// the caller and the remote service; Dactyl does not interpret organization,
+/// repository, membership, or authorization semantics.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StorageContext {
+    version: u16,
+    payload: serde_json::Value,
+}
+
+impl StorageContext {
+    /// Build a versioned opaque context without adopting its domain schema.
+    pub fn new(
+        version: u16,
+        payload: serde_json::Value,
+    ) -> Result<Self, crate::error::DactylError> {
+        let context = Self { version, payload };
+        context.validate()?;
+        Ok(context)
+    }
+
+    pub fn version(&self) -> u16 {
+        self.version
+    }
+
+    /// Return the untouched caller-owned payload.
+    pub fn payload(&self) -> &serde_json::Value {
+        &self.payload
+    }
+
+    pub(crate) fn validate(&self) -> Result<(), crate::error::DactylError> {
+        if self.version == 0 {
+            return Err(crate::error::DactylError::adapter_with_code(
+                crate::error::AdapterErrorKind::Protocol,
+                "invalid_context",
+                "storage context version must be non-zero",
+            ));
+        }
+        if !self.payload.is_object() {
+            return Err(crate::error::DactylError::adapter_with_code(
+                crate::error::AdapterErrorKind::Protocol,
+                "invalid_context",
+                "storage context payload must be a JSON object",
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// Whether an opened route may mutate durable state.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
