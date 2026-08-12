@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "title": "Bump decapod version and fix release action",
-  "intent": "Fix release action to use release-please and bump decapod to 0.98.2",
-  "state": "APPROVED",
+  "title": "v0.7.0 Release",
+  "intent": "Bump version to 0.7.0 and release",
+  "state": "DRAFT",
   "todo_ids": [],
   "proof_hooks": [],
   "unknowns": [],
@@ -15,5 +15,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786569965Z"
+  "updated_at": "1786574200Z"
 }
