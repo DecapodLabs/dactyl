@@ -5,9 +5,10 @@
   "task_id": "bugs_01kzvq6yyx3j1cs6",
   "original_intent": "Solve GitHub issues #57 and #64 as much as possible, completing remaining local SQLite work, then split live Propodus/Neon to a new issue.",
   "derived_intent": "Add a backend-neutral local fixture matrix that proves SQLite completeness for CAS, concurrency, cleanup, and opaque context no-op; keep live cloud proof out of this PR.",
-  "current_phase": "verify-local-fixtures",
+  "current_phase": "validation",
   "next_transitions": [
-    "Run cargo test --all-features and decapod validate"
+    "Run cargo test --all-features and decapod validate",
+    "publish"
   ],
   "active_boundaries": [
     "Local SQLite adapter, mock Neon transport, public StorageContext envelope. No live Propodus, no tenancy/auth policy, no SQL rewriting."
@@ -24,6 +25,8 @@
     "tests/storage_contract.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
     "CHANGELOG.md",
@@ -36,7 +39,8 @@
   ],
   "declared_commands": [
     "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo test --all-features"
+    "cargo test --all-features",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -51,10 +55,15 @@
     {
       "name": "cargo-test-all-features",
       "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "cargo test --all-features passed including tests/storage_fixtures.rs"
+    "cargo test --all-features passed including tests/storage_fixtures.rs",
+    "validation epoch ve_1b5902507f204c89 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -67,7 +76,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f6d42dcd8883f2b7f341239288b7b9a4b58449874d8e1085e6aa87a9649cbfbe",
+  "artifact_hash": "sha256:cfd185d3b2149d6659c2dca569197990c9a6e65d9c1318896a8f77216bd7cbc3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -106,6 +115,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:run_01kzvq_local_57_64",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_01kzvq_local_57_64"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:run_01kzvq_local_57_64",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_01kzvq_local_57_64"
@@ -151,12 +167,30 @@
               "Live Propodus/Vercel Neon credentials are unavailable; that proof belongs to a follow-up issue."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/,tests/,README.md,CHANGELOG.md,.decapod/managed/specs/"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_1b5902507f204c89 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
