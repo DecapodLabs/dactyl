@@ -10,7 +10,8 @@ Architectural principles:
 - **Simplicity**: Keep components focused and reusable.
 - **Modularity**: Clearly defined interface boundaries and dependency separation.
 - **Reliability**: Graceful failure handling and thorough verification.
-- **Backend-neutrality**: local and Neon adapters receive the same SQL, parameters, operation kinds, and opaque atomic batches; backend-specific handles remain private.
+- **Backend-neutrality**: local and Neon adapters receive the same SQL, parameters, operation kinds, opaque atomic batches, and optional caller-owned context; backend-specific handles remain private.
+- **Context separation**: the physical `DatastoreRoute` remains distinct from the versioned opaque `StorageContext`. Local storage ignores cloud-only payloads, while Neon forwards the validated envelope without interpreting its fields.
 
 ## Current Facts
 - Runtime/languages: Rust
@@ -25,6 +26,8 @@ This project's architecture consists of the following key layers/directories:
 ## Data Flows
 - The application supplies SQL, bound values, and caller-owned schema operations.
 - Dactyl selects the local or Neon adapter and enforces the operation/access boundary.
+- For Neon, Dactyl validates the context envelope, attaches it to `/query` and
+  `/batch`, and fails closed before transport when it is absent or malformed.
 - The adapter returns normalized rows, explicit write results, typed errors, or an ordered atomic result.
 
 ## Strongest Existing Primitives
@@ -94,9 +97,9 @@ sequenceDiagram
 - Rollback trigger and blast-radius scope: callers pin a dactyl version; breaking changes are recorded in CHANGELOG.md.
 
 ## Data and Contracts
-- Inbound contracts (application calls): `read`, `write_result`, `atomic`, `OpenOptions`, and owned row/result values.
+- Inbound contracts (application calls): `read`, `write_result`, `atomic`, `OpenOptions`, `StorageContext`, and owned row/result values.
 - Outbound dependencies (datastores/queues/external APIs): Dactyl-owned Rust snapshot/WAL local storage and Neon/Propodus HTTP transport; no SQLite C family dependency.
-- Data ownership boundaries: callers own schema definitions and migration policy; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
+- Data ownership boundaries: callers own schema definitions and migration policy; Decapod owns context meaning; Propodus owns cloud authorization; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
 - Schema evolution + migration policy: outside Dactyl's scope.
 
 ## ADR Register
@@ -106,6 +109,7 @@ sequenceDiagram
 | ADR-002 | Thin application API: read(sql, params) + write(sql, params) | Accepted | One uniform read/write surface for SQLite and Neon; administration remains outside the crate (dactyl #47) | 2026-08-01 |
 | ADR-003 | Backend-neutral Adapter trait | Proposed | New backends (redis, mysql, cassandra) add one module + one DATASTORE arm; public surface unchanged | 2026-08-01 |
 | ADR-004 | Pure-Rust local engine with opaque atomic batches | Accepted | Avoid SQLite C/rusqlite build cost while preserving caller-owned schema execution, local durability, read-only enforcement, and a Neon-parity proof seam (#51-#57) | 2026-08-11 |
+| ADR-005 | Opaque storage-context forwarding | Accepted | Keep physical route configuration and cloud tenancy separate: Dactyl validates only a versioned envelope, ignores it locally, forwards it to Neon, and leaves authorization semantics to Propodus (#64) | 2026-08-11 |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):
@@ -142,7 +146,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37f13361e4f6bac90d4cf2c135899189f5f0b1c4333fbda2d7f8431481c507ed`
+- Repository signal fingerprint: `2f2208d542de787f7a501c38293f30253f30fc76001928f2f53fdc9c876851ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

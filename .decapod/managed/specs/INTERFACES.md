@@ -74,10 +74,25 @@ pub enum ApiError {
 
 - Public application surface: `read`, `write_result`, `atomic(&[Operation])`, `OpenOptions { access_mode, lock_timeout }`, and `Connection::open` for an explicit route. `write` remains the affected-row compatibility wrapper.
 - Adapter selection is ambient-env-driven for free functions: `DATASTORE` is `sqlite` or `neon`, `DATASTORE_ROUTE` is the SQLite path or Neon endpoint, and `DATASTORE_TOKEN` is the optional Neon bearer token.
+- `StorageContext` is a versioned opaque `{ version: u16, payload: JSON object }` envelope supplied through `Connection::open_with_context` or `Connection::open_with_options_and_context`. Dactyl validates only a non-zero version and object payload shape; Decapod/Propodus own the payload meaning.
 - Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`.
 - `Rows` owns normalized `Row` values. SQLite and Neon use the same column/value representation and typed row accessors, including explicit NULL and conversion failures.
 - SQL is never interpolated or rewritten for domain meaning. The local adapter parses only its bounded storage subset, including caller-owned DDL, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
 - `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages.
+
+### Storage-context transport contract
+
+| Consumer | Request field | Local behavior | Neon behavior | Typed failures |
+|---|---|---|---|---|
+| Dactyl adapter | `context: { version, payload }` on `/query` and `/batch` | Ignore context; keep the local route/database boundary authoritative | Forward the envelope unchanged alongside SQL, parameters, access mode, or operations | Missing context: `authentication_required`; invalid envelope: `invalid_context` / `Protocol`; service authz codes remain typed without interpretation |
+
+The context is optional at the connection API so existing local callers remain
+compatible. A Neon operation requires a valid context and fails before network
+I/O when it is absent. The public contract contains no organization, user,
+repository, membership, or schema types; those semantics belong to the
+Decapod and Propodus contracts. The same context is attached once to an atomic
+batch, so all operations in that physical transaction share one forwarding
+boundary.
 
 ### Multi-backend boundary
 
@@ -112,7 +127,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37f13361e4f6bac90d4cf2c135899189f5f0b1c4333fbda2d7f8431481c507ed`
+- Repository signal fingerprint: `2f2208d542de787f7a501c38293f30253f30fc76001928f2f53fdc9c876851ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

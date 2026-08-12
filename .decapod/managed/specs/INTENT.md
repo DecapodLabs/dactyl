@@ -21,7 +21,7 @@
 
 ## What This Project Is
 dactyl-db is a not classified yet project built using Rust.
-Provide a minimal application driver over a Dactyl-owned pure-Rust local store and remote Vercel Neon. Dactyl selects the route, binds application values, executes only its documented bounded local SQL subset, forwards remote requests, and normalizes rows, write results, atomic results, and typed failures. Database administration, schema ownership, migration order, query planning, analytics, retries, idempotency, and business intelligence remain outside the crate.
+Provide a minimal application driver over a Dactyl-owned pure-Rust local store and remote Vercel Neon. Dactyl selects the physical route, binds application values, executes only its documented bounded local SQL subset, forwards remote requests with a versioned opaque storage context, and normalizes rows, write results, atomic results, and typed failures. Database administration, schema ownership, migration order, query planning, analytics, retries, idempotency, tenancy, authorization, and business intelligence remain outside the crate.
 
 Key operating facts:
 - **Primary languages**: Rust
@@ -60,6 +60,9 @@ flowchart LR
 - Technical: runtime, dependency, and topology boundaries are explicit.
 - Operational: deployment, rollback, and incident ownership are defined.
 - Security/compliance: sensitive data handling and authz are mandatory.
+- Context boundary: Decapod owns the meaning of `StorageContext`; Propodus owns
+  membership and repository authorization; Dactyl validates only the envelope
+  and forwards it to Neon.
 
 ## Acceptance Criteria (must be objectively testable)
 - [ ] The outcome is complete when equivalent application reads, writes, schema setup, rollback, read-only rejection, conditional zero-row outcomes, and typed errors produce congruent normalized results through the local and Neon adapter seams, and the full formatting, linting, and conformance suite passes.
@@ -68,6 +71,9 @@ flowchart LR
 - [ ] `cargo test` passes for unit/integration coverage
 - [ ] `cargo clippy -- -D warnings` passes with no denied lints
 - [ ] `cargo fmt --check` passes on the repo
+- [ ] Remote query and atomic requests preserve the versioned opaque context;
+  local operations remain context-neutral and missing remote context fails
+  closed with typed authentication/protocol errors.
 
 ## Epistemic Custody Fields
 
@@ -117,7 +123,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37f13361e4f6bac90d4cf2c135899189f5f0b1c4333fbda2d7f8431481c507ed`
+- Repository signal fingerprint: `2f2208d542de787f7a501c38293f30253f30fc76001928f2f53fdc9c876851ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
