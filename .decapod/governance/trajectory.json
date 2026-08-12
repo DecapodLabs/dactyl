@@ -5,8 +5,9 @@
   "task_id": "code_01kzta91egpqdgv5",
   "original_intent": "Implement the Dactyl transport seam for Decapod's backend-neutral local/cloud storage context in one reviewable PR.",
   "derived_intent": "Add a versioned opaque context envelope to Dactyl's public connection API and Neon query/batch wire requests, keep local storage context-neutral, and prove typed missing/malformed/auth failures without tenancy semantics.",
-  "current_phase": "implementation-verified",
+  "current_phase": "transport-conformance-verified",
   "next_transitions": [
+    "continue Issue #64 review follow-up without adding tenancy semantics",
     "implement context envelope and tests",
     "inspect source and implement contract",
     "refresh governance artifacts and rerun validation"
@@ -59,6 +60,10 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "GitHub CI validate",
+      "status": "passed"
+    },
+    {
       "name": "cargo clippy --all-targets --all-features -- -D warnings",
       "status": "passed"
     },
@@ -77,16 +82,28 @@
     {
       "name": "decapod validate",
       "status": "failed"
+    },
+    {
+      "name": "opaque batch context fixture",
+      "status": "passed"
+    },
+    {
+      "name": "opaque query context fixture",
+      "status": "passed"
     }
   ],
   "evidence": [
+    "Both Neon /query and /batch fixtures assert the exact versioned opaque envelope",
     "Container workspace proof completed; remaining validation failures are governance artifact freshness and plan resolution",
     "Issue #64 acceptance criteria and current Dactyl API/wire envelopes reviewed; no Propodus tenancy fields will be added.",
-    "PR #65 published at https://github.com/DecapodLabs/dactyl/pull/65"
+    "PR #65 hosted HEAD b636488020588d530a2600c7bc88b9812fc202d8",
+    "PR #65 published at https://github.com/DecapodLabs/dactyl/pull/65",
+    "The only Decapod failure is the publication receipt cycle for validation.json"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
     "Live Vercel/Neon deployment and cross-repository parity remain downstream of Dactyl issue #64",
+    "Propodus tenancy and authorization remain outside Dactyl and are downstream service responsibilities",
     "Remote context requirement is enforced fail-closed at the Dactyl boundary when absent; service-side authorization remains normalized, not interpreted."
   ],
   "proof_status": "failed",
@@ -96,7 +113,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:6951670ab4ca9faedfe20941c46bf1bbb757fd8763caf63d2d80c99209e3bf5f",
+  "artifact_hash": "sha256:72c5705a9e6c9681ba715c5cb1ab06be0c9733cee1bb950898ae53f3b31f37c3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -142,6 +159,13 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:run-dactyl64-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-dactyl64-20260811"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:run-dactyl64-20260811",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-dactyl64-20260811"
@@ -213,12 +237,37 @@
               "Live Vercel/Neon deployment and cross-repository parity remain downstream of Dactyl issue #64"
             ],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "transport-conformance-verified",
+            "command": "cargo test --all-features=passed",
+            "scope": [
+              "Issue #64 opaque context transport seam",
+              "src/,tests/,README.md,.decapod/managed/specs/"
+            ],
+            "observations": [
+              "tests/conformance.rs",
+              "PR #65 hosted HEAD b636488020588d530a2600c7bc88b9812fc202d8",
+              "Both Neon /query and /batch fixtures assert the exact versioned opaque envelope",
+              "The only Decapod failure is the publication receipt cycle for validation.json"
+            ],
+            "proof_refs": [
+              "opaque query context fixture",
+              "opaque batch context fixture",
+              "GitHub CI validate",
+              "decapod validate"
+            ],
+            "validation_findings": [
+              "Propodus tenancy and authorization remain outside Dactyl and are downstream service responsibilities"
+            ],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
