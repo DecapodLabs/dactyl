@@ -5,8 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0](https://github.com/DecapodLabs/dactyl/compare/v0.2.1...v0.3.0) (2026-08-12)
+## [0.7.0](https://github.com/DecapodLabs/dactyl/compare/v0.6.5...v0.7.0) (2026-08-12)
 
+
+### Bug Fixes
+
+* bump to v0.7.0 and update release notes ([fc4a6a5](https://github.com/DecapodLabs/dactyl/commit/fc4a6a5fb40fb2c49a6ac34ca86156fdbd59e439))
 
 ### Features
 
