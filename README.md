@@ -26,6 +26,9 @@ SQLite and Neon use the same application contract:
 - `OpenOptions { access_mode: ReadOnly, .. }` opens a non-mutating handle.
 - Values are bound as `Null`, `Bool`, `Integer`, `Real`, `Text`, or `Blob`.
 - The Neon adapter forwards SQL to `/query` and atomic batches to `/batch`.
+- `StorageContext` is a versioned opaque `{ version, payload }` envelope. It
+  is ignored by local storage and forwarded unchanged by Neon; Dactyl does not
+  interpret tenancy or authorization fields.
 - Adapter failures use typed categories including busy/locked/timeout,
   constraint/conflict/version-conflict/transaction-aborted, read-only,
   capability, value, storage, transport, authentication/authorization, quota,
@@ -99,6 +102,27 @@ db.write(
     &[Parameter::Integer(1_725_000_000), Parameter::Integer(7)],
 )?;
 ```
+
+Remote callers provide the Decapod-owned context separately from the physical
+route. The context payload is application-owned and must be a JSON object; its
+fields are opaque to Dactyl:
+
+```rust
+use dactyl_db::{Connection, DatastoreRoute, StorageContext};
+use serde_json::json;
+
+let context = StorageContext::new(
+    1,
+    json!({"opaque_target": "target", "opaque_session": "session"}),
+)?;
+let db = Connection::open_with_context(
+    DatastoreRoute::neon("https://propodus.example", None),
+    Some(context),
+)?;
+```
+
+Neon requests without a valid context fail closed with a typed
+`authentication_required` or `invalid_context` error before Dactyl sends SQL.
 
 Use an explicit physical batch and generated-key result when those semantics
 matter:
