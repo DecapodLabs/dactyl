@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/DecapodLabs/dactyl/compare/v0.2.1...v0.3.0) (2026-08-12)
+
+
+### Features
+
+* add lightweight pure-Rust datastore primitives ([#51](https://github.com/DecapodLabs/dactyl/issues/51)-[#57](https://github.com/DecapodLabs/dactyl/issues/57)) ([#58](https://github.com/DecapodLabs/dactyl/issues/58)) ([7aedc77](https://github.com/DecapodLabs/dactyl/commit/7aedc77694cbdc4332b32d5d80c47017486e2a7c))
+* complete local SQLite fixtures for [#57](https://github.com/DecapodLabs/dactyl/issues/57) and [#64](https://github.com/DecapodLabs/dactyl/issues/64) ([#69](https://github.com/DecapodLabs/dactyl/issues/69)) ([d966d49](https://github.com/DecapodLabs/dactyl/commit/d966d493ae6d9313bf06936e2824feabd63b8cca))
+* complete pure-rust storage parity for Decapod ([#61](https://github.com/DecapodLabs/dactyl/issues/61)) ([e7941cf](https://github.com/DecapodLabs/dactyl/commit/e7941cff4fe652dd12963862dbb7b7b61670cac6))
+* **dactyl:** complete atomic transaction/batch contract ([#24](https://github.com/DecapodLabs/dactyl/issues/24)) ([#43](https://github.com/DecapodLabs/dactyl/issues/43)) ([b7c9866](https://github.com/DecapodLabs/dactyl/commit/b7c986601a7ffdf40b69bcf881a9974966cc9194))
+* **dactyl:** complete typed/NULL-safe named row projections ([#25](https://github.com/DecapodLabs/dactyl/issues/25)) ([#41](https://github.com/DecapodLabs/dactyl/issues/41)) ([d069fd8](https://github.com/DecapodLabs/dactyl/commit/d069fd8c98e9e088842879bd398fba42fe2fe4ff))
+* forward opaque storage context for Issue [#64](https://github.com/DecapodLabs/dactyl/issues/64) ([#65](https://github.com/DecapodLabs/dactyl/issues/65)) ([4647ff3](https://github.com/DecapodLabs/dactyl/commit/4647ff3556749f6728eeff4392f77d6cf811d3f0))
+* make dactyl a thin application read write driver ([#48](https://github.com/DecapodLabs/dactyl/issues/48)) ([7a6d825](https://github.com/DecapodLabs/dactyl/commit/7a6d82594e76e92e34dbfe6c4464d44444b4ba2e))
+* prepare dactyl as Decapod datastore boundary ([#45](https://github.com/DecapodLabs/dactyl/issues/45)) ([6292f28](https://github.com/DecapodLabs/dactyl/commit/6292f28dd8170afb6b575d8a20889b8ebb9811af))
+
+
+### Bug Fixes
+
+* pin decapod version to 0.98.2 ([e9b4664](https://github.com/DecapodLabs/dactyl/commit/e9b4664e6dd295751e3a6e6803905958caffad6e))
+* **release:** prevent recursive releases and tag collisions ([#36](https://github.com/DecapodLabs/dactyl/issues/36)) ([d3eb33f](https://github.com/DecapodLabs/dactyl/commit/d3eb33f6463ebe5e83713ae293812f34a95c08d6))
+* **release:** synchronize facade and macros versions ([#38](https://github.com/DecapodLabs/dactyl/issues/38)) ([96e5126](https://github.com/DecapodLabs/dactyl/commit/96e5126750140e717f848ab574a8224e3d90fb71))
+
 ## [Unreleased]
 
 ### Added
