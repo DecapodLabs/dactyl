@@ -17,11 +17,11 @@
 <!-- decapod:declared-capabilities:end -->
 
 ## Product Outcome
-- Establish Dactyl as the small application-layer database provider for read/write-heavy apps. The same `read(sql, params)` and `write(sql, params)` calls must work against local SQLite and remote Vercel Neon without exposing backend handles or adding database administration behavior.
+- Establish Dactyl as the small application-layer database provider for read/write-heavy apps. The same normalized reads, explicit writes, opaque atomic batches, and access modes must work against the lightweight pure-Rust local store and remote Vercel Neon without exposing backend handles or adding database administration behavior.
 
 ## What This Project Is
 dactyl-db is a not classified yet project built using Rust.
-Provide a minimal application driver over local SQLite and remote Vercel Neon. Dactyl selects the route, binds application values, forwards raw SQL unchanged, and normalizes rows and affected counts. Database administration, schema ownership, query planning, analytics, retries, and business intelligence remain outside the crate.
+Provide a minimal application driver over a Dactyl-owned pure-Rust local store and remote Vercel Neon. Dactyl selects the route, binds application values, executes only its documented bounded local SQL subset, forwards remote requests, and normalizes rows, write results, atomic results, and typed failures. Database administration, schema ownership, migration order, query planning, analytics, retries, idempotency, and business intelligence remain outside the crate.
 
 Key operating facts:
 - **Primary languages**: Rust
@@ -62,7 +62,7 @@ flowchart LR
 - Security/compliance: sensitive data handling and authz are mandatory.
 
 ## Acceptance Criteria (must be objectively testable)
-- [ ] The outcome is complete when equivalent application reads and writes produce congruent row projections, bound-value handling, affected counts, and typed error categories through both SQLite and Neon, and the full formatting, linting, and conformance suite passes.
+- [ ] The outcome is complete when equivalent application reads, writes, schema setup, rollback, read-only rejection, conditional zero-row outcomes, and typed errors produce congruent normalized results through the local and Neon adapter seams, and the full formatting, linting, and conformance suite passes.
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
 - [ ] `cargo test` passes for unit/integration coverage
@@ -117,7 +117,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `30258e46e1bd3dd972ed0a29daf9aa4831458737a8df70a5bd9de2093905738c`
+- Repository signal fingerprint: `919fa7cd8823e9f832ad87dd3ab6d70585d8789f120e4dc1d70348677d2713ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- extend the pure-Rust local schema surface with caller-owned multi-statement
+  DDL, defaults, composite constraints, foreign keys, structural indexes, and
+  rollback/reopen upgrade proofs; map stable remote error codes into typed
+  adapter outcomes without adding retries or Propodus policy
+  ([#52](https://github.com/DecapodLabs/dactyl/issues/52),
+  [#54](https://github.com/DecapodLabs/dactyl/issues/54),
+  [#55](https://github.com/DecapodLabs/dactyl/issues/55),
+  [#56](https://github.com/DecapodLabs/dactyl/issues/56),
+  [#57](https://github.com/DecapodLabs/dactyl/issues/57)).
 - implement the lightweight local datastore in Rust with no SQLite C binding,
   rusqlite dependency, SQLite subprocess, or Turso runtime dependency
   ([#51](https://github.com/DecapodLabs/dactyl/issues/51)).

@@ -2,8 +2,16 @@
 
 use std::sync::{Arc, Mutex};
 
-use axum::{extract::State, http::HeaderMap, routing::post, Json, Router};
-use dactyl_db::{Connection, Datastore, DatastoreRoute, Operation, OperationResult, Parameter};
+use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode},
+    routing::post,
+    Json, Router,
+};
+use dactyl_db::{
+    AccessMode, AdapterErrorKind, Connection, Datastore, DatastoreRoute, OpenOptions, Operation,
+    OperationResult, Parameter,
+};
 use serde_json::{json, Value};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
@@ -17,7 +25,7 @@ async fn query(
     State(state): State<MockState>,
     headers: HeaderMap,
     Json(request): Json<Value>,
-) -> Json<Value> {
+) -> (StatusCode, Json<Value>) {
     let authorization = headers
         .get("authorization")
         .and_then(|value| value.to_str().ok())
@@ -28,13 +36,27 @@ async fn query(
         .unwrap()
         .push((request.clone(), authorization));
     let sql = request["sql"].as_str().unwrap_or_default();
+    if sql == "version_conflict" {
+        return (
+            StatusCode::CONFLICT,
+            Json(json!({
+                "error": {"code": "version_conflict", "message": "stale version"}
+            })),
+        );
+    }
     if sql.starts_with("select") {
-        Json(json!({
+        (
+            StatusCode::OK,
+            Json(json!({
             "columns": ["id", "name", "enabled", "payload"],
             "rows": [{"id": 1, "name": "opened", "enabled": true, "payload": [1, 2, 3]}]
-        }))
+            })),
+        )
     } else {
-        Json(json!({"affected_rows": 1, "rows": []}))
+        (
+            StatusCode::OK,
+            Json(json!({"affected_rows": 1, "rows": []})),
+        )
     }
 }
 
@@ -42,7 +64,7 @@ async fn batch(
     State(state): State<MockState>,
     headers: HeaderMap,
     Json(request): Json<Value>,
-) -> Json<Value> {
+) -> (StatusCode, Json<Value>) {
     let authorization = headers
         .get("authorization")
         .and_then(|value| value.to_str().ok())
@@ -52,13 +74,24 @@ async fn batch(
         .lock()
         .unwrap()
         .push((request.clone(), authorization));
-    Json(json!({
+    if request["operations"][0]["sql"] == "transaction_failure" {
+        return (
+            StatusCode::CONFLICT,
+            Json(json!({
+                "error": {"code": "transaction_aborted", "message": "operation rolled back"}
+            })),
+        );
+    }
+    (
+        StatusCode::OK,
+        Json(json!({
         "results": [
             {"affected_rows": 0},
             {"affected_rows": 1, "generated_keys": [7]},
             {"columns": ["id"], "rows": [{"id": 7}]}
         ]
-    }))
+        })),
+    )
 }
 
 fn with_server(test: impl FnOnce(String, RequestLog) + Send + 'static) {
@@ -150,5 +183,51 @@ fn neon_matches_the_application_read_write_shape() {
         assert_eq!(requests[0].0["params"], json!(["opened", 1]));
         assert_eq!(requests[0].1.as_deref(), Some("Bearer test-token"));
         assert_eq!(requests[1].0["params"], json!([]));
+    });
+}
+
+#[test]
+fn neon_maps_stable_remote_errors_without_string_parsing() {
+    with_server(|endpoint, _requests| {
+        let db = Connection::open(DatastoreRoute::neon(endpoint, None)).unwrap();
+        let error = db.write("version_conflict", &[]).unwrap_err();
+        assert_eq!(
+            error.adapter_kind(),
+            Some(AdapterErrorKind::VersionConflict)
+        );
+        assert_eq!(error.adapter_code(), Some("version_conflict"));
+    });
+}
+
+#[test]
+fn neon_atomic_failure_is_typed_and_read_only_fails_closed() {
+    with_server(|endpoint, requests| {
+        let db = Connection::open(DatastoreRoute::neon(endpoint.clone(), None)).unwrap();
+        let error = db
+            .atomic(&[Operation::write("transaction_failure", Vec::new())])
+            .unwrap_err();
+        assert_eq!(
+            error.adapter_kind(),
+            Some(AdapterErrorKind::TransactionAborted)
+        );
+        assert_eq!(error.adapter_code(), Some("transaction_aborted"));
+
+        let before = requests.lock().unwrap().len();
+        let readonly = Connection::open_with_options(
+            DatastoreRoute::neon(endpoint, None),
+            OpenOptions {
+                access_mode: AccessMode::ReadOnly,
+                lock_timeout: std::time::Duration::from_millis(5),
+            },
+        )
+        .unwrap();
+        let error = readonly
+            .atomic(&[Operation::write(
+                "insert into app default values",
+                Vec::new(),
+            )])
+            .unwrap_err();
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::ReadOnly));
+        assert_eq!(requests.lock().unwrap().len(), before);
     });
 }

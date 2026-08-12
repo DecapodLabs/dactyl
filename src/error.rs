@@ -10,6 +10,10 @@ pub enum AdapterErrorKind {
     Timeout,
     Constraint,
     Conflict,
+    VersionConflict,
+    TransactionAborted,
+    IdempotencyConflict,
+    IdempotencyInProgress,
     Query,
     InvalidOperation,
     ReadOnly,
@@ -18,6 +22,11 @@ pub enum AdapterErrorKind {
     Storage,
     Transport,
     Protocol,
+    Authentication,
+    Authorization,
+    RateLimited,
+    Quota,
+    NotFound,
     Unavailable,
     Cancellation,
     Unknown,
@@ -32,6 +41,7 @@ pub enum DactylError {
     #[error("adapter error ({kind:?}): {message}")]
     Adapter {
         kind: AdapterErrorKind,
+        code: Option<String>,
         message: String,
     },
 
@@ -50,6 +60,20 @@ impl DactylError {
     pub(crate) fn adapter(kind: AdapterErrorKind, message: impl Into<String>) -> Self {
         Self::Adapter {
             kind,
+            code: None,
+            message: message.into(),
+        }
+    }
+
+    #[cfg(feature = "neon")]
+    pub(crate) fn adapter_with_code(
+        kind: AdapterErrorKind,
+        code: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self {
+        Self::Adapter {
+            kind,
+            code: Some(code.into()),
             message: message.into(),
         }
     }
@@ -61,10 +85,23 @@ impl DactylError {
         }
     }
 
+    /// Stable remote/provider code, when the adapter received one.
+    pub fn adapter_code(&self) -> Option<&str> {
+        match self {
+            Self::Adapter { code, .. } => code.as_deref(),
+            _ => None,
+        }
+    }
+
     pub fn is_retryable(&self) -> bool {
         matches!(
             self.adapter_kind(),
-            Some(AdapterErrorKind::Busy | AdapterErrorKind::Locked | AdapterErrorKind::Timeout)
+            Some(
+                AdapterErrorKind::Busy
+                    | AdapterErrorKind::Locked
+                    | AdapterErrorKind::Timeout
+                    | AdapterErrorKind::Unavailable,
+            )
         )
     }
 }

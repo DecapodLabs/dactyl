@@ -198,3 +198,175 @@ fn separate_open_connections_refresh_before_mutating() {
         .unwrap();
     assert_eq!(rows.len(), 2);
 }
+
+#[test]
+fn caller_owned_schema_supports_upgrade_constraints_indexes_and_cascade() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_string_lossy().into_owned();
+    let db = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    db.atomic(&[Operation::schema(
+        "create table parents (id integer primary key); create table children (id integer primary key, parent_id integer not null references parents(id) on delete cascade, name text default 'child'); create unique index if not exists children_name on children(name)",
+        Vec::new(),
+    )])
+    .unwrap();
+    db.write(
+        "insert into parents (id) values ($1)",
+        &[Parameter::Integer(7)],
+    )
+    .unwrap();
+    db.write(
+        "insert into children (id, parent_id) values ($1, $2)",
+        &[Parameter::Integer(8), Parameter::Integer(7)],
+    )
+    .unwrap();
+    db.write(
+        "insert into parents (id) values ($1)",
+        &[Parameter::Integer(10)],
+    )
+    .unwrap();
+    let error = db
+        .write(
+            "insert into children (id, parent_id) values ($1, $2)",
+            &[Parameter::Integer(9), Parameter::Integer(10)],
+        )
+        .unwrap_err();
+    assert!(matches!(
+        error,
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Constraint,
+            ..
+        }
+    ));
+    let error = db
+        .write(
+            "insert into children (id, parent_id) values ($1, $2)",
+            &[Parameter::Integer(9), Parameter::Integer(99)],
+        )
+        .unwrap_err();
+    assert!(matches!(
+        error,
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Constraint,
+            ..
+        }
+    ));
+
+    db.write(
+        "create table pairs (left_id integer, right_id integer, unique (left_id, right_id))",
+        &[],
+    )
+    .unwrap();
+    db.write(
+        "insert into pairs (left_id, right_id) values ($1, $2)",
+        &[Parameter::Integer(1), Parameter::Integer(2)],
+    )
+    .unwrap();
+    db.write(
+        "insert into pairs (left_id, right_id) values ($1, $2)",
+        &[Parameter::Integer(1), Parameter::Integer(3)],
+    )
+    .unwrap();
+    let error = db
+        .write(
+            "insert into pairs (left_id, right_id) values ($1, $2)",
+            &[Parameter::Integer(1), Parameter::Integer(2)],
+        )
+        .unwrap_err();
+    assert!(matches!(
+        error,
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Constraint,
+            ..
+        }
+    ));
+
+    db.atomic(&[Operation::schema(
+        "alter table children add column status text not null default 'open'",
+        Vec::new(),
+    )])
+    .unwrap();
+    let row = db
+        .read(
+            "select status from children where id = $1",
+            &[Parameter::Integer(8)],
+        )
+        .unwrap();
+    assert_eq!(row.as_slice()[0].get_str("status").unwrap(), "open");
+
+    db.write(
+        "delete from parents where id = $1",
+        &[Parameter::Integer(7)],
+    )
+    .unwrap();
+    assert!(db.read("select id from children", &[]).unwrap().is_empty());
+    let reopened = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    assert!(reopened
+        .read("select id from parents", &[])
+        .unwrap()
+        .as_slice()[0]
+        .get_int("id")
+        .is_ok());
+}
+
+#[test]
+fn failed_schema_upgrade_does_not_survive_reopen() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_string_lossy().into_owned();
+    let db = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    db.write("create table app (id integer primary key)", &[])
+        .unwrap();
+    db.write("insert into app (id) values ($1)", &[Parameter::Integer(1)])
+        .unwrap();
+    let error = db
+        .atomic(&[Operation::schema(
+            "alter table app add column status text default 'open'; alter table missing add column value text",
+            Vec::new(),
+        )])
+        .unwrap_err();
+    assert!(matches!(
+        error,
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Query,
+            ..
+        }
+    ));
+    let reopened = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    assert!(reopened.read("select status from app", &[]).is_err());
+}
+
+#[test]
+fn read_only_atomic_schema_and_reader_reuse_are_non_mutating() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_string_lossy().into_owned();
+    let db = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    db.write("create table app (id integer primary key)", &[])
+        .unwrap();
+    drop(db);
+    let options = OpenOptions {
+        access_mode: AccessMode::ReadOnly,
+        lock_timeout: Duration::from_millis(5),
+    };
+    let readers = (0..3)
+        .map(|_| Connection::open_with_options(DatastoreRoute::sqlite(&path), options).unwrap())
+        .collect::<Vec<_>>();
+    let error = readers[0]
+        .atomic(&[Operation::schema(
+            "create table forbidden (id integer primary key)",
+            Vec::new(),
+        )])
+        .unwrap_err();
+    assert!(matches!(
+        error,
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::ReadOnly,
+            ..
+        }
+    ));
+    for reader in readers {
+        assert!(reader.read("select id from app", &[]).unwrap().is_empty());
+    }
+    assert!(Connection::open(DatastoreRoute::sqlite(&path))
+        .unwrap()
+        .read("select id from forbidden", &[])
+        .is_err());
+}

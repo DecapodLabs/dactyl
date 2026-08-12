@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Complete Dactyl issues #52 and #54-#57",
+  "intent": "Complete the remaining Dactyl #52/#54-#57 contract and cross-adapter proof gaps after merged PR #58, preserving pure-Rust lightweight local storage, caller-owned schema/retry policy, trait-based Neon parity, and no SQLite C/rusqlite/subprocess/Turso.",
+  "state": "APPROVED",
+  "todo_ids": [
+    "bugs_01kzskr9n96544ac"
+  ],
+  "proof_hooks": [
+    "cargo fmt --all -- --check",
+    "cargo test --all-features",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo tree --no-default-features --features sqlite",
+    "decapod validate --format json"
+  ],
+  "unknowns": [],
+  "human_questions": [],
+  "stop_conditions": [
+    "No SQLite C, libsqlite3-sys, rusqlite, SQLite subprocess, or Turso runtime dependency",
+    "No retry, idempotency, migration/version policy, or domain semantics in Dactyl",
+    "No false-green conformance skips; unavailable remote proof must be explicit"
+  ],
+  "unresolved_contradictions": [
+    "The current Dactyl Neon mock uses /query and /batch while Propodus v1 documents resource and /api/v1/store/transactions routes; do not silently claim full live Propodus parity or invent a domain translation layer in this wave."
+  ],
+  "deferred_questions": [
+    "Propodus resource-route translation and live deployment proof remain downstream work in Propodus #54/#55/#57; Dactyl mock conformance must remain network-free and explicit about transport capability."
+  ],
+  "constraints": {
+    "forbidden_paths": [
+      ".decapod/*"
+    ],
+    "file_touch_budget": 24
+  },
+  "phases": [
+    {
+      "id": "research",
+      "name": "Research current contract gaps",
+      "description": "Inspect merged Dactyl code, tests, README, and issue acceptance to choose the smallest next proof wave.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": true,
+      "entered_at": "1786494815Z",
+      "completed_at": "1786494846Z"
+    },
+    {
+      "id": "implementation",
+      "name": "Implement bounded contract and adapter parity",
+      "description": "Add only the missing low-level Rust primitives and deterministic local/Neon conformance needed by #52 and #54-#57.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": true,
+      "entered_at": "1786494846Z",
+      "completed_at": "1786495849Z"
+    },
+    {
+      "id": "proof",
+      "name": "Run proof and governance validation",
+      "description": "Run focused tests, full checks, dependency audit, Decapod validation, and inspect the final diff.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": true,
+      "entered_at": "1786495849Z",
+      "completed_at": "1786497312Z"
+    },
+    {
+      "id": "publish",
+      "name": "Publish and update issues",
+      "description": "Commit with SSH signing, publish the PR through Decapod, and update remaining issue threads with evidence.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": false,
+      "entered_at": "1786497312Z",
+      "completed_at": null
+    }
+  ],
+  "updated_at": "1786497358Z"
+}

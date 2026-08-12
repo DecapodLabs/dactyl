@@ -4,13 +4,13 @@
 library
 
 ## What This Project Is
-dactyl-db is a small Rust application driver: one `read(sql, params)` and one `write(sql, params)` surface over SQLite and Vercel Neon. It is not a general SQL framework or database-administration layer.
+dactyl-db is a small Rust application driver: one normalized operation surface over a Dactyl-owned pure-Rust local store and Vercel Neon. It is not a general SQL framework or database-administration layer.
 
 Architectural principles:
 - **Simplicity**: Keep components focused and reusable.
 - **Modularity**: Clearly defined interface boundaries and dependency separation.
 - **Reliability**: Graceful failure handling and thorough verification.
-- **Backend-neutrality**: SQLite and Neon receive the same SQL and parameter shapes and return congruent rows/counts; backend-specific handles remain private.
+- **Backend-neutrality**: local and Neon adapters receive the same SQL, parameters, operation kinds, and opaque atomic batches; backend-specific handles remain private.
 
 ## Current Facts
 - Runtime/languages: Rust
@@ -23,9 +23,9 @@ This project's architecture consists of the following key layers/directories:
 - `tests/`: Integration and unit test suite.
 
 ## Data Flows
-- The application supplies SQL and bound values.
-- Dactyl selects SQLite or Neon and forwards the request.
-- The adapter returns normalized rows for reads or an affected count for writes.
+- The application supplies SQL, bound values, and caller-owned schema operations.
+- Dactyl selects the local or Neon adapter and enforces the operation/access boundary.
+- The adapter returns normalized rows, explicit write results, typed errors, or an ordered atomic result.
 
 ## Strongest Existing Primitives
 - Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
@@ -83,7 +83,7 @@ sequenceDiagram
 
 ## Concurrency and Runtime Model
 - Execution model: each free `read` / `write` call constructs a short-lived adapter for the ambient route and drops it on return; explicit `Connection` scopes several application operations to one route.
-- Isolation boundaries: Dactyl keeps no process-global cache and exposes no backend handle.
+- Isolation boundaries: Dactyl keeps no process-global cache and exposes no backend handle. Local mutating operations take a bounded file lock, execute against a candidate snapshot, and publish through a checksummed journal; `Connection::atomic` commits only after every operation succeeds.
 - Backpressure strategy: owned by the backend or Neon service; Dactyl does not retry or schedule work.
 - Shared state synchronization: none at the Dactyl layer.
 
@@ -94,9 +94,9 @@ sequenceDiagram
 - Rollback trigger and blast-radius scope: callers pin a dactyl version; breaking changes are recorded in CHANGELOG.md.
 
 ## Data and Contracts
-- Inbound contracts (application calls): `read(sql, params)` and `write(sql, params)`.
-- Outbound dependencies (datastores/queues/external APIs): private SQLite C-API wrapper and Neon/Propodus HTTP transport.
-- Data ownership boundaries: the backend owns schema and database intelligence; Dactyl only moves application reads and writes.
+- Inbound contracts (application calls): `read`, `write_result`, `atomic`, `OpenOptions`, and owned row/result values.
+- Outbound dependencies (datastores/queues/external APIs): Dactyl-owned Rust snapshot/WAL local storage and Neon/Propodus HTTP transport; no SQLite C family dependency.
+- Data ownership boundaries: callers own schema definitions and migration policy; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
 - Schema evolution + migration policy: outside Dactyl's scope.
 
 ## ADR Register
@@ -105,6 +105,7 @@ sequenceDiagram
 | ADR-001 | Ambient-env routing contract (DATASTORE/DATASTORE_ROUTE/DATASTORE_TOKEN) | Accepted | Single authoritative selector; no init(); per-call adapters for session isolation (dactyl #26) | 2026-08-01 |
 | ADR-002 | Thin application API: read(sql, params) + write(sql, params) | Accepted | One uniform read/write surface for SQLite and Neon; administration remains outside the crate (dactyl #47) | 2026-08-01 |
 | ADR-003 | Backend-neutral Adapter trait | Proposed | New backends (redis, mysql, cassandra) add one module + one DATASTORE arm; public surface unchanged | 2026-08-01 |
+| ADR-004 | Pure-Rust local engine with opaque atomic batches | Accepted | Avoid SQLite C/rusqlite build cost while preserving caller-owned schema execution, local durability, read-only enforcement, and a Neon-parity proof seam (#51-#57) | 2026-08-11 |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):
@@ -141,7 +142,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `30258e46e1bd3dd972ed0a29daf9aa4831458737a8df70a5bd9de2093905738c`
+- Repository signal fingerprint: `919fa7cd8823e9f832ad87dd3ab6d70585d8789f120e4dc1d70348677d2713ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

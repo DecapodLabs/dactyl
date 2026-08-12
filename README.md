@@ -21,13 +21,16 @@ SQLite and Neon use the same application contract:
 - `write(sql, params)` returns the affected-row count for compatibility;
   `write_result` also returns explicit generated keys.
 - `atomic(&[Operation])` executes an opaque all-or-nothing batch and preserves
-  result order. It does not implement retry, nesting, or idempotency policy.
+  result order. Empty batches are no-ops, and a failed batch persists nothing.
+  It does not implement retry, nesting, or idempotency policy.
 - `OpenOptions { access_mode: ReadOnly, .. }` opens a non-mutating handle.
 - Values are bound as `Null`, `Bool`, `Integer`, `Real`, `Text`, or `Blob`.
 - The Neon adapter forwards SQL to `/query` and atomic batches to `/batch`.
 - Adapter failures use typed categories including busy/locked/timeout,
-  constraint/conflict, read-only, capability, value, storage, transport, and
-  protocol failures.
+  constraint/conflict/version-conflict/transaction-aborted, read-only,
+  capability, value, storage, transport, authentication/authorization, quota,
+  rate-limit, and protocol failures. Remote stable error codes are available
+  through `DactylError::adapter_code()` without parsing provider messages.
 
 The local implementation is Dactyl-owned Rust. It has no `sqlite`, `rusqlite`,
 `libsqlite3-sys`, or SQLite subprocess dependency. The `sqlite` feature and
@@ -35,11 +38,21 @@ route constructor remain as compatibility names for existing callers, but the
 local file is a versioned Dactyl snapshot, not a SQLite file. A SQLite header is
 rejected with a typed capability error; migration/import belongs to the caller.
 
-The local SQL surface is intentionally bounded: caller-supplied `CREATE TABLE`,
-`ALTER TABLE ... ADD`, `DROP TABLE`, `INSERT`, `UPDATE`, `DELETE`, and `SELECT`
-with predicates and basic ordering/limits. Unsupported SQL fails with a typed
-capability/query error rather than silently changing the request. This is a
-storage primitive, not a planner or schema owner.
+The local SQL surface is intentionally bounded: caller-supplied `CREATE TABLE`
+and multi-statement schema batches, `ALTER TABLE ... ADD`, `CREATE [UNIQUE]
+INDEX`, `DROP TABLE`, `DROP INDEX`, `INSERT`, `UPDATE`, `DELETE`, and `SELECT`
+with predicates and basic ordering/limits. Schema operations preserve literal
+defaults, `NOT NULL`, composite `PRIMARY KEY`/`UNIQUE`, foreign keys with
+restrict/cascade delete behavior, and caller-owned indexes. Indexes are
+structural constraints, not a query planner. Unsupported SQL fails with a
+typed capability/query error rather than silently changing the request. This
+is a storage primitive, not a planner or schema owner.
+
+Schema versioning, migration ordering, backups, import from legacy stores,
+retry/backoff, idempotency keys, and domain-level version/CAS policy remain
+with Decapod or Propodus. The Neon adapter maps the stable Propodus v1 error
+codes it receives, but it does not invent the resource-route translation or
+claim live cloud parity when that service contract is unavailable.
 
 ## Quick start
 

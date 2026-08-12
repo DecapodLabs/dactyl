@@ -72,18 +72,20 @@ pub enum ApiError {
 
 ## Dactyl — API Contract (design-time note)
 
-- Public application surface: `read(sql: &str, params: &[Parameter]) -> Result<Rows, DactylError>` and `write(sql: &str, params: &[Parameter]) -> Result<u64, DactylError>`, plus `Connection::open` for an explicit route.
+- Public application surface: `read`, `write_result`, `atomic(&[Operation])`, `OpenOptions { access_mode, lock_timeout }`, and `Connection::open` for an explicit route. `write` remains the affected-row compatibility wrapper.
 - Adapter selection is ambient-env-driven for free functions: `DATASTORE` is `sqlite` or `neon`, `DATASTORE_ROUTE` is the SQLite path or Neon endpoint, and `DATASTORE_TOKEN` is the optional Neon bearer token.
 - Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`.
 - `Rows` owns normalized `Row` values. SQLite and Neon use the same column/value representation and typed row accessors, including explicit NULL and conversion failures.
-- Raw SQL is forwarded unchanged. Dactyl has no query parser, dialect rewriter, schema bootstrap, migration API, transaction API, retry policy, analytics, or business-intelligence behavior.
-- Operational adapter errors expose typed categories so application code does not parse backend error strings.
+- SQL is never interpolated or rewritten for domain meaning. The local adapter parses only its bounded storage subset, including caller-owned DDL, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
+- `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages.
 
 ### Multi-backend boundary
 
 SQLite and Neon are the current supported application stores. Any future
-backend must preserve the same read/write request and response contract; adding
-database administration or business-intelligence features is out of scope.
+backend must preserve the same read/write, access-mode, atomic-batch, result,
+and typed-error contract; adding database administration or business-
+intelligence features is out of scope. Propodus resource-route translation and
+live cloud deployment proof remain service-side concerns.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
@@ -110,7 +112,7 @@ database administration or business-intelligence features is out of scope.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `30258e46e1bd3dd972ed0a29daf9aa4831458737a8df70a5bd9de2093905738c`
+- Repository signal fingerprint: `919fa7cd8823e9f832ad87dd3ab6d70585d8789f120e4dc1d70348677d2713ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -43,6 +43,17 @@ struct Response {
 }
 
 #[derive(Debug, Deserialize)]
+struct ErrorEnvelope {
+    error: ErrorBody,
+}
+
+#[derive(Debug, Deserialize)]
+struct ErrorBody {
+    code: Option<String>,
+    message: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 struct BatchResponse {
     #[serde(default)]
     results: Vec<Response>,
@@ -114,13 +125,7 @@ fn decode_response<T: for<'de> Deserialize<'de>>(
         )
     })?;
     if !status.is_success() {
-        return Err(DactylError::adapter(
-            AdapterErrorKind::Query,
-            format!(
-                "{operation} status {status}: {}",
-                String::from_utf8_lossy(&body)
-            ),
-        ));
+        return Err(remote_error(status.as_u16(), &body, operation));
     }
     serde_json::from_slice(&body).map_err(|error| {
         DactylError::adapter(
@@ -130,12 +135,55 @@ fn decode_response<T: for<'de> Deserialize<'de>>(
     })
 }
 
+fn remote_error(status: u16, body: &[u8], operation: &str) -> DactylError {
+    let envelope = serde_json::from_slice::<ErrorEnvelope>(body).ok();
+    let code = envelope.as_ref().and_then(|value| value.error.code.clone());
+    let message = envelope
+        .as_ref()
+        .and_then(|value| value.error.message.clone())
+        .unwrap_or_else(|| format!("{operation} returned HTTP status {status}"));
+    let kind = match code.as_deref() {
+        Some("invalid_request") => AdapterErrorKind::InvalidOperation,
+        Some("unsupported_query") => AdapterErrorKind::Capability,
+        Some("authentication_required") => AdapterErrorKind::Authentication,
+        Some("entitlement_required") | Some("repository_not_authorized") => {
+            AdapterErrorKind::Authorization
+        }
+        Some("row_not_found") => AdapterErrorKind::NotFound,
+        Some("row_conflict") => AdapterErrorKind::Conflict,
+        Some("version_conflict") => AdapterErrorKind::VersionConflict,
+        Some("idempotency_conflict") => AdapterErrorKind::IdempotencyConflict,
+        Some("idempotency_in_progress") => AdapterErrorKind::IdempotencyInProgress,
+        Some("transaction_aborted") => AdapterErrorKind::TransactionAborted,
+        Some("quota_exceeded") => AdapterErrorKind::Quota,
+        Some("payload_too_large") => AdapterErrorKind::Quota,
+        Some("rate_limited") => AdapterErrorKind::RateLimited,
+        Some("storage_failure") => AdapterErrorKind::Storage,
+        Some("storage_unavailable") => AdapterErrorKind::Unavailable,
+        _ => match status {
+            401 => AdapterErrorKind::Authentication,
+            402 | 403 => AdapterErrorKind::Authorization,
+            404 => AdapterErrorKind::NotFound,
+            408 | 409 => AdapterErrorKind::Conflict,
+            429 => AdapterErrorKind::RateLimited,
+            500 => AdapterErrorKind::Storage,
+            503 => AdapterErrorKind::Unavailable,
+            _ => AdapterErrorKind::Query,
+        },
+    };
+    match code {
+        Some(code) => DactylError::adapter_with_code(kind, code, message),
+        None => DactylError::adapter(kind, message),
+    }
+}
+
 impl Adapter for NeonAdapter {
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
         rows_from_response(self.request(sql, params)?)
     }
 
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError> {
+        ensure_remote_writable(self.access_mode)?;
         let response = self.request(sql, params)?;
         Ok(WriteResult {
             affected_rows: response.affected_rows.unwrap_or(response.rows.len() as u64),
@@ -144,7 +192,26 @@ impl Adapter for NeonAdapter {
     }
 
     fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DactylError> {
+        if operations.is_empty() {
+            return Ok(AtomicResult::default());
+        }
+        if operations
+            .iter()
+            .any(|operation| operation.kind != crate::contract::OperationKind::Read)
+        {
+            ensure_remote_writable(self.access_mode)?;
+        }
         let response = self.request_batch(operations)?;
+        if response.results.len() != operations.len() {
+            return Err(DactylError::adapter(
+                AdapterErrorKind::Protocol,
+                format!(
+                    "neon batch returned {} results for {} operations",
+                    response.results.len(),
+                    operations.len()
+                ),
+            ));
+        }
         let mut results = Vec::with_capacity(response.results.len());
         for result in response.results {
             if !result.columns.is_empty() || !result.rows.is_empty() {
@@ -161,6 +228,17 @@ impl Adapter for NeonAdapter {
 
     fn access_mode(&self) -> AccessMode {
         self.access_mode
+    }
+}
+
+fn ensure_remote_writable(mode: AccessMode) -> Result<(), DactylError> {
+    if mode == AccessMode::ReadOnly {
+        Err(DactylError::adapter(
+            AdapterErrorKind::ReadOnly,
+            "route is read-only",
+        ))
+    } else {
+        Ok(())
     }
 }
 
