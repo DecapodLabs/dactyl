@@ -26,7 +26,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
       - name: Install Decapod
         if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
-        run: cargo binstall --no-confirm decapod
+        run: cargo binstall --no-confirm decapod@0.98.2
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
