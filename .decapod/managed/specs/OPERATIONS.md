@@ -45,6 +45,12 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Rolling update:
 - Feature flags:
 
+## Release Synchronization
+Release synchronization is performed from the fetched `origin/main` tip in an
+isolated worktree. The v0.6.1 baseline includes the release metadata, source,
+tests, and the corresponding Decapod projections as one reconciled state;
+validation must pass before that state is promoted to a protected checkout.
+
 ## Capacity Planning
 - Traffic patterns:
 - Resource utilization:
@@ -118,7 +124,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2f2208d542de787f7a501c38293f30253f30fc76001928f2f53fdc9c876851ac`
+- Repository signal fingerprint: `d1ee4c8fd368ba4bb36446d65972c7fd1c3e548e735c41bf3bc1b2056b303222`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
