@@ -51,6 +51,10 @@ isolated worktree. The v0.6.1 baseline includes the release metadata, source,
 tests, and the corresponding Decapod projections as one reconciled state;
 validation must pass before that state is promoted to a protected checkout.
 
+**CI/CD Notes**:
+- The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.2` and uses it as the cache key to prevent stale cache bugs.
+- The `release-please` action is used to automate the release process, creating a single PR for Cargo.toml versions and changelog, and publishing upon merge.
+
 ## Capacity Planning
 - Traffic patterns:
 - Resource utilization:
@@ -124,7 +128,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa4e292ece7718d0e22211ea009236b62477b5a1d0453b3c7f6291b751d3bde6`
+- Repository signal fingerprint: `f9b7bebbe96ca20cb0fa2dee0648ba402494d79d2eba1427d7c9e06beda0d906`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
