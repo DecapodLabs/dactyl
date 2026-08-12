@@ -17,7 +17,7 @@
 <!-- decapod:declared-capabilities:end -->
 
 ## Product Outcome
-- Establish Dactyl as the small application-layer database provider for read/write-heavy apps. The same normalized reads, explicit writes, opaque atomic batches, and access modes must work against the lightweight pure-Rust local store and remote Vercel Neon without exposing backend handles or adding database administration behavior.
+- Establish Dactyl as the small application-layer database provider for read/write-heavy apps, targeted for the v0.7.0 release. The same normalized reads, explicit writes, opaque atomic batches, and access modes must work against the lightweight pure-Rust local store and remote Vercel Neon without exposing backend handles or adding database administration behavior.
 
 ## What This Project Is
 dactyl-db is a not classified yet project built using Rust.
