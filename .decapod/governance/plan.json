@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Dactyl opaque storage context transport seam",
+  "intent": "Implement Dactyl issue 64 as the narrow backend-neutral transport seam for Decapod issue 1254: carry a versioned opaque storage context through remote query and atomic requests, ignore it for local storage, preserve existing physical route configuration, and expose typed protocol/authentication failures without adding tenancy, repository, schema, retry, or authorization semantics.",
+  "state": "APPROVED",
+  "todo_ids": [
+    "code_01kzta91egpqdgv5"
+  ],
+  "proof_hooks": [
+    "cargo test --all-features",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "decapod validate"
+  ],
+  "unknowns": [],
+  "human_questions": [],
+  "stop_conditions": [],
+  "unresolved_contradictions": [],
+  "deferred_questions": [
+    "The inner storage-context payload remains owned by Decapod and Propodus; Dactyl intentionally forwards it without interpretation.",
+    "Live Vercel/Neon deployment and cross-repository parity remain downstream proof after the Dactyl transport seam."
+  ],
+  "constraints": {
+    "forbidden_paths": [
+      ".decapod/data/"
+    ],
+    "file_touch_budget": 15
+  },
+  "phases": [],
+  "updated_at": "1786515992Z"
+}

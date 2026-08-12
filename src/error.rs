@@ -65,7 +65,6 @@ impl DactylError {
         }
     }
 
-    #[cfg(feature = "neon")]
     pub(crate) fn adapter_with_code(
         kind: AdapterErrorKind,
         code: impl Into<String>,

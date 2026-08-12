@@ -1,6 +1,9 @@
 #![cfg(feature = "sqlite")]
 
-use dactyl_db::{AdapterErrorKind, Connection, Datastore, DatastoreRoute, Parameter};
+use dactyl_db::{
+    AdapterErrorKind, Connection, Datastore, DatastoreRoute, Parameter, StorageContext,
+};
+use serde_json::json;
 use tempfile::NamedTempFile;
 
 #[test]
@@ -68,4 +71,35 @@ fn sqlite_errors_are_typed_without_string_parsing() {
             ..
         }
     ));
+}
+
+#[test]
+fn sqlite_ignores_remote_context_without_changing_local_results() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_string_lossy().into_owned();
+    let db = Connection::open_with_context(
+        DatastoreRoute::sqlite(path),
+        Some(
+            StorageContext::new(
+                1,
+                json!({"opaque_target": "remote", "opaque_session": "ignored"}),
+            )
+            .unwrap(),
+        ),
+    )
+    .unwrap();
+    db.write("create table app (id integer primary key, name text)", &[])
+        .unwrap();
+    db.write(
+        "insert into app (name) values ($1)",
+        &[Parameter::Text("local".into())],
+    )
+    .unwrap();
+    assert_eq!(db.context().unwrap().version(), 1);
+    assert_eq!(
+        db.read("select name from app", &[]).unwrap().as_slice()[0]
+            .get_str("name")
+            .unwrap(),
+        "local"
+    );
 }

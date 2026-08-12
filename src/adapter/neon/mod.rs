@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapter::Adapter;
 use crate::contract::{
-    AccessMode, AtomicResult, OpenOptions, Operation, OperationResult, WriteResult,
+    AccessMode, AtomicResult, OpenOptions, Operation, OperationResult, StorageContext, WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
@@ -14,6 +14,7 @@ pub struct NeonAdapter {
     bearer: Option<String>,
     client: reqwest::blocking::Client,
     access_mode: AccessMode,
+    context: Option<StorageContext>,
 }
 
 #[derive(Debug, Serialize)]
@@ -22,12 +23,14 @@ struct Request<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     params: Option<&'a [Parameter]>,
     access_mode: AccessMode,
+    context: &'a StorageContext,
 }
 
 #[derive(Debug, Serialize)]
 struct BatchRequest<'a> {
     access_mode: AccessMode,
     operations: &'a [Operation],
+    context: &'a StorageContext,
 }
 
 #[derive(Debug, Deserialize)]
@@ -62,19 +65,26 @@ struct BatchResponse {
 impl NeonAdapter {
     #[allow(dead_code)]
     pub fn new(endpoint: &str, bearer: Option<String>) -> Self {
-        Self::new_with_options(endpoint, bearer, OpenOptions::default())
+        Self::new_with_options(endpoint, bearer, OpenOptions::default(), None)
     }
 
-    pub fn new_with_options(endpoint: &str, bearer: Option<String>, options: OpenOptions) -> Self {
+    pub fn new_with_options(
+        endpoint: &str,
+        bearer: Option<String>,
+        options: OpenOptions,
+        context: Option<StorageContext>,
+    ) -> Self {
         Self {
             endpoint: endpoint.trim_end_matches('/').to_owned(),
             bearer,
             client: reqwest::blocking::Client::new(),
             access_mode: options.access_mode,
+            context,
         }
     }
 
     fn request(&self, sql: &str, params: &[Parameter]) -> Result<Response, DactylError> {
+        let context = self.context()?;
         let mut request = self.client.post(format!("{}/query", self.endpoint));
         if let Some(token) = &self.bearer {
             request = request.bearer_auth(token);
@@ -84,6 +94,7 @@ impl NeonAdapter {
                 sql,
                 params: Some(params),
                 access_mode: self.access_mode,
+                context,
             })
             .send()
             .map_err(|error| {
@@ -93,6 +104,7 @@ impl NeonAdapter {
     }
 
     fn request_batch(&self, operations: &[Operation]) -> Result<BatchResponse, DactylError> {
+        let context = self.context()?;
         let mut request = self.client.post(format!("{}/batch", self.endpoint));
         if let Some(token) = &self.bearer {
             request = request.bearer_auth(token);
@@ -101,6 +113,7 @@ impl NeonAdapter {
             .json(&BatchRequest {
                 access_mode: self.access_mode,
                 operations,
+                context,
             })
             .send()
             .map_err(|error| {
@@ -110,6 +123,18 @@ impl NeonAdapter {
                 )
             })?;
         decode_response(response, "neon batch")
+    }
+
+    fn context(&self) -> Result<&StorageContext, DactylError> {
+        let context = self.context.as_ref().ok_or_else(|| {
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Authentication,
+                "authentication_required",
+                "neon requests require an authenticated storage context",
+            )
+        })?;
+        context.validate()?;
+        Ok(context)
     }
 }
 
@@ -146,6 +171,8 @@ fn remote_error(status: u16, body: &[u8], operation: &str) -> DactylError {
         Some("invalid_request") => AdapterErrorKind::InvalidOperation,
         Some("unsupported_query") => AdapterErrorKind::Capability,
         Some("authentication_required") => AdapterErrorKind::Authentication,
+        Some("missing_context") => AdapterErrorKind::Authentication,
+        Some("invalid_context") | Some("malformed_context") => AdapterErrorKind::Protocol,
         Some("entitlement_required") | Some("repository_not_authorized") => {
             AdapterErrorKind::Authorization
         }
