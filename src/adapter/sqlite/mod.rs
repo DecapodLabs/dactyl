@@ -11,7 +11,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
@@ -23,12 +23,14 @@ use crate::contract::{
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
 
-const FORMAT_VERSION: u32 = 1;
+const FORMAT_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Store {
     format_version: u32,
     tables: BTreeMap<String, Table>,
+    #[serde(default)]
+    indexes: BTreeMap<String, Index>,
 }
 
 impl Default for Store {
@@ -36,6 +38,7 @@ impl Default for Store {
         Self {
             format_version: FORMAT_VERSION,
             tables: BTreeMap::new(),
+            indexes: BTreeMap::new(),
         }
     }
 }
@@ -46,6 +49,10 @@ struct Table {
     columns: Vec<Column>,
     rows: Vec<Vec<serde_json::Value>>,
     next_id: i64,
+    #[serde(default)]
+    unique_constraints: Vec<UniqueConstraint>,
+    #[serde(default)]
+    foreign_keys: Vec<ForeignKey>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,6 +61,41 @@ struct Column {
     primary_key: bool,
     unique: bool,
     not_null: bool,
+    #[serde(default)]
+    default: Option<DefaultValue>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Index {
+    name: String,
+    table: String,
+    columns: Vec<String>,
+    unique: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct UniqueConstraint {
+    columns: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ForeignKey {
+    columns: Vec<String>,
+    ref_table: String,
+    ref_columns: Vec<String>,
+    on_delete: OnDelete,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+enum OnDelete {
+    Restrict,
+    Cascade,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+enum DefaultValue {
+    Value(serde_json::Value),
+    CurrentTimestamp,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -191,11 +233,50 @@ fn execute_operation(
     store: &mut Store,
     operation: &Operation,
 ) -> Result<OperationResult, DactylError> {
-    let first = first_word(&operation.sql);
+    let statements = split_statements(&operation.sql);
+    if statements.len() > 1 {
+        if operation.kind != OperationKind::Schema {
+            return Err(adapter_error(
+                AdapterErrorKind::Capability,
+                "multi-statement SQL is only supported for schema operations",
+            ));
+        }
+        let mut affected_rows = 0;
+        for statement in statements {
+            match execute_one_operation(store, operation, &statement)? {
+                OperationResult::Write(result) => affected_rows += result.affected_rows,
+                OperationResult::Rows(_) => {
+                    return Err(adapter_error(
+                        AdapterErrorKind::InvalidOperation,
+                        "schema operation cannot return rows",
+                    ))
+                }
+            }
+        }
+        return Ok(OperationResult::Write(WriteResult {
+            affected_rows,
+            generated_keys: Vec::new(),
+        }));
+    }
+    execute_one_operation(store, operation, &operation.sql)
+}
+
+fn execute_one_operation(
+    store: &mut Store,
+    operation: &Operation,
+    sql: &str,
+) -> Result<OperationResult, DactylError> {
+    let first = first_word(sql);
     if operation.kind == OperationKind::Read && first.as_deref() != Some("select") {
         return Err(adapter_error(
             AdapterErrorKind::InvalidOperation,
             "read operation requires SELECT",
+        ));
+    }
+    if operation.kind == OperationKind::Write && first.as_deref() == Some("select") {
+        return Err(adapter_error(
+            AdapterErrorKind::InvalidOperation,
+            "write operation requires a mutating statement",
         ));
     }
     if operation.kind == OperationKind::Schema
@@ -206,7 +287,35 @@ fn execute_operation(
             "schema operation requires schema SQL",
         ));
     }
-    execute_sql(store, &operation.sql, &operation.params, operation.kind)
+    execute_sql(store, sql, &operation.params, operation.kind)
+}
+
+fn split_statements(sql: &str) -> Vec<String> {
+    let mut statements = Vec::new();
+    let mut current = String::new();
+    let mut quoted = false;
+    let mut chars = sql.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\'' {
+            current.push(ch);
+            if quoted && chars.peek() == Some(&'\'') {
+                current.push(chars.next().expect("peeked quote"));
+            } else {
+                quoted = !quoted;
+            }
+        } else if ch == ';' && !quoted {
+            if !current.trim().is_empty() {
+                statements.push(current.trim().to_owned());
+            }
+            current.clear();
+        } else {
+            current.push(ch);
+        }
+    }
+    if !current.trim().is_empty() {
+        statements.push(current.trim().to_owned());
+    }
+    statements
 }
 
 fn execute_sql(
@@ -232,7 +341,7 @@ fn execute_sql(
         }
         "create" => {
             reject_read(kind)?;
-            create_table(store, &mut parser)
+            create(store, &mut parser)
         }
         "alter" => {
             reject_read(kind)?;
@@ -240,7 +349,7 @@ fn execute_sql(
         }
         "drop" => {
             reject_read(kind)?;
-            drop_table(store, &mut parser)
+            drop_object(store, &mut parser)
         }
         "begin" | "commit" | "rollback" => Err(adapter_error(
             AdapterErrorKind::InvalidOperation,
@@ -382,9 +491,10 @@ fn insert(
     parser.expect_word("into")?;
     let name = parser.word()?;
     let table_key = normalize(&name);
-    let table = store
+    let table_snapshot = store
         .tables
-        .get_mut(&table_key)
+        .get(&table_key)
+        .cloned()
         .ok_or_else(|| missing_table(&name))?;
     let columns = if parser.symbol('(') {
         let mut columns = Vec::new();
@@ -397,38 +507,59 @@ fn insert(
         parser.expect_symbol(')')?;
         columns
     } else {
-        table.columns.iter().map(|c| c.name.clone()).collect()
+        table_snapshot
+            .columns
+            .iter()
+            .map(|c| c.name.clone())
+            .collect()
     };
-    parser.expect_word("values")?;
-    let mut rows = Vec::new();
-    loop {
-        parser.expect_symbol('(')?;
-        let mut values = Vec::new();
+    let rows = if parser.word_is("default") {
+        parser.expect_word("values")?;
+        vec![Vec::new()]
+    } else {
+        parser.expect_word("values")?;
+        let mut rows = Vec::new();
         loop {
-            values.push(parser.expr()?);
+            parser.expect_symbol('(')?;
+            let mut values = Vec::new();
+            loop {
+                values.push(parser.expr()?);
+                if !parser.symbol(',') {
+                    break;
+                }
+            }
+            parser.expect_symbol(')')?;
+            rows.push(values);
             if !parser.symbol(',') {
                 break;
             }
         }
-        parser.expect_symbol(')')?;
-        rows.push(values);
-        if !parser.symbol(',') {
-            break;
-        }
-    }
+        rows
+    };
     parser.finish()?;
+    let indexes = store
+        .indexes
+        .values()
+        .filter(|index| index.table == table_key && index.unique)
+        .cloned()
+        .collect::<Vec<_>>();
+    let mut table = store.tables.remove(&table_key).expect("table was checked");
     let indices = columns
         .iter()
-        .map(|c| column_index(table, c))
+        .map(|c| column_index(&table, c))
         .collect::<Result<Vec<_>, _>>()?;
     let mut result = WriteResult::default();
     for expressions in rows {
         if expressions.len() != indices.len() {
             return Err(query_error("INSERT value count does not match columns"));
         }
-        let mut row = vec![serde_json::Value::Null; table.columns.len()];
+        let mut row = table
+            .columns
+            .iter()
+            .map(|column| default_json_value(column.default.as_ref()))
+            .collect::<Vec<_>>();
         for (index, expr) in expressions.iter().enumerate() {
-            row[indices[index]] = eval(expr, Some(table), &row, params)?;
+            row[indices[index]] = eval(expr, Some(&table), &row, params)?;
         }
         let mut generated = None;
         if let Some(index) = table.columns.iter().position(|c| c.primary_key) {
@@ -440,7 +571,7 @@ fn insert(
                 table.next_id = table.next_id.max(value + 1);
             }
         }
-        if let Err(error) = validate(table, &row, None) {
+        if let Err(error) = validate(&table, &row, None, &indexes) {
             if ignore
                 && matches!(
                     error,
@@ -460,6 +591,16 @@ fn insert(
             result.generated_keys.push(GeneratedKey::Integer(key));
         }
     }
+    store.tables.insert(table_key.clone(), table);
+    let rows = store
+        .tables
+        .get(&table_key)
+        .expect("inserted table")
+        .rows
+        .clone();
+    for row in &rows {
+        validate_foreign_keys(store, &table_key, row)?;
+    }
     Ok(OperationResult::Write(result))
 }
 
@@ -470,6 +611,12 @@ fn update(
 ) -> Result<OperationResult, DactylError> {
     let name = parser.word()?;
     let key = normalize(&name);
+    let indexes = store
+        .indexes
+        .values()
+        .filter(|index| index.table == key && index.unique)
+        .cloned()
+        .collect::<Vec<_>>();
     let table = store
         .tables
         .get_mut(&key)
@@ -506,9 +653,13 @@ fn update(
             let index = column_index(table, column)?;
             row[index] = eval(expr, Some(&snapshot), &row, params)?;
         }
-        validate(table, &row, Some(row_index))?;
+        validate(table, &row, Some(row_index), &indexes)?;
         table.rows[row_index] = row;
         affected += 1;
+    }
+    let rows = table.rows.clone();
+    for row in &rows {
+        validate_foreign_keys(store, &key, row)?;
     }
     Ok(OperationResult::Write(WriteResult {
         affected_rows: affected,
@@ -524,9 +675,10 @@ fn delete(
     parser.expect_word("from")?;
     let name = parser.word()?;
     let key = normalize(&name);
-    let table = store
+    let snapshot = store
         .tables
-        .get_mut(&key)
+        .get(&key)
+        .cloned()
         .ok_or_else(|| missing_table(&name))?;
     let condition = if parser.word_is("where") {
         Some(parser.condition()?)
@@ -534,20 +686,44 @@ fn delete(
         None
     };
     parser.finish()?;
-    let snapshot = table.clone();
+    let deleted = snapshot
+        .rows
+        .iter()
+        .filter(|row| {
+            condition
+                .as_ref()
+                .map_or(true, |c| test_condition(c, Some(&snapshot), row, params))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let table = store.tables.get_mut(&key).expect("table was checked");
     table.rows.retain(|row| {
         !condition
             .as_ref()
             .map_or(true, |c| test_condition(c, Some(&snapshot), row, params))
     });
+    cascade_delete(store, &key, &deleted)?;
     Ok(OperationResult::Write(WriteResult {
-        affected_rows: (snapshot.rows.len() - table.rows.len()) as u64,
+        affected_rows: deleted.len() as u64,
         generated_keys: Vec::new(),
     }))
 }
 
+fn create(store: &mut Store, parser: &mut Parser) -> Result<OperationResult, DactylError> {
+    if parser.word_is("table") {
+        return create_table(store, parser);
+    }
+    let unique = if parser.word_is("unique") {
+        parser.expect_word("index")?;
+        true
+    } else {
+        parser.expect_word("index")?;
+        false
+    };
+    create_index(store, parser, unique)
+}
+
 fn create_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResult, DactylError> {
-    parser.expect_word("table")?;
     let if_not_exists = if parser.word_is("if") {
         parser.expect_word("not")?;
         parser.expect_word("exists")?;
@@ -569,13 +745,35 @@ fn create_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResul
     parser.expect_symbol('(')?;
     let mut columns = Vec::new();
     let mut table_primary = Vec::new();
-    let mut table_unique = Vec::new();
+    let mut table_unique: Vec<Vec<String>> = Vec::new();
+    let mut foreign_keys = Vec::new();
     loop {
         if parser.word_is("primary") {
             parser.expect_word("key")?;
             table_primary = parser.name_list()?;
         } else if parser.word_is("unique") {
-            table_unique.extend(parser.name_list()?);
+            table_unique.push(parser.name_list()?);
+        } else if parser.word_is("foreign") {
+            parser.expect_word("key")?;
+            let columns = parser.name_list()?;
+            foreign_keys.push(parse_foreign_key(parser, columns)?);
+        } else if parser.word_is("constraint") {
+            let _constraint_name = parser.word()?;
+            if parser.word_is("primary") {
+                parser.expect_word("key")?;
+                table_primary = parser.name_list()?;
+            } else if parser.word_is("unique") {
+                table_unique.push(parser.name_list()?);
+            } else if parser.word_is("foreign") {
+                parser.expect_word("key")?;
+                let columns = parser.name_list()?;
+                foreign_keys.push(parse_foreign_key(parser, columns)?);
+            } else {
+                return Err(adapter_error(
+                    AdapterErrorKind::Capability,
+                    "unsupported table constraint",
+                ));
+            }
         } else {
             let name = parser.word()?;
             let mut column = Column {
@@ -583,16 +781,33 @@ fn create_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResul
                 primary_key: false,
                 unique: false,
                 not_null: false,
+                default: None,
             };
             while !parser.peek_symbol(',') && !parser.peek_symbol(')') {
                 if parser.word_is("primary") {
                     parser.expect_word("key")?;
                     column.primary_key = true;
+                    column.not_null = true;
                 } else if parser.word_is("unique") {
                     column.unique = true;
                 } else if parser.word_is("not") {
                     parser.expect_word("null")?;
                     column.not_null = true;
+                } else if parser.word_is("default") {
+                    column.default = Some(default_value(parser.expr()?)?);
+                } else if parser.word_is("references") {
+                    let ref_table = parser.word()?;
+                    let ref_columns = parser.name_list()?;
+                    let on_delete = parse_on_delete(parser)?;
+                    foreign_keys.push(ForeignKey {
+                        columns: vec![column.name.clone()],
+                        ref_table: normalize(&ref_table),
+                        ref_columns: ref_columns
+                            .into_iter()
+                            .map(|value| normalize(&value))
+                            .collect(),
+                        on_delete,
+                    });
                 } else {
                     parser
                         .next()
@@ -608,15 +823,44 @@ fn create_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResul
         break;
     }
     parser.finish()?;
-    for name in table_primary {
-        if let Some(c) = columns.iter_mut().find(|c| c.name == normalize(&name)) {
+    let table_primary = table_primary
+        .into_iter()
+        .map(|value| normalize(&value))
+        .collect::<Vec<_>>();
+    if table_primary.len() == 1 {
+        if let Some(c) = columns.iter_mut().find(|c| c.name == table_primary[0]) {
             c.primary_key = true;
+            c.not_null = true;
+        }
+    } else if table_primary.len() > 1 {
+        for name in &table_primary {
+            if let Some(c) = columns.iter_mut().find(|c| c.name == *name) {
+                c.not_null = true;
+            }
         }
     }
-    for name in table_unique {
-        if let Some(c) = columns.iter_mut().find(|c| c.name == normalize(&name)) {
-            c.unique = true;
+    let mut unique_constraints = Vec::new();
+    for columns_for_constraint in table_unique {
+        let columns_for_constraint = columns_for_constraint
+            .into_iter()
+            .map(|value| normalize(&value))
+            .collect::<Vec<_>>();
+        if columns_for_constraint.len() == 1 {
+            if let Some(column) = columns
+                .iter_mut()
+                .find(|c| c.name == columns_for_constraint[0])
+            {
+                column.unique = true;
+            }
         }
+        unique_constraints.push(UniqueConstraint {
+            columns: columns_for_constraint,
+        });
+    }
+    if table_primary.len() > 1 {
+        unique_constraints.push(UniqueConstraint {
+            columns: table_primary,
+        });
     }
     if columns.is_empty() {
         return Err(query_error("table requires a column"));
@@ -628,8 +872,119 @@ fn create_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResul
             columns,
             rows: Vec::new(),
             next_id: 1,
+            unique_constraints,
+            foreign_keys,
         },
     );
+    Ok(OperationResult::Write(WriteResult::default()))
+}
+
+fn parse_foreign_key(parser: &mut Parser, columns: Vec<String>) -> Result<ForeignKey, DactylError> {
+    parser.expect_word("references")?;
+    let ref_table = parser.word()?;
+    let ref_columns = parser.name_list()?;
+    Ok(ForeignKey {
+        columns: columns.into_iter().map(|value| normalize(&value)).collect(),
+        ref_table: normalize(&ref_table),
+        ref_columns: ref_columns
+            .into_iter()
+            .map(|value| normalize(&value))
+            .collect(),
+        on_delete: parse_on_delete(parser)?,
+    })
+}
+
+fn parse_on_delete(parser: &mut Parser) -> Result<OnDelete, DactylError> {
+    if !parser.word_is("on") {
+        return Ok(OnDelete::Restrict);
+    }
+    parser.expect_word("delete")?;
+    if parser.word_is("cascade") {
+        Ok(OnDelete::Cascade)
+    } else if parser.word_is("restrict") || parser.word_is("no") {
+        if parser.peek_word("action") {
+            parser.expect_word("action")?;
+        }
+        Ok(OnDelete::Restrict)
+    } else {
+        Err(adapter_error(
+            AdapterErrorKind::Capability,
+            "unsupported foreign-key delete action",
+        ))
+    }
+}
+
+fn default_value(expr: Expr) -> Result<DefaultValue, DactylError> {
+    match expr {
+        Expr::Literal(value) => Ok(DefaultValue::Value(value)),
+        Expr::Column(name) if name == "current_timestamp" => Ok(DefaultValue::CurrentTimestamp),
+        _ => Err(adapter_error(
+            AdapterErrorKind::Capability,
+            "default expressions must be literals or CURRENT_TIMESTAMP",
+        )),
+    }
+}
+
+fn default_json_value(default: Option<&DefaultValue>) -> serde_json::Value {
+    match default {
+        Some(DefaultValue::Value(value)) => value.clone(),
+        Some(DefaultValue::CurrentTimestamp) => {
+            let seconds = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|value| value.as_secs())
+                .unwrap_or_default();
+            format!("{seconds}Z").into()
+        }
+        None => serde_json::Value::Null,
+    }
+}
+
+fn create_index(
+    store: &mut Store,
+    parser: &mut Parser,
+    unique: bool,
+) -> Result<OperationResult, DactylError> {
+    let if_not_exists = if parser.word_is("if") {
+        parser.expect_word("not")?;
+        parser.expect_word("exists")?;
+        true
+    } else {
+        false
+    };
+    let name = parser.word()?;
+    let key = normalize(&name);
+    if store.indexes.contains_key(&key) {
+        if if_not_exists {
+            return Ok(OperationResult::Write(WriteResult::default()));
+        }
+        return Err(adapter_error(
+            AdapterErrorKind::Constraint,
+            format!("index {name:?} already exists"),
+        ));
+    }
+    parser.expect_word("on")?;
+    let table = parser.word()?;
+    let columns = parser
+        .name_list()?
+        .into_iter()
+        .map(|value| normalize(&value))
+        .collect::<Vec<_>>();
+    parser.finish()?;
+    let table_key = normalize(&table);
+    let table_ref = get_table(store, &table_key)?;
+    for column in &columns {
+        column_index(table_ref, column)?;
+    }
+    let index = Index {
+        name,
+        table: table_key,
+        columns,
+        unique,
+    };
+    if unique {
+        validate_index_rows(table_ref, &index)?;
+    }
+    store.indexes.insert(key, index);
     Ok(OperationResult::Write(WriteResult::default()))
 }
 
@@ -639,6 +994,23 @@ fn alter_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResult
     parser.expect_word("add")?;
     let _ = parser.word_is("column");
     let column_name = parser.word()?;
+    let mut column = Column {
+        name: normalize(&column_name),
+        primary_key: false,
+        unique: false,
+        not_null: false,
+        default: None,
+    };
+    while !parser.done() {
+        if parser.word_is("not") {
+            parser.expect_word("null")?;
+            column.not_null = true;
+        } else if parser.word_is("default") {
+            column.default = Some(default_value(parser.expr()?)?);
+        } else {
+            parser.next();
+        }
+    }
     parser.finish()?;
     let table = store
         .tables
@@ -650,19 +1022,24 @@ fn alter_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResult
             "column already exists",
         ));
     }
-    table.columns.push(Column {
-        name: normalize(&column_name),
-        primary_key: false,
-        unique: false,
-        not_null: false,
-    });
+    let default = default_json_value(column.default.as_ref());
+    if column.not_null && default.is_null() && !table.rows.is_empty() {
+        return Err(adapter_error(
+            AdapterErrorKind::Constraint,
+            "cannot add a NOT NULL column without a default to a populated table",
+        ));
+    }
+    table.columns.push(column);
     for row in &mut table.rows {
-        row.push(serde_json::Value::Null);
+        row.push(default.clone());
     }
     Ok(OperationResult::Write(WriteResult::default()))
 }
 
-fn drop_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResult, DactylError> {
+fn drop_object(store: &mut Store, parser: &mut Parser) -> Result<OperationResult, DactylError> {
+    if parser.word_is("index") {
+        return drop_index(store, parser);
+    }
     parser.expect_word("table")?;
     let if_exists = if parser.word_is("if") {
         parser.expect_word("exists")?;
@@ -672,8 +1049,25 @@ fn drop_table(store: &mut Store, parser: &mut Parser) -> Result<OperationResult,
     };
     let name = parser.word()?;
     parser.finish()?;
-    if store.tables.remove(&normalize(&name)).is_none() && !if_exists {
+    let key = normalize(&name);
+    if store.tables.remove(&key).is_none() && !if_exists {
         return Err(missing_table(&name));
+    }
+    store.indexes.retain(|_, index| index.table != key);
+    Ok(OperationResult::Write(WriteResult::default()))
+}
+
+fn drop_index(store: &mut Store, parser: &mut Parser) -> Result<OperationResult, DactylError> {
+    let if_exists = if parser.word_is("if") {
+        parser.expect_word("exists")?;
+        true
+    } else {
+        false
+    };
+    let name = parser.word()?;
+    parser.finish()?;
+    if store.indexes.remove(&normalize(&name)).is_none() && !if_exists {
+        return Err(query_error(format!("index {name:?} does not exist")));
     }
     Ok(OperationResult::Write(WriteResult::default()))
 }
@@ -682,6 +1076,7 @@ fn validate(
     table: &Table,
     row: &[serde_json::Value],
     except: Option<usize>,
+    indexes: &[Index],
 ) -> Result<(), DactylError> {
     for (index, column) in table.columns.iter().enumerate() {
         if (column.primary_key || column.not_null) && row[index].is_null() {
@@ -703,6 +1098,160 @@ fn validate(
                 }
             }
         }
+    }
+    for constraint in &table.unique_constraints {
+        let values = values_for_columns(table, row, &constraint.columns)?;
+        if values.iter().any(serde_json::Value::is_null) {
+            continue;
+        }
+        for (other_index, other) in table.rows.iter().enumerate() {
+            if except == Some(other_index) {
+                continue;
+            }
+            if values == values_for_columns(table, other, &constraint.columns)? {
+                return Err(adapter_error(
+                    AdapterErrorKind::Constraint,
+                    format!("unique constraint failed: {:?}", constraint.columns),
+                ));
+            }
+        }
+    }
+    for index in indexes {
+        let values = values_for_columns(table, row, &index.columns)?;
+        if values.iter().any(serde_json::Value::is_null) {
+            continue;
+        }
+        for (other_index, other) in table.rows.iter().enumerate() {
+            if except == Some(other_index) {
+                continue;
+            }
+            if values == values_for_columns(table, other, &index.columns)? {
+                return Err(adapter_error(
+                    AdapterErrorKind::Constraint,
+                    format!("unique index failed: {}", index.name),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn values_for_columns(
+    table: &Table,
+    row: &[serde_json::Value],
+    columns: &[String],
+) -> Result<Vec<serde_json::Value>, DactylError> {
+    columns
+        .iter()
+        .map(|column| Ok(row[column_index(table, column)?].clone()))
+        .collect()
+}
+
+fn validate_index_rows(table: &Table, index: &Index) -> Result<(), DactylError> {
+    if !index.unique {
+        return Ok(());
+    }
+    for (row_index, row) in table.rows.iter().enumerate() {
+        let values = values_for_columns(table, row, &index.columns)?;
+        if values.iter().any(serde_json::Value::is_null) {
+            continue;
+        }
+        for other in table.rows.iter().skip(row_index + 1) {
+            if values == values_for_columns(table, other, &index.columns)? {
+                return Err(adapter_error(
+                    AdapterErrorKind::Constraint,
+                    format!("unique index failed: {}", index.name),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_foreign_keys(
+    store: &Store,
+    table_name: &str,
+    row: &[serde_json::Value],
+) -> Result<(), DactylError> {
+    let table = get_table(store, table_name)?;
+    for foreign_key in &table.foreign_keys {
+        let values = values_for_columns(table, row, &foreign_key.columns)?;
+        if values.iter().any(serde_json::Value::is_null) {
+            continue;
+        }
+        let referenced = get_table(store, &foreign_key.ref_table)?;
+        let found = referenced.rows.iter().any(|candidate| {
+            values_for_columns(referenced, candidate, &foreign_key.ref_columns)
+                .map(|other| other == values)
+                .unwrap_or(false)
+        });
+        if !found {
+            return Err(adapter_error(
+                AdapterErrorKind::Constraint,
+                format!(
+                    "foreign key failed: {} -> {}",
+                    foreign_key.columns.join(","),
+                    foreign_key.ref_table
+                ),
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn cascade_delete(
+    store: &mut Store,
+    parent_name: &str,
+    deleted_rows: &[Vec<serde_json::Value>],
+) -> Result<(), DactylError> {
+    let child_specs = store
+        .tables
+        .iter()
+        .flat_map(|(child_name, table)| {
+            table
+                .foreign_keys
+                .iter()
+                .filter(|foreign_key| foreign_key.ref_table == parent_name)
+                .map(|foreign_key| (child_name.clone(), foreign_key.clone()))
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    for (child_name, foreign_key) in child_specs {
+        let parent = get_table(store, parent_name)?;
+        let child_snapshot = get_table(store, &child_name)?.clone();
+        let matching = child_snapshot
+            .rows
+            .iter()
+            .filter(|child_row| {
+                let child_values =
+                    values_for_columns(&child_snapshot, child_row, &foreign_key.columns);
+                child_values.is_ok_and(|child_values| {
+                    deleted_rows.iter().any(|parent_row| {
+                        values_for_columns(parent, parent_row, &foreign_key.ref_columns)
+                            .map(|parent_values| parent_values == child_values)
+                            .unwrap_or(false)
+                    })
+                })
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        if matching.is_empty() {
+            continue;
+        }
+        if matches!(foreign_key.on_delete, OnDelete::Restrict) {
+            return Err(adapter_error(
+                AdapterErrorKind::Constraint,
+                format!("foreign key prevents deleting from {parent_name}"),
+            ));
+        }
+        let child = store
+            .tables
+            .get_mut(&child_name)
+            .expect("child table was checked");
+        child
+            .rows
+            .retain(|row| !matching.iter().any(|value| value == row));
+        cascade_delete(store, &child_name, &matching)?;
     }
     Ok(())
 }
@@ -860,6 +1409,9 @@ impl Parser {
         } else {
             false
         }
+    }
+    fn peek_word(&self, expected: &str) -> bool {
+        matches!(self.peek(), Some(Token::Word(value)) if value == expected)
     }
     fn symbol(&mut self, expected: char) -> bool {
         if self.peek_symbol(expected) {
@@ -1126,14 +1678,17 @@ fn load_store(path: &Path, mode: AccessMode) -> Result<Store, DactylError> {
         let bytes = fs::read(&journal).map_err(|e| storage_error("read journal", e))?;
         let journal: Journal =
             serde_json::from_slice(&bytes).map_err(|e| storage_error("decode journal", e))?;
-        if journal.format_version != FORMAT_VERSION || checksum(&journal.store)? != journal.checksum
+        if !matches!(journal.format_version, 1 | FORMAT_VERSION)
+            || checksum(&journal.store)? != journal.checksum
         {
             return Err(adapter_error(
                 AdapterErrorKind::Storage,
                 "journal checksum or version mismatch",
             ));
         }
-        persist_store(path, &journal.store)?;
+        let mut recovered = journal.store;
+        recovered.format_version = FORMAT_VERSION;
+        persist_store(path, &recovered)?;
         fs::remove_file(journal_path(path)).map_err(|e| storage_error("remove journal", e))?;
     }
     let mut bytes = Vec::new();
@@ -1152,12 +1707,14 @@ fn load_store(path: &Path, mode: AccessMode) -> Result<Store, DactylError> {
     }
     let store: Store =
         serde_json::from_slice(&bytes).map_err(|e| storage_error("decode store", e))?;
-    if store.format_version != FORMAT_VERSION {
+    if !matches!(store.format_version, 1 | FORMAT_VERSION) {
         return Err(adapter_error(
             AdapterErrorKind::Capability,
             "unsupported Dactyl store format",
         ));
     }
+    let mut store = store;
+    store.format_version = FORMAT_VERSION;
     Ok(store)
 }
 fn persist_store(path: &Path, store: &Store) -> Result<(), DactylError> {

@@ -161,7 +161,7 @@ pub fn execute(sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
 
 fn build_adapter(
     route: &DatastoreRoute,
-    options: OpenOptions,
+    _options: OpenOptions,
 ) -> Result<Box<dyn Adapter>, DactylError> {
     match route.datastore {
         Datastore::Sqlite => {
@@ -170,7 +170,7 @@ fn build_adapter(
                 Ok(Box::new(
                     crate::adapter::sqlite::SqliteAdapter::open_with_options(
                         &route.route,
-                        options,
+                        _options,
                     )?,
                 ))
             }
@@ -188,7 +188,7 @@ fn build_adapter(
                     crate::adapter::neon::NeonAdapter::new_with_options(
                         &route.route,
                         route.token.clone(),
-                        options,
+                        _options,
                     ),
                 ))
             }
