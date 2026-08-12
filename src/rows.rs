@@ -172,6 +172,19 @@ impl<'de> serde::Deserialize<'de> for Parameter {
             {
                 Ok(Parameter::Blob(v))
             }
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let mut bytes = Vec::new();
+                while let Some(value) = seq.next_element::<u64>()? {
+                    let byte = u8::try_from(value).map_err(|_| {
+                        serde::de::Error::custom("blob parameter values must fit in a byte")
+                    })?;
+                    bytes.push(byte);
+                }
+                Ok(Parameter::Blob(bytes))
+            }
         }
         deserializer.deserialize_any(ParameterVisitor)
     }
@@ -613,6 +626,16 @@ mod tests {
             .expect("second name");
         assert_eq!(row.get_str(second_name_idx).unwrap(), "second");
         assert_eq!(row.get_json_ref(second_name_idx).unwrap(), &json!("second"));
+    }
+
+    #[test]
+    fn blob_parameters_round_trip_through_json_arrays() {
+        let encoded = serde_json::to_value(Parameter::Blob(vec![1, 2, 3])).unwrap();
+        assert_eq!(encoded, json!([1, 2, 3]));
+        assert_eq!(
+            serde_json::from_value::<Parameter>(encoded).unwrap(),
+            Parameter::Blob(vec![1, 2, 3])
+        );
     }
 
     #[test]

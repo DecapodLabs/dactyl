@@ -39,9 +39,9 @@ stateDiagram-v2
 - Mapping to retry/degrade behavior:
 
 ## Domain Rules
-- Business rule 1:
-- Business rule 2:
-- Business rule 3:
+- Local conditional writes report stale CAS as `affected_rows = 0`. Dactyl does not promote a local zero-row update into `VersionConflict`; that code is a remote/provider outcome.
+- Local storage ignores `StorageContext`. Cloud-only tenancy fields are not required, stored, or interpreted. The same local SQL has the same result with or without a context envelope.
+- Concurrent local writers serialize on the route lock file. Cleanup is a caller-owned `DROP TABLE` / `DROP INDEX`; Dactyl does not retain scoped test schemas.
 
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
@@ -96,7 +96,7 @@ stateDiagram-v2
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1ee4c8fd368ba4bb36446d65972c7fd1c3e548e735c41bf3bc1b2056b303222`
+- Repository signal fingerprint: `fa4e292ece7718d0e22211ea009236b62477b5a1d0453b3c7f6291b751d3bde6`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

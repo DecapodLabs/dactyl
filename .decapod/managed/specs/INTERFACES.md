@@ -75,10 +75,10 @@ pub enum ApiError {
 - Public application surface: `read`, `write_result`, `atomic(&[Operation])`, `OpenOptions { access_mode, lock_timeout }`, and `Connection::open` for an explicit route. `write` remains the affected-row compatibility wrapper.
 - Adapter selection is ambient-env-driven for free functions: `DATASTORE` is `sqlite` or `neon`, `DATASTORE_ROUTE` is the SQLite path or Neon endpoint, and `DATASTORE_TOKEN` is the optional Neon authorization credential.
 - `StorageContext` is a versioned opaque `{ version: u16, payload: JSON object }` envelope supplied through `Connection::open_with_context` or `Connection::open_with_options_and_context`. Dactyl validates only a non-zero version and object payload shape; Decapod/Propodus own the payload meaning.
-- Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`.
+- Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`. Neon JSON transport encodes `Blob` as an array of bytes so remote writes can bind the same values as local SQLite.
 - `Rows` owns normalized `Row` values. SQLite and Neon use the same column/value representation and typed row accessors, including explicit NULL and conversion failures.
 - SQL is never interpolated or rewritten for domain meaning. The local adapter parses only its bounded storage subset, including caller-owned DDL, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
-- `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages.
+- `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages. The Neon adapter maps `constraint_failed` / unique / not-null / foreign-key violation codes to `AdapterErrorKind::Constraint` and busy/locked/timeout codes to the matching contention kinds.
 
 ### Storage-context transport contract
 
@@ -93,6 +93,22 @@ repository, membership, or schema types; those semantics belong to the
 Decapod and Propodus contracts. The same context is attached once to an atomic
 batch, so all operations in that physical transaction share one forwarding
 boundary.
+
+Local fixtures must keep succeeding when a caller supplies unused
+`org_id` / `user_id` / `repository_id` payload fields, and they must produce
+the same rows, affected counts, and typed constraint errors when context is
+absent. Dactyl still does not read those fields. Remote fixtures prove
+forwarding plus typed `authentication_required`, `invalid_context`, and
+`repository_not_authorized` outcomes. Live Propodus membership lookup is
+outside this contract.
+
+### Backend-neutral fixture suite
+
+`tests/storage_fixtures.rs` is the reusable operation matrix. Each case is a
+schema-generic driver behavior, not a Decapod TODO/lease/governance policy.
+Local SQLite is the required offline backend. The Neon executing mock is the
+offline remote backend. `DACTYL_LIVE_PROPODUS_ROUTE` may exist later; an unset
+or unused live target must be reported as `unavailable`, never as a green pass.
 
 ### Multi-backend boundary
 
@@ -127,7 +143,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1ee4c8fd368ba4bb36446d65972c7fd1c3e548e735c41bf3bc1b2056b303222`
+- Repository signal fingerprint: `fa4e292ece7718d0e22211ea009236b62477b5a1d0453b3c7f6291b751d3bde6`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
