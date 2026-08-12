@@ -190,6 +190,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
+- release v0.6.2 ([#71](https://github.com/DecapodLabs/dactyl/pull/71))
+- reconcile Decapod state with latest origin/main ([#68](https://github.com/DecapodLabs/dactyl/pull/68))
+- release v0.6.1 ([#67](https://github.com/DecapodLabs/dactyl/pull/67))
+
+## [0.6.2](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.6.1...dactyl-db-v0.6.2) - 2026-08-12
+
+### Added
+
+- complete local SQLite fixtures for #57 and #64 ([#69](https://github.com/DecapodLabs/dactyl/pull/69))
+
+### Other
+
 - reconcile Decapod state with latest origin/main ([#68](https://github.com/DecapodLabs/dactyl/pull/68))
 - release v0.6.1 ([#67](https://github.com/DecapodLabs/dactyl/pull/67))
 
