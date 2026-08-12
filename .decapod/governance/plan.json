@@ -1,19 +1,28 @@
 {
   "schema_version": "1.0.0",
-  "title": "v0.7.0 Release",
-  "intent": "Bump version to 0.7.0 and release",
+  "title": "Dactyl store-format whitepaper",
+  "intent": "Confirm Dactyl's local store is a versioned Dactyl snapshot, not a SQLite file, and publish a methodology whitepaper under docs/ as GitHub Pages.",
   "state": "APPROVED",
-  "todo_ids": [],
-  "proof_hooks": [],
+  "todo_ids": [
+    "docs_01kzw5p2x1e49fc3"
+  ],
+  "proof_hooks": [
+    "decapod validate",
+    "cargo test --features sqlite sqlite_header_is_rejected_as_capability"
+  ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not claim a live github.io URL until the Pages workflow has a successful deployment."
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
+    "forbidden_paths": [
+      ".decapod/data"
+    ],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786574200Z"
+  "updated_at": "1786578664Z"
 }
