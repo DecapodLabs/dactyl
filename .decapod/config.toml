@@ -42,8 +42,12 @@ declared_capabilities = [
 protected_paths = []
 approval_categories = ["destructive_operations"]
 
-[proof]
-commands = []
+[[proof.commands]]
+name = "migration_validation"
+command = "cargo test --all-features"
+args = []
+description = "Guided init proof command 1"
+required = true
 
 [custody]
 isolation = "container"
