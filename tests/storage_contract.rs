@@ -370,3 +370,54 @@ fn read_only_atomic_schema_and_reader_reuse_are_non_mutating() {
         .read("select id from forbidden", &[])
         .is_err());
 }
+
+#[test]
+fn sqlite_header_is_rejected_as_capability() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_string_lossy().into_owned();
+    let mut header = b"SQLite format 3\0".to_vec();
+    header.extend_from_slice(&[0; 84]);
+    std::fs::write(&path, header).unwrap();
+    let error = match Connection::open(DatastoreRoute::sqlite(&path)) {
+        Ok(_) => panic!("SQLite header unexpectedly opened as a Dactyl store"),
+        Err(error) => error,
+    };
+    assert!(matches!(
+        error,
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Capability,
+            ..
+        }
+    ));
+    assert!(
+        error
+            .to_string()
+            .contains("SQLite files are not accepted; import into the Dactyl format"),
+        "{error}"
+    );
+}
+
+#[test]
+fn published_snapshot_is_versioned_json_not_sqlite() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_string_lossy().into_owned();
+    let db = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    db.write("create table app (id integer primary key, name text)", &[])
+        .unwrap();
+    db.write(
+        "insert into app (name) values ($1)",
+        &[Parameter::Text("published".into())],
+    )
+    .unwrap();
+    drop(db);
+
+    let bytes = std::fs::read(&path).unwrap();
+    assert!(
+        !bytes.starts_with(b"SQLite format 3"),
+        "Dactyl snapshot must not impersonate the SQLite header"
+    );
+    assert_eq!(bytes.first().copied(), Some(b'{'));
+    let store: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(store["format_version"], 2);
+    assert!(store["tables"]["app"]["rows"].as_array().unwrap().len() == 1);
+}

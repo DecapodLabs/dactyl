@@ -41,6 +41,18 @@ route constructor remain as compatibility names for existing callers, but the
 local file is a versioned Dactyl snapshot, not a SQLite file. A SQLite header is
 rejected with a typed capability error; migration/import belongs to the caller.
 
+## Local store format
+
+`DATASTORE=sqlite` names the local route, not the on-disk product. The published
+file is UTF-8 JSON with `format_version` (currently `2`), plus `$ROUTE.wal` and
+`$ROUTE.lock` sidecars. It does not start with the SQLite magic
+`SQLite format 3`. Opening a SQLite database at that path fails closed as
+`AdapterErrorKind::Capability`.
+
+The methodology — why the header is refused, what the snapshot encodes, and how
+the journal publishes durability — is the [store-format whitepaper](docs/whitepapers/dactyl-store-format.md).
+The same paper is published from `docs/` as GitHub Pages.
+
 The local SQL surface is intentionally bounded: caller-supplied `CREATE TABLE`
 and multi-statement schema batches, `ALTER TABLE ... ADD`, `CREATE [UNIQUE]
 INDEX`, `DROP TABLE`, `DROP INDEX`, `INSERT`, `UPDATE`, `DELETE`, and `SELECT`
