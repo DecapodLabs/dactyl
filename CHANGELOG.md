@@ -28,6 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] (2026-08-12)
+
+### Features
+- add lightweight pure-Rust datastore primitives (#51-#57) (#58) (7aedc77)
+- complete local SQLite fixtures for #57 and #64 (#69) (d966d49)
+- complete pure-rust storage parity for Decapod (#61) (e7941cf)
+- dactyl: complete atomic transaction/batch contract (#24) (#43) (b7c9866)
+- dactyl: complete typed/NULL-safe named row projections (#25) (#41) (d069fd8)
+- forward opaque storage context for Issue #64 (#65) (4647ff3)
+- make dactyl a thin application read write driver (#48) (7a6d825)
+- prepare dactyl as Decapod datastore boundary (#45) (6292f28)
+
+### Bug Fixes
+- pin decapod version to 0.98.2 (e9b4664)
+- release: prevent recursive releases and tag collisions (#36) (d3eb33f)
+- release: synchronize facade and macros versions (#38) (96e5126)
+
 ### Added
 
 - complete the local SQLite half of the backend-neutral storage fixture

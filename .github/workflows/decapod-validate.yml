@@ -26,20 +26,21 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
       - name: Install Decapod
         if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
-        run: cargo binstall --no-confirm decapod@0.98.2
+        run: cargo binstall --no-confirm decapod@0.98.3
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
           # Post-merge: tree-local binary fingerprints lag the last published pin.
-          # PRs still enforce release-bound pins + drift.
-          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ github.event_name == 'push' && '1' || '' }}
+          # PRs still enforce release-bound pins + drift, unless it's a release-please PR.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-please')) && '1' || '' }}
         run: |
           if [ ! -d .decapod ]; then
             decapod init --proof
           fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        if: github.event_name == 'pull_request'
+        # release-please bumps Cargo.toml without pins; fingerprint gates skip; pins advance on next user PR.
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-please')
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.
