@@ -17,7 +17,9 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    "Cargo.toml"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
@@ -29,6 +31,10 @@
   "checks": [
     {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "name",
       "status": "passed"
     }
   ],
@@ -45,7 +51,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f174ec112a9cb116a66e15a2025f7d3e2ebc38b28086bbd9b234f6e1a7bc9ef7",
+  "artifact_hash": "sha256:71ab84773e62c0eb72009da14b9df9121bfc0a8bd671dc6e1ebaf1c54c3c135a",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -127,6 +133,13 @@
       {
         "sequence": 10,
         "event_id": "event:10",
+        "intent_id": "intent:validation_01KZVZ0D4F4X719FK08W6MEX46",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZVZ0D4F4X719FK08W6MEX46"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
         "intent_id": "intent:validation_01KZVZ0D4F4X719FK08W6MEX46",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZVZ0D4F4X719FK08W6MEX46"
@@ -270,12 +283,28 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "Cargo.toml"
+            ],
+            "proof_refs": [
+              "name"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 10
+    "next_sequence": 11
   }
 }
