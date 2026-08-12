@@ -168,6 +168,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial commit
 ## Unreleased
 
+## [0.6.1](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.6.0...dactyl-db-v0.6.1) - 2026-08-12
+
+### Added
+
+- forward opaque storage context for Issue #64 ([#65](https://github.com/DecapodLabs/dactyl/pull/65))
+
+### Other
+
+- release v0.6.0 ([#63](https://github.com/DecapodLabs/dactyl/pull/63))
+
 ## [0.6.0](https://github.com/DecapodLabs/dactyl/compare/dactyl-db-v0.5.0...dactyl-db-v0.6.0) - 2026-08-12
 
 ### Added
