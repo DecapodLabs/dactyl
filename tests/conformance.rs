@@ -216,8 +216,19 @@ fn neon_matches_the_application_read_write_shape() {
             "update app set name = $1 where id = $2"
         );
         assert_eq!(requests[0].0["params"], json!(["opened", 1]));
+        assert_eq!(
+            requests[0].0["context"],
+            json!({
+                "version": 1,
+                "payload": {
+                    "opaque_target": "target-123",
+                    "opaque_session": "session-456"
+                }
+            })
+        );
         assert_eq!(requests[0].1.as_deref(), Some("Bearer test-token"));
         assert_eq!(requests[1].0["params"], json!([]));
+        assert_eq!(requests[1].0["context"], requests[0].0["context"]);
     });
 }
 
