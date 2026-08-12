@@ -76,7 +76,8 @@
   "evidence": [
     "Decapod canonical schema sources require CREATE INDEX, composite constraints, foreign keys, defaults, and ALTER ADD migrations; Propodus v1 requires typed stable error codes and one remote transaction request.",
     "Local schema/upgrade/index/constraint/foreign-key/cascade/read-only/concurrency tests pass; Neon mock maps stable conflict and transaction-aborted codes and rejects remote writes through read-only handles without a request.",
-    "validation epoch ve_62245868e2ecf03e completed with zero failures"
+    "validation epoch ve_62245868e2ecf03e completed with zero failures",
+    "validation epoch ve_6e55cd702b5823fd completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -89,7 +90,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:db4fa3a38a9607ca1a776ca3957333e3546637bb48cb0590b33341ce278da0f3",
+  "artifact_hash": "sha256:0f79af4b267118b17d57abdfa68d3e7332a3e8c1253d530ca346d8a3c2891863",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -149,6 +150,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:dactyl-52-57-next-wave",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:dactyl-52-57-next-wave"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:dactyl-52-57-next-wave",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:dactyl-52-57-next-wave"
@@ -248,12 +256,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/, tests/, README.md, CHANGELOG.md, Cargo.toml, Cargo.lock"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_6e55cd702b5823fd completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
