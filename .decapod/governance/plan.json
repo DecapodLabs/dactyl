@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "title": "Complete Dactyl issues #52 and #54-#57",
   "intent": "Complete the remaining Dactyl #52/#54-#57 contract and cross-adapter proof gaps after merged PR #58, preserving pure-Rust lightweight local storage, caller-owned schema/retry policy, trait-based Neon parity, and no SQLite C/rusqlite/subprocess/Turso.",
-  "state": "EXECUTING",
+  "state": "APPROVED",
   "todo_ids": [
     "bugs_01kzskr9n96544ac"
   ],
@@ -78,5 +78,5 @@
       "completed_at": null
     }
   ],
-  "updated_at": "1786497312Z"
+  "updated_at": "1786497358Z"
 }
