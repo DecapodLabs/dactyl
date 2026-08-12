@@ -52,8 +52,21 @@ tests, and the corresponding Decapod projections as one reconciled state;
 validation must pass before that state is promoted to a protected checkout.
 
 **CI/CD Notes**:
-- The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.2` and uses it as the cache key to prevent stale cache bugs.
+- The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.3` and uses it as the cache key to prevent stale cache bugs.
 - The `release-please` action is used to automate the release process, creating a single PR for Cargo.toml versions and changelog, and publishing upon merge.
+- The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The whitepaper is also readable from the tree at `docs/whitepapers/dactyl-store-format.md`.
+
+## Local snapshot operations
+
+The local route path is a Dactyl snapshot, not a SQLite database. Operators must not point `sqlite3`, Litestream, or SQLite backup agents at `DATASTORE_ROUTE`.
+
+| Artifact | Meaning | Recovery |
+|---|---|---|
+| `$ROUTE` | published JSON snapshot | copy is a backup of published state |
+| `$ROUTE.wal` | checksummed journal | replayed only on the next read-write open |
+| `$ROUTE.lock` | exclusive writer lock | leftover lock blocks writers until removed or timeout |
+
+A leftover valid journal plus a read-only open is a typed `ReadOnly` failure, not silent recovery. Header confusion (opening a SQLite file as Dactyl, or a Dactyl file as SQLite) is a capability/operator error, not an import.
 
 ## Capacity Planning
 - Traffic patterns:

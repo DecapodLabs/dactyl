@@ -54,6 +54,8 @@ flowchart LR
 - `decapod validate`
 - Required test commands:
 - `cargo test --all-features`
+- `cargo test --features sqlite --test storage_contract sqlite_header_is_rejected_as_capability` proves a SQLite magic header is a capability miss, not a decode of a Dactyl snapshot.
+- `cargo test --features sqlite --test storage_contract published_snapshot_is_versioned_json_not_sqlite` proves a published local file starts with `{` and carries `format_version` 2.
 - `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
 

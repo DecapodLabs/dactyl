@@ -19,6 +19,7 @@ flowchart LR
 | Information disclosure | Data at rest/in transit | encryption + classification | security scans |
 | Denial of service | Hot paths | rate limit + backpressure | load tests |
 | Elevation of privilege | Admin interfaces | least privilege + policy checks | authz tests |
+| Tampering / confusion | Local store path | refuse SQLite magic `SQLite format 3`; require Dactyl `format_version`; do not silently import | `sqlite_header_is_rejected_as_capability` |
 
 ## Authentication
 - Identity source:

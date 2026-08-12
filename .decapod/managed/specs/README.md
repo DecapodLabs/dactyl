@@ -4,10 +4,11 @@ Canonical path: `.decapod/managed/specs/`.
 These files are the project-local contract for humans and agents.
 
 ## Snapshot
-- Project: this repository
-- Outcome: Define the intended user-visible outcome.
-- Detected languages: not detected yet
-- Detected surfaces: not detected yet
+- Project: dactyl-db
+- Outcome: Same application read/write/atomic contract over a Dactyl-owned local snapshot and remote Neon, without exposing adapter internals or SQLite files.
+- Public methodology docs: `docs/` (GitHub Pages source), including `docs/whitepapers/dactyl-store-format.md`.
+- Detected languages: Rust
+- Detected surfaces: cargo, rust
 
 ## How to use this folder
 - [INTENT.md](./INTENT.md): what success means and what is explicitly out of scope.
