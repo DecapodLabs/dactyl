@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" role="img" aria-labelledby="title desc">
+  <title id="title">Dactyl local durability protocol</title>
+  <desc id="desc">A mutating local write acquires a lock file, reloads the snapshot, mutates a candidate, writes a checksummed journal, atomically replaces the snapshot, then removes the journal.</desc>
+  <rect width="920" height="420" fill="#fffaf0"/>
+  <text x="28" y="38" fill="#7d2a16" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13" letter-spacing="1.5">FIGURE 2</text>
+  <text x="28" y="64" fill="#1b1611" font-family="Palatino, Times New Roman, serif" font-size="24">Publish through a journal, not in place</text>
+
+  <g font-family="Palatino, Times New Roman, serif" font-size="15" fill="#1b1611">
+    <rect x="28" y="96" width="200" height="64" fill="#efe6d4" stroke="#c9b89d"/>
+    <text x="128" y="134" text-anchor="middle">1. Acquire path.lock</text>
+    <rect x="252" y="96" width="200" height="64" fill="#efe6d4" stroke="#c9b89d"/>
+    <text x="352" y="134" text-anchor="middle">2. Reload snapshot</text>
+    <rect x="476" y="96" width="200" height="64" fill="#efe6d4" stroke="#c9b89d"/>
+    <text x="576" y="134" text-anchor="middle">3. Mutate candidate</text>
+    <rect x="700" y="96" width="192" height="64" fill="#efe6d4" stroke="#c9b89d"/>
+    <text x="796" y="134" text-anchor="middle">4. Write path.wal</text>
+    <rect x="140" y="196" width="240" height="64" fill="#dce8d4" stroke="#b4c8a8"/>
+    <text x="260" y="234" text-anchor="middle">5. Sync path.tmp and rename</text>
+    <rect x="412" y="196" width="200" height="64" fill="#dce8d4" stroke="#b4c8a8"/>
+    <text x="512" y="234" text-anchor="middle">6. Remove path.wal</text>
+    <rect x="644" y="196" width="200" height="64" fill="#dce8d4" stroke="#b4c8a8"/>
+    <text x="744" y="234" text-anchor="middle">7. Drop path.lock</text>
+  </g>
+
+  <text x="28" y="304" fill="#1b1611" font-family="Palatino, Times New Roman, serif" font-size="16">On-disk companions for DATASTORE_ROUTE=/var/lib/app.store</text>
+  <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" fill="#1b1611">
+    <rect x="28" y="320" width="280" height="62" fill="#fffaf0" stroke="#c9b89d"/>
+    <text x="44" y="346">app.store</text>
+    <text x="44" y="366" fill="#4a4136">JSON snapshot, format_version 2</text>
+    <rect x="324" y="320" width="280" height="62" fill="#fffaf0" stroke="#c9b89d"/>
+    <text x="340" y="346">app.store.wal</text>
+    <text x="340" y="366" fill="#4a4136">checksummed crash journal</text>
+    <rect x="620" y="320" width="272" height="62" fill="#fffaf0" stroke="#c9b89d"/>
+    <text x="636" y="346">app.store.lock</text>
+    <text x="636" y="366" fill="#4a4136">exclusive create-new lock</text>
+  </g>
+</svg>

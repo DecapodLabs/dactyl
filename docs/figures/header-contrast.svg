@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">SQLite header versus Dactyl snapshot prefix</title>
+  <desc id="desc">The first sixteen bytes of a SQLite database are the ASCII magic string SQLite format 3 followed by a NUL. A Dactyl snapshot begins with a JSON object whose first field is format_version.</desc>
+  <rect width="920" height="360" fill="#fffaf0"/>
+  <text x="28" y="38" fill="#7d2a16" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13" letter-spacing="1.5">FIGURE 1</text>
+  <text x="28" y="64" fill="#1b1611" font-family="Palatino, Times New Roman, serif" font-size="24">Two incompatible first bytes</text>
+
+  <text x="28" y="108" fill="#4a4136" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13">SQLite database file</text>
+  <rect x="28" y="118" width="864" height="72" fill="#f3d5c8" stroke="#d9a28d"/>
+  <text x="44" y="148" fill="#1b1611" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="18">53 51 4C 69 74 65 20 66 6F 72 6D 61 74 20 33 00</text>
+  <text x="44" y="172" fill="#7d2a16" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14">S  Q  L  i  t  e     f  o  r  m  a  t     3  \\0</text>
+
+  <text x="28" y="228" fill="#4a4136" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13">Dactyl snapshot file</text>
+  <rect x="28" y="238" width="864" height="72" fill="#dce8d4" stroke="#b4c8a8"/>
+  <text x="44" y="268" fill="#1b1611" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="18">7B 22 66 6F 72 6D 61 74 5F 76 65 72 73 69 6F 6E</text>
+  <text x="44" y="292" fill="#2d4a24" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14">{  "  f  o  r  m  a  t  _  v  e  r  s  i  o  n</text>
+
+  <text x="28" y="338" fill="#4a4136" font-family="Palatino, Times New Roman, serif" font-size="14">Dactyl rejects any file whose bytes start with the SQLite magic before it attempts JSON decode.</text>
+</svg>
