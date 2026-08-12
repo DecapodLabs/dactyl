@@ -5,10 +5,11 @@
   "task_id": "bugs_01kzskr9n96544ac",
   "original_intent": "Complete Dactyl #52 and #54-#57 remaining contract/conformance wave after PR #58.",
   "derived_intent": "Finish caller-owned schema proof, atomic batch semantics, typed local/remote outcomes, explicit read-only conformance, and deterministic local/Neon parity without adding policy.",
-  "current_phase": "implementation",
+  "current_phase": "validation",
   "next_transitions": [
     "implementation",
-    "proof"
+    "proof",
+    "publish"
   ],
   "active_boundaries": [
     "No SQLite C, rusqlite, SQLite subprocess, or Turso runtime; Dactyl owns execution, atomicity, access modes, errors, and result normalization only; callers own migrations, retries, idempotency, and domain policy."
@@ -26,6 +27,8 @@
     "tests/storage_contract.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -40,7 +43,8 @@
   ],
   "declared_commands": [
     "apply_patch source/test/spec changes",
-    "decapod rpc --op specs.refresh"
+    "decapod rpc --op specs.refresh",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -63,11 +67,16 @@
     {
       "name": "cargo tree --no-default-features --features sqlite",
       "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
     }
   ],
   "evidence": [
     "Decapod canonical schema sources require CREATE INDEX, composite constraints, foreign keys, defaults, and ALTER ADD migrations; Propodus v1 requires typed stable error codes and one remote transaction request.",
-    "Local schema/upgrade/index/constraint/foreign-key/cascade/read-only/concurrency tests pass; Neon mock maps stable conflict and transaction-aborted codes and rejects remote writes through read-only handles without a request."
+    "Local schema/upgrade/index/constraint/foreign-key/cascade/read-only/concurrency tests pass; Neon mock maps stable conflict and transaction-aborted codes and rejects remote writes through read-only handles without a request.",
+    "validation epoch ve_62245868e2ecf03e completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -80,7 +89,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:9f891db23b76f0cc5e17adf7ff1aa735beb1d1337e5b0d3565e28d8be5918cba",
+  "artifact_hash": "sha256:63dd0a1dbaf37d1ee3ff779f0b22c9694faf9d67fb3687de554f598f60233dd5",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -126,6 +135,13 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:dactyl-52-57-next-wave",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:dactyl-52-57-next-wave"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:dactyl-52-57-next-wave",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:dactyl-52-57-next-wave"
@@ -189,12 +205,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/, tests/, README.md, CHANGELOG.md, Cargo.toml, Cargo.lock"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_62245868e2ecf03e completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
