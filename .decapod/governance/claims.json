@@ -22,3 +22,4 @@
   }],
   "governance":{"required_claim_fields":["id","sequence","title","statement","why_it_matters","baseline","decapod_condition","failure_modes","measurements","proof_gate","open_questions","evidence","implementation_links","non_guarantees"],"review_policy":"Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and schema compatibility is preserved.","new_capability_rule":"Every new capability must map to an existing claim or introduce a new falsifiable claim before it is treated as research-relevant.","change_control":{"requires_issue":true,"requires_validation":true,"requires_human_review":true}}
 }
+ 
