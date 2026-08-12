@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Bump decapod version and fix release action",
+  "intent": "Fix release action to use release-please and bump decapod to 0.98.2",
+  "state": "APPROVED",
+  "todo_ids": [],
+  "proof_hooks": [],
+  "unknowns": [],
+  "human_questions": [],
+  "stop_conditions": [],
+  "unresolved_contradictions": [],
+  "deferred_questions": [],
+  "constraints": {
+    "forbidden_paths": [],
+    "file_touch_budget": null
+  },
+  "phases": [],
+  "updated_at": "1786569965Z"
+}
