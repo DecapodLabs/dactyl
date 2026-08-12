@@ -77,29 +77,53 @@ fn sqlite_errors_are_typed_without_string_parsing() {
 fn sqlite_ignores_remote_context_without_changing_local_results() {
     let file = NamedTempFile::new().unwrap();
     let path = file.path().to_string_lossy().into_owned();
-    let db = Connection::open_with_context(
-        DatastoreRoute::sqlite(path),
+    let without = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    without
+        .write(
+            "create table app (id integer primary key, name text unique)",
+            &[],
+        )
+        .unwrap();
+    without
+        .write(
+            "insert into app (name) values ($1)",
+            &[Parameter::Text("local".into())],
+        )
+        .unwrap();
+    let with = Connection::open_with_context(
+        DatastoreRoute::sqlite(&path),
         Some(
             StorageContext::new(
                 1,
-                json!({"opaque_target": "remote", "opaque_session": "ignored"}),
+                json!({
+                    "org_id": "should-not-be-required",
+                    "user_id": "should-not-be-required",
+                    "repository_id": "should-not-be-required",
+                    "opaque_target": "remote",
+                    "opaque_session": "ignored"
+                }),
             )
             .unwrap(),
         ),
     )
     .unwrap();
-    db.write("create table app (id integer primary key, name text)", &[])
-        .unwrap();
-    db.write(
-        "insert into app (name) values ($1)",
-        &[Parameter::Text("local".into())],
-    )
-    .unwrap();
-    assert_eq!(db.context().unwrap().version(), 1);
+    assert_eq!(with.context().unwrap().version(), 1);
     assert_eq!(
-        db.read("select name from app", &[]).unwrap().as_slice()[0]
+        with.read("select name from app", &[]).unwrap().as_slice()[0]
             .get_str("name")
             .unwrap(),
-        "local"
+        without
+            .read("select name from app", &[])
+            .unwrap()
+            .as_slice()[0]
+            .get_str("name")
+            .unwrap()
     );
+    let error = with
+        .write(
+            "insert into app (name) values ($1)",
+            &[Parameter::Text("local".into())],
+        )
+        .unwrap_err();
+    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Constraint));
 }

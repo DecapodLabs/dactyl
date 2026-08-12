@@ -53,7 +53,8 @@ flowchart LR
 ## Proof Surfaces
 - `decapod validate`
 - Required test commands:
-- `cargo test`
+- `cargo test --all-features`
+- `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
 
 ## Promotion Gates
@@ -198,7 +199,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1ee4c8fd368ba4bb36446d65972c7fd1c3e548e735c41bf3bc1b2056b303222`
+- Repository signal fingerprint: `fa4e292ece7718d0e22211ea009236b62477b5a1d0453b3c7f6291b751d3bde6`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

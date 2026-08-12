@@ -57,6 +57,27 @@ with Decapod or Propodus. The Neon adapter maps the stable Propodus v1 error
 codes it receives, but it does not invent the resource-route translation or
 claim live cloud parity when that service contract is unavailable.
 
+## Local and mock conformance matrix
+
+`tests/storage_fixtures.rs` is the backend-neutral fixture suite. The same
+cases run against the local store and, when the `neon` feature is enabled, an
+in-process executing mock that speaks the Neon `/query` and `/batch` envelope.
+
+| Case | Local SQLite | Neon executing mock | Live Propodus / Vercel Neon |
+|---|---|---|---|
+| Parameterized read/write and result normalization | proved | proved | unavailable unless `DACTYL_LIVE_PROPODUS_ROUTE` is set; still not claimed here |
+| Explicit caller-owned ids and affected-row counts | proved | proved | unavailable |
+| Conditional `UPDATE` / CAS and zero-row stale writes | proved as `affected_rows = 0` | proved as `affected_rows = 0` | live `version_conflict` remains a service-side proof |
+| Atomic state-plus-event commit and rollback | proved | proved | unavailable |
+| Read-only handles | proved | covered by the Neon adapter tests | unavailable |
+| Typed constraint / timeout errors | proved | proved for constraint | live transport and provider codes remain a service-side proof |
+| Concurrent scoped writes and `DROP` cleanup | proved | not required of the HTTP mock | unavailable |
+| Opaque `StorageContext` | ignored; tenancy fields are unnecessary | forwarded unchanged; missing/invalid context and `repository_not_authorized` are typed | live authorization directory remains a service-side proof |
+
+A skipped live backend is recorded as `unavailable`, never `passed`. Local
+CAS is a zero-row observation on a caller-owned `version` predicate. Dactyl
+does not invent a version-conflict policy for the local store.
+
 ## Quick start
 
 ```toml

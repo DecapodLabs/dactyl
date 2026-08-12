@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- complete the local SQLite half of the backend-neutral storage fixture
+  matrix: conditional CAS/zero-row writes, state-plus-event atomic
+  commit/rollback, concurrent scoped writes with deterministic cleanup,
+  storage-context no-op including unused tenancy fields, and an executing
+  Neon mock that runs the same cases without claiming live Propodus/Vercel
+  Neon parity ([#57](https://github.com/DecapodLabs/dactyl/issues/57),
+  [#64](https://github.com/DecapodLabs/dactyl/issues/64)).
+
+### Fixed
+
+- deserialize JSON blob parameters as byte arrays so Neon writes bind the
+  same `Blob` values as local SQLite, and map remote constraint/contention
+  codes into typed adapter errors.
+
 - extend the pure-Rust local schema surface with caller-owned multi-statement
   DDL, defaults, composite constraints, foreign keys, structural indexes, and
   rollback/reopen upgrade proofs; map stable remote error codes into typed

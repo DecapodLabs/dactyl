@@ -178,6 +178,13 @@ fn remote_error(status: u16, body: &[u8], operation: &str) -> DactylError {
         }
         Some("row_not_found") => AdapterErrorKind::NotFound,
         Some("row_conflict") => AdapterErrorKind::Conflict,
+        Some("constraint_failed")
+        | Some("unique_violation")
+        | Some("not_null_violation")
+        | Some("foreign_key_violation") => AdapterErrorKind::Constraint,
+        Some("busy") => AdapterErrorKind::Busy,
+        Some("locked") => AdapterErrorKind::Locked,
+        Some("timeout") => AdapterErrorKind::Timeout,
         Some("version_conflict") => AdapterErrorKind::VersionConflict,
         Some("idempotency_conflict") => AdapterErrorKind::IdempotencyConflict,
         Some("idempotency_in_progress") => AdapterErrorKind::IdempotencyInProgress,

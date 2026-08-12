@@ -65,15 +65,15 @@ flowchart LR
   and forwards it to Neon.
 
 ## Acceptance Criteria (must be objectively testable)
-- [ ] The outcome is complete when equivalent application reads, writes, schema setup, rollback, read-only rejection, conditional zero-row outcomes, and typed errors produce congruent normalized results through the local and Neon adapter seams, and the full formatting, linting, and conformance suite passes.
+- [x] Local SQLite proves the backend-neutral fixture matrix in `tests/storage_fixtures.rs`: parameterized reads/writes, explicit keys, conditional CAS/zero-row updates, atomic state-plus-event commit and rollback, read-only rejection, typed constraint errors, concurrent scoped writes, deterministic `DROP` cleanup, and storage-context no-op when cloud tenancy fields are present or absent.
+- [x] The same fixture cases run through the Neon adapter against an executing in-process mock; live Propodus/Vercel Neon is recorded as `unavailable` unless `DACTYL_LIVE_PROPODUS_ROUTE` is set, and a skipped live backend is never reported as passed.
+- [x] Remote query and atomic requests preserve the versioned opaque context; local operations remain context-neutral; missing remote context fails closed with typed authentication/protocol errors; remote authorization denials surface as `AdapterErrorKind::Authorization`.
+- [ ] Live Propodus/Vercel Neon deployment, route translation, and provider CAS/`version_conflict` proof remain a follow-up issue.
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
 - [ ] `cargo test` passes for unit/integration coverage
 - [ ] `cargo clippy -- -D warnings` passes with no denied lints
 - [ ] `cargo fmt --check` passes on the repo
-- [ ] Remote query and atomic requests preserve the versioned opaque context;
-  local operations remain context-neutral and missing remote context fails
-  closed with typed authentication/protocol errors.
 
 ## Epistemic Custody Fields
 
@@ -123,7 +123,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1ee4c8fd368ba4bb36446d65972c7fd1c3e548e735c41bf3bc1b2056b303222`
+- Repository signal fingerprint: `fa4e292ece7718d0e22211ea009236b62477b5a1d0453b3c7f6291b751d3bde6`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -63,6 +63,14 @@ async fn query(
             })),
         );
     }
+    if sql == "authorization_failure" {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "error": {"code": "repository_not_authorized", "message": "remote authorization denied"}
+            })),
+        );
+    }
     if sql.starts_with("select") {
         (
             StatusCode::OK,
@@ -305,6 +313,18 @@ fn neon_normalizes_service_authentication_failure() {
         let error = db.write("auth_failure", &[]).unwrap_err();
         assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authentication));
         assert_eq!(error.adapter_code(), Some("authentication_required"));
+    });
+}
+
+#[test]
+fn neon_normalizes_service_authorization_failure() {
+    with_server(|endpoint, _requests| {
+        let db =
+            Connection::open_with_context(DatastoreRoute::neon(endpoint, None), Some(context()))
+                .unwrap();
+        let error = db.write("authorization_failure", &[]).unwrap_err();
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authorization));
+        assert_eq!(error.adapter_code(), Some("repository_not_authorized"));
     });
 }
 

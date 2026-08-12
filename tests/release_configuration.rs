@@ -52,7 +52,7 @@ fn release_commits_cannot_recursively_prepare_another_release() {
 
 #[test]
 fn package_metadata_has_the_application_driver_tags() {
-    assert_eq!(manifest_package_version(DATABASE_MANIFEST), "0.6.0");
+    assert_eq!(manifest_package_version(DATABASE_MANIFEST), "0.6.1");
     assert!(DATABASE_MANIFEST
         .contains("keywords = [\"datastore\", \"vercel\", \"postgres\", \"sql\", \"sqlite\"]"));
     assert!(!DATABASE_MANIFEST.contains("#decapod"));
