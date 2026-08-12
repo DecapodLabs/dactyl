@@ -89,7 +89,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:63dd0a1dbaf37d1ee3ff779f0b22c9694faf9d67fb3687de554f598f60233dd5",
+  "artifact_hash": "sha256:db4fa3a38a9607ca1a776ca3957333e3546637bb48cb0590b33341ce278da0f3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -142,6 +142,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:dactyl-52-57-next-wave",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:dactyl-52-57-next-wave"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:dactyl-52-57-next-wave",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:dactyl-52-57-next-wave"
@@ -223,12 +230,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/, tests/, README.md, CHANGELOG.md, Cargo.toml, Cargo.lock"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_62245868e2ecf03e completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
