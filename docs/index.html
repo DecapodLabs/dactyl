@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dactyl Docs</title>
+  <meta name="description" content="Public documentation for dactyl-db, including the store-format whitepaper.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="site-frame">
+    <header class="masthead">
+      <a class="wordmark" href="index.html">Dactyl Docs</a>
+      <div class="kicker">DecapodLabs / dactyl-db</div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="kicker">Public documentation</div>
+        <h1>The local store is not a SQLite file.</h1>
+        <p class="lede">
+          The <code>sqlite</code> route name is a compatibility label. The file
+          Dactyl writes is a versioned JSON snapshot with its own durability
+          protocol. These pages publish that methodology.
+        </p>
+      </div>
+      <aside class="panel">
+        <strong>Confirmed from current code</strong>
+        Local open rejects the 16-byte SQLite magic
+        <code>SQLite format 3</code> with
+        <code>AdapterErrorKind::Capability</code>. The accepted prefix is a
+        JSON object whose first field is <code>format_version</code>.
+      </aside>
+    </section>
+
+    <section class="card-grid">
+      <article class="paper-card">
+        <div class="kicker">Technical report 001</div>
+        <h2>The Dactyl Store Format</h2>
+        <p>
+          Why Dactyl refuses SQLite's file header, what the snapshot encodes,
+          how the checksummed journal publishes durability, and why the local
+          SQL surface is a bounded storage language.
+        </p>
+        <div class="meta">
+          <span>dactyl-db 0.7.0</span>
+          <span>2026-08-12</span>
+          <span>Local store methodology</span>
+        </div>
+        <a class="cta" href="whitepapers/dactyl-store-format.html">Read the whitepaper</a>
+        <p class="note">Markdown source: <a href="whitepapers/dactyl-store-format.md">dactyl-store-format.md</a></p>
+      </article>
+      <article class="note-card">
+        <div class="kicker">What this site is</div>
+        <h2>Pages from <code>docs/</code></h2>
+        <p>
+          This directory is the GitHub Pages source. Relative links keep the
+          site correct both at the repository root and at
+          <code>/dactyl/</code> on github.io. Live hosting still requires the
+          repository Pages source to be this workflow.
+        </p>
+        <p>
+          Operator quickstart remains in the repository
+          <a href="https://github.com/DecapodLabs/dactyl">README</a>.
+          These pages do not replace living specs under
+          <code>.decapod/managed/specs/</code>.
+        </p>
+      </article>
+    </section>
+  </div>
+</body>
+</html>
