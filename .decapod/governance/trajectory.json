@@ -76,7 +76,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:cf8459a15408eb635ea637ccb886c337f41e066948b434226d84245ddf96a7d0",
+  "artifact_hash": "sha256:1fd61781996814e88e6de55559e6c90e6b9e908790111dc79aab2bce29f0463d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -136,6 +136,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:run_01kzvq_local_57_64",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_01kzvq_local_57_64"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:run_01kzvq_local_57_64",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_01kzvq_local_57_64"
@@ -235,12 +242,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/,tests/,README.md,CHANGELOG.md,.decapod/managed/specs/"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_1b5902507f204c89 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
