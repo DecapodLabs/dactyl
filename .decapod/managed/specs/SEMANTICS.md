@@ -42,6 +42,7 @@ stateDiagram-v2
 - Local conditional writes report stale CAS as `affected_rows = 0`. Dactyl does not promote a local zero-row update into `VersionConflict`; that code is a remote/provider outcome.
 - Local storage ignores `StorageContext`. Cloud-only tenancy fields are not required, stored, or interpreted. The same local SQL has the same result with or without a context envelope.
 - Concurrent local writers serialize on the route lock file. Cleanup is a caller-owned `DROP TABLE` / `DROP INDEX`; Dactyl does not retain scoped test schemas.
+- A local snapshot is Dactyl JSON. `format_version` 1 and 2 load; other versions are a capability miss. After load, the in-memory store is raised to version 2. A SQLite magic prefix is never treated as a Dactyl snapshot. Journal recovery is a write: read-only opens refuse a leftover `.wal`.
 
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |

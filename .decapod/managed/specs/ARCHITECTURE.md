@@ -111,6 +111,7 @@ sequenceDiagram
 | ADR-004 | Pure-Rust local engine with opaque atomic batches | Accepted | Avoid SQLite C/rusqlite build cost while preserving caller-owned schema execution, local durability, read-only enforcement, and a Neon-parity proof seam (#51-#57) | 2026-08-11 |
 | ADR-005 | Opaque storage-context forwarding | Accepted | Keep physical route configuration and cloud tenancy separate: Dactyl validates only a versioned envelope, ignores it locally, forwards it to Neon, and leaves authorization semantics to Propodus (#64) | 2026-08-11 |
 | ADR-006 | Local fixture completeness before live Propodus | Accepted | Issues #57 and #64 are complete for the local store and the offline Neon mock: CAS is a zero-row observation, concurrent writers share a file lock, cleanup is `DROP`, and live Vercel Neon/Propodus proof is a separate deployment issue | 2026-08-12 |
+| ADR-007 | Dactyl-owned snapshot format, not a SQLite file header | Accepted | The local route keeps the `sqlite` compatibility name, but the published file is a versioned JSON snapshot (`format_version` 2) with a checksummed `.wal` journal and `.lock` sidecar. Bytes that start with `SQLite format 3` fail as `Capability`. Import from SQLite remains caller-owned. Documented in `docs/whitepapers/dactyl-store-format.md` | 2026-08-12 |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):
