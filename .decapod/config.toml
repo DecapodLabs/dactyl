@@ -17,6 +17,13 @@ product_summary = "Establish Dactyl as the governed datastore boundary for Decap
 architecture_direction = "library"
 product_type = "service_or_library"
 done_criteria = "The outcome is complete when equivalent queries across all nine Decapod stores produce equivalent row projections through both adapters, compile-time query analysis works for literal queries, runtime analysis works for dynamic queries, inline datastore directives are honored, and the full formatting, linting, and conformance suite passes."
+
+[repo.migration_validation]
+command = "cargo"
+args = ["test", "--all-features"]
+working_directory = "."
+timeout_seconds = 120
+
 base_branch = "main"
 primary_languages = ["Rust"]
 detected_surfaces = [

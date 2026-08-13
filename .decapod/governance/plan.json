@@ -1,25 +1,29 @@
 {
   "schema_version": "1.0.0",
-  "title": "Dactyl Rust Contract release-proof fix",
-  "intent": "Fix the Rust Contract workflow regression introduced by the v0.8.1 release by deriving the release assertion from the package metadata, preserving host SQLite runtime proof, and publishing one dedicated PR.",
+  "title": "Thin ambient SQLite and Neon routing for Propodus Vercel integration",
+  "intent": "Implement the Dactyl-owned thin physical storage seam for local SQLite versus Propodus Vercel/Neon: preserve the existing public execution signature and local behavior, select the route only from the documented ambient configuration, forward the opaque StorageContext without tenancy or governance semantics, normalize stable typed outcomes, and publish one reviewable PR with local and mock proof while recording live deployment proof as a separate gated dependency.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzwvspta28svd5"
+    "feat_01kzy8y1ep0h6qpa"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check; cargo test --all-features with explicit host SQLite; cargo clippy --all-targets --all-features -- -D warnings; decapod validate"
+    "cargo fmt --all -- --check; cargo test --all-features; cargo clippy --all-targets --all-features -- -D warnings; decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "No bundled SQLite, rusqlite, libsqlite3-sys, public backend handle, or silent snapshot fallback."
+    "Do not claim deployed Vercel/Neon parity or close live-proof issues without protected credentials and machine-readable live evidence.",
+    "Do not add organization, repository, membership, authorization, retry, idempotency, schema-policy, migration, or governance semantics to Dactyl.",
+    "Keep default SQLite tests network-free and preserve the existing public function signatures; any unsupported remote capability must fail with the existing typed contract."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": 10
+    "forbidden_paths": [
+      ".decapod/"
+    ],
+    "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786601420Z"
+  "updated_at": "1786649210Z"
 }

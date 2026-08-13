@@ -1,66 +1,85 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-  "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-  "task_id": "bugs_01kzwvspta28svd5",
-  "original_intent": "Produce proof artifacts for a repository validation completion.",
-  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
-  "destination": "validation completion",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "run_id": "run-20260813-dactyl-neon-propodus",
+  "intent_id": "intent:run-20260813-dactyl-neon-propodus",
+  "original_intent": "Make Dactyl route the unchanged application execution contract to local SQLite or Propodus Vercel/Neon from ambient configuration, preserve the local path, keep Dactyl thin, publish one PR, and update associated issues.",
+  "derived_intent": "Implement and prove only Dactyl route/config/transport/normalization behavior supported by current code and linked contracts; leave live deployment parity and cross-repository ownership as explicit issue dependencies.",
   "active_boundaries": [
-    "Repository validation and tracked proof artifacts"
+    "Dactyl owns physical route selection, binding, transport, atomicity, access mode, normalized results, and typed physical errors; Decapod owns domain/migration/retry/governance; Propodus owns hosting/auth/tenancy/schema/transactions/idempotency."
   ],
   "repo_scope": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    "src/lib.rs, src/adapter/neon/mod.rs, tests/conformance.rs, tests/lib route behavior, README.md, CHANGELOG.md, living specs and governed artifacts required for one Dactyl PR; no direct .decapod state edits or cross-repository code."
   ],
   "inspected_files": [
-    ".decapod/managed/specs/VALIDATION.md",
-    ".github/workflows/rust-contract.yml",
-    "AGENTS.md",
-    "Cargo.toml",
-    "tests/release_configuration.rs"
+    ".decapod/managed/specs/INTERFACES.md",
+    "CHANGELOG.md",
+    "README.md",
+    "src/adapter/mod.rs",
+    "src/adapter/neon/mod.rs",
+    "src/adapter/sqlite/mod.rs",
+    "src/contract.rs",
+    "src/error.rs",
+    "src/lib.rs",
+    "tests/conformance.rs",
+    "tests/storage_fixtures.rs"
   ],
   "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/managed/specs/INTERFACES.md",
+    "CHANGELOG.md",
+    "README.md",
+    "src/adapter/neon/mod.rs",
+    "src/lib.rs",
+    "tests/conformance.rs"
   ],
-  "declared_commands": [
-    "decapod validate"
-  ],
+  "declared_commands": [],
   "tool_calls": [],
+  "loops": [
+    {
+      "intent_id": "intent:run-20260813-dactyl-neon-propodus",
+      "trajectory_id": "run-20260813-dactyl-neon-propodus",
+      "loop_id": "verification-1",
+      "loop_type": "agent",
+      "attempt": 1,
+      "trigger": "agent",
+      "grader_result": "pass",
+      "feedback": "Ambient SQLite/Neon routing and typed remote result normalization are locally verified; protected deployed parity remains an explicit external gate.",
+      "proof_refs": [
+        "DACTYL_SQLITE_LIBRARY=... cargo test --all-features",
+        "cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo fmt --all -- --check"
+      ],
+      "mutation_proposal": "none",
+      "status": "passed",
+      "custody_event_id": "event:5"
+    }
+  ],
   "checks": [
+    {
+      "name": "cargo_clippy_all_targets",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
     {
       "name": "cargo_test_all_features",
       "status": "passed"
     },
     {
-      "name": "decapod validate",
+      "name": "execution_readiness",
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
+      "name": "github_issue_review",
       "status": "passed"
     },
     {
-      "name": "host_sqlite_runtime_contract_preserved",
-      "status": "passed"
-    },
-    {
-      "name": "package_metadata_version_binding",
-      "status": "passed"
-    },
-    {
-      "name": "release_proof_spec_updated",
+      "name": "governed_orientation",
       "status": "passed"
     }
   ],
-  "evidence": [
-    "validation epoch ve_a1cf154c2d134803 completed with zero failures"
-  ],
+  "evidence": [],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
   "proof_status": "passed",
@@ -70,22 +89,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:fe9d0d865e13e7755302f54140333e4cc0052539654bc980854c1570101cca1e",
+  "artifact_hash": "sha256:930b7f11fef9ce53c063f248395958d289ce9a31b2e1282580e87a395f17d2d2",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE": {
-        "id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-        "raw_intent": "Produce proof artifacts for a repository validation completion.",
-        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+      "intent:run-20260813-dactyl-neon-propodus": {
+        "id": "intent:run-20260813-dactyl-neon-propodus",
+        "raw_intent": "Make Dactyl route the unchanged application execution contract to local SQLite or Propodus Vercel/Neon from ambient configuration, preserve the local path, keep Dactyl thin, publish one PR, and update associated issues.",
+        "refined_intent": "Implement and prove only Dactyl route/config/transport/normalization behavior supported by current code and linked contracts; leave live deployment parity and cross-repository ownership as explicit issue dependencies.",
         "acceptance_criteria": [],
         "constraints": [
-          ".decapod/governance/trajectory.json",
-          ".decapod/governance/validation.json"
+          "src/lib.rs, src/adapter/neon/mod.rs, tests/conformance.rs, tests/lib route behavior, README.md, CHANGELOG.md, living specs and governed artifacts required for one Dactyl PR; no direct .decapod state edits or cross-repository code."
         ],
         "assumptions": [],
         "boundaries": [
-          "Repository validation and tracked proof artifacts"
+          "Dactyl owns physical route selection, binding, transport, atomicity, access mode, normalized results, and typed physical errors; Decapod owns domain/migration/retry/governance; Propodus owns hosting/auth/tenancy/schema/transactions/idempotency."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -98,168 +116,83 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+        "intent_id": "intent:run-20260813-dactyl-neon-propodus",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+        "intent_id": "intent:run-20260813-dactyl-neon-propodus",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+        "intent_id": "intent:run-20260813-dactyl-neon-propodus",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
+        "detail": "trajectory:run-20260813-dactyl-neon-propodus"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+        "intent_id": "intent:run-20260813-dactyl-neon-propodus",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
-      },
-      {
-        "sequence": 9,
-        "event_id": "event:9",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
+        "detail": "trajectory:run-20260813-dactyl-neon-propodus"
       }
     ],
     "trajectories": {
-      "validation_01KZWW0NF9DWJ0B6JRP3G5ANFE": {
-        "id": "validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
-        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+      "run-20260813-dactyl-neon-propodus": {
+        "id": "run-20260813-dactyl-neon-propodus",
+        "intent_id": "intent:run-20260813-dactyl-neon-propodus",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
+              "src/lib.rs, src/adapter/neon/mod.rs, tests/conformance.rs, tests/lib route behavior, README.md, CHANGELOG.md, living specs and governed artifacts required for one Dactyl PR; no direct .decapod state edits or cross-repository code."
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a1cf154c2d134803 completed with zero failures"
+              "src/lib.rs",
+              "src/contract.rs",
+              "src/adapter/mod.rs",
+              "src/adapter/neon/mod.rs",
+              "src/adapter/sqlite/mod.rs",
+              "src/error.rs",
+              "tests/conformance.rs",
+              "tests/storage_fixtures.rs",
+              "README.md"
             ],
             "proof_refs": [
-              "decapod validate"
+              "github_issue_review",
+              "governed_orientation",
+              "execution_readiness"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "trajectory.record",
+            "action": "loop:verification-1:1",
             "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
+              "src/lib.rs, src/adapter/neon/mod.rs, tests/conformance.rs, tests/lib route behavior, README.md, CHANGELOG.md, living specs and governed artifacts required for one Dactyl PR; no direct .decapod state edits or cross-repository code."
             ],
-            "observations": [
-              "tests/release_configuration.rs"
-            ],
+            "observations": [],
             "proof_refs": [
-              "cargo_test_all_features"
+              "cargo fmt --all -- --check",
+              "DACTYL_SQLITE_LIBRARY=... cargo test --all-features",
+              "cargo clippy --all-targets --all-features -- -D warnings"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "Ambient SQLite/Neon routing and typed remote result normalization are locally verified; protected deployed parity remains an explicit external gate."
+            ],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              "Cargo.toml"
-            ],
-            "proof_refs": [
-              "package_metadata_version_binding"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".github/workflows/rust-contract.yml"
-            ],
-            "proof_refs": [
-              "host_sqlite_runtime_contract_preserved"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/managed/specs/VALIDATION.md"
-            ],
-            "proof_refs": [
-              "release_proof_spec_updated"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:8"
-          },
-          {
-            "sequence": 9,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              "AGENTS.md"
-            ],
-            "proof_refs": [
-              "decapod_validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 9
+    "next_sequence": 5
   }
 }
