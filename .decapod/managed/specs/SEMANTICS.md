@@ -42,8 +42,8 @@ stateDiagram-v2
 - Local conditional writes report stale CAS as `affected_rows = 0`. Dactyl does not promote a local zero-row update into `VersionConflict`; that code is a remote/provider outcome.
 - Local storage ignores `StorageContext`. Cloud-only tenancy fields are not required, stored, or interpreted. The same local SQL has the same result with or without a context envelope.
 - Concurrent local writers serialize on the route lock file. Cleanup is a caller-owned `DROP TABLE` / `DROP INDEX`; Dactyl does not retain scoped test schemas.
-- A local snapshot is Dactyl JSON. `format_version` 1 and 2 load; other versions are a capability miss. After load, the in-memory store is raised to version 2. A SQLite magic prefix is never treated as a Dactyl snapshot by `open`. Journal recovery is a write: read-only opens refuse a leftover `.wal`.
-- SQLite import is fail-closed and explicit. Unsupported schema objects abort before publish. Same-path success replaces the source only after a complete snapshot exists. A matching converted destination is idempotent; a divergent Dactyl destination is a conflict.
+- A local route is a real SQLite database. Read/write opens may create the requested file; read-only opens require it to exist. SQLite owns file-format compatibility, locking, journaling, and recovery. Dactyl configures foreign-key enforcement and the caller's busy timeout.
+- Atomic local batches begin one SQLite transaction and roll back the entire batch on any operation failure. Dactyl does not import, convert, snapshot, or rewrite local database files.
 
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
@@ -98,7 +98,7 @@ stateDiagram-v2
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

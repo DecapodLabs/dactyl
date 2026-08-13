@@ -3,10 +3,10 @@
 Canonical path: `.decapod/managed/specs/`.
 These files are the project-local contract for humans and agents.
 
-## Snapshot
+## Connector
 - Project: dactyl-db
-- Outcome: Same application read/write/atomic contract over a Dactyl-owned local snapshot and remote Neon, without exposing adapter internals or SQLite files.
-- Public methodology docs: `docs/` (GitHub Pages source), including `docs/whitepapers/dactyl-store-format.md`.
+- Outcome: Same application read/write/atomic contract over a real local SQLite file and remote Neon, without exposing adapter internals or cloud policy.
+- Public methodology docs: `docs/` (GitHub Pages source), including `docs/whitepapers/dactyl-sqlite-connector.md`.
 - Detected languages: Rust
 - Detected surfaces: cargo, rust
 
@@ -49,7 +49,7 @@ These files are the project-local contract for humans and agents.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

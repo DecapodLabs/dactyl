@@ -19,7 +19,7 @@ flowchart LR
 | Information disclosure | Data at rest/in transit | encryption + classification | security scans |
 | Denial of service | Hot paths | rate limit + backpressure | load tests |
 | Elevation of privilege | Admin interfaces | least privilege + policy checks | authz tests |
-| Tampering / confusion | Local store path | refuse SQLite magic `SQLite format 3`; require Dactyl `format_version`; do not silently import | `sqlite_header_is_rejected_as_capability` |
+| Tampering / confusion | Local store path | open through SQLite's file validation; do not convert or reinterpret unknown files; fail closed on malformed databases | `existing_sqlite_fixture_opens_without_conversion` and typed invalid-database mapping |
 
 ## Authentication
 - Identity source:
@@ -105,7 +105,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

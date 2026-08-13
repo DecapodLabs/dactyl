@@ -54,11 +54,10 @@ flowchart LR
 - `decapod validate`
 - Required test commands:
 - `cargo test --all-features`
-- `cargo test --features sqlite --test storage_contract sqlite_header_is_rejected_as_capability` proves a SQLite magic header is a capability miss, not a decode of a Dactyl snapshot.
-- `cargo test --features sqlite --test storage_contract published_snapshot_is_versioned_json_not_sqlite` proves a published local file starts with `{` and carries `format_version` 2.
-- `cargo test --features sqlite,legacy-import --test sqlite_import` proves the pure-Rust Decapod catalog reader, fixture import, reopen, blob getters, idempotency, deterministic output, divergent destination, and typed corrupt/missing/read-only outcomes.
-- `cargo tree --all-features` must contain no native SQLite binding or SQLite C subtree; this is the dependency proof for the local boundary.
-- The import suite also proves byte-for-byte deterministic output, rejects invalid UTF-8 instead of lossy replacement, and fails closed for unsupported SQLite schema constructs before publishing an output.
+- `cargo test --features sqlite --test sqlite_existing` proves that an existing Decapod SQLite fixture opens without conversion, preserves schema and values, supports updates and reopen, handles NULL/REAL/blob/generated-key values, and fails closed for missing/read-only paths.
+- `cargo test --features sqlite --test storage_contract` proves SQLite transaction rollback, schema changes, foreign-key cascades, typed constraints, separate-connection refresh, read-only behavior, and a bounded native SQLite lock timeout.
+- `cargo tree --features sqlite` must show the intentional optional `rusqlite`/`libsqlite3-sys` local binding; it must not show a custom parser, snapshot/import crate, or a SQLite subprocess.
+- `cargo test --all-features` is the complete local and executing-Neon mock proof. Live Propodus remains an external `unavailable` prerequisite unless a separate deployment proof supplies it.
 - `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
 
@@ -223,7 +222,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
