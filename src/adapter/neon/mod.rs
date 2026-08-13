@@ -263,6 +263,14 @@ impl Adapter for NeonAdapter {
     fn access_mode(&self) -> AccessMode {
         self.access_mode
     }
+
+    fn inspect_schema(&self) -> Result<crate::schema::StoreSchema, DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_schema_inspection",
+            "schema inspection is a local-store operation",
+        ))
+    }
 }
 
 fn ensure_remote_writable(mode: AccessMode) -> Result<(), DactylError> {

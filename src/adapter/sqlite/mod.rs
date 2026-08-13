@@ -22,6 +22,14 @@ use crate::contract::{
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
+use crate::schema::{
+    ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
+};
+
+#[cfg(feature = "legacy-import")]
+mod import;
+#[cfg(feature = "legacy-import")]
+pub use import::{import_sqlite_file, ImportReport};
 
 const FORMAT_VERSION: u32 = 2;
 
@@ -226,6 +234,70 @@ impl Adapter for SqliteAdapter {
 
     fn access_mode(&self) -> AccessMode {
         self.options.access_mode
+    }
+
+    fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
+        let state = self.state()?;
+        Ok(store_schema(&state))
+    }
+}
+
+fn store_schema(store: &Store) -> StoreSchema {
+    StoreSchema {
+        format_version: store.format_version,
+        tables: store
+            .tables
+            .values()
+            .map(|table| TableSchema {
+                name: table.name.clone(),
+                columns: table
+                    .columns
+                    .iter()
+                    .map(|column| ColumnSchema {
+                        name: column.name.clone(),
+                        primary_key: column.primary_key,
+                        unique: column.unique,
+                        not_null: column.not_null,
+                        default: match &column.default {
+                            Some(DefaultValue::Value(value)) => Some(value.clone()),
+                            Some(DefaultValue::CurrentTimestamp) => {
+                                Some(serde_json::Value::String("CURRENT_TIMESTAMP".into()))
+                            }
+                            None => None,
+                        },
+                    })
+                    .collect(),
+                unique_constraints: table
+                    .unique_constraints
+                    .iter()
+                    .map(|constraint| constraint.columns.clone())
+                    .collect(),
+                foreign_keys: table
+                    .foreign_keys
+                    .iter()
+                    .map(|foreign_key| ForeignKeySchema {
+                        columns: foreign_key.columns.clone(),
+                        ref_table: foreign_key.ref_table.clone(),
+                        ref_columns: foreign_key.ref_columns.clone(),
+                        on_delete: match foreign_key.on_delete {
+                            OnDelete::Restrict => ForeignKeyAction::Restrict,
+                            OnDelete::Cascade => ForeignKeyAction::Cascade,
+                        },
+                    })
+                    .collect(),
+                row_count: table.rows.len() as u64,
+            })
+            .collect(),
+        indexes: store
+            .indexes
+            .values()
+            .map(|index| IndexSchema {
+                name: index.name.clone(),
+                table: index.table.clone(),
+                columns: index.columns.clone(),
+                unique: index.unique,
+            })
+            .collect(),
     }
 }
 
@@ -1518,6 +1590,21 @@ fn lex(sql: &str) -> Result<Vec<Token>, DactylError> {
     while i < bytes.len() {
         if bytes[i].is_ascii_whitespace() {
             i += 1;
+            continue;
+        }
+        if bytes[i] == b'-' && bytes.get(i + 1) == Some(&b'-') {
+            i += 2;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
+        if bytes[i] == b'/' && bytes.get(i + 1) == Some(&b'*') {
+            i += 2;
+            while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i = i.saturating_add(2).min(bytes.len());
             continue;
         }
         if bytes[i] == b'\'' {
