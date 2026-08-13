@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dactyl Docs</title>
-  <meta name="description" content="Public documentation for dactyl-db, including the store-format whitepaper.">
+  <meta name="description" content="Public documentation for dactyl-db, including the SQLite connector report.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,39 +17,35 @@
     <section class="hero">
       <div>
         <div class="kicker">Public documentation</div>
-        <h1>The local store is not a SQLite file.</h1>
+        <h1>The local route is a real SQLite file.</h1>
         <p class="lede">
-          The <code>sqlite</code> route name is a compatibility label. The file
-          Dactyl writes is a versioned JSON snapshot with its own durability
-          protocol. These pages publish that methodology.
+          Dactyl keeps a thin backend-neutral application contract while SQLite
+          owns local file compatibility, locking, journaling, and SQL execution.
         </p>
       </div>
       <aside class="panel">
         <strong>Confirmed from current code</strong>
-        Local open rejects the 16-byte SQLite magic
-        <code>SQLite format 3</code> with
-        <code>AdapterErrorKind::Capability</code>. Convert leftover SQLite
-        files with <code>import_sqlite_file</code>. The accepted prefix is a
-        JSON object whose first field is <code>format_version</code>.
+        Existing SQLite fixtures open unchanged through
+        <code>Connection::open</code>. Read/write opens create missing paths;
+        read-only opens fail closed when the database is absent.
       </aside>
     </section>
 
     <section class="card-grid">
       <article class="paper-card">
         <div class="kicker">Technical report 001</div>
-        <h2>The Dactyl Store Format</h2>
+        <h2>Dactyl's SQLite Connector Boundary</h2>
         <p>
-          Why Dactyl refuses SQLite's file header, what the snapshot encodes,
-          how the checksummed journal publishes durability, and why the local
-          SQL surface is a bounded storage language.
+          How Dactyl preserves a small application API over a real local SQLite
+          file and the remote Neon/Propodus route.
         </p>
         <div class="meta">
           <span>dactyl-db 0.7.0</span>
           <span>2026-08-12</span>
           <span>Local store methodology</span>
         </div>
-        <a class="cta" href="whitepapers/dactyl-store-format.html">Read the whitepaper</a>
-        <p class="note">Markdown source: <a href="whitepapers/dactyl-store-format.md">dactyl-store-format.md</a></p>
+        <a class="cta" href="whitepapers/dactyl-sqlite-connector.html">Read the report</a>
+        <p class="note">Markdown source: <a href="whitepapers/dactyl-sqlite-connector.md">dactyl-sqlite-connector.md</a></p>
       </article>
       <article class="note-card">
         <div class="kicker">What this site is</div>

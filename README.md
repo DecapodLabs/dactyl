@@ -35,53 +35,32 @@ SQLite and Neon use the same application contract:
   rate-limit, and protocol failures. Remote stable error codes are available
   through `DactylError::adapter_code()` without parsing provider messages.
 
-The local implementation is Dactyl-owned Rust. Both the native snapshot route
-and the optional `legacy-import` converter are pure Rust: Dactyl has no native
-SQLite binding, SQLite subprocess, or external database runtime dependency.
-The `sqlite` feature and route constructor remain as compatibility names for
-existing callers, but the local file is a versioned Dactyl snapshot, not a
-SQLite file. `Connection::open` rejects a SQLite header with a typed capability
-error. Existing SQLite files are converted by the optional `legacy-import`
-feature (`import_sqlite_file` or the `dactyl-import` binary), not by opening
-them as stores.
+The local implementation is a thin `rusqlite` connection behind the same
+public contract. The optional `sqlite` feature owns the SQLite binding; Dactyl
+does not duplicate SQLite's file format, parser, pager, journal, or query
+planner. The route name and `DATASTORE=sqlite` setting therefore mean what
+they say: the requested path is an ordinary SQLite database.
 
-## Local store format
+## Local SQLite route
 
-`DATASTORE=sqlite` names the local route, not the on-disk product. The published
-file is UTF-8 JSON with `format_version` (currently `2`), plus `$ROUTE.wal` and
-`$ROUTE.lock` sidecars. It does not start with the SQLite magic
-`SQLite format 3`. Opening a SQLite database at that path fails closed as
-`AdapterErrorKind::Capability`.
+`DATASTORE=sqlite DATASTORE_ROUTE=/path/to/app.db` opens the file directly.
+Existing SQLite files remain readable and writable without conversion. A
+read/write route creates a missing file and its parent directory; a read-only
+route requires an existing file. SQLite supplies locking, journaling, crash
+recovery, and its supported SQL surface. Dactyl applies the configured busy
+timeout and maps SQLite busy, locked, constraint, read-only, corrupt, and
+storage outcomes into its typed error categories.
 
-The methodology — why the header is refused, what the snapshot encodes, how
-the journal publishes durability, and how explicit SQLite import works — is the
-[store-format whitepaper](docs/whitepapers/dactyl-store-format.md).
-The same paper is published from `docs/` as GitHub Pages.
+The [SQLite connector report](docs/whitepapers/dactyl-sqlite-connector.md)
+records the boundary and the compatibility proof. The same report is published
+from `docs/` as GitHub Pages.
 
-Inspect the local catalog with `Connection::inspect_schema()`. Do not query
-`sqlite_master`. Blobs are JSON arrays of bytes and are read back with
-`Row::get_blob`.
-
-Convert a legacy SQLite file with Dactyl's pure-Rust reader:
-
-```text
-cargo run --features legacy-import --bin dactyl-import -- /path/to/decapod.db
-```
-
-Same-path import writes a Dactyl snapshot at that path and keeps the original
-bytes at `/path/to/decapod.db.legacy-sqlite`. Re-running import on the converted
-path is a no-op. A destination that is already a Dactyl snapshot and does not
-match the source fails instead of overwriting.
-
-The local SQL surface is intentionally bounded: caller-supplied `CREATE TABLE`
-and multi-statement schema batches, `ALTER TABLE ... ADD`, `CREATE [UNIQUE]
-INDEX`, `DROP TABLE`, `DROP INDEX`, `INSERT`, `UPDATE`, `DELETE`, and `SELECT`
-with predicates and basic ordering/limits. Schema operations preserve literal
-defaults, `NOT NULL`, composite `PRIMARY KEY`/`UNIQUE`, foreign keys with
-restrict/cascade delete behavior, and caller-owned indexes. Indexes are
-structural constraints, not a query planner. Unsupported SQL fails with a
-typed capability/query error rather than silently changing the request. This
-is a storage primitive, not a planner or schema owner.
+`Connection::inspect_schema()` returns a backend-neutral catalog containing
+tables, columns, nullability/defaults, primary and unique keys, indexes,
+foreign keys, delete actions, and row counts. Callers do not need to issue
+SQLite-specific catalog queries. Blobs are normalized to JSON arrays of bytes
+and are read back with `Row::get_blob`; NULL, text, integer, REAL, and blob
+values remain distinct through the public row contract.
 
 Schema versioning, migration ordering, backups, import from legacy stores,
 retry/backoff, idempotency keys, and domain-level version/CAS policy remain

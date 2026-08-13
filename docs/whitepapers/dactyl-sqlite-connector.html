@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dactyl SQLite Connector</title>
+  <meta name="description" content="Dactyl's real SQLite local connector boundary.">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <main class="site-frame">
+    <header class="masthead">
+      <a class="wordmark" href="../index.html">Dactyl Docs</a>
+      <div class="kicker">DecapodLabs / dactyl-db</div>
+    </header>
+    <article class="paper-card">
+      <div class="kicker">Technical report 001</div>
+      <h1>Dactyl's SQLite Connector Boundary</h1>
+      <p class="lede">The local route is a real SQLite database. Dactyl keeps the application-facing operation, result, and error boundary while SQLite owns file compatibility and execution.</p>
+      <h2>Boundary</h2>
+      <pre><code>application -&gt; Dactyl facade -&gt; SQLite file
+                         \-&gt; Neon/Propodus HTTP route</code></pre>
+      <p>Dactyl owns route selection, parameter binding, access mode, atomic batches, row normalization, generated-key results, schema projection, and stable error categories. Decapod owns schema and migration policy. Propodus owns hosting, authentication, tenancy, authorization, retries, and idempotency.</p>
+      <h2>Local compatibility</h2>
+      <p>Read/write opens use SQLite's normal flags and create the requested path when needed. Read-only opens require an existing file. SQLite supplies locking, journaling, crash recovery, and the SQL surface; Dactyl configures the busy timeout and maps native outcomes to backend-neutral errors.</p>
+      <h2>Proof</h2>
+      <p><code>tests/sqlite_existing.rs</code> opens a checked-in Decapod SQLite fixture without conversion, verifies values and schema, updates it, and reopens it. The storage contract covers atomic rollback, constraints, foreign keys, read-only behavior, and a native SQLite lock timeout.</p>
+      <p><a class="cta" href="../../README.md">Return to the repository README</a> · <a href="dactyl-sqlite-connector.md">Read the Markdown source</a></p>
+    </article>
+  </main>
+</body>
+</html>
