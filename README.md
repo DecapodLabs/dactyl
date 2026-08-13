@@ -1,6 +1,6 @@
 # dactyl
 
-[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.98.2-dc2626)](https://github.com/DecapodLabs/decapod)
+[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.98.3-dc2626)](https://github.com/DecapodLabs/decapod)
 
 `dactyl-db` is a lightweight application-layer datastore for read/write-heavy
 apps that need the same small Rust surface over a local store and Vercel Neon.

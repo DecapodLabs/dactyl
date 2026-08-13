@@ -1,15 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "title": "Dactyl store-format paper plus SQLite import",
-  "intent": "Keep the published store-format whitepaper PR and add a Dactyl-owned SQLite-to-snapshot import plus schema inspection for issue 77, correcting the paper where import is no longer caller-owned.",
+  "title": "Store-format paper, issue 77 import, 0.98.3 pin verification",
+  "intent": "Keep the whitepaper and SQLite import on PR 78, and ensure Decapod 0.98.3 entrypoint fingerprints and public version pins match the evaluating binary.",
   "state": "APPROVED",
   "todo_ids": [
     "feat_01kzw6k7snxhm176",
-    "docs_01kzw5p2x1e49fc3"
+    "docs_01kzw5p2x1e49fc3",
+    "code_01kzw7bf5wtf8cfw"
   ],
   "proof_hooks": [
-    "cargo test --features sqlite,legacy-import",
-    "decapod validate"
+    "decapod validate",
+    "decapod init --proof --dry-run"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +26,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786579171Z"
+  "updated_at": "1786579945Z"
 }
