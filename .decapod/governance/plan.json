@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "title": "Pure-Rust local SQLite import for Issue 77",
-  "intent": "Keep PR 78 local-only: remove all native SQLite bindings and implement the explicit SQLite-to-Dactyl import boundary with a bounded pure-Rust read-only reader. Defer Neon/Propodus feature parity to a separate issue.",
+  "intent": "Keep PR 78 local-only: remove all native SQLite bindings and implement the explicit SQLite-to-Dactyl import boundary with a bounded pure-Rust read-only reader, including INTEGER PRIMARY KEY rowid reconstruction. Defer Neon and Propodus feature parity to a separate issue.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kzwdcq5x0s3180"
@@ -14,7 +14,7 @@
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not change Neon behavior in this PR; track Neon/Propodus parity separately."
+    "Do not change Neon behavior in this PR; track Neon and Propodus parity separately."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -25,5 +25,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786587725Z"
+  "updated_at": "1786588221Z"
 }
