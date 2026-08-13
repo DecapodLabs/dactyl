@@ -66,7 +66,7 @@ The local route path is a Dactyl snapshot, not a SQLite database. Operators must
 | `$ROUTE.wal` | checksummed journal | replayed only on the next read-write open |
 | `$ROUTE.lock` | exclusive writer lock | leftover lock blocks writers until removed or timeout |
 
-A leftover valid journal plus a read-only open is a typed `ReadOnly` failure, not silent recovery. Header confusion (opening a SQLite file as Dactyl, or a Dactyl file as SQLite) is a capability/operator error, not an import.
+A leftover valid journal plus a read-only open is a typed `ReadOnly` failure, not silent recovery. Header confusion (opening a SQLite file as Dactyl, or a Dactyl file as SQLite) is a capability/operator error. Convert leftover SQLite files with `dactyl-import` / `import_sqlite_file` before pointing `DATASTORE_ROUTE` at the path. Same-path import leaves `$path.legacy-sqlite` as the recoverable source.
 
 ## Capacity Planning
 - Traffic patterns:

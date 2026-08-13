@@ -1,14 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Dactyl store-format whitepaper",
-  "intent": "Confirm Dactyl's local store is a versioned Dactyl snapshot, not a SQLite file, and publish a methodology whitepaper under docs/ as GitHub Pages.",
+  "title": "Dactyl store-format paper plus SQLite import",
+  "intent": "Keep the published store-format whitepaper PR and add a Dactyl-owned SQLite-to-snapshot import plus schema inspection for issue 77, correcting the paper where import is no longer caller-owned.",
   "state": "APPROVED",
   "todo_ids": [
+    "feat_01kzw6k7snxhm176",
     "docs_01kzw5p2x1e49fc3"
   ],
   "proof_hooks": [
-    "decapod validate",
-    "cargo test --features sqlite sqlite_header_is_rejected_as_capability"
+    "cargo test --features sqlite,legacy-import",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -24,5 +25,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786578664Z"
+  "updated_at": "1786579171Z"
 }
