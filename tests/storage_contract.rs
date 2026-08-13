@@ -6,7 +6,6 @@ use dactyl_db::{
     AccessMode, AdapterErrorKind, Connection, DatastoreRoute, GeneratedKey, OpenOptions, Operation,
     OperationResult, Parameter,
 };
-use rusqlite::Connection as NativeConnection;
 use tempfile::NamedTempFile;
 
 #[test]
@@ -153,8 +152,8 @@ fn lock_timeout_is_typed_and_bounded() {
         .write("create table app (id integer primary key)", &[])
         .unwrap();
     drop(setup);
-    let blocker = NativeConnection::open(&path).unwrap();
-    blocker.execute_batch("BEGIN EXCLUSIVE").unwrap();
+    let blocker = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    blocker.write("BEGIN EXCLUSIVE", &[]).unwrap();
     let db = Connection::open_with_options(
         DatastoreRoute::sqlite(&path),
         OpenOptions {
@@ -169,7 +168,7 @@ fn lock_timeout_is_typed_and_bounded() {
         Some(AdapterErrorKind::Busy | AdapterErrorKind::Locked)
     ));
     assert!(error.is_retryable());
-    blocker.execute_batch("ROLLBACK").unwrap();
+    blocker.write("ROLLBACK", &[]).unwrap();
 }
 
 #[test]

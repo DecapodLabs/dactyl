@@ -1,19 +1,19 @@
-//! SQLite-backed local storage.
+//! SQLite-backed local storage through the host's shared SQLite ABI.
 //!
-//! Dactyl owns the narrow driver boundary around this connection: route
-//! selection, parameter binding, atomic batches, access mode, row/result
-//! normalization, and stable error categories. SQLite owns file compatibility,
-//! SQL execution, locking, journaling, and constraint enforcement.
+//! Dactyl owns the narrow driver boundary: route selection, parameter
+//! binding, atomic batches, access mode, row/result normalization, and stable
+//! error categories. SQLite owns file compatibility, SQL execution, locking,
+//! journaling, and constraint enforcement. No SQLite Rust wrapper, bundled
+//! amalgamation, or `libsqlite3-sys` dependency is used.
+
+mod ffi;
 
 use std::collections::BTreeMap;
+use std::ffi::{c_int, c_void, CString};
 use std::fs;
 use std::io::Read;
 use std::path::Path;
-use std::sync::{Mutex, MutexGuard};
-
-use rusqlite::types::{Value, ValueRef};
-use rusqlite::{params_from_iter, Connection as SqliteConnection, Error as SqliteError};
-use rusqlite::{ErrorCode, OpenFlags};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::adapter::Adapter;
 use crate::contract::{
@@ -31,6 +31,27 @@ const SCHEMA_DESCRIPTION_VERSION: u32 = 1;
 pub struct SqliteAdapter {
     connection: Mutex<SqliteConnection>,
     options: OpenOptions,
+}
+
+struct SqliteConnection {
+    api: Arc<ffi::Api>,
+    database: *mut ffi::sqlite3,
+}
+
+// SQLite serializes access according to the flags supplied at open time. The
+// adapter additionally holds the connection behind a Mutex, so the raw handle
+// is never concurrently used by safe Dactyl code.
+unsafe impl Send for SqliteConnection {}
+unsafe impl Sync for SqliteConnection {}
+
+impl Drop for SqliteConnection {
+    fn drop(&mut self) {
+        if !self.database.is_null() {
+            unsafe {
+                let _ = self.api.close(self.database);
+            }
+        }
+    }
 }
 
 impl SqliteAdapter {
@@ -61,25 +82,26 @@ impl SqliteAdapter {
             validate_existing_sqlite_header(path_ref)?;
         }
 
-        let connection = if path == ":memory:" {
-            SqliteConnection::open_in_memory()
-        } else {
-            let flags = match options.access_mode {
-                AccessMode::ReadWrite => {
-                    OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE
-                }
-                AccessMode::ReadOnly => OpenFlags::SQLITE_OPEN_READ_ONLY,
-            };
-            SqliteConnection::open_with_flags(path, flags)
+        let api = Arc::new(ffi::Api::load()?);
+        let database = open_database(&api, path, options.access_mode)?;
+        let connection = SqliteConnection { api, database };
+        let timeout = options
+            .lock_timeout
+            .as_millis()
+            .try_into()
+            .unwrap_or(c_int::MAX);
+        let result = (|| {
+            let code = unsafe { connection.api.busy_timeout(connection.database, timeout) };
+            if code != ffi::SQLITE_OK {
+                return Err(connection.error("configure SQLite busy timeout", code));
+            }
+            exec_sql(&connection, "PRAGMA foreign_keys = ON")
+                .map_err(|error| connection.error_from_failure("enable SQLite foreign keys", error))
+        })();
+        if let Err(error) = result {
+            drop(connection);
+            return Err(error);
         }
-        .map_err(|error| sqlite_error("open SQLite database", error))?;
-
-        connection
-            .busy_timeout(options.lock_timeout)
-            .map_err(|error| sqlite_error("configure SQLite busy timeout", error))?;
-        connection
-            .execute_batch("PRAGMA foreign_keys = ON")
-            .map_err(|error| sqlite_error("enable SQLite foreign keys", error))?;
 
         Ok(Self {
             connection: Mutex::new(connection),
@@ -92,6 +114,52 @@ impl SqliteAdapter {
             DactylError::adapter(AdapterErrorKind::Storage, "SQLite connection lock poisoned")
         })
     }
+}
+
+fn open_database(
+    api: &Arc<ffi::Api>,
+    path: &str,
+    access_mode: AccessMode,
+) -> Result<*mut ffi::sqlite3, DactylError> {
+    let filename = CString::new(path).map_err(|_| {
+        DactylError::adapter_with_code(
+            AdapterErrorKind::InvalidOperation,
+            "invalid_path",
+            "SQLite path contains an interior NUL byte",
+        )
+    })?;
+    let flags = match access_mode {
+        AccessMode::ReadWrite => ffi::SQLITE_OPEN_READWRITE | ffi::SQLITE_OPEN_CREATE,
+        AccessMode::ReadOnly => ffi::SQLITE_OPEN_READONLY,
+    } | ffi::SQLITE_OPEN_FULLMUTEX;
+    let mut database = std::ptr::null_mut();
+    let code = unsafe { api.open_v2(filename.as_ptr(), &mut database, flags) };
+    if code != ffi::SQLITE_OK {
+        let error = if database.is_null() {
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Unavailable,
+                "cannot_open",
+                format!("open SQLite database {path}: SQLite error code {code}"),
+            )
+        } else {
+            let failure = unsafe { api.failure(database) };
+            map_sqlite_failure("open SQLite database", failure)
+        };
+        if !database.is_null() {
+            unsafe {
+                let _ = api.close(database);
+            }
+        }
+        return Err(error);
+    }
+    if database.is_null() {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Unavailable,
+            "cannot_open",
+            format!("open SQLite database {path}: SQLite returned no handle"),
+        ));
+    }
+    Ok(database)
 }
 
 fn validate_existing_sqlite_header(path: &Path) -> Result<(), DactylError> {
@@ -150,9 +218,9 @@ impl Adapter for SqliteAdapter {
 
         let connection = self.connection()?;
         if mutates {
-            connection
-                .execute_batch("BEGIN IMMEDIATE")
-                .map_err(|error| sqlite_error("begin SQLite transaction", error))?;
+            exec_sql(&connection, "BEGIN IMMEDIATE").map_err(|error| {
+                connection.error_from_failure("begin SQLite transaction", error)
+            })?;
         }
 
         let result = (|| {
@@ -169,15 +237,15 @@ impl Adapter for SqliteAdapter {
 
         match result {
             Ok(value) => {
-                if let Err(error) = connection.execute_batch("COMMIT") {
-                    let _ = connection.execute_batch("ROLLBACK");
-                    Err(sqlite_error("commit SQLite transaction", error))
+                if let Err(error) = exec_sql(&connection, "COMMIT") {
+                    let _ = exec_sql(&connection, "ROLLBACK");
+                    Err(connection.error_from_failure("commit SQLite transaction", error))
                 } else {
                     Ok(value)
                 }
             }
             Err(error) => {
-                let _ = connection.execute_batch("ROLLBACK");
+                let _ = exec_sql(&connection, "ROLLBACK");
                 Err(error)
             }
         }
@@ -231,9 +299,9 @@ fn execute_operation(
                         "multi-statement schema SQL cannot bind parameters",
                     ));
                 }
-                connection
-                    .execute_batch(operation.sql())
-                    .map_err(|error| sqlite_error("execute SQLite schema batch", error))?;
+                exec_sql(connection, operation.sql()).map_err(|error| {
+                    connection.error_from_failure("execute SQLite schema batch", error)
+                })?;
                 Ok(OperationResult::Write(WriteResult::default()))
             } else {
                 Ok(OperationResult::Write(execute_write(
@@ -251,12 +319,17 @@ fn execute_write(
     sql: &str,
     params: &[Parameter],
 ) -> Result<WriteResult, DactylError> {
-    let values = sqlite_values(params);
-    connection
-        .execute(sql, params_from_iter(values.iter()))
-        .map_err(|error| sqlite_error("execute SQLite write", error))?;
+    let mut statement = Statement::prepare(connection, sql)?;
+    statement.bind_all(params)?;
+    loop {
+        match statement.step()? {
+            ffi::SQLITE_ROW => continue,
+            ffi::SQLITE_DONE => break,
+            _ => unreachable!("Statement::step maps non-row/non-done to an error"),
+        }
+    }
     let generated_keys = if first_word(sql).as_deref() == Some("insert") {
-        let rowid = connection.last_insert_rowid();
+        let rowid = unsafe { connection.api.last_insert_rowid(connection.database) };
         if rowid != 0 {
             vec![GeneratedKey::Integer(rowid)]
         } else {
@@ -266,7 +339,9 @@ fn execute_write(
         Vec::new()
     };
     Ok(WriteResult {
-        affected_rows: connection.changes(),
+        affected_rows: unsafe { connection.api.changes64(connection.database) }
+            .try_into()
+            .unwrap_or_default(),
         generated_keys,
     })
 }
@@ -276,31 +351,17 @@ fn query_rows(
     sql: &str,
     params: &[Parameter],
 ) -> Result<Rows, DactylError> {
-    let values = sqlite_values(params);
-    let mut statement = connection
-        .prepare(sql)
-        .map_err(|error| sqlite_error("prepare SQLite query", error))?;
-    let columns = statement
-        .column_names()
-        .into_iter()
-        .map(ToOwned::to_owned)
-        .collect::<Vec<_>>();
-    let column_count = statement.column_count();
+    let mut statement = Statement::prepare(connection, sql)?;
+    statement.bind_all(params)?;
+    let column_count = unsafe { connection.api.column_count(statement.statement) };
+    let columns = (0..column_count)
+        .map(|index| statement.column_name(index))
+        .collect::<Result<Vec<_>, _>>()?;
     let mut result_rows = Vec::new();
-    let mut query = statement
-        .query(params_from_iter(values.iter()))
-        .map_err(|error| sqlite_error("run SQLite query", error))?;
-    while let Some(row) = query
-        .next()
-        .map_err(|error| sqlite_error("read SQLite row", error))?
-    {
-        let mut values = Vec::with_capacity(column_count);
-        for index in 0..column_count {
-            values.push(value_to_json(
-                row.get_ref(index)
-                    .map_err(|error| sqlite_error("read SQLite value", error))?,
-            )?);
-        }
+    while statement.step()? == ffi::SQLITE_ROW {
+        let values = (0..column_count)
+            .map(|index| statement.value(index))
+            .collect::<Result<Vec<_>, _>>()?;
         result_rows.push(Row {
             columns: columns.clone(),
             values,
@@ -309,60 +370,269 @@ fn query_rows(
     Ok(Rows(result_rows))
 }
 
-fn sqlite_values(params: &[Parameter]) -> Vec<Value> {
-    params
-        .iter()
-        .map(|parameter| match parameter {
-            Parameter::Null => Value::Null,
-            Parameter::Bool(value) => Value::Integer(i64::from(*value)),
-            Parameter::Integer(value) => Value::Integer(*value),
-            Parameter::Real(value) => Value::Real(*value),
-            Parameter::Text(value) => Value::Text(value.clone()),
-            Parameter::Blob(value) => Value::Blob(value.clone()),
-        })
-        .collect()
+struct Statement<'a> {
+    connection: &'a SqliteConnection,
+    statement: *mut ffi::sqlite3_stmt,
 }
 
-fn value_to_json(value: ValueRef<'_>) -> Result<serde_json::Value, DactylError> {
-    match value {
-        ValueRef::Null => Ok(serde_json::Value::Null),
-        ValueRef::Integer(value) => Ok(serde_json::Value::Number(value.into())),
-        ValueRef::Real(value) => serde_json::Number::from_f64(value)
-            .map(serde_json::Value::Number)
-            .ok_or_else(|| {
-                adapter_error(AdapterErrorKind::Value, "SQLite returned a non-finite REAL")
-            }),
-        ValueRef::Text(value) => String::from_utf8(value.to_vec())
-            .map(serde_json::Value::String)
-            .map_err(|error| {
+impl<'a> Statement<'a> {
+    fn prepare(connection: &'a SqliteConnection, sql: &str) -> Result<Self, DactylError> {
+        let sql = CString::new(sql).map_err(|_| {
+            adapter_error(
+                AdapterErrorKind::InvalidOperation,
+                "SQL contains an interior NUL byte",
+            )
+        })?;
+        let mut statement = std::ptr::null_mut();
+        let code = unsafe {
+            connection
+                .api
+                .prepare_v2(connection.database, sql.as_ptr(), &mut statement)
+        };
+        if code != ffi::SQLITE_OK {
+            return Err(connection.error("prepare SQLite statement", code));
+        }
+        if statement.is_null() {
+            return Err(adapter_error(
+                AdapterErrorKind::Query,
+                "SQLite returned an empty statement handle",
+            ));
+        }
+        Ok(Self {
+            connection,
+            statement,
+        })
+    }
+
+    fn bind_all(&mut self, params: &[Parameter]) -> Result<(), DactylError> {
+        for (index, parameter) in params.iter().enumerate() {
+            let index = c_int::try_from(index + 1).map_err(|_| {
                 adapter_error(
-                    AdapterErrorKind::Value,
-                    format!("SQLite returned invalid UTF-8 text: {error}"),
+                    AdapterErrorKind::InvalidOperation,
+                    "too many SQLite parameters",
                 )
-            }),
-        ValueRef::Blob(value) => Ok(serde_json::Value::Array(
-            value
-                .iter()
-                .map(|byte| serde_json::Value::Number(u64::from(*byte).into()))
-                .collect(),
-        )),
+            })?;
+            let code = unsafe {
+                match parameter {
+                    Parameter::Null => self.connection.api.bind_null(self.statement, index),
+                    Parameter::Bool(value) => {
+                        self.connection
+                            .api
+                            .bind_int64(self.statement, index, i64::from(*value))
+                    }
+                    Parameter::Integer(value) => {
+                        self.connection
+                            .api
+                            .bind_int64(self.statement, index, *value)
+                    }
+                    Parameter::Real(value) => {
+                        self.connection
+                            .api
+                            .bind_double(self.statement, index, *value)
+                    }
+                    Parameter::Text(value) => self.connection.api.bind_text(
+                        self.statement,
+                        index,
+                        value.as_ptr().cast(),
+                        c_int::try_from(value.len()).map_err(|_| {
+                            adapter_error(
+                                AdapterErrorKind::Value,
+                                "SQLite text parameter is too large",
+                            )
+                        })?,
+                    ),
+                    Parameter::Blob(value) => self.connection.api.bind_blob(
+                        self.statement,
+                        index,
+                        value.as_ptr().cast::<c_void>(),
+                        c_int::try_from(value.len()).map_err(|_| {
+                            adapter_error(
+                                AdapterErrorKind::Value,
+                                "SQLite blob parameter is too large",
+                            )
+                        })?,
+                    ),
+                }
+            };
+            if code != ffi::SQLITE_OK {
+                return Err(self.connection.error("bind SQLite parameter", code));
+            }
+        }
+        Ok(())
+    }
+
+    fn step(&mut self) -> Result<c_int, DactylError> {
+        let code = unsafe { self.connection.api.step(self.statement) };
+        if matches!(code, ffi::SQLITE_ROW | ffi::SQLITE_DONE) {
+            Ok(code)
+        } else {
+            Err(self.connection.error("step SQLite statement", code))
+        }
+    }
+
+    fn column_name(&self, index: c_int) -> Result<String, DactylError> {
+        let value = unsafe { self.connection.api.column_name(self.statement, index) };
+        if value.is_null() {
+            return Err(adapter_error(
+                AdapterErrorKind::Value,
+                "SQLite returned a null column name",
+            ));
+        }
+        Ok(unsafe { std::ffi::CStr::from_ptr(value) }
+            .to_string_lossy()
+            .into_owned())
+    }
+
+    fn value(&self, index: c_int) -> Result<serde_json::Value, DactylError> {
+        let kind = unsafe { self.connection.api.column_type(self.statement, index) };
+        unsafe {
+            match kind {
+                ffi::SQLITE_NULL => Ok(serde_json::Value::Null),
+                ffi::SQLITE_INTEGER => Ok(serde_json::Value::Number(
+                    self.connection
+                        .api
+                        .column_int64(self.statement, index)
+                        .into(),
+                )),
+                ffi::SQLITE_FLOAT => serde_json::Number::from_f64(
+                    self.connection.api.column_double(self.statement, index),
+                )
+                .map(serde_json::Value::Number)
+                .ok_or_else(|| {
+                    adapter_error(AdapterErrorKind::Value, "SQLite returned a non-finite REAL")
+                }),
+                ffi::SQLITE_TEXT => {
+                    let pointer = self.connection.api.column_text(self.statement, index);
+                    let length = self.connection.api.column_bytes(self.statement, index);
+                    if pointer.is_null() && length != 0 {
+                        return Err(adapter_error(
+                            AdapterErrorKind::Value,
+                            "SQLite returned a null text pointer",
+                        ));
+                    }
+                    String::from_utf8(
+                        std::slice::from_raw_parts(pointer, length.max(0) as usize).to_vec(),
+                    )
+                    .map(serde_json::Value::String)
+                    .map_err(|error| {
+                        adapter_error(
+                            AdapterErrorKind::Value,
+                            format!("SQLite returned invalid UTF-8 text: {error}"),
+                        )
+                    })
+                }
+                ffi::SQLITE_BLOB => {
+                    let pointer = self.connection.api.column_blob(self.statement, index);
+                    let length = self.connection.api.column_bytes(self.statement, index);
+                    if pointer.is_null() && length != 0 {
+                        return Err(adapter_error(
+                            AdapterErrorKind::Value,
+                            "SQLite returned a null blob pointer",
+                        ));
+                    }
+                    Ok(serde_json::Value::Array(
+                        std::slice::from_raw_parts(pointer.cast::<u8>(), length.max(0) as usize)
+                            .iter()
+                            .map(|byte| serde_json::Value::Number(u64::from(*byte).into()))
+                            .collect(),
+                    ))
+                }
+                _ => Err(adapter_error(
+                    AdapterErrorKind::Value,
+                    "SQLite returned an unknown value type",
+                )),
+            }
+        }
     }
 }
 
-fn inspect_schema(connection: &SqliteConnection) -> Result<StoreSchema, DactylError> {
-    let mut table_statement = connection
-        .prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
-        .map_err(|error| sqlite_error("prepare SQLite table catalog", error))?;
-    let table_names = table_statement
-        .query_map([], |row| row.get::<_, String>(0))
-        .map_err(|error| sqlite_error("read SQLite table catalog", error))?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|error| sqlite_error("decode SQLite table catalog", error))?;
-    drop(table_statement);
+impl Drop for Statement<'_> {
+    fn drop(&mut self) {
+        if !self.statement.is_null() {
+            unsafe {
+                let _ = self.connection.api.finalize(self.statement);
+            }
+        }
+    }
+}
 
-    let mut tables = Vec::with_capacity(table_names.len());
+fn exec_sql(connection: &SqliteConnection, sql: &str) -> Result<(), ffi::SqliteFailure> {
+    let sql = CString::new(sql).map_err(|_| ffi::SqliteFailure {
+        code: ffi::SQLITE_ERROR,
+        extended_code: ffi::SQLITE_ERROR,
+        message: "SQL contains an interior NUL byte".to_string(),
+    })?;
+    let code = unsafe { connection.api.exec(connection.database, sql.as_ptr()) };
+    if code == ffi::SQLITE_OK {
+        Ok(())
+    } else {
+        Err(unsafe { connection.api.failure(connection.database) })
+    }
+}
+
+impl SqliteConnection {
+    fn error(&self, operation: &str, code: c_int) -> DactylError {
+        map_sqlite_failure(
+            operation,
+            ffi::SqliteFailure {
+                code,
+                extended_code: unsafe { self.api.extended_errcode(self.database) },
+                message: unsafe { self.api.failure(self.database).message },
+            },
+        )
+    }
+
+    fn error_from_failure(&self, operation: &str, failure: ffi::SqliteFailure) -> DactylError {
+        map_sqlite_failure(operation, failure)
+    }
+}
+
+fn map_sqlite_failure(operation: &str, failure: ffi::SqliteFailure) -> DactylError {
+    let text = failure.message.to_ascii_lowercase();
+    let (kind, code) = match failure.code {
+        ffi::SQLITE_BUSY => (AdapterErrorKind::Busy, "busy"),
+        ffi::SQLITE_LOCKED => (AdapterErrorKind::Locked, "locked"),
+        ffi::SQLITE_READONLY => (AdapterErrorKind::ReadOnly, "read_only"),
+        ffi::SQLITE_CONSTRAINT => {
+            let code = if text.contains("foreign key") {
+                "foreign_key_violation"
+            } else if text.contains("not null") {
+                "not_null_violation"
+            } else if text.contains("unique") {
+                "unique_violation"
+            } else {
+                "constraint_failed"
+            };
+            (AdapterErrorKind::Constraint, code)
+        }
+        ffi::SQLITE_NOTADB | ffi::SQLITE_CORRUPT => {
+            (AdapterErrorKind::Capability, "invalid_database")
+        }
+        ffi::SQLITE_CANTOPEN => (AdapterErrorKind::Unavailable, "cannot_open"),
+        ffi::SQLITE_IOERR => (AdapterErrorKind::Storage, "storage_failure"),
+        ffi::SQLITE_RANGE => (AdapterErrorKind::InvalidOperation, "invalid_parameters"),
+        _ => (AdapterErrorKind::Query, "sqlite_error"),
+    };
+    DactylError::adapter_with_code(
+        kind,
+        code,
+        format!(
+            "{operation}: {} (extended code {})",
+            failure.message, failure.extended_code
+        ),
+    )
+}
+
+fn inspect_schema(connection: &SqliteConnection) -> Result<StoreSchema, DactylError> {
+    let table_rows = query_rows(
+        connection,
+        "SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+        &[],
+    )?;
+    let mut tables = Vec::with_capacity(table_rows.len());
     let mut indexes = Vec::new();
-    for table_name in table_names {
+    for row in table_rows.iter() {
+        let table_name = row_string(row, 0)?;
         let table_indexes = indexes_for_table(connection, &table_name)?;
         let unique_columns = table_indexes
             .iter()
@@ -372,9 +642,13 @@ fn inspect_schema(connection: &SqliteConnection) -> Result<StoreSchema, DactylEr
         let columns = columns_for_table(connection, &table_name, &unique_columns)?;
         let foreign_keys = foreign_keys_for_table(connection, &table_name)?;
         let count_sql = format!("SELECT COUNT(*) FROM {}", quote_identifier(&table_name));
-        let row_count = connection
-            .query_row(&count_sql, [], |row| row.get::<_, i64>(0))
-            .map_err(|error| sqlite_error("count SQLite table rows", error))?;
+        let count_rows = query_rows(connection, &count_sql, &[])?;
+        let row_count = row_i64(
+            count_rows.as_slice().first().ok_or_else(|| {
+                adapter_error(AdapterErrorKind::Value, "SQLite returned no table count")
+            })?,
+            0,
+        )?;
         tables.push(TableSchema {
             name: table_name.clone(),
             columns,
@@ -394,7 +668,6 @@ fn inspect_schema(connection: &SqliteConnection) -> Result<StoreSchema, DactylEr
         }));
     }
     indexes.sort_by(|left, right| left.name.cmp(&right.name));
-
     Ok(StoreSchema {
         format_version: SCHEMA_DESCRIPTION_VERSION,
         tables,
@@ -414,32 +687,18 @@ fn indexes_for_table(
     table_name: &str,
 ) -> Result<Vec<IndexInfo>, DactylError> {
     let sql = format!("PRAGMA index_list({})", quote_identifier(table_name));
-    let mut statement = connection
-        .prepare(&sql)
-        .map_err(|error| sqlite_error("prepare SQLite index catalog", error))?;
-    let names = statement
-        .query_map([], |row| {
-            Ok((row.get::<_, String>(1)?, row.get::<_, i64>(2)? != 0))
-        })
-        .map_err(|error| sqlite_error("read SQLite index catalog", error))?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|error| sqlite_error("decode SQLite index catalog", error))?;
-    drop(statement);
-
-    let mut indexes = Vec::with_capacity(names.len());
-    for (name, unique) in names {
+    let rows = query_rows(connection, &sql, &[])?;
+    let mut indexes = Vec::with_capacity(rows.len());
+    for row in rows.iter() {
+        let name = row_string(row, 1)?;
+        let unique = row_i64(row, 2)? != 0;
         let sql = format!("PRAGMA index_info({})", quote_identifier(&name));
-        let mut statement = connection
-            .prepare(&sql)
-            .map_err(|error| sqlite_error("prepare SQLite index columns", error))?;
-        let columns = statement
-            .query_map([], |row| row.get::<_, Option<String>>(2))
-            .map_err(|error| sqlite_error("read SQLite index columns", error))?
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|error| sqlite_error("decode SQLite index columns", error))?
-            .into_iter()
-            .flatten()
-            .collect::<Vec<_>>();
+        let columns = query_rows(connection, &sql, &[])?
+            .iter()
+            .filter_map(|row| {
+                row_value(row, 2).and_then(|value| value.as_str().map(ToOwned::to_owned))
+            })
+            .collect();
         indexes.push(IndexInfo {
             name,
             unique,
@@ -456,27 +715,22 @@ fn columns_for_table(
     unique_columns: &[String],
 ) -> Result<Vec<ColumnSchema>, DactylError> {
     let sql = format!("PRAGMA table_info({})", quote_identifier(table_name));
-    let mut statement = connection
-        .prepare(&sql)
-        .map_err(|error| sqlite_error("prepare SQLite column catalog", error))?;
-    let columns = statement
-        .query_map([], |row| {
-            let name = row.get::<_, String>(1)?;
-            let default = row
-                .get::<_, Option<String>>(4)?
-                .map(|value| default_value(&value));
+    query_rows(connection, &sql, &[])?
+        .iter()
+        .map(|row| {
+            let name = row_string(row, 1)?;
+            let default = row_value(row, 4)
+                .and_then(|value| value.as_str())
+                .map(default_value);
             Ok(ColumnSchema {
                 unique: unique_columns.iter().any(|column| column == &name),
                 name,
-                primary_key: row.get::<_, i64>(5)? != 0,
-                not_null: row.get::<_, i64>(3)? != 0,
+                primary_key: row_i64(row, 5)? != 0,
+                not_null: row_i64(row, 3)? != 0,
                 default,
             })
         })
-        .map_err(|error| sqlite_error("read SQLite column catalog", error))?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|error| sqlite_error("decode SQLite column catalog", error))?;
-    Ok(columns)
+        .collect()
 }
 
 fn foreign_keys_for_table(
@@ -484,27 +738,19 @@ fn foreign_keys_for_table(
     table_name: &str,
 ) -> Result<Vec<ForeignKeySchema>, DactylError> {
     let sql = format!("PRAGMA foreign_key_list({})", quote_identifier(table_name));
-    let mut statement = connection
-        .prepare(&sql)
-        .map_err(|error| sqlite_error("prepare SQLite foreign-key catalog", error))?;
-    let rows = statement
-        .query_map([], |row| {
-            Ok((
-                row.get::<_, i64>(0)?,
-                row.get::<_, i64>(1)?,
-                row.get::<_, String>(2)?,
-                row.get::<_, String>(3)?,
-                row.get::<_, Option<String>>(4)?.unwrap_or_default(),
-                row.get::<_, String>(6)?,
-            ))
-        })
-        .map_err(|error| sqlite_error("read SQLite foreign-key catalog", error))?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|error| sqlite_error("decode SQLite foreign-key catalog", error))?;
-
+    let rows = query_rows(connection, &sql, &[])?;
     type ForeignKeyParts = (String, ForeignKeyAction, Vec<(i64, String, String)>);
     let mut grouped: BTreeMap<i64, ForeignKeyParts> = BTreeMap::new();
-    for (id, sequence, ref_table, column, ref_column, action) in rows {
+    for row in rows.iter() {
+        let id = row_i64(row, 0)?;
+        let sequence = row_i64(row, 1)?;
+        let ref_table = row_string(row, 2)?;
+        let column = row_string(row, 3)?;
+        let ref_column = row_value(row, 4)
+            .and_then(|value| value.as_str())
+            .unwrap_or_default()
+            .to_string();
+        let action = row_string(row, 6)?;
         let entry = grouped
             .entry(id)
             .or_insert_with(|| (ref_table.clone(), foreign_key_action(&action), Vec::new()));
@@ -528,6 +774,33 @@ fn foreign_keys_for_table(
             }
         })
         .collect())
+}
+
+fn row_value(row: &Row, index: usize) -> Option<&serde_json::Value> {
+    row.values.get(index)
+}
+
+fn row_string(row: &Row, index: usize) -> Result<String, DactylError> {
+    row_value(row, index)
+        .and_then(|value| value.as_str())
+        .map(ToOwned::to_owned)
+        .ok_or_else(|| {
+            adapter_error(
+                AdapterErrorKind::Value,
+                "SQLite catalog returned a non-text value",
+            )
+        })
+}
+
+fn row_i64(row: &Row, index: usize) -> Result<i64, DactylError> {
+    row_value(row, index)
+        .and_then(|value| value.as_i64())
+        .ok_or_else(|| {
+            adapter_error(
+                AdapterErrorKind::Value,
+                "SQLite catalog returned a non-integer value",
+            )
+        })
 }
 
 fn default_value(value: &str) -> serde_json::Value {
@@ -556,60 +829,6 @@ fn foreign_key_action(action: &str) -> ForeignKeyAction {
 
 fn quote_identifier(value: &str) -> String {
     format!("\"{}\"", value.replace('"', "\"\""))
-}
-
-fn sqlite_error(operation: &str, error: SqliteError) -> DactylError {
-    let message = error.to_string();
-    let (kind, code) = match &error {
-        SqliteError::SqliteFailure(sqlite_error, detail) => {
-            let text = detail.as_deref().unwrap_or(&message).to_ascii_lowercase();
-            match sqlite_error.code {
-                ErrorCode::DatabaseBusy => (AdapterErrorKind::Busy, "busy"),
-                ErrorCode::DatabaseLocked => (AdapterErrorKind::Locked, "locked"),
-                ErrorCode::ReadOnly => (AdapterErrorKind::ReadOnly, "read_only"),
-                ErrorCode::ConstraintViolation => {
-                    let code = if text.contains("foreign key") {
-                        "foreign_key_violation"
-                    } else if text.contains("not null") {
-                        "not_null_violation"
-                    } else if text.contains("unique") {
-                        "unique_violation"
-                    } else {
-                        "constraint_failed"
-                    };
-                    (AdapterErrorKind::Constraint, code)
-                }
-                ErrorCode::NotADatabase | ErrorCode::DatabaseCorrupt => {
-                    (AdapterErrorKind::Capability, "invalid_database")
-                }
-                ErrorCode::CannotOpen => (AdapterErrorKind::Unavailable, "cannot_open"),
-                ErrorCode::DiskFull | ErrorCode::SystemIoFailure => {
-                    (AdapterErrorKind::Storage, "storage_failure")
-                }
-                ErrorCode::ParameterOutOfRange => {
-                    (AdapterErrorKind::InvalidOperation, "invalid_parameters")
-                }
-                _ => (AdapterErrorKind::Query, "sqlite_error"),
-            }
-        }
-        SqliteError::InvalidParameterCount(_, _)
-        | SqliteError::InvalidParameterName(_)
-        | SqliteError::ToSqlConversionFailure(_) => {
-            (AdapterErrorKind::InvalidOperation, "invalid_parameters")
-        }
-        SqliteError::MultipleStatement => (AdapterErrorKind::Capability, "multiple_statements"),
-        SqliteError::InvalidQuery | SqliteError::ExecuteReturnedResults => {
-            (AdapterErrorKind::InvalidOperation, "invalid_query")
-        }
-        SqliteError::FromSqlConversionFailure(_, _, _)
-        | SqliteError::InvalidColumnIndex(_)
-        | SqliteError::InvalidColumnName(_)
-        | SqliteError::InvalidColumnType(_, _, _)
-        | SqliteError::IntegralValueOutOfRange(_, _)
-        | SqliteError::Utf8Error(..) => (AdapterErrorKind::Value, "value_error"),
-        _ => (AdapterErrorKind::Query, "sqlite_error"),
-    };
-    DactylError::adapter_with_code(kind, code, format!("{operation}: {message}"))
 }
 
 fn adapter_error(kind: AdapterErrorKind, message: impl Into<String>) -> DactylError {
