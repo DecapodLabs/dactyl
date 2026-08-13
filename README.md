@@ -35,11 +35,14 @@ SQLite and Neon use the same application contract:
   rate-limit, and protocol failures. Remote stable error codes are available
   through `DactylError::adapter_code()` without parsing provider messages.
 
-The local implementation is Dactyl-owned Rust. It has no `sqlite`, `rusqlite`,
-`libsqlite3-sys`, or SQLite subprocess dependency. The `sqlite` feature and
-route constructor remain as compatibility names for existing callers, but the
-local file is a versioned Dactyl snapshot, not a SQLite file. A SQLite header is
-rejected with a typed capability error; migration/import belongs to the caller.
+The local implementation is Dactyl-owned Rust. The default `sqlite` feature
+has no `rusqlite`, `libsqlite3-sys`, or SQLite subprocess dependency. The
+`sqlite` feature and route constructor remain as compatibility names for
+existing callers, but the local file is a versioned Dactyl snapshot, not a
+SQLite file. `Connection::open` rejects a SQLite header with a typed capability
+error. Existing SQLite files are converted by the optional `legacy-import`
+feature (`import_sqlite_file` or the `dactyl-import` binary), not by opening
+them as stores.
 
 ## Local store format
 
@@ -49,9 +52,25 @@ file is UTF-8 JSON with `format_version` (currently `2`), plus `$ROUTE.wal` and
 `SQLite format 3`. Opening a SQLite database at that path fails closed as
 `AdapterErrorKind::Capability`.
 
-The methodology — why the header is refused, what the snapshot encodes, and how
-the journal publishes durability — is the [store-format whitepaper](docs/whitepapers/dactyl-store-format.md).
+The methodology — why the header is refused, what the snapshot encodes, how
+the journal publishes durability, and how explicit SQLite import works — is the
+[store-format whitepaper](docs/whitepapers/dactyl-store-format.md).
 The same paper is published from `docs/` as GitHub Pages.
+
+Inspect the local catalog with `Connection::inspect_schema()`. Do not query
+`sqlite_master`. Blobs are JSON arrays of bytes and are read back with
+`Row::get_blob`.
+
+Convert a legacy SQLite file without putting `rusqlite` on the runtime crate:
+
+```text
+cargo run --features legacy-import --bin dactyl-import -- /path/to/decapod.db
+```
+
+Same-path import writes a Dactyl snapshot at that path and keeps the original
+bytes at `/path/to/decapod.db.legacy-sqlite`. Re-running import on the converted
+path is a no-op. A destination that is already a Dactyl snapshot and does not
+match the source fails instead of overwriting.
 
 The local SQL surface is intentionally bounded: caller-supplied `CREATE TABLE`
 and multi-statement schema batches, `ALTER TABLE ... ADD`, `CREATE [UNIQUE]

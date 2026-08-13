@@ -7,9 +7,11 @@
 
 ## Abstract
 
-Dactyl's local route is still labeled `sqlite`, but the on-disk artifact is not a SQLite database. The file is a versioned JSON snapshot owned by Dactyl. The current format version is `2`. Files whose first bytes are the SQLite magic string `SQLite format 3` are rejected with a typed capability error before JSON decode. Durability is published through a checksummed sidecar journal and an atomic rename, not through SQLite's pager, WAL, or rollback journal.
+Dactyl's local route is still labeled `sqlite`, but the on-disk artifact is not a SQLite database. The file is a versioned JSON snapshot owned by Dactyl. The current format version is `2`. Files whose first bytes are the SQLite magic string `SQLite format 3` are rejected by `Connection::open` with a typed capability error before JSON decode. Durability is published through a checksummed sidecar journal and an atomic rename, not through SQLite's pager, WAL, or rollback journal.
 
-This is a methodology paper, not a second SQL engine. It records why Dactyl refused SQLite's file header, what the snapshot actually contains, how crash recovery works, and why the local SQL surface is a bounded storage language rather than a SQLite dialect.
+Legacy SQLite files are not opened as stores. They are converted by an explicit Dactyl-owned import (`import_sqlite_file`, or the `dactyl-import` binary) gated on the optional `legacy-import` feature. That feature may link a SQLite reader inside Dactyl. A Decapod runtime crate that enables only `sqlite` must still see an empty `cargo tree -i rusqlite`.
+
+This is a methodology paper, not a second SQL engine. It records why Dactyl refused SQLite's file header, what the snapshot actually contains, how crash recovery and explicit import work, and why the local SQL surface is a bounded storage language rather than a SQLite dialect.
 
 ## 1. The confusion the header is meant to stop
 
@@ -180,8 +182,10 @@ if bytes.starts_with(b"SQLite format 3") {
 The check is a methodology statement:
 
 - **Do not impersonate SQLite.** A Dactyl file must not look like a SQLite file.
-- **Do not silently import.** Converting a SQLite catalog, affinities, and pages into a Dactyl snapshot is caller-owned work. Dactyl will not guess.
-- **Fail with a capability error.** This is the wrong product, not a corrupt Dactyl file. Storage decode errors are reserved for JSON that claimed to be Dactyl and then failed.
+- **Do not silently import on open.** `Connection::open` never converts a SQLite file in place. Conversion is a separate, reviewable operation.
+- **Fail with a capability error on the wrong product.** A SQLite magic prefix is not a corrupt Dactyl file. Storage decode errors are reserved for JSON that claimed to be Dactyl and then failed.
+
+The supported conversion is `import_sqlite_file(source, destination)` behind `legacy-import`. It inspects the source read-only, rejects views, triggers, `WITHOUT ROWID`, and any `CREATE` statement the Dactyl parser cannot accept, writes a complete snapshot to a temporary file, and only then replaces the destination. Same-path import moves the original SQLite file to `$path.legacy-sqlite`. A failed conversion leaves the SQLite source authoritative. Re-running against an already converted Dactyl path is idempotent; a destination that is already a Dactyl snapshot and does not match the source fails as `divergent_destination` instead of overwriting.
 
 The inverse is also true. Opening a Dactyl snapshot with `sqlite3` is unsupported. The file starts with `{`, not the SQLite magic, and a SQLite engine should refuse it.
 
@@ -203,20 +207,31 @@ Predicates are comparisons, `IS [NOT] NULL`, and `AND`. Parameters are `$1` or `
 
 Unsupported SQL fails closed as `Capability` or `Query`. The engine does not rewrite a join, `OR`, function call, or subquery into a nearby supported form. Indexes never become a planner. Trailing tokens after a finished statement are an error.
 
+The portable catalog is `Connection::inspect_schema()`. It reports tables, columns, nullability, defaults, primary and unique keys, indexes, foreign keys, and row counts. Callers must not use `sqlite_master` or `PRAGMA table_info`. Joins, aggregates, `LIKE`, `IN`, `OR`, and JSON extraction remain out of the local dialect; Decapod must rewrite those callers onto this inspect-plus-read/write contract.
+
 This is the same fail-closed posture as the file header. A SQLite header would invite SQLite SQL. A Dactyl header invites only the documented subset.
 
 ## 8. What this methodology is not
 
 - Not a SQLite replacement and not a Postgres replacement.
-- Not import, export, dump, or backup tooling.
+- Not a silent compatibility veneer: `open` still rejects a SQLite header. Import is explicit and fail-closed.
 - Not encryption, compression, or page-level storage.
-- Not a migration manager. Callers own ids, order, and expand/contract policy.
+- Not a migration manager. Callers own ids, order, and expand/contract policy. Dactyl only converts physical files.
 - Not a claim that Neon uses this file. Neon receives SQL over `/query` and `/batch`.
 - Not a claim that every historical changelog mention of "SQLite" still describes the local file.
+- Not a claim that the Decapod runtime may enable `legacy-import`. That feature is a one-shot converter; runtime crates should keep `rusqlite` out of `cargo tree`.
 
 ## 9. Operational consequences
 
-Point `DATASTORE_ROUTE` at a Dactyl path, not at a file you intend to open with `sqlite3`. Copying the snapshot is a backup of published state. Copying a torn `.wal` without the recovery rule above is not a restore procedure.
+Point `DATASTORE_ROUTE` at a Dactyl path, not at a file you intend to open with `sqlite3`. An existing `.decapod/data/decapod.db` that still starts with `SQLite format 3` must be converted first:
+
+```text
+dactyl-import .decapod/data/decapod.db
+```
+
+or `import_sqlite_file(path, path)` from a helper that enables `legacy-import`. After a successful in-place import, the same path is a Dactyl snapshot and the original bytes live at `decapod.db.legacy-sqlite`.
+
+Copying the snapshot is a backup of published state. Copying a torn `.wal` without the recovery rule above is not a restore procedure.
 
 Crash leftover:
 
@@ -228,7 +243,7 @@ Schema change is caller SQL: `ALTER TABLE ... ADD`, `CREATE INDEX`, `DROP`. Fail
 
 ## 10. Proof
 
-The behavior is implemented in `src/adapter/sqlite/mod.rs` (`FORMAT_VERSION`, `Store`, `Journal`, `load_store`, `persist_store`, `checksum`). The public README states that a SQLite header is rejected. `tests/storage_contract.rs` proves durability across reopen, atomic rollback, lock timeout, and header rejection.
+The behavior is implemented in `src/adapter/sqlite/mod.rs` (`FORMAT_VERSION`, `Store`, `Journal`, `load_store`, `persist_store`, `checksum`) and `src/adapter/sqlite/import.rs`. The public README states that a SQLite header is rejected by `open` and converted only through import. `tests/storage_contract.rs` proves durability across reopen, atomic rollback, lock timeout, and header rejection. `tests/sqlite_import.rs` proves Decapod catalog parse, fixture import, reopen, blob round-trip, idempotency, divergent-destination refusal, and typed corrupt/missing/read-only outcomes.
 
 A skipped live Neon backend remains `unavailable`. This paper does not claim cloud file-format parity; Neon is not a Dactyl snapshot.
 
