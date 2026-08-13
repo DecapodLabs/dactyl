@@ -102,6 +102,10 @@ sequenceDiagram
 - Data ownership boundaries: callers own schema definitions and migration policy; Decapod owns context meaning; Propodus owns cloud authorization; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
 - Schema evolution + migration policy: outside Dactyl's scope.
 
+### Issue #77 Direct SQLite Proof Boundary
+- The local connector opens the caller-selected SQLite file through Dactyl's private runtime-loaded C ABI. `DACTYL_SQLITE_LIBRARY` is an explicit escape hatch for hosts whose shared-library name is not in the platform defaults; the crate does not bundle SQLite or expose the backend handle.
+- The release proof must exercise an actual host SQLite runtime, verify the backend-neutral contract and existing-file compatibility, and keep the loader dependency-free from `rusqlite` and `libsqlite3-sys`. Neon/Vercel deployment parity and Decapod adoption remain cross-repository work owned by Propodus and Decapod.
+
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
@@ -150,7 +154,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b71bd1cffaed13db8a75a4ebc3a4ea93a9a6eb088f3249bc9b4c76bc2f888d0e`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
+- Repository signal fingerprint: `109dee6063b1bbde09a5f46f2d88f05abf4b7ba4fcb39d3306f0247f042bf053`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

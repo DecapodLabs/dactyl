@@ -49,19 +49,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Changed
 
-- optional `legacy-import` conversion for issue #77: `import_sqlite_file`,
-  `dactyl-import`, `Connection::inspect_schema`, and `Row::get_blob`. `open`
-  still rejects a SQLite header. The Decapod runtime must not enable this
-  feature.
+- Issue #77 now describes the direct SQLite connector boundary: the `sqlite`
+  feature dynamically loads a host SQLite shared library through Dactyl's
+  private C ABI, and existing SQLite files open without conversion.
+- The local route is an ordinary SQLite database. Dactyl does not ship a
+  snapshot format, legacy importer, SQLite wrapper, bundled SQLite, or native
+  SQLite dependency; missing host runtimes fail with a typed outcome.
 
 ### Documentation
 
-- publish the Dactyl store-format whitepaper from `docs/` as GitHub Pages: the
-  local route is a versioned JSON snapshot (`format_version` 2), not a SQLite
-  file, and a SQLite magic header is rejected as a capability error. Explicit
-  import is now Dactyl-owned and is no longer described as caller-only work.
+- The Dactyl SQLite connector report and GitHub Pages documentation describe
+  the backend-neutral API, host-runtime loading, schema projection, and local
+  compatibility proof. Import and migration policy remain caller-owned.
 
 ## [0.7.0] (2026-08-12)
 
