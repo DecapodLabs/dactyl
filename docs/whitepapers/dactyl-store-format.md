@@ -1,8 +1,8 @@
 # The Dactyl Store Format
 
-**Technical report 001**  
-**Project:** dactyl-db 0.7.0  
-**Date:** 2026-08-12  
+**Technical report 001**<br>
+**Project:** dactyl-db 0.7.0<br>
+**Date:** 2026-08-12<br>
 **Status:** Describes current local-store behavior. Live GitHub Pages hosting is a repository setting; this document is the source.
 
 ## Abstract
