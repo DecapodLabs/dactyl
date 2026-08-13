@@ -31,7 +31,7 @@ timeout from `OpenOptions::lock_timeout`. SQLite remains responsible for its
 pager, locking, rollback journal/WAL mode, crash recovery, and file
 compatibility. Dactyl maps native outcomes such as busy, locked, read-only,
 constraint, malformed database, and I/O failure to `AdapterErrorKind` values
-without exposing `rusqlite` types through the public API.
+without exposing SQLite loader or C-ABI types through the public API.
 
 ## Shared operation contract
 
@@ -75,11 +75,19 @@ native SQLite lock timeout. `tests/storage_fixtures.rs` retains the
 backend-neutral local matrix; its live Propodus row remains `unavailable`
 unless an external service proof is explicitly supplied.
 
-The dependency is optional and isolated behind the `sqlite` feature:
+The connector is optional and isolated behind the `sqlite` feature. It uses a
+small generic dynamic-loader dependency and resolves the host SQLite runtime
+only when a local route is opened:
 
 ```text
-sqlite feature -> rusqlite -> libsqlite3-sys -> SQLite
+sqlite feature -> libloading -> host shared SQLite library
 ```
 
-The normal no-feature build remains free of the local adapter. The repository
-does not contain a second SQLite reader or a Dactyl-native snapshot format.
+No `rusqlite`, `libsqlite3-sys`, SQLite amalgamation, or bundled SQLite is
+compiled into Dactyl or a consumer such as Decapod. Linux uses the host
+`libsqlite3.so`, macOS uses the system `libsqlite3.dylib`, and Windows uses a
+`sqlite3.dll` supplied by the deployment. `DACTYL_SQLITE_LIBRARY` can provide
+an explicit library path when the host loader search path is non-standard.
+If no compatible runtime is present, opening a local route fails with the
+typed `sqlite_runtime_unavailable` outcome. The normal no-feature build
+remains free of the local adapter.

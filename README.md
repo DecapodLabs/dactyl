@@ -35,9 +35,10 @@ SQLite and Neon use the same application contract:
   rate-limit, and protocol failures. Remote stable error codes are available
   through `DactylError::adapter_code()` without parsing provider messages.
 
-The local implementation is a thin `rusqlite` connection behind the same
-public contract. The optional `sqlite` feature owns the SQLite binding; Dactyl
-does not duplicate SQLite's file format, parser, pager, journal, or query
+The local implementation is a thin private C-ABI connection behind the same
+public contract. The optional `sqlite` feature dynamically loads the host's
+shared SQLite library at runtime; Dactyl does not compile or bundle SQLite,
+and does not duplicate SQLite's file format, parser, pager, journal, or query
 planner. The route name and `DATASTORE=sqlite` setting therefore mean what
 they say: the requested path is an ordinary SQLite database.
 
