@@ -98,7 +98,7 @@ sequenceDiagram
 
 ## Data and Contracts
 - Inbound contracts (application calls): `read`, `write_result`, `atomic`, `OpenOptions`, `StorageContext`, and owned row/result values.
-- Outbound dependencies (datastores/queues/external APIs): optional `rusqlite`/SQLite local storage and Neon/Propodus HTTP transport. The local binding is isolated behind the private adapter module.
+- Outbound dependencies (datastores/queues/external APIs): optional runtime-loaded host SQLite and Neon/Propodus HTTP transport. The local C-ABI loader is isolated behind the private adapter module; no SQLite wrapper or bundled SQLite implementation is compiled into consumers.
 - Data ownership boundaries: callers own schema definitions and migration policy; Decapod owns context meaning; Propodus owns cloud authorization; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
 - Schema evolution + migration policy: outside Dactyl's scope.
 

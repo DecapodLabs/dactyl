@@ -1,18 +1,18 @@
 {
   "schema_version": "1.0.0",
-  "title": "Real SQLite local connector for Issue 77",
-  "intent": "Keep PR 78 local-only: use a real SQLite connector through the smallest suitable rusqlite configuration, opening existing SQLite files unchanged, preserving the backend-neutral public API, proving parameterized values/constraints/read-only/atomic/schema behavior, and leaving Neon/Propodus hosting policy outside Dactyl.",
+  "title": "System SQLite FFI connector for Issue 77",
+  "intent": "Keep PR 78 local-only and eliminate the SQLite wrapper/bundled implementation path: Dactyl must provide the real SQLite connector through a private minimal FFI linked to the host shared libsqlite3, with no rusqlite, libsqlite3-sys, SQLite wrapper crate, or bundled SQLite dependency, while preserving existing SQLite file compatibility, the backend-neutral public API, parameterized values/constraints/read-only/atomic/schema behavior, and the Neon contract.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzwpz9s431heak"
+    "bugs_01kzwqq1rbmd5qv0"
   ],
   "proof_hooks": [
-    "cargo fmt --check; cargo test --all-features; cargo clippy --all-features --all-targets -- -D warnings; cargo tree --features sqlite; decapod validate"
+    "cargo fmt --check; cargo test --all-features; cargo clippy --all-features --all-targets -- -D warnings; cargo tree --features sqlite; readelf -d target/debug/deps/*dactyl* | grep sqlite3; decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not change Neon behavior in this PR; track Neon and Propodus parity separately."
+    "Require a host shared libsqlite3 development/runtime link; do not fall back to bundled SQLite or any SQLite wrapper crate."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -23,5 +23,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786596383Z"
+  "updated_at": "1786597107Z"
 }

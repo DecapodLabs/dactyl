@@ -56,7 +56,8 @@ flowchart LR
 - `cargo test --all-features`
 - `cargo test --features sqlite --test sqlite_existing` proves that an existing Decapod SQLite fixture opens without conversion, preserves schema and values, supports updates and reopen, handles NULL/REAL/blob/generated-key values, and fails closed for missing/read-only paths.
 - `cargo test --features sqlite --test storage_contract` proves SQLite transaction rollback, schema changes, foreign-key cascades, typed constraints, separate-connection refresh, read-only behavior, and a bounded native SQLite lock timeout.
-- `cargo tree --features sqlite` must show the intentional optional `rusqlite`/`libsqlite3-sys` local binding; it must not show a custom parser, snapshot/import crate, or a SQLite subprocess.
+- `cargo tree --features sqlite` must show only the small optional loader path; it must not show `rusqlite`, `libsqlite3-sys`, a bundled SQLite implementation, a custom parser, snapshot/import crate, or a SQLite subprocess.
+- The local runtime proof must load a host shared SQLite library without a link-time SQLite dependency; `DACTYL_SQLITE_LIBRARY` may be used when the host loader path is non-standard.
 - `cargo test --all-features` is the complete local and executing-Neon mock proof. Live Propodus remains an external `unavailable` prerequisite unless a separate deployment proof supplies it.
 - `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
