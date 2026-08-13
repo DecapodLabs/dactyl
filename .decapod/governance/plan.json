@@ -1,15 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "title": "Pure-Rust local SQLite import for Issue 77",
-  "intent": "Keep PR 78 local-only: remove all native SQLite bindings and implement the explicit SQLite-to-Dactyl import boundary with a bounded pure-Rust read-only reader, including INTEGER PRIMARY KEY rowid reconstruction. Defer Neon and Propodus feature parity to a separate issue.",
+  "title": "Real SQLite local connector for Issue 77",
+  "intent": "Keep PR 78 local-only: replace the handwritten JSON snapshot, parser, journal, and pure-Rust importer with a real SQLite connector that opens existing SQLite files unchanged, preserves the backend-neutral public API, proves parameterized values/constraints/read-only/atomic/schema behavior, and leaves Neon/Propodus hosting policy outside Dactyl.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kzwdcq5x0s3180"
   ],
   "proof_hooks": [
-    "cargo test --features sqlite,legacy-import",
-    "cargo tree --all-features",
-    "cargo clippy --features sqlite,legacy-import --all-targets -- -D warnings"
+    "cargo fmt --check; cargo test --all-features; cargo clippy --all-features --all-targets -- -D warnings; cargo tree --features sqlite; decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +23,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786588221Z"
+  "updated_at": "1786595595Z"
 }
