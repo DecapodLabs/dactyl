@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapter::Adapter;
 use crate::contract::{
-    AccessMode, AtomicResult, OpenOptions, Operation, OperationResult, StorageContext, WriteResult,
+    AccessMode, AtomicResult, OpenOptions, Operation, OperationKind, OperationResult,
+    StorageContext, WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
@@ -198,10 +199,11 @@ fn remote_error(status: u16, body: &[u8], operation: &str) -> DactylError {
             401 => AdapterErrorKind::Authentication,
             402 | 403 => AdapterErrorKind::Authorization,
             404 => AdapterErrorKind::NotFound,
-            408 | 409 => AdapterErrorKind::Conflict,
+            408 => AdapterErrorKind::Timeout,
+            409 => AdapterErrorKind::Conflict,
             429 => AdapterErrorKind::RateLimited,
             500 => AdapterErrorKind::Storage,
-            503 => AdapterErrorKind::Unavailable,
+            502..=504 => AdapterErrorKind::Unavailable,
             _ => AdapterErrorKind::Query,
         },
     };
@@ -247,14 +249,17 @@ impl Adapter for NeonAdapter {
             ));
         }
         let mut results = Vec::with_capacity(response.results.len());
-        for result in response.results {
-            if !result.columns.is_empty() || !result.rows.is_empty() {
-                results.push(OperationResult::Rows(rows_from_response(result)?));
-            } else {
-                results.push(OperationResult::Write(WriteResult {
-                    affected_rows: result.affected_rows.unwrap_or(0),
-                    generated_keys: result.generated_keys,
-                }));
+        for (operation, result) in operations.iter().zip(response.results) {
+            match operation.kind() {
+                OperationKind::Read => {
+                    results.push(OperationResult::Rows(rows_from_response(result)?));
+                }
+                OperationKind::Write | OperationKind::Schema => {
+                    results.push(OperationResult::Write(WriteResult {
+                        affected_rows: result.affected_rows.unwrap_or(0),
+                        generated_keys: result.generated_keys,
+                    }));
+                }
             }
         }
         Ok(AtomicResult { results })

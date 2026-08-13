@@ -38,6 +38,10 @@ pub struct DatastoreRoute {
     token: Option<String>,
 }
 
+const DATASTORE_ENV: &str = "DATASTORE";
+const DATASTORE_ROUTE_ENV: &str = "DATASTORE_ROUTE";
+const DATASTORE_TOKEN_ENV: &str = "DATASTORE_TOKEN";
+
 impl DatastoreRoute {
     pub fn sqlite(path: impl Into<String>) -> Self {
         Self {
@@ -67,15 +71,48 @@ impl DatastoreRoute {
         self.token.as_deref()
     }
 
-    /// Resolve `DATASTORE`, `DATASTORE_ROUTE`, and `DATASTORE_TOKEN`.
+    /// Resolve the ambient route configuration.
+    ///
+    /// `DATASTORE` is the sole selector. `DATASTORE_ROUTE` is required for
+    /// the selected backend, and `DATASTORE_TOKEN` is read only for Neon.
+    /// There is deliberately no implicit local fallback: a missing or empty
+    /// selector/route fails before an adapter is constructed.
     pub fn from_env() -> Result<Self, DactylError> {
-        let datastore = std::env::var("DATASTORE")
+        let datastore = std::env::var(DATASTORE_ENV)
             .map_err(|_| DactylError::Config("DATASTORE is not set: use sqlite or neon".into()))?;
-        let route = std::env::var("DATASTORE_ROUTE")
+        let route = std::env::var(DATASTORE_ROUTE_ENV)
             .map_err(|_| DactylError::Config("DATASTORE_ROUTE is not set".into()))?;
-        match datastore.as_str() {
+        Self::from_env_values(
+            Some(&datastore),
+            Some(&route),
+            std::env::var(DATASTORE_TOKEN_ENV).ok().as_deref(),
+        )
+    }
+
+    fn from_env_values(
+        datastore: Option<&str>,
+        route: Option<&str>,
+        token: Option<&str>,
+    ) -> Result<Self, DactylError> {
+        let datastore = datastore.ok_or_else(|| {
+            DactylError::Config("DATASTORE is not set: use sqlite or neon".into())
+        })?;
+        let route =
+            route.ok_or_else(|| DactylError::Config("DATASTORE_ROUTE is not set".into()))?;
+        if route.trim().is_empty() {
+            return Err(DactylError::Config(
+                "DATASTORE_ROUTE must not be empty".into(),
+            ));
+        }
+
+        match datastore {
             "sqlite" => Ok(Self::sqlite(route)),
-            "neon" => Ok(Self::neon(route, std::env::var("DATASTORE_TOKEN").ok())),
+            "neon" => Ok(Self::neon(
+                route,
+                token
+                    .filter(|value| !value.trim().is_empty())
+                    .map(str::to_owned),
+            )),
             other => Err(DactylError::Config(format!(
                 "invalid DATASTORE value {other:?}: use sqlite or neon"
             ))),
@@ -257,5 +294,46 @@ fn build_adapter(
                 ))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Datastore, DatastoreRoute};
+
+    #[test]
+    fn ambient_route_requires_selector_and_non_empty_route() {
+        assert!(DatastoreRoute::from_env_values(None, Some("/tmp/app.db"), None).is_err());
+        assert!(DatastoreRoute::from_env_values(Some("sqlite"), None, None).is_err());
+        assert!(DatastoreRoute::from_env_values(Some("sqlite"), Some("  "), None).is_err());
+        assert!(DatastoreRoute::from_env_values(Some("unknown"), Some("route"), None).is_err());
+    }
+
+    #[test]
+    fn ambient_selector_controls_backend_and_token_is_neon_only() {
+        let sqlite =
+            DatastoreRoute::from_env_values(Some("sqlite"), Some("/tmp/app.db"), Some("secret"))
+                .unwrap();
+        assert_eq!(sqlite.datastore(), Datastore::Sqlite);
+        assert_eq!(sqlite.route(), "/tmp/app.db");
+        assert_eq!(sqlite.token(), None);
+
+        let neon = DatastoreRoute::from_env_values(
+            Some("neon"),
+            Some("https://propodus.example"),
+            Some("secret"),
+        )
+        .unwrap();
+        assert_eq!(neon.datastore(), Datastore::Neon);
+        assert_eq!(neon.route(), "https://propodus.example");
+        assert_eq!(neon.token(), Some("secret"));
+
+        let blank_token = DatastoreRoute::from_env_values(
+            Some("neon"),
+            Some("https://propodus.example"),
+            Some("  "),
+        )
+        .unwrap();
+        assert_eq!(blank_token.token(), None);
     }
 }

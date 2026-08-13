@@ -71,6 +71,12 @@ async fn query(
             })),
         );
     }
+    if sql == "timeout_status" {
+        return (StatusCode::REQUEST_TIMEOUT, Json(json!({})));
+    }
+    if sql == "gateway_status" {
+        return (StatusCode::BAD_GATEWAY, Json(json!({})));
+    }
     if sql.starts_with("select") {
         (
             StatusCode::OK,
@@ -108,6 +114,9 @@ async fn batch(
                 "error": {"code": "transaction_aborted", "message": "operation rolled back"}
             })),
         );
+    }
+    if request["operations"][0]["sql"] == "empty_read" {
+        return (StatusCode::OK, Json(json!({"results": [{"rows": []}]})));
     }
     (
         StatusCode::OK,
@@ -191,6 +200,22 @@ fn neon_atomic_batch_preserves_results_and_explicit_keys() {
 }
 
 #[test]
+fn neon_empty_read_remains_a_rows_result() {
+    with_server(|endpoint, _requests| {
+        let db =
+            Connection::open_with_context(DatastoreRoute::neon(endpoint, None), Some(context()))
+                .unwrap();
+        let result = db
+            .atomic(&[Operation::read("empty_read", Vec::new())])
+            .unwrap();
+        match &result.results[0] {
+            OperationResult::Rows(rows) => assert!(rows.is_empty()),
+            other => panic!("unexpected result: {other:?}"),
+        }
+    });
+}
+
+#[test]
 fn neon_matches_the_application_read_write_shape() {
     with_server(|endpoint, requests| {
         let db = Connection::open_with_context(
@@ -252,6 +277,25 @@ fn neon_maps_stable_remote_errors_without_string_parsing() {
             Some(AdapterErrorKind::VersionConflict)
         );
         assert_eq!(error.adapter_code(), Some("version_conflict"));
+    });
+}
+
+#[test]
+fn neon_maps_http_status_fallbacks_to_typed_transport_errors() {
+    with_server(|endpoint, _requests| {
+        let db =
+            Connection::open_with_context(DatastoreRoute::neon(endpoint, None), Some(context()))
+                .unwrap();
+        let timeout = db.write("timeout_status", &[]).unwrap_err();
+        assert_eq!(timeout.adapter_kind(), Some(AdapterErrorKind::Timeout));
+        assert_eq!(timeout.adapter_code(), None);
+
+        let unavailable = db.write("gateway_status", &[]).unwrap_err();
+        assert_eq!(
+            unavailable.adapter_kind(),
+            Some(AdapterErrorKind::Unavailable)
+        );
+        assert_eq!(unavailable.adapter_code(), None);
     });
 }
 

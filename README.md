@@ -179,6 +179,15 @@ let result = db.atomic(&[
 | `DATASTORE_TOKEN` | Optional opaque bearer token for Neon |
 | `DACTYL_SQLITE_LIBRARY` | Optional explicit host SQLite shared-library path for non-standard loader paths |
 
+`DATASTORE` is the only ambient selector. Dactyl requires a non-empty
+`DATASTORE_ROUTE` for whichever selector is chosen and fails before adapter
+construction when either value is missing, empty, or unsupported. There is no
+implicit SQLite fallback, so a deployment cannot silently write to a local
+file when its Neon configuration is malformed. `DATASTORE_TOKEN` is read only
+for `neon`; an unset or blank token is treated as absent and does not change
+the context requirement. Explicit `Connection::open` routes bypass ambient
+selection without changing the free-function signatures.
+
 The database schema and backend endpoint contract are application-owned. Dactyl
 executes caller-supplied schema statements but does not assign migration ids,
 order migrations, create hidden tables, or administer recovery policy.
