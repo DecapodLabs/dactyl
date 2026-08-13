@@ -69,6 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Harden ambient SQLite/Neon route resolution: `DATASTORE` remains the sole
+  selector, empty routes fail closed, blank Neon tokens are ignored, and Neon
+  atomic responses are classified by the requested operation kind so empty
+  reads cannot be mistaken for writes.
 - Issue #77 now describes the direct SQLite connector boundary: the `sqlite`
   feature dynamically loads a host SQLite shared library through Dactyl's
   private C ABI, and existing SQLite files open without conversion.

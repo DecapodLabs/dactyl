@@ -82,6 +82,22 @@ pub enum ApiError {
 - `Connection::inspect_schema()` is the backend-neutral catalog for local SQLite. It reports tables, columns, defaults, primary/unique keys, indexes, foreign keys, delete actions, and row counts. `Row::get_blob` reads the canonical JSON byte-array row shape. Neon inspection fails as `unsupported_schema_inspection`.
 - `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages. The Neon adapter maps `constraint_failed` / unique / not-null / foreign-key violation codes to `AdapterErrorKind::Constraint` and busy/locked/timeout codes to the matching contention kinds.
 
+#### Ambient route and batch result hardening
+
+`DATASTORE` is the sole ambient selector; `DATASTORE_ROUTE` is mandatory and
+must be non-empty for both `sqlite` and `neon`. Dactyl does not silently fall
+back to local SQLite when the selected route is incomplete. `DATASTORE_TOKEN`
+is read only for Neon, and a blank value is treated as absent. The explicit
+`Connection::open` path remains available for callers that do not want ambient
+selection.
+
+Neon `/batch` results are normalized using the corresponding caller-supplied
+`OperationKind`, not by inspecting whether the response happens to contain
+columns or rows. This preserves an empty remote read as `OperationResult::Rows`
+and keeps write/generated-key results in `OperationResult::Write` even when a
+provider includes auxiliary row data. HTTP 408/502/503/504 fallbacks map to
+typed timeout/unavailable outcomes; provider error codes still take precedence.
+
 ### Storage-context transport contract
 
 | Consumer | Request field | Local behavior | Neon behavior | Typed failures |
@@ -145,7 +161,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c12fb0e2f65c1f5041582e9c407886969302c982a4c5e92cf629ee157143d3ee`
+- Repository signal fingerprint: `d577d6f04f4dc668f2833f953cdd4c3854c28b689bbdff85e5a9b2343e46641c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
