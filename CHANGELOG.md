@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/DecapodLabs/dactyl/compare/v0.7.0...v0.8.0) (2026-08-13)
+
+
+### Features
+
+* add explicit SQLite-to-Dactyl import for issue 77 ([0543cc5](https://github.com/DecapodLabs/dactyl/commit/0543cc5a1a6282232ec3a11029cc1847fd72cd01))
+* inspect local schema and round-trip blobs ([e0ae7a0](https://github.com/DecapodLabs/dactyl/commit/e0ae7a0353b82931910daa0408026ff230da1236))
+* make issue 77 import pure rust ([3f2d92c](https://github.com/DecapodLabs/dactyl/commit/3f2d92c42405a5e0d9f9293e28b8bef9f399279b))
+* make SQLite import pure Rust for [#77](https://github.com/DecapodLabs/dactyl/issues/77) ([642829d](https://github.com/DecapodLabs/dactyl/commit/642829d198365696f59456ae1559981b13745875))
+* **sqlite:** load host SQLite through Dactyl FFI ([479a856](https://github.com/DecapodLabs/dactyl/commit/479a856449be8980dded0ae2eb4bf03e257a8740))
+* **sqlite:** use a real SQLite local connector ([3965ca1](https://github.com/DecapodLabs/dactyl/commit/3965ca1b2beb5ad0df2bf43fa800d69a0f4ec353))
+
+
+### Bug Fixes
+
+* **sqlite:** reject malformed existing files ([3874af3](https://github.com/DecapodLabs/dactyl/commit/3874af31aa2f9da58ddb6315a88384786febc549))
+
 ## [0.7.0](https://github.com/DecapodLabs/dactyl/compare/v0.6.5...v0.7.0) (2026-08-12)
 
 
