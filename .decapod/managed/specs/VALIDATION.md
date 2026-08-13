@@ -148,6 +148,13 @@ flowchart LR
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
+## Codebase Attestation
+
+- Repository signal fingerprint: `2676b9ee4f370665d87731ca527c43e46617ffc0acd8941ef69a05c5dd7528a0`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Validation Overlay
@@ -208,7 +215,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2676b9ee4f370665d87731ca527c43e46617ffc0acd8941ef69a05c5dd7528a0`
+- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
 - Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
