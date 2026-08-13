@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2](https://github.com/DecapodLabs/dactyl/compare/v0.8.1...v0.8.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* keep release contract version agnostic ([fd7f2e4](https://github.com/DecapodLabs/dactyl/commit/fd7f2e4b03737be2f0fddff627b32f35586958e4))
+* keep Rust Contract release proof version agnostic ([37282b5](https://github.com/DecapodLabs/dactyl/commit/37282b5f2603a688c4eb1512b26c82d6b804c230))
+* keep Rust Contract release proof version agnostic ([000a729](https://github.com/DecapodLabs/dactyl/commit/000a7296f648a80192443ce81a1e1c85a9cbeba0))
+
 ## [0.8.1](https://github.com/DecapodLabs/dactyl/compare/v0.8.0...v0.8.1) (2026-08-13)
 
 
