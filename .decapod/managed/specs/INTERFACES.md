@@ -77,7 +77,9 @@ pub enum ApiError {
 - `StorageContext` is a versioned opaque `{ version: u16, payload: JSON object }` envelope supplied through `Connection::open_with_context` or `Connection::open_with_options_and_context`. Dactyl validates only a non-zero version and object payload shape; Decapod/Propodus own the payload meaning.
 - Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`. Neon JSON transport encodes `Blob` as an array of bytes so remote writes can bind the same values as local SQLite.
 - `Rows` owns normalized `Row` values. SQLite and Neon use the same column/value representation and typed row accessors, including explicit NULL and conversion failures.
-- SQL is never interpolated or rewritten for domain meaning. The local adapter parses only its bounded storage subset, including caller-owned DDL, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
+- SQL is never interpolated or rewritten for domain meaning. The local adapter binds parameters and delegates SQL to the real SQLite connection, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
+- The local route file is an ordinary SQLite database. Read/write opens create missing paths; read-only opens require an existing path. SQLite owns file format compatibility, locking, journaling, and SQL execution. Dactyl configures the busy timeout and maps native failures to stable `AdapterErrorKind` categories.
+- `Connection::inspect_schema()` is the backend-neutral catalog for local SQLite. It reports tables, columns, defaults, primary/unique keys, indexes, foreign keys, delete actions, and row counts. `Row::get_blob` reads the canonical JSON byte-array row shape. Neon inspection fails as `unsupported_schema_inspection`.
 - `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages. The Neon adapter maps `constraint_failed` / unique / not-null / foreign-key violation codes to `AdapterErrorKind::Constraint` and busy/locked/timeout codes to the matching contention kinds.
 
 ### Storage-context transport contract
@@ -143,7 +145,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `19b665474fc27392b2edb34d4c39948e120fd37cced3c6a64855e9da4a46d87c`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
+- Repository signal fingerprint: `b71bd1cffaed13db8a75a4ebc3a4ea93a9a6eb088f3249bc9b4c76bc2f888d0e`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,6 +1,6 @@
 # dactyl
 
-[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.98.2-dc2626)](https://github.com/DecapodLabs/decapod)
+[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.98.3-dc2626)](https://github.com/DecapodLabs/decapod)
 
 `dactyl-db` is a lightweight application-layer datastore for read/write-heavy
 apps that need the same small Rust surface over a local store and Vercel Neon.
@@ -35,21 +35,33 @@ SQLite and Neon use the same application contract:
   rate-limit, and protocol failures. Remote stable error codes are available
   through `DactylError::adapter_code()` without parsing provider messages.
 
-The local implementation is Dactyl-owned Rust. It has no `sqlite`, `rusqlite`,
-`libsqlite3-sys`, or SQLite subprocess dependency. The `sqlite` feature and
-route constructor remain as compatibility names for existing callers, but the
-local file is a versioned Dactyl snapshot, not a SQLite file. A SQLite header is
-rejected with a typed capability error; migration/import belongs to the caller.
+The local implementation is a thin private C-ABI connection behind the same
+public contract. The optional `sqlite` feature dynamically loads the host's
+shared SQLite library at runtime; Dactyl does not compile or bundle SQLite,
+and does not duplicate SQLite's file format, parser, pager, journal, or query
+planner. The route name and `DATASTORE=sqlite` setting therefore mean what
+they say: the requested path is an ordinary SQLite database.
 
-The local SQL surface is intentionally bounded: caller-supplied `CREATE TABLE`
-and multi-statement schema batches, `ALTER TABLE ... ADD`, `CREATE [UNIQUE]
-INDEX`, `DROP TABLE`, `DROP INDEX`, `INSERT`, `UPDATE`, `DELETE`, and `SELECT`
-with predicates and basic ordering/limits. Schema operations preserve literal
-defaults, `NOT NULL`, composite `PRIMARY KEY`/`UNIQUE`, foreign keys with
-restrict/cascade delete behavior, and caller-owned indexes. Indexes are
-structural constraints, not a query planner. Unsupported SQL fails with a
-typed capability/query error rather than silently changing the request. This
-is a storage primitive, not a planner or schema owner.
+## Local SQLite route
+
+`DATASTORE=sqlite DATASTORE_ROUTE=/path/to/app.db` opens the file directly.
+Existing SQLite files remain readable and writable without conversion. A
+read/write route creates a missing file and its parent directory; a read-only
+route requires an existing file. SQLite supplies locking, journaling, crash
+recovery, and its supported SQL surface. Dactyl applies the configured busy
+timeout and maps SQLite busy, locked, constraint, read-only, corrupt, and
+storage outcomes into its typed error categories.
+
+The [SQLite connector report](docs/whitepapers/dactyl-sqlite-connector.md)
+records the boundary and the compatibility proof. The same report is published
+from `docs/` as GitHub Pages.
+
+`Connection::inspect_schema()` returns a backend-neutral catalog containing
+tables, columns, nullability/defaults, primary and unique keys, indexes,
+foreign keys, delete actions, and row counts. Callers do not need to issue
+SQLite-specific catalog queries. Blobs are normalized to JSON arrays of bytes
+and are read back with `Row::get_blob`; NULL, text, integer, REAL, and blob
+values remain distinct through the public row contract.
 
 Schema versioning, migration ordering, backups, import from legacy stores,
 retry/backoff, idempotency keys, and domain-level version/CAS policy remain

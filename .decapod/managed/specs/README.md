@@ -3,11 +3,12 @@
 Canonical path: `.decapod/managed/specs/`.
 These files are the project-local contract for humans and agents.
 
-## Snapshot
-- Project: this repository
-- Outcome: Define the intended user-visible outcome.
-- Detected languages: not detected yet
-- Detected surfaces: not detected yet
+## Connector
+- Project: dactyl-db
+- Outcome: Same application read/write/atomic contract over a real local SQLite file and remote Neon, without exposing adapter internals or cloud policy.
+- Public methodology docs: `docs/` (GitHub Pages source), including `docs/whitepapers/dactyl-sqlite-connector.md`.
+- Detected languages: Rust
+- Detected surfaces: cargo, rust
 
 ## How to use this folder
 - [INTENT.md](./INTENT.md): what success means and what is explicitly out of scope.
@@ -48,7 +49,7 @@ These files are the project-local contract for humans and agents.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `19b665474fc27392b2edb34d4c39948e120fd37cced3c6a64855e9da4a46d87c`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
+- Repository signal fingerprint: `b71bd1cffaed13db8a75a4ebc3a4ea93a9a6eb088f3249bc9b4c76bc2f888d0e`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

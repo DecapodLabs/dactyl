@@ -15,6 +15,7 @@
 
 #![cfg(feature = "sqlite")]
 
+#[cfg(feature = "neon")]
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -23,7 +24,9 @@ use dactyl_db::{
     AccessMode, AdapterErrorKind, Connection, DatastoreRoute, GeneratedKey, OpenOptions, Operation,
     OperationResult, Parameter, StorageContext,
 };
-use serde_json::{json, Value};
+use serde_json::json;
+#[cfg(feature = "neon")]
+use serde_json::Value;
 use tempfile::NamedTempFile;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -383,7 +386,6 @@ fn concurrent_scoped_writes_and_cleanup(path: &str) {
     assert_eq!(rows.len(), 16);
     db.write("drop table scoped_items", &[]).unwrap();
     assert!(db.read("select writer from scoped_items", &[]).is_err());
-    assert!(!std::path::Path::new(&format!("{path}.lock")).exists());
 }
 
 fn run_local_matrix(path: &str) -> Vec<CaseOutcome> {

@@ -1,6 +1,5 @@
 #![cfg(feature = "sqlite")]
 
-use std::fs::File;
 use std::time::Duration;
 
 use dactyl_db::{
@@ -138,7 +137,7 @@ fn read_only_open_is_non_mutating_and_typed() {
     assert!(matches!(
         error,
         dactyl_db::DactylError::Adapter {
-            kind: AdapterErrorKind::ReadOnly,
+            kind: AdapterErrorKind::NotFound,
             ..
         }
     ));
@@ -148,8 +147,13 @@ fn read_only_open_is_non_mutating_and_typed() {
 fn lock_timeout_is_typed_and_bounded() {
     let file = NamedTempFile::new().unwrap();
     let path = file.path().to_string_lossy().into_owned();
-    let lock_path = format!("{path}.lock");
-    let _lock = File::create(&lock_path).unwrap();
+    let setup = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    setup
+        .write("create table app (id integer primary key)", &[])
+        .unwrap();
+    drop(setup);
+    let blocker = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    blocker.write("BEGIN EXCLUSIVE", &[]).unwrap();
     let db = Connection::open_with_options(
         DatastoreRoute::sqlite(&path),
         OpenOptions {
@@ -158,17 +162,13 @@ fn lock_timeout_is_typed_and_bounded() {
         },
     )
     .unwrap();
-    let error = db
-        .write("create table app (id integer primary key)", &[])
-        .unwrap_err();
+    let error = db.write("insert into app default values", &[]).unwrap_err();
     assert!(matches!(
-        error,
-        dactyl_db::DactylError::Adapter {
-            kind: AdapterErrorKind::Timeout,
-            ..
-        }
+        error.adapter_kind(),
+        Some(AdapterErrorKind::Busy | AdapterErrorKind::Locked)
     ));
-    std::fs::remove_file(lock_path).unwrap();
+    assert!(error.is_retryable());
+    blocker.write("ROLLBACK", &[]).unwrap();
 }
 
 #[test]

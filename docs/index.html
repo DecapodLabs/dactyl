@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dactyl Docs</title>
+  <meta name="description" content="Public documentation for dactyl-db, including the SQLite connector report.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="site-frame">
+    <header class="masthead">
+      <a class="wordmark" href="index.html">Dactyl Docs</a>
+      <div class="kicker">DecapodLabs / dactyl-db</div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="kicker">Public documentation</div>
+        <h1>The local route is a real SQLite file.</h1>
+        <p class="lede">
+          Dactyl keeps a thin backend-neutral application contract while SQLite
+          owns local file compatibility, locking, journaling, and SQL execution.
+        </p>
+      </div>
+      <aside class="panel">
+        <strong>Confirmed from current code</strong>
+        Existing SQLite fixtures open unchanged through
+        <code>Connection::open</code>. Read/write opens create missing paths;
+        read-only opens fail closed when the database is absent.
+      </aside>
+    </section>
+
+    <section class="card-grid">
+      <article class="paper-card">
+        <div class="kicker">Technical report 001</div>
+        <h2>Dactyl's SQLite Connector Boundary</h2>
+        <p>
+          How Dactyl preserves a small application API over a real local SQLite
+          file and the remote Neon/Propodus route.
+        </p>
+        <div class="meta">
+          <span>dactyl-db 0.7.0</span>
+          <span>2026-08-12</span>
+          <span>Local store methodology</span>
+        </div>
+        <a class="cta" href="whitepapers/dactyl-sqlite-connector.html">Read the report</a>
+        <p class="note">Markdown source: <a href="whitepapers/dactyl-sqlite-connector.md">dactyl-sqlite-connector.md</a></p>
+      </article>
+      <article class="note-card">
+        <div class="kicker">What this site is</div>
+        <h2>Pages from <code>docs/</code></h2>
+        <p>
+          This directory is the GitHub Pages source. Relative links keep the
+          site correct both at the repository root and at
+          <code>/dactyl/</code> on github.io. Live hosting still requires the
+          repository Pages source to be this workflow.
+        </p>
+        <p>
+          Operator quickstart remains in the repository
+          <a href="https://github.com/DecapodLabs/dactyl">README</a>.
+          These pages do not replace living specs under
+          <code>.decapod/managed/specs/</code>.
+        </p>
+      </article>
+    </section>
+  </div>
+</body>
+</html>

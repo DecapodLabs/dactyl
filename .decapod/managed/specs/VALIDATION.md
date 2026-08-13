@@ -54,6 +54,11 @@ flowchart LR
 - `decapod validate`
 - Required test commands:
 - `cargo test --all-features`
+- `cargo test --features sqlite --test sqlite_existing` proves that an existing Decapod SQLite fixture opens without conversion, preserves schema and values, supports updates and reopen, handles NULL/REAL/blob/generated-key values, and fails closed for missing/read-only paths.
+- `cargo test --features sqlite --test storage_contract` proves SQLite transaction rollback, schema changes, foreign-key cascades, typed constraints, separate-connection refresh, read-only behavior, and a bounded native SQLite lock timeout.
+- `cargo tree --features sqlite` must show only the small optional loader path; it must not show `rusqlite`, `libsqlite3-sys`, a bundled SQLite implementation, a custom parser, snapshot/import crate, or a SQLite subprocess.
+- The local runtime proof must load a host shared SQLite library without a link-time SQLite dependency; `DACTYL_SQLITE_LIBRARY` may be used when the host loader path is non-standard.
+- `cargo test --all-features` is the complete local and executing-Neon mock proof. Live Propodus remains an external `unavailable` prerequisite unless a separate deployment proof supplies it.
 - `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
 
@@ -138,6 +143,25 @@ flowchart LR
 - Repository signal fingerprint: `919fa7cd8823e9f832ad87dd3ab6d70585d8789f120e4dc1d70348677d2713ac`
 - Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
 
+## Codebase Attestation
+
+- Repository signal fingerprint: `cf7a521e61f99ad1452855e5decc7daacf95fd68f9b5d0c516ca4f127bf5ae74`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `2676b9ee4f370665d87731ca527c43e46617ffc0acd8941ef69a05c5dd7528a0`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Validation Overlay
@@ -198,7 +222,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `19b665474fc27392b2edb34d4c39948e120fd37cced3c6a64855e9da4a46d87c`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
+- Repository signal fingerprint: `b71bd1cffaed13db8a75a4ebc3a4ea93a9a6eb088f3249bc9b4c76bc2f888d0e`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

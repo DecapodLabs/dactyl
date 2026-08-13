@@ -435,6 +435,35 @@ impl Row {
         Ok(&self.values[i])
     }
 
+    /// Canonical blob cell: a JSON array of byte integers `0..=255`.
+    ///
+    /// This is the only blob shape Dactyl stores locally. Callers must not
+    /// interpret a JSON string or object as a blob.
+    pub fn get_blob<I: RowIndex>(&self, index: I) -> Result<Vec<u8>, DactylError> {
+        let i = self.idx(&index)?;
+        match &self.values[i] {
+            serde_json::Value::Null => Err(Self::null_err(&index)),
+            serde_json::Value::Array(values) => values
+                .iter()
+                .map(|value| {
+                    value
+                        .as_u64()
+                        .and_then(|byte| u8::try_from(byte).ok())
+                        .ok_or_else(|| {
+                            DactylError::Conversion(format!(
+                                "blob cell at column {:?} is not an array of bytes",
+                                index
+                            ))
+                        })
+                })
+                .collect(),
+            other => Err(DactylError::Conversion(format!(
+                "cannot read {other:?} as blob at column {:?}",
+                index
+            ))),
+        }
+    }
+
     fn null_err<I: std::fmt::Debug>(index: &I) -> DactylError {
         DactylError::Conversion(format!(
             "column {:?} is NULL; use Option<T> with get for nullable columns",
@@ -636,6 +665,11 @@ mod tests {
             serde_json::from_value::<Parameter>(encoded).unwrap(),
             Parameter::Blob(vec![1, 2, 3])
         );
+        let row = Row {
+            columns: vec!["payload".into()],
+            values: vec![json!([1, 2, 3])],
+        };
+        assert_eq!(row.get_blob("payload").unwrap(), vec![1, 2, 3]);
     }
 
     #[test]

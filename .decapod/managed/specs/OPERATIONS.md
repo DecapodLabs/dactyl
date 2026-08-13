@@ -52,8 +52,21 @@ tests, and the corresponding Decapod projections as one reconciled state;
 validation must pass before that state is promoted to a protected checkout.
 
 **CI/CD Notes**:
-- The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.2` and uses it as the cache key to prevent stale cache bugs.
+- The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.3` and uses it as the cache key to prevent stale cache bugs.
 - The `release-please` action is used to automate the release process, creating a single PR for Cargo.toml versions and changelog, and publishing upon merge.
+- The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md`.
+
+## Local SQLite operations
+
+The local route path is an ordinary SQLite database. Operators may use standard SQLite backup, integrity-check, and journal/WAL tooling appropriate to the configured SQLite mode; Dactyl does not add sidecar storage.
+
+| Artifact | Meaning | Recovery |
+|---|---|---|
+| `$ROUTE` | SQLite database file | use a SQLite-compatible backup or restore procedure |
+| SQLite journal/WAL files | SQLite-managed durability state | let SQLite recover them; do not treat them as Dactyl artifacts |
+| `OpenOptions::lock_timeout` | SQLite busy timeout | retry or surface the typed busy/locked error; Dactyl does not retry |
+
+Read-only opens never create or mutate a database. Existing SQLite files are opened directly; there is no migration/import command in Dactyl. Decapod remains responsible for explicit schema and migration policy.
 
 ## Capacity Planning
 - Traffic patterns:
@@ -128,7 +141,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `19b665474fc27392b2edb34d4c39948e120fd37cced3c6a64855e9da4a46d87c`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
+- Repository signal fingerprint: `b71bd1cffaed13db8a75a4ebc3a4ea93a9a6eb088f3249bc9b4c76bc2f888d0e`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
