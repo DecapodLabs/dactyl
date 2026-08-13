@@ -7,6 +7,7 @@
 mod adapter;
 mod contract;
 mod rows;
+mod schema;
 
 pub mod error;
 
@@ -16,6 +17,12 @@ pub use crate::contract::{
 };
 pub use crate::error::{AdapterErrorKind, DactylError};
 pub use crate::rows::{Parameter, Row, Rows};
+pub use crate::schema::{
+    ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
+};
+
+#[cfg(feature = "legacy-import")]
+pub use crate::adapter::sqlite::{import_sqlite_file, ImportReport};
 
 use crate::adapter::Adapter;
 
@@ -166,6 +173,11 @@ impl Connection {
 
     pub fn access_mode(&self) -> AccessMode {
         self.adapter.access_mode()
+    }
+
+    /// Inspect the local store catalog without SQLite PRAGMA or sqlite_master.
+    pub fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
+        self.adapter.inspect_schema()
     }
 }
 
