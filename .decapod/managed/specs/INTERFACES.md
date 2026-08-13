@@ -77,10 +77,9 @@ pub enum ApiError {
 - `StorageContext` is a versioned opaque `{ version: u16, payload: JSON object }` envelope supplied through `Connection::open_with_context` or `Connection::open_with_options_and_context`. Dactyl validates only a non-zero version and object payload shape; Decapod/Propodus own the payload meaning.
 - Parameters are always adapter-bound, never interpolated. `Parameter` covers `Null`, `Bool`, `Integer`, `Real`, `Text`, and `Blob`. Neon JSON transport encodes `Blob` as an array of bytes so remote writes can bind the same values as local SQLite.
 - `Rows` owns normalized `Row` values. SQLite and Neon use the same column/value representation and typed row accessors, including explicit NULL and conversion failures.
-- SQL is never interpolated or rewritten for domain meaning. The local adapter parses only its bounded storage subset, including caller-owned DDL, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
-- The local route file is a Dactyl snapshot, not a SQLite database. The published bytes are UTF-8 JSON `{ "format_version": 2, "tables": ..., "indexes": ... }`. Sidecars are `$ROUTE.wal` (checksummed crash journal) and `$ROUTE.lock`. Bytes that start with `SQLite format 3` fail as `AdapterErrorKind::Capability` with "SQLite files are not accepted; import into the Dactyl format". Unknown `format_version` values also fail as `Capability`.
-- Explicit conversion is `import_sqlite_file(source, dest)` behind `legacy-import`, plus the `dactyl-import` binary. The implementation is a bounded pure-Rust read-only SQLite file reader; no native SQLite binding or subprocess is allowed. Stable import codes: `missing_input`, `not_sqlite`, `already_dactyl`, `destination_is_sqlite`, `divergent_destination`, `unsupported_schema`, `unsupported_value`, `corrupt_input`, `read_only_destination`, `replacement_failed`. Same-path import backs up to `$path.legacy-sqlite`. Re-import of an already converted identical snapshot is idempotent.
-- `Connection::inspect_schema()` is the backend-neutral catalog. `Row::get_blob` reads the canonical blob shape (JSON array of bytes). Neon inspection fails as `unsupported_schema_inspection`.
+- SQL is never interpolated or rewritten for domain meaning. The local adapter binds parameters and delegates SQL to the real SQLite connection, while Neon forwards the SQL transport request. Dactyl has no schema bootstrap, migration API, retry policy, idempotency policy, analytics, or business-intelligence behavior.
+- The local route file is an ordinary SQLite database. Read/write opens create missing paths; read-only opens require an existing path. SQLite owns file format compatibility, locking, journaling, and SQL execution. Dactyl configures the busy timeout and maps native failures to stable `AdapterErrorKind` categories.
+- `Connection::inspect_schema()` is the backend-neutral catalog for local SQLite. It reports tables, columns, defaults, primary/unique keys, indexes, foreign keys, delete actions, and row counts. `Row::get_blob` reads the canonical JSON byte-array row shape. Neon inspection fails as `unsupported_schema_inspection`.
 - `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages. The Neon adapter maps `constraint_failed` / unique / not-null / foreign-key violation codes to `AdapterErrorKind::Constraint` and busy/locked/timeout codes to the matching contention kinds.
 
 ### Storage-context transport contract
@@ -146,7 +145,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

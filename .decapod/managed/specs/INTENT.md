@@ -17,10 +17,10 @@
 <!-- decapod:declared-capabilities:end -->
 
 ## Product Outcome
-- Establish Dactyl as the small application-layer database provider for read/write-heavy apps, targeted for the v0.7.0 release. The same normalized reads, explicit writes, opaque atomic batches, and access modes must work against the lightweight pure-Rust local store and remote Vercel Neon without exposing backend handles or adding database administration behavior.
+- Establish Dactyl as the small application-layer database provider for read/write-heavy apps, targeted for the v0.7.0 release. The same normalized reads, explicit writes, opaque atomic batches, and access modes must work against a real local SQLite file and remote Vercel Neon without exposing backend handles or adding database administration behavior.
 
 ## What This Project Is
-dactyl-db is a Rust application driver over a Dactyl-owned local snapshot store and remote Vercel Neon. Dactyl selects the physical route, binds application values, executes only its documented bounded local SQL subset, forwards remote requests with a versioned opaque storage context, and normalizes rows, write results, atomic results, and typed failures. The local file is a versioned Dactyl JSON snapshot, not a SQLite database; the `sqlite` route name is compatibility only. Database administration, schema ownership, migration order, query planning, analytics, retries, idempotency, tenancy, authorization, SQLite import, and business intelligence remain outside the crate.
+dactyl-db is a Rust application driver over a real local SQLite file and remote Vercel Neon. Dactyl selects the physical route, binds application values, delegates SQL execution and file durability to SQLite, forwards remote requests with a versioned opaque storage context, and normalizes rows, write results, atomic results, schema projections, and typed failures. Database administration, schema ownership, migration order, query planning, analytics, retries, idempotency, tenancy, authorization, and business intelligence remain outside the crate.
 
 Key operating facts:
 - **Primary languages**: Rust
@@ -67,8 +67,8 @@ flowchart LR
 - [x] Local SQLite proves the backend-neutral fixture matrix in `tests/storage_fixtures.rs`: parameterized reads/writes, explicit keys, conditional CAS/zero-row updates, atomic state-plus-event commit and rollback, read-only rejection, typed constraint errors, concurrent scoped writes, deterministic `DROP` cleanup, and storage-context no-op when cloud tenancy fields are present or absent.
 - [x] The same fixture cases run through the Neon adapter against an executing in-process mock; live Propodus/Vercel Neon is recorded as `unavailable` unless `DACTYL_LIVE_PROPODUS_ROUTE` is set, and a skipped live backend is never reported as passed.
 - [x] Remote query and atomic requests preserve the versioned opaque context; local operations remain context-neutral; missing remote context fails closed with typed authentication/protocol errors; remote authorization denials surface as `AdapterErrorKind::Authorization`.
-- [x] The local published file is a Dactyl snapshot (`format_version` 2 JSON) and a SQLite magic header is rejected as `AdapterErrorKind::Capability`. The methodology is recorded in `docs/whitepapers/dactyl-store-format.md` and served from `docs/` as GitHub Pages.
-- [x] Issue #77: an existing SQLite file can be converted through a pure-Rust `legacy-import` reader without `Connection::open` accepting the SQLite header. A representative Decapod catalog and fixture prove parse, import, reopen, blob round-trip, idempotency, deterministic output, and fail-closed outcomes.
+- [x] The local route opens real SQLite files through the optional `sqlite` feature. Existing files open unchanged; read/write creation, read-only access, SQLite locking/journaling, typed errors, and the backend-neutral schema projection are covered by tests.
+- [x] Issue #77's revised connector requirement is proved by `tests/sqlite_existing.rs`: the checked-in Decapod fixture opens without conversion, preserves catalog and values, accepts updates, reopens successfully, and covers NULL/REAL/blob/generated-key and missing/read-only behavior.
 - [ ] Live Propodus/Vercel Neon deployment, route translation, and provider CAS/`version_conflict` proof remain a follow-up issue.
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
@@ -124,7 +124,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

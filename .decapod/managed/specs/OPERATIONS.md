@@ -54,19 +54,19 @@ validation must pass before that state is promoted to a protected checkout.
 **CI/CD Notes**:
 - The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.3` and uses it as the cache key to prevent stale cache bugs.
 - The `release-please` action is used to automate the release process, creating a single PR for Cargo.toml versions and changelog, and publishing upon merge.
-- The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The whitepaper is also readable from the tree at `docs/whitepapers/dactyl-store-format.md`.
+- The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md`.
 
-## Local snapshot operations
+## Local SQLite operations
 
-The local route path is a Dactyl snapshot, not a SQLite database. Operators must not point `sqlite3`, Litestream, or SQLite backup agents at `DATASTORE_ROUTE`.
+The local route path is an ordinary SQLite database. Operators may use standard SQLite backup, integrity-check, and journal/WAL tooling appropriate to the configured SQLite mode; Dactyl does not add sidecar storage.
 
 | Artifact | Meaning | Recovery |
 |---|---|---|
-| `$ROUTE` | published JSON snapshot | copy is a backup of published state |
-| `$ROUTE.wal` | checksummed journal | replayed only on the next read-write open |
-| `$ROUTE.lock` | exclusive writer lock | leftover lock blocks writers until removed or timeout |
+| `$ROUTE` | SQLite database file | use a SQLite-compatible backup or restore procedure |
+| SQLite journal/WAL files | SQLite-managed durability state | let SQLite recover them; do not treat them as Dactyl artifacts |
+| `OpenOptions::lock_timeout` | SQLite busy timeout | retry or surface the typed busy/locked error; Dactyl does not retry |
 
-A leftover valid journal plus a read-only open is a typed `ReadOnly` failure, not silent recovery. Header confusion (opening a SQLite file as Dactyl, or a Dactyl file as SQLite) is a capability/operator error. Convert leftover SQLite files with the pure-Rust `dactyl-import` / `import_sqlite_file` boundary before pointing `DATASTORE_ROUTE` at the path. Same-path import leaves `$path.legacy-sqlite` as the recoverable source.
+Read-only opens never create or mutate a database. Existing SQLite files are opened directly; there is no migration/import command in Dactyl. Decapod remains responsible for explicit schema and migration policy.
 
 ## Capacity Planning
 - Traffic patterns:
@@ -141,7 +141,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26615da10af8433ac3e96e07d84de01eb6ed703536d5f4dd9d70991f48d03f2d`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `7de6b8b4e6af5d53680f6919ab4ce9fc8c676ac9ef9663ce51e75026b6f7ab36`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (8 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
