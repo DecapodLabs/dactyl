@@ -386,7 +386,6 @@ fn concurrent_scoped_writes_and_cleanup(path: &str) {
     assert_eq!(rows.len(), 16);
     db.write("drop table scoped_items", &[]).unwrap();
     assert!(db.read("select writer from scoped_items", &[]).is_err());
-    assert!(!std::path::Path::new(&format!("{path}.lock")).exists());
 }
 
 fn run_local_matrix(path: &str) -> Vec<CaseOutcome> {

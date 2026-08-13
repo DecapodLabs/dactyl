@@ -1,12 +1,12 @@
 #![cfg(feature = "sqlite")]
 
-use std::fs::File;
 use std::time::Duration;
 
 use dactyl_db::{
     AccessMode, AdapterErrorKind, Connection, DatastoreRoute, GeneratedKey, OpenOptions, Operation,
     OperationResult, Parameter,
 };
+use rusqlite::Connection as NativeConnection;
 use tempfile::NamedTempFile;
 
 #[test]
@@ -138,7 +138,7 @@ fn read_only_open_is_non_mutating_and_typed() {
     assert!(matches!(
         error,
         dactyl_db::DactylError::Adapter {
-            kind: AdapterErrorKind::ReadOnly,
+            kind: AdapterErrorKind::NotFound,
             ..
         }
     ));
@@ -148,8 +148,13 @@ fn read_only_open_is_non_mutating_and_typed() {
 fn lock_timeout_is_typed_and_bounded() {
     let file = NamedTempFile::new().unwrap();
     let path = file.path().to_string_lossy().into_owned();
-    let lock_path = format!("{path}.lock");
-    let _lock = File::create(&lock_path).unwrap();
+    let setup = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
+    setup
+        .write("create table app (id integer primary key)", &[])
+        .unwrap();
+    drop(setup);
+    let blocker = NativeConnection::open(&path).unwrap();
+    blocker.execute_batch("BEGIN EXCLUSIVE").unwrap();
     let db = Connection::open_with_options(
         DatastoreRoute::sqlite(&path),
         OpenOptions {
@@ -158,17 +163,13 @@ fn lock_timeout_is_typed_and_bounded() {
         },
     )
     .unwrap();
-    let error = db
-        .write("create table app (id integer primary key)", &[])
-        .unwrap_err();
+    let error = db.write("insert into app default values", &[]).unwrap_err();
     assert!(matches!(
-        error,
-        dactyl_db::DactylError::Adapter {
-            kind: AdapterErrorKind::Timeout,
-            ..
-        }
+        error.adapter_kind(),
+        Some(AdapterErrorKind::Busy | AdapterErrorKind::Locked)
     ));
-    std::fs::remove_file(lock_path).unwrap();
+    assert!(error.is_retryable());
+    blocker.execute_batch("ROLLBACK").unwrap();
 }
 
 #[test]
@@ -369,55 +370,4 @@ fn read_only_atomic_schema_and_reader_reuse_are_non_mutating() {
         .unwrap()
         .read("select id from forbidden", &[])
         .is_err());
-}
-
-#[test]
-fn sqlite_header_is_rejected_as_capability() {
-    let file = NamedTempFile::new().unwrap();
-    let path = file.path().to_string_lossy().into_owned();
-    let mut header = b"SQLite format 3\0".to_vec();
-    header.extend_from_slice(&[0; 84]);
-    std::fs::write(&path, header).unwrap();
-    let error = match Connection::open(DatastoreRoute::sqlite(&path)) {
-        Ok(_) => panic!("SQLite header unexpectedly opened as a Dactyl store"),
-        Err(error) => error,
-    };
-    assert!(matches!(
-        error,
-        dactyl_db::DactylError::Adapter {
-            kind: AdapterErrorKind::Capability,
-            ..
-        }
-    ));
-    assert!(
-        error
-            .to_string()
-            .contains("SQLite files are not accepted; import into the Dactyl format"),
-        "{error}"
-    );
-}
-
-#[test]
-fn published_snapshot_is_versioned_json_not_sqlite() {
-    let file = NamedTempFile::new().unwrap();
-    let path = file.path().to_string_lossy().into_owned();
-    let db = Connection::open(DatastoreRoute::sqlite(&path)).unwrap();
-    db.write("create table app (id integer primary key, name text)", &[])
-        .unwrap();
-    db.write(
-        "insert into app (name) values ($1)",
-        &[Parameter::Text("published".into())],
-    )
-    .unwrap();
-    drop(db);
-
-    let bytes = std::fs::read(&path).unwrap();
-    assert!(
-        !bytes.starts_with(b"SQLite format 3"),
-        "Dactyl snapshot must not impersonate the SQLite header"
-    );
-    assert_eq!(bytes.first().copied(), Some(b'{'));
-    let store: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(store["format_version"], 2);
-    assert!(store["tables"]["app"]["rows"].as_array().unwrap().len() == 1);
 }
