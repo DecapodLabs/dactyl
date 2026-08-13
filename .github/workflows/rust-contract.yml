@@ -1,0 +1,43 @@
+name: Rust Contract
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Locate host SQLite runtime
+        id: sqlite
+        shell: bash
+        run: |
+          set -euo pipefail
+          path="$(ldconfig -p | awk '/libsqlite3\.so\.0/{print $NF; exit}')"
+          test -n "${path}"
+          echo "path=${path}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run contract tests
+        env:
+          DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
+        run: cargo test --all-features
+
+      - name: Run clippy
+        env:
+          DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
+        run: cargo clippy --all-targets --all-features -- -D warnings

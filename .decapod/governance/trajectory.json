@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
-  "intent_id": "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
-  "task_id": "bugs_01kzwqq1rbmd5qv0",
+  "run_id": "validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+  "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+  "task_id": "bugs_01kzwt9x5tk8ksh6",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -17,7 +17,14 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    ".github/workflows/rust-contract.yml",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "README.md",
+    "src/adapter/sqlite/ffi.rs",
+    "tests/release_configuration.rs"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
@@ -28,12 +35,36 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo_clippy_all_targets_all_features",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_all_features",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_tree_forbidden_sqlite_dependencies",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate_container",
+      "status": "passed"
+    },
+    {
+      "name": "readelf_no_direct_sqlite_needed",
       "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_1b1ad230f6c2bbc4 completed with zero failures"
+    "validation epoch ve_8a54d072d916e27b completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -44,12 +75,12 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:fad40c361e37495f52b84a06b0db5b162721036f928ff7bab28a43218834712e",
+  "artifact_hash": "sha256:4a23a47870c62af61d2f87804253a2c45d11b2a3c796acc03c439296cd637bd6",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG": {
-        "id": "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
+      "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX": {
+        "id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
         "raw_intent": "Produce proof artifacts for a repository validation completion.",
         "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
@@ -72,27 +103,69 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWRMF0MVNJBRSFVPE7RPFEG"
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
       }
     ],
     "trajectories": {
-      "validation_01KZWRMF0MVNJBRSFVPE7RPFEG": {
-        "id": "validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
-        "intent_id": "intent:validation_01KZWRMF0MVNJBRSFVPE7RPFEG",
+      "validation_01KZWV235BMYCPZD3Q1VSBZFYX": {
+        "id": "validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
         "evidence_only": true,
         "steps": [
           {
@@ -106,19 +179,115 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_1b1ad230f6c2bbc4 completed with zero failures"
+              "validation epoch ve_8a54d072d916e27b completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "README.md"
+            ],
+            "proof_refs": [
+              "cargo_fmt"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "src/adapter/sqlite/ffi.rs"
+            ],
+            "proof_refs": [
+              "cargo_test_all_features"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "tests/release_configuration.rs"
+            ],
+            "proof_refs": [
+              "cargo_clippy_all_targets_all_features"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".github/workflows/rust-contract.yml"
+            ],
+            "proof_refs": [
+              "cargo_tree_forbidden_sqlite_dependencies"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "CHANGELOG.md"
+            ],
+            "proof_refs": [
+              "readelf_no_direct_sqlite_needed"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "AGENTS.md"
+            ],
+            "proof_refs": [
+              "decapod_validate_container"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 10
   }
 }

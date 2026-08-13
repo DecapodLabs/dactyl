@@ -115,7 +115,8 @@ pub struct Api {
 
 impl Api {
     pub fn load() -> Result<Self, DactylError> {
-        let candidates = library_candidates();
+        let explicit_path = std::env::var("DACTYL_SQLITE_LIBRARY").ok();
+        let candidates = library_candidates(explicit_path.as_deref());
         let mut failures = Vec::new();
         let library = candidates
             .iter()
@@ -334,18 +335,16 @@ fn load_symbol<T: Copy>(
     Ok(*symbol)
 }
 
-fn library_candidates() -> Vec<String> {
+fn library_candidates(explicit_path: Option<&str>) -> Vec<String> {
     let mut candidates = Vec::new();
-    if let Ok(path) = std::env::var("DACTYL_SQLITE_LIBRARY") {
-        if !path.trim().is_empty() {
-            candidates.push(path);
+    if let Some(path) = explicit_path.filter(|path| !path.trim().is_empty()) {
+        candidates.push(path.to_string());
+    }
+    for name in platform_library_names() {
+        if !candidates.iter().any(|candidate| candidate == name) {
+            candidates.push((*name).to_string());
         }
     }
-    candidates.extend(
-        platform_library_names()
-            .iter()
-            .map(|name| (*name).to_string()),
-    );
     candidates
 }
 
@@ -406,3 +405,28 @@ pub const SQLITE_FLOAT: c_int = 2;
 pub const SQLITE_TEXT: c_int = 3;
 pub const SQLITE_BLOB: c_int = 4;
 pub const SQLITE_NULL: c_int = 5;
+
+#[cfg(test)]
+mod tests {
+    use super::library_candidates;
+
+    #[test]
+    fn explicit_library_path_is_tried_first() {
+        let candidates = library_candidates(Some("/opt/sqlite/libsqlite3.so"));
+
+        assert_eq!(
+            candidates.first().map(String::as_str),
+            Some("/opt/sqlite/libsqlite3.so")
+        );
+    }
+
+    #[test]
+    fn blank_explicit_library_path_uses_platform_candidates() {
+        let candidates = library_candidates(Some("  "));
+
+        assert!(!candidates.is_empty());
+        assert!(candidates
+            .iter()
+            .all(|candidate| !candidate.trim().is_empty()));
+    }
+}

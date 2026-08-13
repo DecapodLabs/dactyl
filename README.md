@@ -94,7 +94,7 @@ does not invent a version-conflict policy for the local store.
 
 ```toml
 [dependencies]
-dactyl-db = { version = "0.4.0", features = ["sqlite", "neon"] }
+dactyl-db = { version = "0.8.0", features = ["sqlite", "neon"] }
 ```
 
 Select the backend with environment variables:
@@ -177,6 +177,7 @@ let result = db.atomic(&[
 | `DATASTORE` | `sqlite` or `neon` |
 | `DATASTORE_ROUTE` | Dactyl local-store path or Neon service endpoint |
 | `DATASTORE_TOKEN` | Optional opaque bearer token for Neon |
+| `DACTYL_SQLITE_LIBRARY` | Optional explicit host SQLite shared-library path for non-standard loader paths |
 
 The database schema and backend endpoint contract are application-owned. Dactyl
 executes caller-supplied schema statements but does not assign migration ids,
