@@ -62,6 +62,10 @@ flowchart LR
 - `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
 
+### Release Contract Test Invariant
+- Release configuration tests must derive the expected package version from Cargo's `CARGO_PKG_VERSION` metadata rather than hard-coding a prior release. The Rust Contract workflow therefore remains valid across release PR version bumps, including v0.8.1 and later.
+- The hosted contract job must discover an installed host SQLite shared library, pass it through `DACTYL_SQLITE_LIBRARY`, and run the same all-feature tests and clippy gates used for local proof. A release-version assertion failure is a test drift defect, not evidence of a SQLite runtime failure.
+
 ## Promotion Gates
 
 ## Blocking Gates
@@ -162,6 +166,11 @@ flowchart LR
 - Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
 - Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 
+## Codebase Attestation
+
+- Repository signal fingerprint: `109dee6063b1bbde09a5f46f2d88f05abf4b7ba4fcb39d3306f0247f042bf053`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Validation Overlay
@@ -222,7 +231,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `109dee6063b1bbde09a5f46f2d88f05abf4b7ba4fcb39d3306f0247f042bf053`
+- Repository signal fingerprint: `c12fb0e2f65c1f5041582e9c407886969302c982a4c5e92cf629ee157143d3ee`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

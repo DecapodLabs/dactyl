@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KZWV235BMYCPZD3Q1VSBZFYX",
-  "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
-  "task_id": "bugs_01kzwt9x5tk8ksh6",
+  "run_id": "validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+  "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+  "task_id": "bugs_01kzwvspta28svd5",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -18,11 +18,10 @@
     ".decapod/governance/validation.json"
   ],
   "inspected_files": [
+    ".decapod/managed/specs/VALIDATION.md",
     ".github/workflows/rust-contract.yml",
     "AGENTS.md",
-    "CHANGELOG.md",
-    "README.md",
-    "src/adapter/sqlite/ffi.rs",
+    "Cargo.toml",
     "tests/release_configuration.rs"
   ],
   "modified_files": [
@@ -35,19 +34,7 @@
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_clippy_all_targets_all_features",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
       "name": "cargo_test_all_features",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_tree_forbidden_sqlite_dependencies",
       "status": "passed"
     },
     {
@@ -55,16 +42,24 @@
       "status": "passed"
     },
     {
-      "name": "decapod_validate_container",
+      "name": "decapod_validate",
       "status": "passed"
     },
     {
-      "name": "readelf_no_direct_sqlite_needed",
+      "name": "host_sqlite_runtime_contract_preserved",
+      "status": "passed"
+    },
+    {
+      "name": "package_metadata_version_binding",
+      "status": "passed"
+    },
+    {
+      "name": "release_proof_spec_updated",
       "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_8a54d072d916e27b completed with zero failures"
+    "validation epoch ve_a1cf154c2d134803 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -75,12 +70,12 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:4a23a47870c62af61d2f87804253a2c45d11b2a3c796acc03c439296cd637bd6",
+  "artifact_hash": "sha256:fe9d0d865e13e7755302f54140333e4cc0052539654bc980854c1570101cca1e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX": {
-        "id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+      "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE": {
+        "id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "raw_intent": "Produce proof artifacts for a repository validation completion.",
         "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
@@ -103,69 +98,62 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
       },
       {
         "sequence": 8,
         "event_id": "event:8",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
       },
       {
         "sequence": 9,
         "event_id": "event:9",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
-      },
-      {
-        "sequence": 10,
-        "event_id": "event:10",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZWV235BMYCPZD3Q1VSBZFYX"
+        "detail": "trajectory:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE"
       }
     ],
     "trajectories": {
-      "validation_01KZWV235BMYCPZD3Q1VSBZFYX": {
-        "id": "validation_01KZWV235BMYCPZD3Q1VSBZFYX",
-        "intent_id": "intent:validation_01KZWV235BMYCPZD3Q1VSBZFYX",
+      "validation_01KZWW0NF9DWJ0B6JRP3G5ANFE": {
+        "id": "validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
+        "intent_id": "intent:validation_01KZWW0NF9DWJ0B6JRP3G5ANFE",
         "evidence_only": true,
         "steps": [
           {
@@ -179,7 +167,7 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_8a54d072d916e27b completed with zero failures"
+              "validation epoch ve_a1cf154c2d134803 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -195,10 +183,10 @@
               ".decapod/governance/validation.json"
             ],
             "observations": [
-              "README.md"
+              "tests/release_configuration.rs"
             ],
             "proof_refs": [
-              "cargo_fmt"
+              "cargo_test_all_features"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
@@ -211,10 +199,10 @@
               ".decapod/governance/validation.json"
             ],
             "observations": [
-              "src/adapter/sqlite/ffi.rs"
+              "Cargo.toml"
             ],
             "proof_refs": [
-              "cargo_test_all_features"
+              "package_metadata_version_binding"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
@@ -227,10 +215,10 @@
               ".decapod/governance/validation.json"
             ],
             "observations": [
-              "tests/release_configuration.rs"
+              ".github/workflows/rust-contract.yml"
             ],
             "proof_refs": [
-              "cargo_clippy_all_targets_all_features"
+              "host_sqlite_runtime_contract_preserved"
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
@@ -243,10 +231,10 @@
               ".decapod/governance/validation.json"
             ],
             "observations": [
-              ".github/workflows/rust-contract.yml"
+              ".decapod/managed/specs/VALIDATION.md"
             ],
             "proof_refs": [
-              "cargo_tree_forbidden_sqlite_dependencies"
+              "release_proof_spec_updated"
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
@@ -259,35 +247,19 @@
               ".decapod/governance/validation.json"
             ],
             "observations": [
-              "CHANGELOG.md"
-            ],
-            "proof_refs": [
-              "readelf_no_direct_sqlite_needed"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:9"
-          },
-          {
-            "sequence": 10,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
               "AGENTS.md"
             ],
             "proof_refs": [
-              "decapod_validate_container"
+              "decapod_validate"
             ],
             "validation_findings": [],
-            "custody_event_id": "event:10"
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 10
+    "next_sequence": 9
   }
 }

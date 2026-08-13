@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "title": "Dactyl Issue 77 direct SQLite connector completion",
-  "intent": "Complete the Dactyl-owned remainder of Issue 77: provide the minimal private runtime-loaded host SQLite connector, remove stale snapshot/import semantics and unnecessary implementation paths, preserve the backend-neutral API and local SQLite compatibility, and publish one dedicated PR.",
+  "title": "Dactyl Rust Contract release-proof fix",
+  "intent": "Fix the Rust Contract workflow regression introduced by the v0.8.1 release by deriving the release assertion from the package metadata, preserving host SQLite runtime proof, and publishing one dedicated PR.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzwt9x5tk8ksh6"
+    "bugs_01kzwvspta28svd5"
   ],
   "proof_hooks": [
-    "cargo fmt --check; cargo test --all-features; cargo clippy --all-features --all-targets -- -D warnings; cargo tree --all-features; readelf -d target/debug/deps/*dactyl* | grep sqlite3; decapod validate"
+    "cargo fmt --all -- --check; cargo test --all-features with explicit host SQLite; cargo clippy --all-targets --all-features -- -D warnings; decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -17,11 +17,9 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/data"
-    ],
-    "file_touch_budget": null
+    "forbidden_paths": [],
+    "file_touch_budget": 10
   },
   "phases": [],
-  "updated_at": "1786599807Z"
+  "updated_at": "1786601420Z"
 }
