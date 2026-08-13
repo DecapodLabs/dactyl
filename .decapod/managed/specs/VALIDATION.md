@@ -56,7 +56,9 @@ flowchart LR
 - `cargo test --all-features`
 - `cargo test --features sqlite --test storage_contract sqlite_header_is_rejected_as_capability` proves a SQLite magic header is a capability miss, not a decode of a Dactyl snapshot.
 - `cargo test --features sqlite --test storage_contract published_snapshot_is_versioned_json_not_sqlite` proves a published local file starts with `{` and carries `format_version` 2.
-- `cargo test --features sqlite,legacy-import --test sqlite_import` proves Decapod catalog parse, fixture import, reopen, blob getters, idempotency, divergent destination, and typed corrupt/missing/read-only outcomes.
+- `cargo test --features sqlite,legacy-import --test sqlite_import` proves the pure-Rust Decapod catalog reader, fixture import, reopen, blob getters, idempotency, deterministic output, divergent destination, and typed corrupt/missing/read-only outcomes.
+- `cargo tree --all-features` must contain no native SQLite binding or SQLite C subtree; this is the dependency proof for the local boundary.
+- The import suite also proves byte-for-byte deterministic output, rejects invalid UTF-8 instead of lossy replacement, and fails closed for unsupported SQLite schema constructs before publishing an output.
 - `cargo test --all-features --test storage_fixtures` is the backend-neutral #57/#64 matrix. Local SQLite must pass. The Neon executing mock must pass when the `neon` feature is on. Live Propodus must appear as `unavailable` in the printed JSON report unless a later live-proof issue implements that backend. A skipped live backend is a failure if it is recorded as `passed`.
 - Required integration/e2e commands: project-defined
 
@@ -155,6 +157,13 @@ flowchart LR
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
+## Codebase Attestation
+
+- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
+- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Validation Overlay
@@ -215,7 +224,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
+- Repository signal fingerprint: `5191eedde973a06e9a60998b5d26d28c2aaf09e0bc3661ec0f1e8765cddb9f83`
 - Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

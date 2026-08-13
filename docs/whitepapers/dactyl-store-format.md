@@ -9,7 +9,7 @@
 
 Dactyl's local route is still labeled `sqlite`, but the on-disk artifact is not a SQLite database. The file is a versioned JSON snapshot owned by Dactyl. The current format version is `2`. Files whose first bytes are the SQLite magic string `SQLite format 3` are rejected by `Connection::open` with a typed capability error before JSON decode. Durability is published through a checksummed sidecar journal and an atomic rename, not through SQLite's pager, WAL, or rollback journal.
 
-Legacy SQLite files are not opened as stores. They are converted by an explicit Dactyl-owned import (`import_sqlite_file`, or the `dactyl-import` binary) gated on the optional `legacy-import` feature. That feature may link a SQLite reader inside Dactyl. A Decapod runtime crate that enables only `sqlite` must still see an empty `cargo tree -i rusqlite`.
+Legacy SQLite files are not opened as stores. They are converted by an explicit Dactyl-owned import (`import_sqlite_file`, or the `dactyl-import` binary) gated on the optional `legacy-import` feature. The importer contains a bounded, read-only pure-Rust SQLite b-tree and record reader; it has no native SQLite binding, SQLite subprocess, or external database runtime dependency. The normal `sqlite` route and migration route therefore share the same pure-Rust dependency boundary.
 
 This is a methodology paper, not a second SQL engine. It records why Dactyl refused SQLite's file header, what the snapshot actually contains, how crash recovery and explicit import work, and why the local SQL surface is a bounded storage language rather than a SQLite dialect.
 
@@ -51,7 +51,7 @@ Dactyl is an application-layer driver. It exists so Decapod can run the same rea
 
 The local implementation is therefore constrained:
 
-- no `sqlite`, `rusqlite`, `libsqlite3-sys`, SQLite subprocess, or Turso runtime
+- no native SQLite binding, SQLite subprocess, or Turso runtime
 - no process-global connection cache
 - no hidden catalog tables
 - no dialect rewrite that makes unsupported SQL look successful
@@ -219,7 +219,7 @@ This is the same fail-closed posture as the file header. A SQLite header would i
 - Not a migration manager. Callers own ids, order, and expand/contract policy. Dactyl only converts physical files.
 - Not a claim that Neon uses this file. Neon receives SQL over `/query` and `/batch`.
 - Not a claim that every historical changelog mention of "SQLite" still describes the local file.
-- Not a claim that the Decapod runtime may enable `legacy-import`. That feature is a one-shot converter; runtime crates should keep `rusqlite` out of `cargo tree`.
+- Not a claim that the Decapod runtime should import on every startup. `legacy-import` is a one-shot pure-Rust converter; runtime crates should keep migration work explicit and separate from ordinary local opens.
 
 ## 9. Operational consequences
 

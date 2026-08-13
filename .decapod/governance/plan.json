@@ -1,21 +1,20 @@
 {
   "schema_version": "1.0.0",
-  "title": "Store-format paper, issue 77 import, 0.98.3 pin verification",
-  "intent": "Keep the whitepaper and SQLite import on PR 78, and ensure Decapod 0.98.3 entrypoint fingerprints and public version pins match the evaluating binary.",
+  "title": "Pure-Rust local SQLite import for Issue 77",
+  "intent": "Keep PR 78 local-only: remove all native SQLite bindings and implement the explicit SQLite-to-Dactyl import boundary with a bounded pure-Rust read-only reader. Defer Neon/Propodus feature parity to a separate issue.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kzw6k7snxhm176",
-    "docs_01kzw5p2x1e49fc3",
-    "code_01kzw7bf5wtf8cfw"
+    "bugs_01kzwdcq5x0s3180"
   ],
   "proof_hooks": [
-    "decapod validate",
-    "decapod init --proof --dry-run"
+    "cargo test --features sqlite,legacy-import",
+    "cargo tree --all-features",
+    "cargo clippy --features sqlite,legacy-import --all-targets -- -D warnings"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not claim a live github.io URL until the Pages workflow has a successful deployment."
+    "Do not change Neon behavior in this PR; track Neon/Propodus parity separately."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -26,5 +25,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786579945Z"
+  "updated_at": "1786587725Z"
 }

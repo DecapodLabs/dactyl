@@ -51,7 +51,8 @@
             <code>Connection::open</code> with a typed capability error before
             JSON decode. Legacy SQLite files convert only through explicit
             <code>import_sqlite_file</code> / <code>dactyl-import</code> behind
-            <code>legacy-import</code>. Durability is published through a
+            <code>legacy-import</code>, using a bounded pure-Rust read-only
+            SQLite b-tree and record reader. Durability is published through a
             checksummed sidecar journal and an atomic rename, not through
             SQLite's pager, WAL, or rollback journal.
           </p>
@@ -125,7 +126,7 @@ S  Q  L  i  t  e     f  o  r  m  a  t     3  \0</pre>
         </p>
         <p>The local implementation is therefore constrained:</p>
         <ul>
-          <li>no <code>sqlite</code>, <code>rusqlite</code>, <code>libsqlite3-sys</code>, SQLite subprocess, or Turso runtime</li>
+          <li>no native SQLite binding, SQLite subprocess, or Turso runtime</li>
           <li>no process-global connection cache</li>
           <li>no hidden catalog tables</li>
           <li>no dialect rewrite that makes unsupported SQL look successful</li>

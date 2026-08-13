@@ -94,6 +94,17 @@ fn sqlite_import_reopens_with_deterministic_schema_and_values() {
 }
 
 #[test]
+fn import_is_deterministic() {
+    let dir = TempDir::new().unwrap();
+    let source = copy_fixture(&dir, "source.db");
+    let first = dir.path().join("first.store");
+    let second = dir.path().join("second.store");
+    import_sqlite_file(&source, &first).unwrap();
+    import_sqlite_file(&source, &second).unwrap();
+    assert_eq!(fs::read(&first).unwrap(), fs::read(&second).unwrap());
+}
+
+#[test]
 fn in_place_import_backups_source_and_is_idempotent() {
     let dir = TempDir::new().unwrap();
     let path = copy_fixture(&dir, "decapod.db");

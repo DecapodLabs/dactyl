@@ -66,7 +66,7 @@ The local route path is a Dactyl snapshot, not a SQLite database. Operators must
 | `$ROUTE.wal` | checksummed journal | replayed only on the next read-write open |
 | `$ROUTE.lock` | exclusive writer lock | leftover lock blocks writers until removed or timeout |
 
-A leftover valid journal plus a read-only open is a typed `ReadOnly` failure, not silent recovery. Header confusion (opening a SQLite file as Dactyl, or a Dactyl file as SQLite) is a capability/operator error. Convert leftover SQLite files with `dactyl-import` / `import_sqlite_file` before pointing `DATASTORE_ROUTE` at the path. Same-path import leaves `$path.legacy-sqlite` as the recoverable source.
+A leftover valid journal plus a read-only open is a typed `ReadOnly` failure, not silent recovery. Header confusion (opening a SQLite file as Dactyl, or a Dactyl file as SQLite) is a capability/operator error. Convert leftover SQLite files with the pure-Rust `dactyl-import` / `import_sqlite_file` boundary before pointing `DATASTORE_ROUTE` at the path. Same-path import leaves `$path.legacy-sqlite` as the recoverable source.
 
 ## Capacity Planning
 - Traffic patterns:
@@ -141,7 +141,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
+- Repository signal fingerprint: `5191eedde973a06e9a60998b5d26d28c2aaf09e0bc3661ec0f1e8765cddb9f83`
 - Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

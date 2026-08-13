@@ -68,7 +68,7 @@ flowchart LR
 - [x] The same fixture cases run through the Neon adapter against an executing in-process mock; live Propodus/Vercel Neon is recorded as `unavailable` unless `DACTYL_LIVE_PROPODUS_ROUTE` is set, and a skipped live backend is never reported as passed.
 - [x] Remote query and atomic requests preserve the versioned opaque context; local operations remain context-neutral; missing remote context fails closed with typed authentication/protocol errors; remote authorization denials surface as `AdapterErrorKind::Authorization`.
 - [x] The local published file is a Dactyl snapshot (`format_version` 2 JSON) and a SQLite magic header is rejected as `AdapterErrorKind::Capability`. The methodology is recorded in `docs/whitepapers/dactyl-store-format.md` and served from `docs/` as GitHub Pages.
-- [x] Issue #77: an existing SQLite file can be converted through `legacy-import` without `Connection::open` accepting the SQLite header. A representative Decapod catalog and fixture prove parse, import, reopen, blob round-trip, idempotency, and fail-closed outcomes.
+- [x] Issue #77: an existing SQLite file can be converted through a pure-Rust `legacy-import` reader without `Connection::open` accepting the SQLite header. A representative Decapod catalog and fixture prove parse, import, reopen, blob round-trip, idempotency, deterministic output, and fail-closed outcomes.
 - [ ] Live Propodus/Vercel Neon deployment, route translation, and provider CAS/`version_conflict` proof remain a follow-up issue.
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
@@ -124,7 +124,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
+- Repository signal fingerprint: `5191eedde973a06e9a60998b5d26d28c2aaf09e0bc3661ec0f1e8765cddb9f83`
 - Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

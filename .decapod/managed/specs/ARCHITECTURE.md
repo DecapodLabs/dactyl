@@ -108,11 +108,11 @@ sequenceDiagram
 | ADR-001 | Ambient-env routing contract (DATASTORE/DATASTORE_ROUTE/DATASTORE_TOKEN) | Accepted | Single authoritative selector; no init(); per-call adapters for session isolation (dactyl #26) | 2026-08-01 |
 | ADR-002 | Thin application API: read(sql, params) + write(sql, params) | Accepted | One uniform read/write surface for SQLite and Neon; administration remains outside the crate (dactyl #47) | 2026-08-01 |
 | ADR-003 | Backend-neutral Adapter trait | Proposed | New backends (redis, mysql, cassandra) add one module + one DATASTORE arm; public surface unchanged | 2026-08-01 |
-| ADR-004 | Pure-Rust local engine with opaque atomic batches | Accepted | Avoid SQLite C/rusqlite build cost while preserving caller-owned schema execution, local durability, read-only enforcement, and a Neon-parity proof seam (#51-#57) | 2026-08-11 |
+| ADR-004 | Pure-Rust local engine with opaque atomic batches | Accepted | Avoid native SQLite binding cost while preserving caller-owned schema execution, local durability, read-only enforcement, and a Neon-parity proof seam (#51-#57) | 2026-08-11 |
 | ADR-005 | Opaque storage-context forwarding | Accepted | Keep physical route configuration and cloud tenancy separate: Dactyl validates only a versioned envelope, ignores it locally, forwards it to Neon, and leaves authorization semantics to Propodus (#64) | 2026-08-11 |
 | ADR-006 | Local fixture completeness before live Propodus | Accepted | Issues #57 and #64 are complete for the local store and the offline Neon mock: CAS is a zero-row observation, concurrent writers share a file lock, cleanup is `DROP`, and live Vercel Neon/Propodus proof is a separate deployment issue | 2026-08-12 |
 | ADR-007 | Dactyl-owned snapshot format, not a SQLite file header | Accepted | The local route keeps the `sqlite` compatibility name, but the published file is a versioned JSON snapshot (`format_version` 2) with a checksummed `.wal` journal and `.lock` sidecar. Bytes that start with `SQLite format 3` fail as `Capability` on `open`. Documented in `docs/whitepapers/dactyl-store-format.md` | 2026-08-12 |
-| ADR-008 | Explicit SQLite-to-Dactyl import for issue #77 | Accepted | Conversion is a Dactyl-owned `legacy-import` operation (`import_sqlite_file` / `dactyl-import`), not `Connection::open`. Same-path import is atomic via temp + `$path.legacy-sqlite` backup. Runtime crates must not enable the feature. Schema inspection is `Connection::inspect_schema()`. | 2026-08-12 |
+| ADR-008 | Explicit pure-Rust SQLite-to-Dactyl import for issue #77 | Accepted | Conversion is a Dactyl-owned `legacy-import` operation (`import_sqlite_file` / `dactyl-import`) with a bounded read-only SQLite b-tree/record reader, not `Connection::open`; no native SQLite binding or subprocess is part of the dependency graph. Same-path import is atomic via temp + `$path.legacy-sqlite` backup. Schema inspection is `Connection::inspect_schema()`. | 2026-08-12 |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):
@@ -149,7 +149,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
+- Repository signal fingerprint: `5191eedde973a06e9a60998b5d26d28c2aaf09e0bc3661ec0f1e8765cddb9f83`
 - Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

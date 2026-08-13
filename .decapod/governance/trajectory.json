@@ -1,59 +1,95 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-docs-01kzw5p2",
-  "intent_id": "intent:run-docs-01kzw5p2",
-  "task_id": "docs_01kzw5p2x1e49fc3",
-  "original_intent": "Confirm whether Dactyl has its own SQL format/header unlike SQLite and document it as a whitepaper in docs/ published as pages.",
-  "derived_intent": "Document the Dactyl-owned versioned JSON snapshot, SQLite-header rejection, checksummed journal, and bounded SQL methodology as a GitHub Pages whitepaper under docs/.",
+  "run_id": "run-issue77-pr78-01kzwd",
+  "intent_id": "intent:run-issue77-pr78-01kzwd",
+  "task_id": "bugs_01kzwdcq5x0s3180",
+  "original_intent": "Continue working on GitHub Issue #77 and PR #78.",
+  "derived_intent": "Verify and complete the explicit SQLite-to-Dactyl v0.7 import boundary, with evidence-backed code and governed proof artifacts.",
+  "destination": "issue 77 / PR 78 continuation",
   "current_phase": "validation",
   "next_transitions": [
-    "publish"
+    "inspect",
+    "publish",
+    "validate"
   ],
   "active_boundaries": [
-    "Do not mutate .decapod/data; do not work on main; do not invent live hosting proof."
+    "Work only in the claimed task workspace; preserve Dactyl as a thin storage boundary; runtime consumers must not depend on rusqlite; do not mutate .decapod/data."
   ],
   "repo_scope": [
-    "docs/,README.md,.github/workflows/,tests/storage_contract.rs,.decapod/managed/specs/"
+    "src/ tests/ docs/ README.md Cargo.toml Cargo.lock .github/workflows/ .decapod governance and managed specs as governed outputs"
   ],
   "inspected_files": [
+    ".decapod/managed/specs/VALIDATION.md",
+    "Cargo.lock",
+    "Cargo.toml",
     "README.md",
+    "docs/whitepapers/dactyl-store-format.md",
+    "src/adapter/sqlite/import.rs",
     "src/adapter/sqlite/mod.rs",
-    "tests/storage_contract.rs"
+    "tests/release_configuration.rs",
+    "tests/sqlite_import.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".github/workflows/pages.yml",
-    "README.md",
-    "docs/index.html",
-    "docs/whitepapers/dactyl-store-format.md",
-    "tests/storage_contract.rs"
+    ".decapod/managed/specs/VALIDATION.md",
+    "src/adapter/sqlite/import.rs",
+    "tests/release_configuration.rs",
+    "tests/sqlite_import.rs"
   ],
   "declared_commands": [
-    "cargo test --features sqlite --test storage_contract",
+    "cargo clippy --all-features --all-targets -- -D warnings",
+    "cargo fmt --check",
+    "cargo test --all-features",
+    "cargo test --features sqlite,legacy-import --test sqlite_import",
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo clippy --all-features --all-targets -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "name": "cargo fmt --check",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --all-features",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --features sqlite,legacy-import --test sqlite_import",
+      "status": "passed"
+    },
+    {
+      "name": "cargo tree --all-features has no native SQLite subtree",
+      "status": "passed"
+    },
+    {
+      "name": "clippy",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
     {
-      "name": "published_snapshot_is_versioned_json_not_sqlite",
+      "name": "integer-primary-key-pure-reader-smoke",
       "status": "passed"
     },
     {
-      "name": "sqlite_header_is_rejected_as_capability",
+      "name": "sqlite_import",
       "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_8fc0dcbe5a77494c completed with zero failures"
+    "Issue #77 and PR #78 live bodies/comments/reviews/files/commits/checks were inspected; no hosted review comments exist; local PR tip tests exposed and corrected the stale 0.6.1 release assertion.",
+    "validation epoch ve_6f13660d8f93a847 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "GitHub Pages live URL is unproven until the Pages workflow deploys after merge."
+    "The released v0.7 importer remains Dactyl-owned and may link rusqlite only behind legacy-import; runtime consumers continue enabling sqlite only."
   ],
   "proof_status": "passed",
   "verdicts": {
@@ -62,21 +98,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:7d8f1efbaff4797193e67ae0ef90bc8804b04800b00eb6f6c782159091a6a0ee",
+  "artifact_hash": "sha256:649b5bcd00bf8c0851e7eff4928f01f192c88160aaea6894d46b17240c941cc3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-docs-01kzw5p2": {
-        "id": "intent:run-docs-01kzw5p2",
-        "raw_intent": "Confirm whether Dactyl has its own SQL format/header unlike SQLite and document it as a whitepaper in docs/ published as pages.",
-        "refined_intent": "Document the Dactyl-owned versioned JSON snapshot, SQLite-header rejection, checksummed journal, and bounded SQL methodology as a GitHub Pages whitepaper under docs/.",
+      "intent:run-issue77-pr78-01kzwd": {
+        "id": "intent:run-issue77-pr78-01kzwd",
+        "raw_intent": "Continue working on GitHub Issue #77 and PR #78.",
+        "refined_intent": "Verify and complete the explicit SQLite-to-Dactyl v0.7 import boundary, with evidence-backed code and governed proof artifacts.",
         "acceptance_criteria": [],
         "constraints": [
-          "docs/,README.md,.github/workflows/,tests/storage_contract.rs,.decapod/managed/specs/"
+          "src/ tests/ docs/ README.md Cargo.toml Cargo.lock .github/workflows/ .decapod governance and managed specs as governed outputs"
         ],
         "assumptions": [],
         "boundaries": [
-          "Do not mutate .decapod/data; do not work on main; do not invent live hosting proof."
+          "Work only in the claimed task workspace; preserve Dactyl as a thin storage boundary; runtime consumers must not depend on rusqlite; do not mutate .decapod/data."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -89,59 +125,70 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-docs-01kzw5p2",
+        "intent_id": "intent:run-issue77-pr78-01kzwd",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-docs-01kzw5p2",
+        "intent_id": "intent:run-issue77-pr78-01kzwd",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-docs-01kzw5p2",
+        "intent_id": "intent:run-issue77-pr78-01kzwd",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-docs-01kzw5p2"
+        "detail": "trajectory:run-issue77-pr78-01kzwd"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run-docs-01kzw5p2",
+        "intent_id": "intent:run-issue77-pr78-01kzwd",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-docs-01kzw5p2"
+        "detail": "trajectory:run-issue77-pr78-01kzwd"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:run-issue77-pr78-01kzwd",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-issue77-pr78-01kzwd"
       }
     ],
     "trajectories": {
-      "run-docs-01kzw5p2": {
-        "id": "run-docs-01kzw5p2",
-        "intent_id": "intent:run-docs-01kzw5p2",
+      "run-issue77-pr78-01kzwd": {
+        "id": "run-issue77-pr78-01kzwd",
+        "intent_id": "intent:run-issue77-pr78-01kzwd",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
-            "command": "cargo test --features sqlite --test storage_contract",
+            "action": "verification",
+            "command": "cargo fmt --check",
             "scope": [
-              "docs/,README.md,.github/workflows/,tests/storage_contract.rs,.decapod/managed/specs/"
+              "src/ tests/ docs/ README.md Cargo.toml Cargo.lock .github/workflows/ .decapod governance and managed specs as governed outputs"
             ],
             "observations": [
+              "src/adapter/sqlite/import.rs",
               "src/adapter/sqlite/mod.rs",
-              "README.md",
-              "tests/storage_contract.rs",
-              "docs/whitepapers/dactyl-store-format.md",
-              "docs/index.html",
-              ".github/workflows/pages.yml",
-              "tests/storage_contract.rs",
-              "README.md"
+              "tests/sqlite_import.rs",
+              "tests/release_configuration.rs",
+              ".decapod/managed/specs/VALIDATION.md",
+              "src/adapter/sqlite/import.rs",
+              "tests/sqlite_import.rs",
+              "tests/release_configuration.rs",
+              ".decapod/managed/specs/VALIDATION.md",
+              "Issue #77 and PR #78 live bodies/comments/reviews/files/commits/checks were inspected; no hosted review comments exist; local PR tip tests exposed and corrected the stale 0.6.1 release assertion."
             ],
             "proof_refs": [
-              "sqlite_header_is_rejected_as_capability",
-              "published_snapshot_is_versioned_json_not_sqlite"
+              "cargo fmt --check",
+              "sqlite_import",
+              "cargo test --all-features",
+              "clippy"
             ],
             "validation_findings": [
-              "GitHub Pages live URL is unproven until the Pages workflow deploys after merge."
+              "The released v0.7 importer remains Dactyl-owned and may link rusqlite only behind legacy-import; runtime consumers continue enabling sqlite only."
             ],
             "custody_event_id": "event:4"
           },
@@ -150,24 +197,48 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "docs/,README.md,.github/workflows/,tests/storage_contract.rs,.decapod/managed/specs/"
+              "src/ tests/ docs/ README.md Cargo.toml Cargo.lock .github/workflows/ .decapod governance and managed specs as governed outputs"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_8fc0dcbe5a77494c completed with zero failures"
+              "validation epoch ve_6f13660d8f93a847 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "scope": [
+              "src/ tests/ docs/ README.md Cargo.toml Cargo.lock .github/workflows/ .decapod governance and managed specs as governed outputs"
+            ],
+            "observations": [
+              "src/adapter/sqlite/import.rs",
+              "Cargo.toml",
+              "Cargo.lock",
+              "tests/sqlite_import.rs",
+              "README.md",
+              "docs/whitepapers/dactyl-store-format.md"
+            ],
+            "proof_refs": [
+              "cargo test --all-features",
+              "cargo test --features sqlite,legacy-import --test sqlite_import",
+              "cargo clippy --all-features --all-targets -- -D warnings",
+              "cargo tree --all-features has no native SQLite subtree",
+              "integer-primary-key-pure-reader-smoke"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }

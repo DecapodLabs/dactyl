@@ -35,9 +35,10 @@ SQLite and Neon use the same application contract:
   rate-limit, and protocol failures. Remote stable error codes are available
   through `DactylError::adapter_code()` without parsing provider messages.
 
-The local implementation is Dactyl-owned Rust. The default `sqlite` feature
-has no `rusqlite`, `libsqlite3-sys`, or SQLite subprocess dependency. The
-`sqlite` feature and route constructor remain as compatibility names for
+The local implementation is Dactyl-owned Rust. Both the native snapshot route
+and the optional `legacy-import` converter are pure Rust: Dactyl has no native
+SQLite binding, SQLite subprocess, or external database runtime dependency.
+The `sqlite` feature and route constructor remain as compatibility names for
 existing callers, but the local file is a versioned Dactyl snapshot, not a
 SQLite file. `Connection::open` rejects a SQLite header with a typed capability
 error. Existing SQLite files are converted by the optional `legacy-import`
@@ -61,7 +62,7 @@ Inspect the local catalog with `Connection::inspect_schema()`. Do not query
 `sqlite_master`. Blobs are JSON arrays of bytes and are read back with
 `Row::get_blob`.
 
-Convert a legacy SQLite file without putting `rusqlite` on the runtime crate:
+Convert a legacy SQLite file with Dactyl's pure-Rust reader:
 
 ```text
 cargo run --features legacy-import --bin dactyl-import -- /path/to/decapod.db
