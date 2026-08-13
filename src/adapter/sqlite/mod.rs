@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::fs;
+use std::io::Read;
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 
@@ -57,6 +58,7 @@ impl SqliteAdapter {
                     })?;
                 }
             }
+            validate_existing_sqlite_header(path_ref)?;
         }
 
         let connection = if path == ":memory:" {
@@ -90,6 +92,36 @@ impl SqliteAdapter {
             DactylError::adapter(AdapterErrorKind::Storage, "SQLite connection lock poisoned")
         })
     }
+}
+
+fn validate_existing_sqlite_header(path: &Path) -> Result<(), DactylError> {
+    let metadata = fs::metadata(path).map_err(|error| {
+        DactylError::adapter_with_code(
+            AdapterErrorKind::Storage,
+            "stat_database_failed",
+            format!("inspect SQLite database: {error}"),
+        )
+    })?;
+    if metadata.len() == 0 {
+        return Ok(());
+    }
+
+    let mut file = fs::File::open(path).map_err(|error| {
+        DactylError::adapter_with_code(
+            AdapterErrorKind::Storage,
+            "read_database_header_failed",
+            format!("read SQLite database header: {error}"),
+        )
+    })?;
+    let mut header = [0_u8; 16];
+    if file.read_exact(&mut header).is_err() || header != *b"SQLite format 3\0" {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "invalid_database",
+            "existing local file is not a SQLite database",
+        ));
+    }
+    Ok(())
 }
 
 impl Adapter for SqliteAdapter {
