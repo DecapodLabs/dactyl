@@ -606,7 +606,7 @@ fn sqlite_error(operation: &str, error: SqliteError) -> DactylError {
         | SqliteError::InvalidColumnName(_)
         | SqliteError::InvalidColumnType(_, _, _)
         | SqliteError::IntegralValueOutOfRange(_, _)
-        | SqliteError::Utf8Error(_) => (AdapterErrorKind::Value, "value_error"),
+        | SqliteError::Utf8Error(..) => (AdapterErrorKind::Value, "value_error"),
         _ => (AdapterErrorKind::Query, "sqlite_error"),
     };
     DactylError::adapter_with_code(kind, code, format!("{operation}: {message}"))
