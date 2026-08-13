@@ -32,11 +32,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- optional `legacy-import` conversion for issue #77: `import_sqlite_file`,
+  `dactyl-import`, `Connection::inspect_schema`, and `Row::get_blob`. `open`
+  still rejects a SQLite header. The Decapod runtime must not enable this
+  feature.
+
 ### Documentation
 
 - publish the Dactyl store-format whitepaper from `docs/` as GitHub Pages: the
   local route is a versioned JSON snapshot (`format_version` 2), not a SQLite
-  file, and a SQLite magic header is rejected as a capability error.
+  file, and a SQLite magic header is rejected as a capability error. Explicit
+  import is now Dactyl-owned and is no longer described as caller-only work.
 
 ## [0.7.0] (2026-08-12)
 

@@ -68,6 +68,7 @@ flowchart LR
 - [x] The same fixture cases run through the Neon adapter against an executing in-process mock; live Propodus/Vercel Neon is recorded as `unavailable` unless `DACTYL_LIVE_PROPODUS_ROUTE` is set, and a skipped live backend is never reported as passed.
 - [x] Remote query and atomic requests preserve the versioned opaque context; local operations remain context-neutral; missing remote context fails closed with typed authentication/protocol errors; remote authorization denials surface as `AdapterErrorKind::Authorization`.
 - [x] The local published file is a Dactyl snapshot (`format_version` 2 JSON) and a SQLite magic header is rejected as `AdapterErrorKind::Capability`. The methodology is recorded in `docs/whitepapers/dactyl-store-format.md` and served from `docs/` as GitHub Pages.
+- [x] Issue #77: an existing SQLite file can be converted through `legacy-import` without `Connection::open` accepting the SQLite header. A representative Decapod catalog and fixture prove parse, import, reopen, blob round-trip, idempotency, and fail-closed outcomes.
 - [ ] Live Propodus/Vercel Neon deployment, route translation, and provider CAS/`version_conflict` proof remain a follow-up issue.
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
