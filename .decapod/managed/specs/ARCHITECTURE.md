@@ -129,6 +129,27 @@ sequenceDiagram
 |---|---|---|---|
 | Contract drift across components | Medium | High | Spec + schema checks in CI |
 | Runtime saturation under peak load | Medium | High | Capacity model + load tests |
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Architecture Overlay
+
+### State Ownership
+- Each entity type MUST have a designated state owner
+- State ownership boundaries MUST be explicitly documented
+- Cross-boundary state access MUST go through defined interfaces
+
+### Transaction Boundaries
+- All multi-entity mutations MUST occur within explicit transactions
+- Transaction boundaries MUST be documented in ARCHITECTURE.md
+- Compensating transactions for distributed operations
+
+### Storage Abstraction
+- Storage ownership, consistency behavior, and access boundaries MUST be explicit
+- Portability or swappable implementations are project decisions, not universal requirements
+- Migration and rollback treatment MUST match the selected storage technology
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation

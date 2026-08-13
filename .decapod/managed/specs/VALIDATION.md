@@ -175,7 +175,65 @@ flowchart LR
 
 - Repository signal fingerprint: `4ef0812329ae43b548b91cee12185140a9e57fa25915c70ca28f15e7572f98f7`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
-- Refreshed from the current codebase by `decapod specs.refresh`<!-- decapod:codebase-attestation:start -->
+- Refreshed from the current codebase by `decapod specs.refresh`
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:capability-overlay:public-api:start -->
+
+## Public API Validation Overlay
+
+### Contract Tests
+- All public endpoints MUST have contract tests
+- Request/response schema validation on every request
+- Compatibility regression tests for each version
+
+### Security Tests
+- Authentication bypass tests
+- Malformed input handling tests
+- Rate limit enforcement tests
+- Token expiry/revocation tests
+<!-- decapod:capability-overlay:public-api:end -->
+
+<!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
