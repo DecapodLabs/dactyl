@@ -80,27 +80,6 @@ Describe the security primitives and security controls implemented in this repos
 - **Least Privilege**: Ensure minimal access permissions for all subsystems and roles.
 - **Input Validation**: Strictly validate all inputs at trust boundaries.
 - **Secure Storage**: Encrypt sensitive data at rest and in transit.
-
-<!-- decapod:capability-overlay:public-api:start -->
-
-## Public API Security Overlay
-
-### Authentication Requirements
-- All public endpoints MUST validate authentication tokens
-- Token validation MUST include expiry, revocation, and scope checks
-- Anonymous access MUST be explicitly documented and justified
-
-### Input Validation
-- All request bodies MUST be validated against schemas
-- Reject requests with unknown fields (strict schema validation)
-- Size limits MUST be enforced on all request bodies
-
-### Rate Limiting
-- Limits and enforcement boundaries MUST be selected for this deployment
-- Clustered enforcement behavior MUST be documented when applicable
-- Client-visible throttling behavior MUST be part of the contract when applicable
-<!-- decapod:capability-overlay:public-api:end -->
-
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation

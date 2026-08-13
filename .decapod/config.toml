@@ -33,18 +33,6 @@ detected_surfaces = [
 external_tracker = false
 container_workspaces = true
 backend = "local"
-declared_capabilities = [
-    "authentication",
-    "background-processing",
-    "event-driven",
-    "external-integrations",
-    "infrastructure-management",
-    "persistent-state",
-    "public-api",
-    "scheduled-jobs",
-    "secrets-handling",
-]
-
 [governance]
 protected_paths = []
 approval_categories = ["destructive_operations"]
