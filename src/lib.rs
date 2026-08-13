@@ -21,9 +21,6 @@ pub use crate::schema::{
     ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
 };
 
-#[cfg(feature = "legacy-import")]
-pub use crate::adapter::sqlite::{import_sqlite_file, ImportReport};
-
 use crate::adapter::Adapter;
 
 /// A supported application datastore.
@@ -175,7 +172,7 @@ impl Connection {
         self.adapter.access_mode()
     }
 
-    /// Inspect the local store catalog without SQLite PRAGMA or sqlite_master.
+    /// Inspect the local SQLite catalog through the backend-neutral schema type.
     pub fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
         self.adapter.inspect_schema()
     }

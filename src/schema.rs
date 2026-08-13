@@ -1,14 +1,14 @@
 //! Backend-neutral local schema inspection.
 //!
-//! This is the portable catalog surface. Callers must not query
-//! `sqlite_master` or `PRAGMA table_info`; those names are SQLite-specific
-//! and are not part of the Dactyl contract.
+//! This is the portable catalog surface. Callers do not need to depend on
+//! SQLite catalog queries or Neon metadata response shapes.
 
 use serde::{Deserialize, Serialize};
 
-/// Snapshot of the local store's caller-visible schema.
+/// Projection of the caller-visible schema for a physical store.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StoreSchema {
+    /// Version of this backend-neutral schema description, not the file format.
     pub format_version: u32,
     pub tables: Vec<TableSchema>,
     pub indexes: Vec<IndexSchema>,
@@ -27,7 +27,7 @@ impl StoreSchema {
     }
 }
 
-/// One table in the local snapshot.
+/// One table in the physical store.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TableSchema {
     pub name: String,
@@ -56,7 +56,7 @@ pub struct IndexSchema {
     pub unique: bool,
 }
 
-/// A recorded foreign key.
+/// A recorded foreign key and its delete action.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ForeignKeySchema {
     pub columns: Vec<String>,
@@ -65,10 +65,13 @@ pub struct ForeignKeySchema {
     pub on_delete: ForeignKeyAction,
 }
 
-/// Delete action stored in the snapshot.
+/// Delete action reported by the physical store.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ForeignKeyAction {
+    NoAction,
     Restrict,
     Cascade,
+    SetNull,
+    SetDefault,
 }
