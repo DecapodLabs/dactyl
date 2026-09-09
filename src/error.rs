@@ -20,6 +20,7 @@ pub enum AdapterErrorKind {
     Capability,
     Value,
     Storage,
+    Corrupt,
     Transport,
     Protocol,
     Authentication,

@@ -63,11 +63,63 @@ SQLite-specific catalog queries. Blobs are normalized to JSON arrays of bytes
 and are read back with `Row::get_blob`; NULL, text, integer, REAL, and blob
 values remain distinct through the public row contract.
 
-Schema versioning, migration ordering, backups, import from legacy stores,
+Schema versioning, migration ordering, import from legacy stores,
 retry/backoff, idempotency keys, and domain-level version/CAS policy remain
-with Decapod or Propodus. The Neon adapter maps the stable Propodus v1 error
+with Decapod or Propodus; Dactyl owns the physical local SQLite maintenance
+contract described below. The Neon adapter maps the stable Propodus v1 error
 codes it receives, but it does not invent the resource-route translation or
 claim live cloud parity when that service contract is unavailable.
+
+## Explicit SQLite maintenance and recovery
+
+Local callers can use the additive `Connection` methods
+`verify_integrity()`, `backup(destination)`, and
+`recover_from_dump_reload(RecoveryOptions)`. These methods are deliberately
+not part of ordinary connection startup: Dactyl never silently repairs,
+renames, overwrites, or replaces a database during open or validation.
+Neon returns typed capability errors for these local-only operations.
+
+`verify_integrity()` runs SQLite's full `PRAGMA integrity_check`. A successful
+call returns the observed journal mode, `user_version`, and `application_id`.
+Malformed files and damaged indexes return `AdapterErrorKind::Corrupt` with a
+stable code such as `malformed_database`, `corrupt_database`, or
+`integrity_check_failed`; busy/locked, unavailable, and filesystem failures
+remain separate typed outcomes.
+
+`backup(destination)` uses SQLite's online backup API against the live
+connection. It is the supported live snapshot operation: WAL and SHM are read
+through SQLite and are not copied independently, so copying only the main
+database file is not used as a live-backup strategy. Dactyl writes a temporary
+destination, integrity-checks it, syncs it, and atomically publishes it. The
+backup is durable only to the extent that the host filesystem honors the file
+and directory sync operations. The destination is standalone and no partial
+destination is published on a backup, validation, sync, or rename failure.
+
+`recover_from_dump_reload(RecoveryOptions::new(archive_path,
+RecoveryJournalMode::Delete))` is an explicit operator action for a file-backed
+SQLite route. Dactyl starts a bounded exclusive SQLite transaction, rebuilds a
+new database from schema and table data using full-table reads that bypass
+secondary indexes, restores `user_version`, `application_id`, and
+`sqlite_sequence`, validates the new database, syncs it, preserves the
+original database plus any `-wal`/`-shm` sidecars at `archive_path`, and then
+renames the verified replacement into place. The original is retained until
+activation is ready; rename, sync, and reopen failures attempt rollback and
+leave the original active. An existing archive path is a typed conflict.
+
+Logical dump/reload intentionally does not preserve `PRAGMA journal_mode`.
+Dactyl always activates recovered databases in DELETE rollback-journal mode,
+which keeps replacement a single-file operation. The recovery result exposes
+the selected mode. Re-enabling WAL is a separate, explicit caller operation
+after reopening; it is not part of recovery atomicity.
+
+Recovery requires every other Dactyl connection in the current process to be
+closed and uses SQLite's configured busy timeout for cooperating clients. A
+live backup may run while other Dactyl connections are open. Dactyl cannot
+detect idle handles in another process, coordinate arbitrary external SQLite
+writers, or guarantee correctness on mounted filesystems that do not reliably
+propagate advisory locks. Operators must quiesce cooperating clients before
+replacement; Decapod's canonical coordination layer remains responsible for
+that higher-level process boundary.
 
 ## Local and mock conformance matrix
 

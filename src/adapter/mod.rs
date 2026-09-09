@@ -1,6 +1,9 @@
 //! Private backend adapters.
 
-use crate::contract::{AccessMode, AtomicResult, Operation, WriteResult};
+use crate::contract::{
+    AccessMode, AtomicResult, BackupResult, IntegrityReport, Operation, RecoveryOptions,
+    RecoveryResult, WriteResult,
+};
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Rows};
 use crate::schema::StoreSchema;
@@ -16,6 +19,33 @@ pub trait Adapter {
             AdapterErrorKind::Capability,
             "unsupported_schema_inspection",
             "schema inspection is a local-store operation",
+        ))
+    }
+
+    fn verify_integrity(&self) -> Result<IntegrityReport, DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_integrity_verification",
+            "integrity verification is a local SQLite operation",
+        ))
+    }
+
+    fn backup(&self, _destination: &std::path::Path) -> Result<BackupResult, DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_backup",
+            "SQLite backup is unavailable for this datastore",
+        ))
+    }
+
+    fn recover_from_dump_reload(
+        &mut self,
+        _options: &RecoveryOptions,
+    ) -> Result<RecoveryResult, DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_recovery",
+            "SQLite dump-reload recovery is unavailable for this datastore",
         ))
     }
 }

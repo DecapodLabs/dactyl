@@ -23,6 +23,11 @@ pub struct sqlite3_stmt {
     _private: [u8; 0],
 }
 
+#[repr(C)]
+pub struct sqlite3_backup {
+    _private: [u8; 0],
+}
+
 pub type sqlite3_destructor_type = Option<unsafe extern "C" fn(*mut c_void)>;
 
 type OpenV2 = unsafe extern "C" fn(*const c_char, *mut *mut sqlite3, c_int, *const c_char) -> c_int;
@@ -73,6 +78,14 @@ type ColumnBytes = unsafe extern "C" fn(*mut sqlite3_stmt, c_int) -> c_int;
 type ColumnBlob = unsafe extern "C" fn(*mut sqlite3_stmt, c_int) -> *const c_void;
 type Changes64 = unsafe extern "C" fn(*mut sqlite3) -> i64;
 type LastInsertRowid = unsafe extern "C" fn(*mut sqlite3) -> i64;
+type BackupInit = unsafe extern "C" fn(
+    *mut sqlite3,
+    *const c_char,
+    *mut sqlite3,
+    *const c_char,
+) -> *mut sqlite3_backup;
+type BackupStep = unsafe extern "C" fn(*mut sqlite3_backup, c_int) -> c_int;
+type BackupFinish = unsafe extern "C" fn(*mut sqlite3_backup) -> c_int;
 
 /// The native error information needed by Dactyl's stable mapper.
 #[derive(Debug)]
@@ -111,6 +124,9 @@ pub struct Api {
     column_blob: ColumnBlob,
     changes64: Changes64,
     last_insert_rowid: LastInsertRowid,
+    backup_init: BackupInit,
+    backup_step: BackupStep,
+    backup_finish: BackupFinish,
 }
 
 impl Api {
@@ -171,6 +187,9 @@ impl Api {
             column_blob: symbol!("sqlite3_column_blob", ColumnBlob),
             changes64: symbol!("sqlite3_changes64", Changes64),
             last_insert_rowid: symbol!("sqlite3_last_insert_rowid", LastInsertRowid),
+            backup_init: symbol!("sqlite3_backup_init", BackupInit),
+            backup_step: symbol!("sqlite3_backup_step", BackupStep),
+            backup_finish: symbol!("sqlite3_backup_finish", BackupFinish),
             _library: library,
         })
     }
@@ -317,6 +336,24 @@ impl Api {
 
     pub unsafe fn last_insert_rowid(&self, database: *mut sqlite3) -> i64 {
         (self.last_insert_rowid)(database)
+    }
+
+    pub unsafe fn backup_init(
+        &self,
+        destination: *mut sqlite3,
+        destination_name: *const c_char,
+        source: *mut sqlite3,
+        source_name: *const c_char,
+    ) -> *mut sqlite3_backup {
+        (self.backup_init)(destination, destination_name, source, source_name)
+    }
+
+    pub unsafe fn backup_step(&self, backup: *mut sqlite3_backup, pages: c_int) -> c_int {
+        (self.backup_step)(backup, pages)
+    }
+
+    pub unsafe fn backup_finish(&self, backup: *mut sqlite3_backup) -> c_int {
+        (self.backup_finish)(backup)
     }
 }
 

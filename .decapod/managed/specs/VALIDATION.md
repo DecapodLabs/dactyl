@@ -56,6 +56,15 @@ flowchart LR
 - `cargo test --all-features`
 - `cargo test --features sqlite --test sqlite_existing` proves that an existing Decapod SQLite fixture opens without conversion, preserves schema and values, supports updates and reopen, handles NULL/REAL/blob/generated-key values, and fails closed for missing/read-only paths.
 - `cargo test --features sqlite --test storage_contract` proves SQLite transaction rollback, schema changes, foreign-key cascades, typed constraints, separate-connection refresh, read-only behavior, and a bounded native SQLite lock timeout.
+- `cargo test --features sqlite --test sqlite_maintenance` proves healthy
+  integrity verification, malformed/corrupt-index detection, failed `REINDEX`
+  followed by successful dump/reload recovery, WAL/SHM-aware live backup,
+  schema/data/metadata preservation, DELETE journal-mode activation, atomic
+  archive conflicts, open-connection refusal, and bounded backup lock errors.
+- `cargo test --all-features --test conformance
+  neon_maintenance_operations_remain_typed_local_capabilities` proves the
+  additive maintenance methods do not change the Neon request/response
+  contract or issue remote requests.
 - `cargo tree --features sqlite` must show only the small optional loader path; it must not show `rusqlite`, `libsqlite3-sys`, a bundled SQLite implementation, a custom parser, snapshot/import crate, or a SQLite subprocess.
 - The local runtime proof must load a host shared SQLite library without a link-time SQLite dependency; `DACTYL_SQLITE_LIBRARY` may be used when the host loader path is non-standard.
 - `cargo test --all-features` is the complete local and executing-Neon mock proof. Live Propodus remains an external `unavailable` prerequisite unless a separate deployment proof supplies it.
@@ -106,76 +115,6 @@ flowchart LR
 - [ ] Unit tests cover critical branches.
 - [ ] Integration tests cover key user flows.
 - [ ] Failure-path tests cover retries/timeouts.
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `675a9e6374cb61169b87aeeb7997af79b5f0254619de715783b4eec78d518399`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `dactyl-db-macros/` (1 files), `src/` (10 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `4c9f2d54af60b251796edfdb274cd05721ccdafbc0314c2c80ed31bf68cf141b`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `bf1b0037f7e3d423956592464bb932446dc2d7444bf011dba2a9b464d136e350`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (6 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `919fa7cd8823e9f832ad87dd3ab6d70585d8789f120e4dc1d70348677d2713ac`
-- Significant implementation surfaces: `.github/` (2 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `cf7a521e61f99ad1452855e5decc7daacf95fd68f9b5d0c516ca4f127bf5ae74`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (7 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `2676b9ee4f370665d87731ca527c43e46617ffc0acd8941ef69a05c5dd7528a0`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `bdbd6f7c35de09571ba910250385d42b41598775405a141aa149bf866f2b40a7`
-- Significant implementation surfaces: `.github/` (3 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `109dee6063b1bbde09a5f46f2d88f05abf4b7ba4fcb39d3306f0247f042bf053`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `4ef0812329ae43b548b91cee12185140a9e57fa25915c70ca28f15e7572f98f7`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -237,7 +176,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d577d6f04f4dc668f2833f953cdd4c3854c28b689bbdff85e5a9b2343e46641c`
+- Repository signal fingerprint: `3ec0353ec71f876a987d542c5e67a26ab315c1ff7d9b410d5f771ff75ed13277`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -32,6 +32,33 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Dependency health:
 - Synthetic transaction:
 
+## SQLite maintenance runbook
+
+1. Call `Connection::verify_integrity()` and record the typed result. Treat
+   `Corrupt` as a storage incident; do not retry `REINDEX` or mutate the live
+   file as an automatic response. Busy/locked/unavailable outcomes require
+   contention or filesystem triage instead.
+2. For a live snapshot, call `Connection::backup(destination)`. The online
+   backup includes committed WAL state through SQLite and does not require
+   copying the source main file, `-wal`, or `-shm` independently. Verify the
+   returned destination before handing it to another process.
+3. For explicit corruption recovery, stop/quiesce cooperating writers, close
+   all other Dactyl connections, choose an unused archive path in the database
+   directory, and call `recover_from_dump_reload(RecoveryOptions::new(...,
+   RecoveryJournalMode::Delete))`. The result records the active path, archive
+   path, preserved metadata, and DELETE journal mode.
+4. Reopen through the normal `Connection` API and run
+   `verify_integrity()` again. The original database and sidecars remain at
+   the reported archive path for forensic recovery. If activation or rollback
+   reports a failure, preserve all named paths and escalate rather than
+   deleting or recreating the store.
+
+This runbook is online for backup but quiesced for replacement. Dactyl uses a
+bounded SQLite exclusive transaction and same-process handle tracking, but it
+cannot coordinate arbitrary external writers or guarantee advisory locks over
+unreliable bind mounts/filesystems. Re-enabling WAL after recovery is a
+separate explicit operation and is outside replacement atomicity.
+
 ## Incident Response
 - Detection:
 - Triage:
@@ -141,7 +168,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d577d6f04f4dc668f2833f953cdd4c3854c28b689bbdff85e5a9b2343e46641c`
+- Repository signal fingerprint: `3ec0353ec71f876a987d542c5e67a26ab315c1ff7d9b410d5f771ff75ed13277`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
