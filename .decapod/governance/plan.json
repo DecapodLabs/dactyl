@@ -1,20 +1,21 @@
 {
   "schema_version": "1.0.0",
-  "title": "Thin ambient SQLite and Neon routing for Propodus Vercel integration",
-  "intent": "Implement the Dactyl-owned thin physical storage seam for local SQLite versus Propodus Vercel/Neon: preserve the existing public execution signature and local behavior, select the route only from the documented ambient configuration, forward the opaque StorageContext without tenancy or governance semantics, normalize stable typed outcomes, and publish one reviewable PR with local and mock proof while recording live deployment proof as a separate gated dependency.",
+  "title": "Native SQLite backup and explicit recovery for Dactyl",
+  "intent": "Implement a Dactyl-native, explicit, auditable SQLite storage maintenance contract for live backup, integrity verification, dump-reload recovery, and atomic activation while preserving the existing local/remote abstraction boundary and request/response behavior. Inspect the current adapters and tests first; prefer an additive typed contract only if necessary. Preserve original stores until a verified replacement is ready, distinguish healthy, unavailable/locked, and corrupt outcomes, document WAL/SHM and journal-mode semantics, and leave arbitrary external writers and unreliable filesystems outside the guarantee boundary. Do not modify Decapod unless a strictly necessary compatible integration change is proven.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kzy8y1ep0h6qpa"
+    "feat_01m2429jct8gfy4m"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check; cargo test --all-features; cargo clippy --all-targets --all-features -- -D warnings; decapod validate"
+    "cargo fmt --all -- --check",
+    "cargo test --all-features",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not claim deployed Vercel/Neon parity or close live-proof issues without protected credentials and machine-readable live evidence.",
-    "Do not add organization, repository, membership, authorization, retry, idempotency, schema-policy, migration, or governance semantics to Dactyl.",
-    "Keep default SQLite tests network-free and preserve the existing public function signatures; any unsupported remote capability must fail with the existing typed contract."
+    "Stop before adding a cross-process lock-file protocol or Decapod change; the existing Decapod coordination boundary is sufficient for this focused Dactyl contract."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -25,5 +26,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786649210Z"
+  "updated_at": "1788991962Z"
 }

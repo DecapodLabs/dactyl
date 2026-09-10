@@ -12,7 +12,8 @@ mod schema;
 pub mod error;
 
 pub use crate::contract::{
-    AccessMode, AtomicResult, GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult,
+    AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,
+    OperationKind, OperationResult, RecoveryJournalMode, RecoveryOptions, RecoveryResult,
     StorageContext, WriteResult, STORAGE_CONTEXT_VERSION,
 };
 pub use crate::error::{AdapterErrorKind, DactylError};
@@ -212,6 +213,38 @@ impl Connection {
     /// Inspect the local SQLite catalog through the backend-neutral schema type.
     pub fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
         self.adapter.inspect_schema()
+    }
+
+    /// Verify the selected datastore without mutating it.
+    ///
+    /// SQLite returns an [`IntegrityReport`] only when `PRAGMA integrity_check`
+    /// succeeds. A malformed or damaged database is returned as a typed
+    /// `AdapterErrorKind::Corrupt`; lock, I/O, and unavailable failures retain
+    /// their independent typed categories.
+    pub fn verify_integrity(&self) -> Result<IntegrityReport, DactylError> {
+        self.adapter.verify_integrity()
+    }
+
+    /// Create a durable, consistent SQLite online-backup snapshot.
+    ///
+    /// The destination is published atomically after SQLite's online backup
+    /// API and a full integrity check succeed. SQLite WAL/SHM sidecars are
+    /// read through the source connection and are not copied as backup
+    /// inputs; the result is a standalone database file.
+    pub fn backup(
+        &self,
+        destination: impl AsRef<std::path::Path>,
+    ) -> Result<BackupResult, DactylError> {
+        self.adapter.backup(destination.as_ref())
+    }
+
+    /// Explicitly recover a local SQLite database through logical
+    /// dump/reload and atomically activate the verified replacement.
+    pub fn recover_from_dump_reload(
+        &mut self,
+        options: RecoveryOptions,
+    ) -> Result<RecoveryResult, DactylError> {
+        self.adapter.recover_from_dump_reload(&options)
     }
 }
 

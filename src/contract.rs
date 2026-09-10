@@ -172,6 +172,65 @@ pub struct OpenOptions {
     pub lock_timeout: Duration,
 }
 
+/// The journal mode selected for a recovered SQLite database.
+///
+/// Logical dump/reload recovery intentionally activates the replacement in
+/// rollback-journal mode. Re-enabling WAL is a separate, explicit caller
+/// operation after the recovered connection has been reopened.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RecoveryJournalMode {
+    Delete,
+}
+
+/// Explicit operator input for logical SQLite recovery.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecoveryOptions {
+    /// A new path at which Dactyl preserves the original database file and
+    /// any `-wal`/`-shm` sidecars before activating the replacement.
+    pub preserve_original_at: String,
+    /// The journal mode used by the replacement. This is currently explicit
+    /// and fixed to DELETE because it keeps activation a single-file atomic
+    /// replacement; the enum leaves the decision visible in the result.
+    pub journal_mode: RecoveryJournalMode,
+}
+
+impl RecoveryOptions {
+    pub fn new(preserve_original_at: impl Into<String>, journal_mode: RecoveryJournalMode) -> Self {
+        Self {
+            preserve_original_at: preserve_original_at.into(),
+            journal_mode,
+        }
+    }
+}
+
+/// A successful SQLite integrity verification.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IntegrityReport {
+    pub journal_mode: String,
+    pub user_version: i64,
+    pub application_id: i64,
+}
+
+/// The result of an online SQLite backup.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BackupResult {
+    pub destination: String,
+    pub source_journal_mode: String,
+    pub destination_journal_mode: String,
+    pub bytes: u64,
+}
+
+/// The result of a verified, atomically activated logical recovery.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RecoveryResult {
+    pub active_path: String,
+    pub preserved_original_path: String,
+    pub journal_mode: RecoveryJournalMode,
+    pub user_version: i64,
+    pub application_id: i64,
+}
+
 impl Default for OpenOptions {
     fn default() -> Self {
         Self {

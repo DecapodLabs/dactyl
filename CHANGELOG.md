@@ -86,12 +86,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The local route is an ordinary SQLite database. Dactyl does not ship a
   snapshot format, legacy importer, SQLite wrapper, bundled SQLite, or native
   SQLite dependency; missing host runtimes fail with a typed outcome.
+- Add explicit local SQLite integrity verification, online-backup snapshots,
+  and validated logical dump/reload recovery with atomic activation, original
+  file/sidecar preservation, typed corruption/lock outcomes, and DELETE
+  journal-mode activation after recovery ([#88](https://github.com/DecapodLabs/dactyl/issues/88)).
 
 ### Documentation
 
 - The Dactyl SQLite connector report and GitHub Pages documentation describe
   the backend-neutral API, host-runtime loading, schema projection, and local
-  compatibility proof. Import and migration policy remain caller-owned.
+  compatibility proof, backup/recovery guarantees, WAL/SHM boundaries, and
+  explicit repair policy. Import and migration policy remain caller-owned.
 
 ## [0.7.0] (2026-08-12)
 

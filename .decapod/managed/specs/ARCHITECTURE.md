@@ -6,6 +6,12 @@ library
 ## What This Project Is
 dactyl-db is a small Rust application driver: one normalized operation surface over a real local SQLite file and Vercel Neon. It is not a database-administration layer and does not reimplement SQLite.
 
+The one maintenance exception is a narrow, explicit local-storage contract:
+Dactyl can verify a SQLite file, make an online-backup snapshot, and perform a
+quiesced logical dump/reload replacement. These operations remain physical
+storage primitives; callers own repair policy, operator authorization,
+migration meaning, and when to invoke them.
+
 Architectural principles:
 - **Simplicity**: Keep components focused and reusable.
 - **Modularity**: Clearly defined interface boundaries and dependency separation.
@@ -29,6 +35,10 @@ This project's architecture consists of the following key layers/directories:
 - For Neon, Dactyl validates the context envelope, attaches it to `/query` and
   `/batch`, and fails closed before transport when it is absent or malformed.
 - The adapter returns normalized rows, explicit write results, typed errors, or an ordered atomic result.
+- A local maintenance call uses the same private SQLite connection seam: live
+  backup uses SQLite's online-backup API, verification uses full
+  `integrity_check`, and recovery builds a validated sibling before atomic
+  activation. Neon reports typed capability errors for local maintenance.
 
 ## Strongest Existing Primitives
 - Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
@@ -88,7 +98,11 @@ sequenceDiagram
 - Execution model: each free `read` / `write` call constructs a short-lived adapter for the ambient route and drops it on return; explicit `Connection` scopes several application operations to one route.
 - Isolation boundaries: Dactyl keeps no process-global cache and exposes no backend handle. Each local connection owns a private mutex-protected SQLite handle; SQLite's pager, lock, journal, busy timeout, and transaction machinery provide file isolation. `Connection::atomic` commits only after every operation succeeds.
 - Backpressure strategy: owned by the backend or Neon service; Dactyl does not retry or schedule work.
-- Shared state synchronization: none at the Dactyl layer.
+- Shared state synchronization: each local handle is mutex-protected; a
+  process-local path registry rejects recovery while another Dactyl handle is
+  open, and recovery also uses SQLite's bounded exclusive transaction. Dactyl
+  does not claim cross-process protection for idle handles, arbitrary external
+  writers, or unreliable mounted filesystems.
 
 ## Deployment Topology
 - Runtime units: none (library).
@@ -118,6 +132,7 @@ sequenceDiagram
 | ADR-007 | Dactyl-owned snapshot format, not a SQLite file header | Superseded | The snapshot and its sidecars were removed; the local route now opens the requested SQLite file directly. | 2026-08-12 |
 | ADR-008 | Explicit pure-Rust SQLite-to-Dactyl import for issue #77 | Superseded | The revised Issue #77 scope requires direct compatibility, so the importer and custom reader were removed. | 2026-08-12 |
 | ADR-009 | Real SQLite local connector for issue #77 | Accepted | Use the smallest suitable SQLite binding behind the private adapter, preserve the existing backend-neutral API, and leave schema/migration policy outside Dactyl. | 2026-08-13 |
+| ADR-010 | Explicit SQLite maintenance through the existing adapter seam | Accepted | Add typed `verify_integrity`, online `backup`, and dump/reload recovery methods to `Connection`; validate and fsync temporary files before activation, preserve the original plus sidecars, require same-process quiescence, and always activate logical recovery in DELETE journal mode. | 2026-09-09 |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):
@@ -154,7 +169,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d577d6f04f4dc668f2833f953cdd4c3854c28b689bbdff85e5a9b2343e46641c`
+- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

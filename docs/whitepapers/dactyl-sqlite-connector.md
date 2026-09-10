@@ -61,6 +61,54 @@ details; callers do not need to depend on `sqlite_schema` or PRAGMA response
 layouts. Neon intentionally returns `unsupported_schema_inspection` because
 hosted catalog policy belongs to the remote service boundary.
 
+## Backup, verification, and explicit recovery
+
+The local connection exposes three additive maintenance operations:
+
+- `verify_integrity()` runs full `PRAGMA integrity_check` and returns the
+  observed journal mode, `user_version`, and `application_id` only when the
+  store is healthy. `AdapterErrorKind::Corrupt` distinguishes malformed files
+  and damaged indexes from `Busy`, `Locked`, `Unavailable`, and filesystem
+  failures.
+- `backup(destination)` uses `sqlite3_backup_init`/`sqlite3_backup_step` and
+  `sqlite3_backup_finish`. It is the live-backup contract; Dactyl does not copy
+  only the main file and does not copy WAL/SHM sidecars as a substitute for
+  SQLite's snapshot semantics. SQLite reads committed WAL state through the
+  source handle and the destination is integrity-checked, file-synced, and
+  atomically published from a temporary sibling.
+- `recover_from_dump_reload(RecoveryOptions)` is explicit and never called by
+  open, validation, or ordinary reads/writes. It rebuilds a new database from
+  caller-owned schema SQL and full-table reads with `NOT INDEXED`, preserving
+  application rows, schema objects, `sqlite_sequence`, `user_version`, and
+  `application_id`. The replacement is integrity-checked before activation.
+
+Recovery is a quiesced replacement operation, not an online write operation.
+Dactyl rejects it when another Dactyl connection to the same path is open in
+the current process. It uses a bounded `BEGIN EXCLUSIVE` transaction for the
+cooperating SQLite clients it can reach, then closes its own handle before
+renaming. The caller supplies a new archive path in the same directory;
+Dactyl moves the original main file and any `-wal`/`-shm` sidecars there only
+after the replacement is validated. The archive path must not already exist.
+If activation, directory syncing, or reopening fails, Dactyl attempts to
+quarantine the replacement and restore the original. A rollback failure is
+reported as `recovery_rollback_failed`; Dactyl never silently falls back to a
+fresh empty database.
+
+SQLite logical dump/reload does not carry `PRAGMA journal_mode` across the
+new database. Dactyl therefore always activates a recovered database in
+`DELETE` rollback-journal mode and exposes that choice in `RecoveryResult`.
+It does not restore WAL implicitly. Re-enabling WAL is an explicit caller
+operation after the normal Dactyl connection has reopened and is outside the
+recovery atomicity guarantee.
+
+The durability guarantee is bounded by the host filesystem: Dactyl syncs the
+replacement file, preserved archive files, and their parent directory, but it
+cannot repair filesystems or mounted transports that lose or misorder writes
+or fail to propagate advisory locks. It also cannot coordinate arbitrary
+external SQLite writers. A live backup is safe for cooperating SQLite clients;
+replacement requires those clients to be quiesced, including any higher-level
+coordination used by Decapod.
+
 ## Compatibility proof
 
 `tests/sqlite_existing.rs` copies a checked-in Decapod SQLite fixture and

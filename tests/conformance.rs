@@ -10,7 +10,7 @@ use axum::{
 };
 use dactyl_db::{
     AccessMode, AdapterErrorKind, Connection, Datastore, DatastoreRoute, OpenOptions, Operation,
-    OperationResult, Parameter, StorageContext,
+    OperationResult, Parameter, RecoveryJournalMode, RecoveryOptions, StorageContext,
 };
 use serde_json::{json, Value};
 use tokio::runtime::Runtime;
@@ -370,6 +370,29 @@ fn neon_normalizes_service_authorization_failure() {
         assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authorization));
         assert_eq!(error.adapter_code(), Some("repository_not_authorized"));
     });
+}
+
+#[test]
+fn neon_maintenance_operations_remain_typed_local_capabilities() {
+    let mut db = Connection::open_with_context(
+        DatastoreRoute::neon("http://127.0.0.1:1", None),
+        Some(context()),
+    )
+    .unwrap();
+    let integrity = db.verify_integrity().unwrap_err();
+    assert_eq!(
+        integrity.adapter_code(),
+        Some("unsupported_integrity_verification")
+    );
+    let backup = db.backup("/tmp/dactyl-neon-backup.db").unwrap_err();
+    assert_eq!(backup.adapter_code(), Some("unsupported_backup"));
+    let recovery = db
+        .recover_from_dump_reload(RecoveryOptions::new(
+            "/tmp/dactyl-neon-archive.db",
+            RecoveryJournalMode::Delete,
+        ))
+        .unwrap_err();
+    assert_eq!(recovery.adapter_code(), Some("unsupported_recovery"));
 }
 
 #[test]

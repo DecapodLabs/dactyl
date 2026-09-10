@@ -82,6 +82,34 @@ pub enum ApiError {
 - `Connection::inspect_schema()` is the backend-neutral catalog for local SQLite. It reports tables, columns, defaults, primary/unique keys, indexes, foreign keys, delete actions, and row counts. `Row::get_blob` reads the canonical JSON byte-array row shape. Neon inspection fails as `unsupported_schema_inspection`.
 - `atomic` is an opaque all-or-nothing batch with ordered results, empty-batch no-op semantics, and no nested transaction handles. Operational adapter errors expose typed categories and preserve stable remote error codes so application code does not parse backend messages. The Neon adapter maps `constraint_failed` / unique / not-null / foreign-key violation codes to `AdapterErrorKind::Constraint` and busy/locked/timeout codes to the matching contention kinds.
 
+### Explicit SQLite maintenance contract
+
+- `Connection::verify_integrity()` is read-only and returns `IntegrityReport`
+  (`journal_mode`, `user_version`, `application_id`) only for a healthy local
+  store. Malformed files and damaged indexes use the additive
+  `AdapterErrorKind::Corrupt` category with stable codes; lock, unavailable,
+  and filesystem failures remain distinguishable.
+- `Connection::backup(destination)` is a local-only online snapshot. It
+  accounts for WAL/SHM through SQLite's backup API, validates and syncs a
+  temporary sibling, then atomically publishes a standalone destination.
+  Existing destination paths are conflicts, so an operator never loses a
+  prior backup implicitly.
+- `Connection::recover_from_dump_reload(RecoveryOptions)` is an explicit
+  mutating operation. The caller names a same-directory archive path and the
+  journal-mode choice exposed by the typed options/result. The current
+  supported mode is DELETE: logical dump/reload does not preserve source WAL,
+  and Dactyl does not re-enable WAL implicitly.
+- Recovery validates schema/data/metadata in a new file before moving the
+  original main file and any `-wal`/`-shm` sidecars to the archive. Same-process
+  sibling connections return `Conflict/open_connections`; cross-process
+  quiescence remains the caller/coordinator boundary. Rename, fsync, and
+  reopen failures attempt rollback and surface `recovery_rollback_failed` if
+  rollback itself cannot be proven.
+- Ordinary open, validation, reads, and writes never invoke recovery. The
+  public surface contains no SQLite handle, raw dump text, Decapod event model,
+  workspace model, or automatic repair policy. Neon returns typed capability
+  errors without issuing network requests.
+
 #### Ambient route and batch result hardening
 
 `DATASTORE` is the sole ambient selector; `DATASTORE_ROUTE` is mandatory and
@@ -161,7 +189,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d577d6f04f4dc668f2833f953cdd4c3854c28b689bbdff85e5a9b2343e46641c`
+- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

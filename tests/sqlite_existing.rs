@@ -159,13 +159,13 @@ fn sqlite_read_only_and_missing_paths_fail_closed() {
 }
 
 #[test]
-fn malformed_local_file_fails_closed_as_a_typed_capability_error() {
+fn malformed_local_file_fails_closed_as_a_typed_corruption_error() {
     let file = NamedTempFile::new().unwrap();
     fs::write(file.path(), b"not a SQLite database").unwrap();
     let error = match Connection::open(DatastoreRoute::sqlite(file.path().to_string_lossy())) {
         Ok(_) => panic!("malformed local file unexpectedly opened"),
         Err(error) => error,
     };
-    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Capability));
-    assert_eq!(error.adapter_code(), Some("invalid_database"));
+    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Corrupt));
+    assert_eq!(error.adapter_code(), Some("malformed_database"));
 }
