@@ -189,7 +189,7 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3c717df07776549e917efc254a349c993b305d03f3fa3ee64275264eb9994ff2`
+- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -19,6 +19,7 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/VALIDATION.md",
+    ".github/workflows/decapod-validate.yml",
     "README.md",
     "docs/whitepapers/dactyl-sqlite-connector.md",
     "src/adapter/mod.rs",
@@ -98,6 +99,10 @@
       "status": "passed"
     },
     {
+      "name": "hosted_decapod_version_alignment",
+      "status": "passed"
+    },
+    {
       "name": "issue_1313_comment",
       "status": "passed"
     },
@@ -111,6 +116,10 @@
     },
     {
       "name": "specs_refresh",
+      "status": "passed"
+    },
+    {
+      "name": "specs_refresh_after_workflow_change",
       "status": "passed"
     }
   ],
@@ -129,7 +138,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:e3109d2d8630c6aa533c1d852b256e45929b55e99e8ef86ceaa882ec3f3a14f3",
+  "artifact_hash": "sha256:165c97bc12d0f186fa7f5a25384de17f671b9a1bc7554640e43cf6ceadf307c2",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -196,6 +205,13 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
         "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
@@ -326,12 +342,28 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "trajectory.record",
+            "scope": [
+              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+            ],
+            "observations": [
+              ".github/workflows/decapod-validate.yml"
+            ],
+            "proof_refs": [
+              "hosted_decapod_version_alignment",
+              "specs_refresh_after_workflow_change"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 9
   }
 }
