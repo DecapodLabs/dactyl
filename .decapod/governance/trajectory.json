@@ -5,6 +5,10 @@
   "task_id": "feat_01m2429jct8gfy4m",
   "original_intent": "Implement the Dactyl-side solution for dactyl#88 and the remaining storage-contract work from decapod#1313.",
   "derived_intent": "Add typed Dactyl-local SQLite integrity verification, online backup, and explicit logical dump-reload recovery with atomic activation, original preservation, DELETE journal-mode semantics, tests, docs, and no Decapod changes.",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Dactyl repository only; preserve the existing adapter abstraction; do not perform automatic repair; do not claim protection for arbitrary external writers or unreliable filesystems."
   ],
@@ -29,6 +33,8 @@
     "tests/storage_contract.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -50,7 +56,8 @@
   ],
   "declared_commands": [
     "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --all"
+    "cargo fmt --all",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -72,6 +79,10 @@
     },
     {
       "name": "dactyl_pr_89",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
       "status": "passed"
     },
     {
@@ -104,7 +115,8 @@
     }
   ],
   "evidence": [
-    "Dactyl issue #88 and Decapod issue #1313 reviewed; no Decapod source changes required because PR #1317 supplies cooperating-client coordination."
+    "Dactyl issue #88 and Decapod issue #1313 reviewed; no Decapod source changes required because PR #1317 supplies cooperating-client coordination.",
+    "validation epoch ve_6bf5ab46ce65265e completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -117,7 +129,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:cf2cd13f877480536f07d6e9b78648c62eb6b5335faaf7682eba1a1eeef8afcc",
+  "artifact_hash": "sha256:e3109d2d8630c6aa533c1d852b256e45929b55e99e8ef86ceaa882ec3f3a14f3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -177,6 +189,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
@@ -289,12 +308,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_6bf5ab46ce65265e completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
