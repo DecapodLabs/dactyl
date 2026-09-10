@@ -12,6 +12,7 @@
     "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
   ],
   "inspected_files": [
+    ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/VALIDATION.md",
     "README.md",
@@ -70,11 +71,27 @@
       "status": "passed"
     },
     {
+      "name": "dactyl_pr_89",
+      "status": "passed"
+    },
+    {
       "name": "decapod_validate",
       "status": "failed"
     },
     {
       "name": "focused_sqlite_maintenance",
+      "status": "passed"
+    },
+    {
+      "name": "git_push",
+      "status": "passed"
+    },
+    {
+      "name": "issue_1313_comment",
+      "status": "passed"
+    },
+    {
+      "name": "issue_88_comment",
       "status": "passed"
     },
     {
@@ -100,7 +117,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:460b19106af4d243a8dd2aa393196c5078bec0f1289f11ccb78d00bb7eec140e",
+  "artifact_hash": "sha256:cf2cd13f877480536f07d6e9b78648c62eb6b5335faaf7682eba1a1eeef8afcc",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -153,6 +170,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
@@ -247,12 +271,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json"
+            ],
+            "proof_refs": [
+              "git_push",
+              "dactyl_pr_89",
+              "issue_88_comment",
+              "issue_1313_comment"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
