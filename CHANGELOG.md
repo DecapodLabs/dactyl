@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0](https://github.com/DecapodLabs/dactyl/compare/v0.9.0...v0.10.0) (2026-09-10)
+
+
+### Features
+
+* **sqlite:** add explicit backup and recovery contract ([43546e6](https://github.com/DecapodLabs/dactyl/commit/43546e6deceac7063509d08a5c5c438265961ee6))
+* **sqlite:** add explicit backup and recovery contract ([1424682](https://github.com/DecapodLabs/dactyl/commit/1424682f7fca9fc9f5d9f9406d05116ed769f702))
+
 ## [0.9.0](https://github.com/DecapodLabs/dactyl/compare/v0.8.2...v0.9.0) (2026-08-13)
 
 
