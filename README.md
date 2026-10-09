@@ -3,7 +3,7 @@
 [![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.98.3-dc2626)](https://github.com/DecapodLabs/decapod)
 
 `dactyl-db` is a lightweight application-layer datastore for read/write-heavy
-apps that need the same small Rust surface over a local store and Vercel Neon.
+apps that need the same small Rust surface over a local store, Vercel Neon, and an opt-in Supabase-backed service.
 It binds values, normalizes returned rows, and exposes explicit physical
 atomicity so the application does not need separate driver code for each
 backend.
@@ -15,7 +15,7 @@ atomic batch boundaries, access mode, and result/error normalization.
 
 ## What is shared
 
-SQLite and Neon use the same application contract:
+SQLite, Neon, and Supabase expose the same application contract:
 
 - `read(sql, params)` returns owned `Rows`.
 - `write(sql, params)` returns the affected-row count for compatibility;
@@ -25,9 +25,9 @@ SQLite and Neon use the same application contract:
   It does not implement retry, nesting, or idempotency policy.
 - `OpenOptions { access_mode: ReadOnly, .. }` opens a non-mutating handle.
 - Values are bound as `Null`, `Bool`, `Integer`, `Real`, `Text`, or `Blob`.
-- The Neon adapter forwards SQL to `/query` and atomic batches to `/batch`.
+- The HTTP adapters forward SQL to `/query` and atomic batches to `/batch`.
 - `StorageContext` is a versioned opaque `{ version, payload }` envelope. It
-  is ignored by local storage and forwarded unchanged by Neon; Dactyl does not
+  is ignored by local storage and forwarded unchanged by remote adapters; Dactyl does not
   interpret tenancy or authorization fields.
 - Adapter failures use typed categories including busy/locked/timeout,
   constraint/conflict/version-conflict/transaction-aborted, read-only,
@@ -41,6 +41,37 @@ shared SQLite library at runtime; Dactyl does not compile or bundle SQLite,
 and does not duplicate SQLite's file format, parser, pager, journal, or query
 planner. The route name and `DATASTORE=sqlite` setting therefore mean what
 they say: the requested path is an ordinary SQLite database.
+
+## Supabase service route (opt-in)
+
+Enable the `supabase` feature and select `DATASTORE=supabase` with
+`DATASTORE_ROUTE=https://your-storage-service.example` and a user bearer in
+`DATASTORE_TOKEN`. Or use `DatastoreRoute::supabase(endpoint, Some(user_token))`
+with `Connection::open_with_context(route, Some(context))`.
+
+The route is an authenticated SQL-over-HTTP service backed by Supabase Postgres,
+not a Supabase REST API URL or a PostgreSQL connection string. Database provider
+and hosting provider are independent. `DatastoreRoute::transport()` reports
+`DatastoreTransport::Local` for SQLite and `Http` for Neon/Supabase. No query has
+a provider selector. Existing SQLite/Neon configuration and default features
+are unchanged; an uncompiled provider fails instead of falling back locally.
+
+A user bearer and the existing opaque `StorageContext` are required. The service
+owns identity, org/group/team/user authorization, SQL capabilities and physical
+PostgreSQL transactions. Shared database passwords and service-role keys must
+remain server-side. The adapter never invents tenant policy from context.
+
+Remote service endpoints must use HTTPS. Plain HTTP is accepted only for literal
+loopback IP addresses for disposable local tests, never DNS names. Redirects are
+refused, requests have a 15-second total budget and 5-second connection budget,
+and request/response JSON is limited to 4 MiB. Errors and route debug output
+redact credentials, URLs and server messages. There are no automatic retries.
+
+See [the Supabase service contract](docs/supabase-service.md) for the exact wire,
+portable value/SQL profile, connection-mode boundary, and proof limits. This
+client capability does not prove that every SQLite schema or Decapod subsystem
+can run on a configured service. Full PostgreSQL service conformance and live
+Supabase authorization remain separate release gates.
 
 ## Local SQLite route
 

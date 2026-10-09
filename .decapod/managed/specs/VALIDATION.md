@@ -77,6 +77,22 @@ flowchart LR
 
 ## Promotion Gates
 
+### Supabase HTTP Runtime and Boundaries
+
+The opt-in Supabase service contract suite uses synthetic loopback HTTP and must
+pass with only `supabase` enabled and with all features. It covers the 4 MiB
+request/response bounds, the 15-second request deadline both before headers and
+while reading a stalled body, and typed timeout classification without matching
+or exposing remote error text. Construction, successful requests, remote and
+transport errors, and connection drop must remain safe inside both current-thread
+and multithread Tokio runtimes. These synchronous calls may block the caller;
+the blocking HTTP client is constructed, used, and dropped on a joined worker.
+
+This client evidence does not prove actual PostgreSQL transactions, pooler
+behavior, live Supabase authorization, or container execution. Missing physical
+backend or required container proof remains unavailable and blocks publication
+where required; a clean-tree validation relaxation is not container evidence.
+
 ## Blocking Gates
 | Gate | Command | Evidence |
 |---|---|---|
@@ -176,7 +192,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
+- Repository signal fingerprint: `2349ef9e7acd548bf008a7b14f1eb124f3a9fd13a84880fc762a0c01e68727a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

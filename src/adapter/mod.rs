@@ -55,3 +55,6 @@ pub mod sqlite;
 
 #[cfg(feature = "neon")]
 pub mod neon;
+
+#[cfg(feature = "supabase")]
+pub(crate) mod supabase;

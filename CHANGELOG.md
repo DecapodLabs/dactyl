@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Opt-in `supabase` provider behind the existing read/write/atomic facade and
+  `DATASTORE=supabase`, with explicit provider/transport semantics.
+- Authenticated bounded HTTPS service transport, opaque context forwarding,
+  fail-closed configuration, strict portable result normalization, redacted
+  errors, and synthetic HTTP regression tests.
+- Documented PostgreSQL service proof requirements and unsupported native,
+  catalog, maintenance, and live Supabase capabilities. Existing SQLite/Neon
+  defaults and features remain unchanged.
+
 ## [0.10.0](https://github.com/DecapodLabs/dactyl/compare/v0.9.0...v0.10.0) (2026-09-10)
 
 

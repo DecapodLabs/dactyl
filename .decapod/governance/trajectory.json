@@ -1,69 +1,60 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run_01m2429jct8gfy4m-sqlite-recovery",
-  "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
-  "task_id": "feat_01m2429jct8gfy4m",
-  "original_intent": "Implement the Dactyl-side solution for dactyl#88 and the remaining storage-contract work from decapod#1313.",
-  "derived_intent": "Add typed Dactyl-local SQLite integrity verification, online backup, and explicit logical dump-reload recovery with atomic activation, original preservation, DELETE journal-mode semantics, tests, docs, and no Decapod changes.",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
+  "run_id": "dactyl-supabase-91-review",
+  "intent_id": "intent:dactyl-supabase-91-review",
+  "task_id": "feat_01m4f20t9tkjq7kx",
+  "original_intent": "Prepare a reviewed draft for Dactyl issue 91",
+  "derived_intent": "Implement the opt-in authenticated Supabase HTTP client contract without native database credentials or default changes",
+  "current_phase": "reviewed-candidate-governance-blocked",
+  "blockers": [
+    "Final validation requires actual container workspace proof; runtime is unavailable. Earlier clean-tree relaxation did not establish this proof.",
+    "Governance artifact inventory reports stale validation receipt; a successful governed validation with actual required container proof is needed before publication.",
+    "Staged gatekeeper pattern findings require supported resolution before publication; classification as synthetic/prose does not constitute a gate pass."
   ],
   "active_boundaries": [
-    "Dactyl repository only; preserve the existing adapter abstraction; do not perform automatic repair; do not claim protection for arbitrary external writers or unreliable filesystems."
+    "No external database connections or deployment; actual PostgreSQL, live Supabase and container execution unproven"
   ],
   "repo_scope": [
-    "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+    "Cargo.toml",
+    "docs",
+    "src",
+    "tests"
   ],
   "inspected_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/VALIDATION.md",
-    ".github/workflows/decapod-validate.yml",
-    "README.md",
-    "docs/whitepapers/dactyl-sqlite-connector.md",
-    "src/adapter/mod.rs",
-    "src/adapter/neon/mod.rs",
-    "src/adapter/sqlite/ffi.rs",
-    "src/adapter/sqlite/mod.rs",
-    "src/contract.rs",
-    "src/error.rs",
-    "src/lib.rs",
-    "tests/conformance.rs",
-    "tests/sqlite_existing.rs",
-    "tests/storage_contract.rs"
+    "src/adapter/supabase.rs",
+    "tests/supabase_contract.rs"
   ],
   "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".decapod/managed/specs/INTENT.md",
-    ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".decapod/managed/specs/SECURITY.md",
     ".decapod/managed/specs/VALIDATION.md",
-    "CHANGELOG.md",
-    "README.md",
-    "docs/whitepapers/dactyl-sqlite-connector.md",
-    "src/adapter/mod.rs",
-    "src/adapter/sqlite/ffi.rs",
-    "src/adapter/sqlite/mod.rs",
-    "src/contract.rs",
-    "src/error.rs",
-    "src/lib.rs",
-    "tests/conformance.rs",
-    "tests/sqlite_existing.rs",
-    "tests/sqlite_maintenance.rs"
+    ".github/workflows/rust-contract.yml",
+    "docs/supabase-service.md",
+    "src/adapter/supabase.rs",
+    "tests/supabase_contract.rs"
   ],
   "declared_commands": [
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --all",
-    "decapod validate"
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --all-features",
+    "cargo test --locked --all-features",
+    "cargo test --locked --no-default-features (all eight feature combinations)",
+    "decapod validate --format json"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "actual_postgres",
+      "status": "unavailable"
+    },
+    {
+      "name": "body_timeout_classification",
+      "status": "passed"
+    },
+    {
       "name": "cargo_clippy",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_feature_matrix",
       "status": "passed"
     },
     {
@@ -75,62 +66,48 @@
       "status": "passed"
     },
     {
-      "name": "clippy",
-      "status": "passed"
-    },
-    {
-      "name": "dactyl_pr_89",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
-      "status": "passed"
+      "name": "container_execution",
+      "status": "unavailable"
     },
     {
       "name": "decapod_validate",
       "status": "failed"
     },
     {
-      "name": "focused_sqlite_maintenance",
+      "name": "gatekeeper_staged",
+      "status": "failed"
+    },
+    {
+      "name": "governance_inventory",
+      "status": "failed"
+    },
+    {
+      "name": "independent_client_probes",
       "status": "passed"
     },
     {
-      "name": "git_push",
-      "status": "passed"
+      "name": "live_supabase",
+      "status": "unavailable"
     },
     {
-      "name": "hosted_decapod_version_alignment",
-      "status": "passed"
-    },
-    {
-      "name": "issue_1313_comment",
-      "status": "passed"
-    },
-    {
-      "name": "issue_88_comment",
-      "status": "passed"
-    },
-    {
-      "name": "neon_capability_contract",
-      "status": "passed"
-    },
-    {
-      "name": "specs_refresh",
-      "status": "passed"
-    },
-    {
-      "name": "specs_refresh_after_workflow_change",
+      "name": "tokio_runtime_lifecycle",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Dactyl issue #88 and Decapod issue #1313 reviewed; no Decapod source changes required because PR #1317 supplies cooperating-client coordination.",
-    "validation epoch ve_6bf5ab46ce65265e completed with zero failures"
+    "All eight optional feature combinations passed on the final client source, including 16 synthetic HTTP contract tests when Supabase is enabled",
+    "Decapod clean-tree validation does not constitute container execution; no container runtime exists in this workspace",
+    "Final explicit locked all-features rerun passed 67 tests after adding exact 4 MiB acceptance coverage; all 16 Supabase contract tests passed",
+    "Final validation report: 185 passed gates, container_workspace_required failed. No skip flags or custody-policy changes used.",
+    "Formatting and clippy passed. Governed validation still reports 185 passing gates and container_workspace_required failure. Existing successful validation receipt is stale against the updated trajectory and cannot be refreshed until required proof is available.",
+    "Independent seven-probe suite passed on adapter SHA256 9d78ed3ce7fff7c1925ff55b1c451003bb7d8d66a1d05758678e53aa47d2ac9c: Tokio current-thread and multithread lifecycle, body-stall Timeout, size bounds, malformed responses and integer normalization",
+    "Independent stalled response-body probe reproduced Timeout being incorrectly classified as Transport; prior candidate is superseded by an in-progress Tokio-safe worker lifecycle correction",
+    "No-feature, SQLite, Neon, Supabase, and SQLite+Neon feature suites passed before the final two-code authentication mapping addition",
+    "Rust 1.96.1: all-features contract suite passed, including 13 synthetic HTTP tests; fmt and clippy passed",
+    "Staged validation reports 184 passing gates and two failed gates: required container proof and nine pattern detections. Manual inspection identifies ordinary bearer-token prose, explicit synthetic URL/password fixture values, and positional PostgreSQL bind syntax; no scanner switches or obfuscated fixtures were used."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Recovery is explicitly quiesced across processes; Dactyl proves only same-process handles and SQLite bounded locking."
-  ],
+  "unresolved_assumptions": [],
   "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -138,21 +115,24 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:165c97bc12d0f186fa7f5a25384de17f671b9a1bc7554640e43cf6ceadf307c2",
+  "artifact_hash": "sha256:f596db0b38da79e4c24cc5b3f61c9bd211a39259382b107d8bea54de18f57b71",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run_01m2429jct8gfy4m-sqlite-recovery": {
-        "id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
-        "raw_intent": "Implement the Dactyl-side solution for dactyl#88 and the remaining storage-contract work from decapod#1313.",
-        "refined_intent": "Add typed Dactyl-local SQLite integrity verification, online backup, and explicit logical dump-reload recovery with atomic activation, original preservation, DELETE journal-mode semantics, tests, docs, and no Decapod changes.",
+      "intent:dactyl-supabase-91-review": {
+        "id": "intent:dactyl-supabase-91-review",
+        "raw_intent": "Prepare a reviewed draft for Dactyl issue 91",
+        "refined_intent": "Implement the opt-in authenticated Supabase HTTP client contract without native database credentials or default changes",
         "acceptance_criteria": [],
         "constraints": [
-          "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+          "src",
+          "tests",
+          "docs",
+          "Cargo.toml"
         ],
         "assumptions": [],
         "boundaries": [
-          "Dactyl repository only; preserve the existing adapter abstraction; do not perform automatic repair; do not claim protection for arbitrary external writers or unreliable filesystems."
+          "No external database connections or deployment; actual PostgreSQL, live Supabase and container execution unproven"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -165,196 +145,199 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+        "detail": "trajectory:dactyl-supabase-91-review"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+        "detail": "trajectory:dactyl-supabase-91-review"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+        "detail": "trajectory:dactyl-supabase-91-review"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+        "detail": "trajectory:dactyl-supabase-91-review"
       },
       {
         "sequence": 8,
         "event_id": "event:8",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+        "detail": "trajectory:dactyl-supabase-91-review"
       },
       {
         "sequence": 9,
         "event_id": "event:9",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01m2429jct8gfy4m-sqlite-recovery"
+        "detail": "trajectory:dactyl-supabase-91-review"
       }
     ],
     "trajectories": {
-      "run_01m2429jct8gfy4m-sqlite-recovery": {
-        "id": "run_01m2429jct8gfy4m-sqlite-recovery",
-        "intent_id": "intent:run_01m2429jct8gfy4m-sqlite-recovery",
+      "dactyl-supabase-91-review": {
+        "id": "dactyl-supabase-91-review",
+        "intent_id": "intent:dactyl-supabase-91-review",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
-            "command": "cargo fmt --all",
             "scope": [
-              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+              "Cargo.toml",
+              "docs",
+              "src",
+              "tests"
             ],
             "observations": [
-              "src/adapter/mod.rs",
-              "src/adapter/sqlite/mod.rs",
-              "src/adapter/sqlite/ffi.rs",
-              "src/adapter/neon/mod.rs",
-              "src/contract.rs",
-              "src/error.rs",
-              "src/lib.rs",
-              "tests/sqlite_existing.rs",
-              "tests/storage_contract.rs",
-              "tests/conformance.rs",
-              "README.md",
-              "docs/whitepapers/dactyl-sqlite-connector.md",
-              "src/adapter/sqlite/mod.rs",
-              "src/adapter/sqlite/ffi.rs",
-              "src/adapter/mod.rs",
-              "src/contract.rs",
-              "src/error.rs",
-              "src/lib.rs",
-              "tests/sqlite_existing.rs",
-              "tests/sqlite_maintenance.rs",
-              "tests/conformance.rs",
-              "README.md",
-              "docs/whitepapers/dactyl-sqlite-connector.md",
-              "CHANGELOG.md",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/managed/specs/VALIDATION.md",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/SECURITY.md",
-              "Dactyl issue #88 and Decapod issue #1313 reviewed; no Decapod source changes required because PR #1317 supplies cooperating-client coordination."
+              "Rust 1.96.1: all-features contract suite passed, including 13 synthetic HTTP tests; fmt and clippy passed",
+              "No-feature, SQLite, Neon, Supabase, and SQLite+Neon feature suites passed before the final two-code authentication mapping addition",
+              "Decapod clean-tree validation does not constitute container execution; no container runtime exists in this workspace"
             ],
             "proof_refs": [
-              "focused_sqlite_maintenance",
-              "neon_capability_contract",
-              "clippy"
+              "cargo_test_all_features",
+              "cargo_feature_matrix",
+              "cargo_clippy",
+              "cargo_fmt",
+              "container_execution",
+              "actual_postgres",
+              "live_supabase"
             ],
-            "validation_findings": [
-              "Recovery is explicitly quiesced across processes; Dactyl proves only same-process handles and SQLite bounded locking."
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
             "action": "trajectory.record",
             "scope": [
-              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+              "Cargo.toml",
+              "docs",
+              "src",
+              "tests"
             ],
             "observations": [
-              ".decapod/governance/validation.json",
-              ".decapod/managed/specs/VALIDATION.md"
+              "Final validation report: 185 passed gates, container_workspace_required failed. No skip flags or custody-policy changes used."
             ],
             "proof_refs": [
-              "decapod_validate",
-              "specs_refresh"
+              "decapod_validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
           {
             "sequence": 6,
-            "action": "trajectory.record",
+            "action": "correcting-runtime-lifecycle",
+            "command": "cargo test --all-features",
             "scope": [
-              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+              "Cargo.toml",
+              "docs",
+              "src",
+              "tests"
             ],
             "observations": [
-              "src/adapter/sqlite/mod.rs"
+              "src/adapter/supabase.rs",
+              "tests/supabase_contract.rs",
+              "Independent stalled response-body probe reproduced Timeout being incorrectly classified as Transport; prior candidate is superseded by an in-progress Tokio-safe worker lifecycle correction"
             ],
             "proof_refs": [
-              "cargo_fmt",
+              "body_timeout_classification",
+              "cargo_test_all_features",
+              "cargo_feature_matrix",
               "cargo_clippy",
-              "cargo_test_all_features"
+              "cargo_fmt"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
           },
           {
             "sequence": 7,
-            "action": "trajectory.record",
+            "action": "candidate-tested-publication-blocked",
+            "command": "cargo test --locked --no-default-features (all eight feature combinations)",
             "scope": [
-              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+              "Cargo.toml",
+              "docs",
+              "src",
+              "tests"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json"
+              "src/adapter/supabase.rs",
+              "tests/supabase_contract.rs",
+              "docs/supabase-service.md",
+              ".github/workflows/rust-contract.yml",
+              ".decapod/managed/specs/VALIDATION.md",
+              "All eight optional feature combinations passed on the final client source, including 16 synthetic HTTP contract tests when Supabase is enabled",
+              "Independent seven-probe suite passed on adapter SHA256 9d78ed3ce7fff7c1925ff55b1c451003bb7d8d66a1d05758678e53aa47d2ac9c: Tokio current-thread and multithread lifecycle, body-stall Timeout, size bounds, malformed responses and integer normalization",
+              "Formatting and clippy passed. Governed validation still reports 185 passing gates and container_workspace_required failure. Existing successful validation receipt is stale against the updated trajectory and cannot be refreshed until required proof is available."
             ],
             "proof_refs": [
-              "git_push",
-              "dactyl_pr_89",
-              "issue_88_comment",
-              "issue_1313_comment"
+              "body_timeout_classification",
+              "tokio_runtime_lifecycle",
+              "cargo_feature_matrix",
+              "cargo_clippy",
+              "cargo_fmt",
+              "independent_client_probes",
+              "decapod_validate",
+              "governance_inventory"
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
           },
           {
             "sequence": 8,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
+            "command": "cargo test --locked --all-features",
             "scope": [
-              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+              "Cargo.toml",
+              "docs",
+              "src",
+              "tests"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_6bf5ab46ce65265e completed with zero failures"
+              "Final explicit locked all-features rerun passed 67 tests after adding exact 4 MiB acceptance coverage; all 16 Supabase contract tests passed"
             ],
             "proof_refs": [
-              "decapod validate"
+              "cargo_test_all_features"
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
           },
           {
             "sequence": 9,
-            "action": "trajectory.record",
+            "action": "reviewed-candidate-governance-blocked",
             "scope": [
-              "src/adapter, public contract/error surface, focused SQLite/Neon tests, README/whitepaper/changelog, governed living specs"
+              "Cargo.toml",
+              "docs",
+              "src",
+              "tests"
             ],
             "observations": [
-              ".github/workflows/decapod-validate.yml"
+              "Staged validation reports 184 passing gates and two failed gates: required container proof and nine pattern detections. Manual inspection identifies ordinary bearer-token prose, explicit synthetic URL/password fixture values, and positional PostgreSQL bind syntax; no scanner switches or obfuscated fixtures were used."
             ],
             "proof_refs": [
-              "hosted_decapod_version_alignment",
-              "specs_refresh_after_workflow_change"
+              "gatekeeper_staged"
             ],
             "validation_findings": [],
             "custody_event_id": "event:9"

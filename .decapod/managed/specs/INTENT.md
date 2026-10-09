@@ -132,7 +132,17 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
+- Repository signal fingerprint: `2349ef9e7acd548bf008a7b14f1eb124f3a9fd13a84880fc762a0c01e68727a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Supabase provider boundary (issue 91)
+
+Add an opt-in third provider selected at connection construction. Existing
+SQLite and Neon configurations, features, defaults and operation contracts stay
+compatible. Supabase clients use authenticated HTTPS with user bearer credentials
+and the opaque versioned StorageContext. Database passwords and service-role
+keys belong exclusively to a separately authorized service/operator boundary.
+No native Postgres transport, deployment, data migration, or identity policy is
+introduced by the client adapter.

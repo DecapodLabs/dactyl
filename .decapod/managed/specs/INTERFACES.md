@@ -189,7 +189,22 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
+- Repository signal fingerprint: `2349ef9e7acd548bf008a7b14f1eb124f3a9fd13a84880fc762a0c01e68727a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Supabase HTTP contract (issue 91)
+
+The `supabase` Cargo feature adds `Datastore::Supabase` and
+`DatastoreRoute::supabase(endpoint, bearer)`. `DATASTORE=supabase` selects the
+same route with `DATASTORE_ROUTE` and `DATASTORE_TOKEN`. `DatastoreTransport`
+reports Local or Http without specifying an HTTP hosting company. No SQL call
+accepts a provider override. The existing versioned StorageContext is forwarded
+unchanged; it does not grant tenant authority. The service owns authorization.
+
+The endpoint exposes `/query` and `/batch` with the existing JSON scalar and
+byte-array parameter profile, ordered results, explicit affected counts and
+explicit generated keys. SQLite-only catalog/maintenance operations fail with
+capability errors. SQL compatibility and physical commit/rollback require actual
+PostgreSQL service evidence, not an HTTP mock executing SQLite.
