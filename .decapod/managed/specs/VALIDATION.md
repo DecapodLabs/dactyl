@@ -1,5 +1,9 @@
 # Validation
 
+## Secure shared-directory SQLite recovery
+
+The SQLite recovery unit suite inspects 0700/0600 creation checkpoints and populated PERSIST journals under subprocess umask 000, tests accepted 0660/2770 sharing and original inode/group custody, rejects metadata and symlink/collision/replacement hazards, injects seven recovery failure boundaries plus diagnostic-sync failure, and kills subprocesses at seven stages to verify private artifacts and recoverable originals. Existing sqlite_maintenance regressions remain required. Platform capability limits are explicit; Linux test evidence is not proof on other hosts.
+
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
 
@@ -216,7 +220,7 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad12e439947abe2541ead5800d94589dac76cfc2b6fb74423ea65338db52343f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (2 files)
+- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

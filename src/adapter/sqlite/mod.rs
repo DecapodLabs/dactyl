@@ -7,6 +7,8 @@
 //! amalgamation, or `libsqlite3-sys` dependency is used.
 
 mod ffi;
+#[cfg(any(target_os = "linux", target_os = "android"))]
+mod recovery;
 
 use std::collections::BTreeMap;
 use std::ffi::{c_int, c_void, CString};
@@ -35,6 +37,8 @@ pub struct SqliteAdapter {
     connection: Mutex<SqliteConnection>,
     options: OpenOptions,
     path: String,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    file_identity: Option<(u64, u64)>,
 }
 
 struct SqliteConnection {
@@ -184,6 +188,8 @@ impl SqliteAdapter {
             connection: Mutex::new(connection),
             options,
             path: path.to_string(),
+            #[cfg(any(target_os = "linux", target_os = "android"))]
+            file_identity: file_identity(path),
         })
     }
 
@@ -192,6 +198,14 @@ impl SqliteAdapter {
             DactylError::adapter(AdapterErrorKind::Storage, "SQLite connection lock poisoned")
         })
     }
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn file_identity(path: &str) -> Option<(u64, u64)> {
+    use std::os::unix::fs::MetadataExt;
+    fs::metadata(path)
+        .ok()
+        .map(|metadata| (metadata.dev(), metadata.ino()))
 }
 
 impl Drop for SqliteAdapter {
@@ -565,433 +579,23 @@ fn perform_backup(
     result
 }
 
-#[derive(Debug)]
-struct SchemaObject {
-    kind: String,
-    name: String,
-    sql: String,
-}
-
 fn recover_database(
     adapter: &mut SqliteAdapter,
     options: &RecoveryOptions,
 ) -> Result<RecoveryResult, DactylError> {
-    if adapter.path == ":memory:" {
-        return Err(DactylError::adapter_with_code(
-            AdapterErrorKind::Capability,
-            "unsupported_memory_recovery",
-            "SQLite dump-reload recovery requires a file-backed database",
-        ));
-    }
-    let source_path = PathBuf::from(&adapter.path);
-    let archive_path = PathBuf::from(&options.preserve_original_at);
-    validate_recovery_paths(&source_path, &archive_path)?;
-    ensure_absent(&archive_path, "recovery archive")?;
-    ensure_absent(&sidecar_path(&archive_path, "-wal"), "recovery WAL archive")?;
-    ensure_absent(&sidecar_path(&archive_path, "-shm"), "recovery SHM archive")?;
-    let temporary = temporary_path(&source_path, "recovery")?;
-
-    let result = recover_database_inner(adapter, &source_path, &archive_path, &temporary);
-    if result.is_err() {
-        let _ = remove_file_if_exists(&temporary);
-        let _ = remove_file_if_exists(&sidecar_path(&temporary, "-wal"));
-        let _ = remove_file_if_exists(&sidecar_path(&temporary, "-shm"));
-    }
-    result
-}
-
-fn recover_database_inner(
-    adapter: &mut SqliteAdapter,
-    source_path: &Path,
-    archive_path: &Path,
-    temporary: &Path,
-) -> Result<RecoveryResult, DactylError> {
-    let connection = adapter.connection.get_mut().map_err(|_| {
-        DactylError::adapter(AdapterErrorKind::Storage, "SQLite connection lock poisoned")
-    })?;
-    exec_sql(connection, "BEGIN EXCLUSIVE")
-        .map_err(|error| connection.error_from_failure("begin SQLite recovery", error))?;
-
-    let rebuild = rebuild_database(connection, temporary, adapter.options.lock_timeout);
-    let rollback = exec_sql(connection, "ROLLBACK");
-    let rebuild = match (rebuild, rollback) {
-        (Ok(value), Ok(())) => value,
-        (Err(error), Ok(())) => return Err(error),
-        (Err(error), Err(rollback)) => {
-            return Err(recovery_rollback_error(
-                error,
-                connection.error_from_failure("rollback SQLite recovery snapshot", rollback),
-            ))
-        }
-        (Ok(_), Err(error)) => {
-            return Err(DactylError::adapter_with_code(
-                AdapterErrorKind::Storage,
-                "recovery_rollback_failed",
-                format!(
-                    "rollback SQLite recovery snapshot: {}",
-                    connection.error_from_failure("rollback SQLite recovery snapshot", error)
-                ),
-            ))
-        }
-    };
-    sync_database_files(temporary, false)?;
-    connection.close()?;
-
-    let moved_sidecars = match move_original_to_archive(source_path, archive_path) {
-        Ok(value) => value,
-        Err(error) => {
-            if let Err(rollback) = reopen_connection(adapter, source_path) {
-                return Err(recovery_rollback_error(error, rollback));
-            }
-            return Err(error);
-        }
-    };
-    if let Err(error) = sync_database_files(archive_path, true) {
-        let rollback = restore_original_from_archive(source_path, archive_path, moved_sidecars);
-        if let Err(rollback) = rollback {
-            return Err(recovery_rollback_error(error, rollback));
-        }
-        if let Err(rollback) = reopen_connection(adapter, source_path) {
-            return Err(recovery_rollback_error(error, rollback));
-        }
-        return Err(error);
-    }
-    if let Err(error) = fs::rename(temporary, source_path)
-        .map_err(|error| storage_io("activate recovered SQLite database", error))
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     {
-        let rollback_error =
-            restore_original_from_archive(source_path, archive_path, moved_sidecars);
-        if let Err(rollback_error) = rollback_error {
-            return Err(recovery_rollback_error(error, rollback_error));
-        }
-        reopen_connection(adapter, source_path)?;
-        return Err(error);
+        recovery::recover(adapter, options)
     }
-    if let Err(error) = sync_parent(source_path) {
-        let failed_path = unused_path(source_path, "failed-recovery")?;
-        let rollback_error = (|| {
-            fs::rename(source_path, &failed_path).map_err(|error| {
-                storage_io("quarantine unsynced recovered SQLite database", error)
-            })?;
-            restore_original_from_archive(source_path, archive_path, moved_sidecars)
-        })();
-        if let Err(rollback_error) = rollback_error {
-            return Err(recovery_rollback_error(error, rollback_error));
-        }
-        reopen_connection(adapter, source_path)?;
-        return Err(DactylError::adapter_with_code(
-            AdapterErrorKind::Storage,
-            "recovery_sync_failed",
-            format!("sync recovered SQLite database before activation: {error}"),
-        ));
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    {
+        let _ = (adapter, options);
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "secure_recovery_unsupported",
+            "secure SQLite recovery requires Unix permissions and atomic no-replace rename support",
+        ))
     }
-    if let Err(error) = reopen_connection(adapter, source_path) {
-        let failed_path = unused_path(source_path, "failed-recovery")?;
-        let rollback_error = (|| {
-            let connection = adapter.connection.get_mut().map_err(|_| {
-                DactylError::adapter(AdapterErrorKind::Storage, "SQLite connection lock poisoned")
-            })?;
-            let _ = connection.close();
-            fs::rename(source_path, &failed_path).map_err(|error| {
-                storage_io("quarantine unreopenable recovered SQLite database", error)
-            })?;
-            restore_original_from_archive(source_path, archive_path, moved_sidecars)
-        })();
-        if let Err(rollback_error) = rollback_error {
-            return Err(recovery_rollback_error(error, rollback_error));
-        }
-        reopen_connection(adapter, source_path)?;
-        return Err(DactylError::adapter_with_code(
-            AdapterErrorKind::Unavailable,
-            "recovery_reopen_failed",
-            format!("reopen recovered SQLite database: {error}"),
-        ));
-    }
-
-    Ok(RecoveryResult {
-        active_path: source_path.to_string_lossy().into_owned(),
-        preserved_original_path: archive_path.to_string_lossy().into_owned(),
-        journal_mode: RecoveryJournalMode::Delete,
-        user_version: rebuild.user_version,
-        application_id: rebuild.application_id,
-    })
-}
-
-#[derive(Debug)]
-struct RebuildResult {
-    user_version: i64,
-    application_id: i64,
-}
-
-fn rebuild_database(
-    source: &SqliteConnection,
-    temporary: &Path,
-    lock_timeout: Duration,
-) -> Result<RebuildResult, DactylError> {
-    let api = source.api.clone();
-    let database = open_database(&api, &temporary.to_string_lossy(), AccessMode::ReadWrite)?;
-    let mut destination = SqliteConnection {
-        api,
-        database,
-        path: temporary.to_string_lossy().into_owned(),
-    };
-    let result = (|| {
-        configure_connection(
-            &destination,
-            OpenOptions {
-                access_mode: AccessMode::ReadWrite,
-                lock_timeout,
-            },
-        )?;
-        exec_sql(&destination, "PRAGMA foreign_keys = OFF").map_err(|error| {
-            destination.error_from_failure("disable recovery foreign keys", error)
-        })?;
-        let user_version = pragma_integer(source, "user_version")?;
-        let application_id = pragma_integer(source, "application_id")?;
-        let objects = schema_objects(source)?;
-        for object in objects.iter().filter(|object| object.kind == "table") {
-            if object.sql.to_ascii_lowercase().contains("virtual table") {
-                return Err(DactylError::adapter_with_code(
-                    AdapterErrorKind::Capability,
-                    "unsupported_recovery_object",
-                    format!(
-                        "logical recovery does not support virtual table {}",
-                        object.name
-                    ),
-                ));
-            }
-            exec_sql(&destination, &object.sql).map_err(|error| {
-                destination.error_from_failure("create recovered SQLite table", error)
-            })?;
-        }
-        for object in objects.iter().filter(|object| object.kind == "table") {
-            copy_table_rows(source, &destination, &object.name)?;
-        }
-        if has_sqlite_sequence(source)? {
-            copy_table_rows(source, &destination, "sqlite_sequence")?;
-        }
-        for object in objects
-            .iter()
-            .filter(|object| matches!(object.kind.as_str(), "index" | "view" | "trigger"))
-        {
-            exec_sql(&destination, &object.sql).map_err(|error| {
-                destination.error_from_failure("create recovered SQLite schema object", error)
-            })?;
-        }
-        exec_sql(
-            &destination,
-            &format!("PRAGMA user_version = {user_version}"),
-        )
-        .map_err(|error| destination.error_from_failure("restore SQLite user_version", error))?;
-        exec_sql(
-            &destination,
-            &format!("PRAGMA application_id = {application_id}"),
-        )
-        .map_err(|error| destination.error_from_failure("restore SQLite application_id", error))?;
-        exec_sql(&destination, "PRAGMA journal_mode = DELETE").map_err(|error| {
-            destination.error_from_failure("set recovered SQLite journal mode", error)
-        })?;
-        let report = verify_integrity(&destination)?;
-        if !report.journal_mode.eq_ignore_ascii_case("delete") {
-            return Err(DactylError::adapter_with_code(
-                AdapterErrorKind::Storage,
-                "recovery_journal_mode_mismatch",
-                format!("recovered SQLite journal mode is {}", report.journal_mode),
-            ));
-        }
-        Ok(RebuildResult {
-            user_version,
-            application_id,
-        })
-    })();
-    let close = destination.close();
-    match (result, close) {
-        (Ok(value), Ok(())) => Ok(value),
-        (Err(error), _) => Err(error),
-        (Ok(_), Err(error)) => Err(error),
-    }
-}
-
-fn schema_objects(source: &SqliteConnection) -> Result<Vec<SchemaObject>, DactylError> {
-    let rows = query_rows(
-        source,
-        "SELECT type, name, sql FROM sqlite_schema WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY CASE type WHEN 'table' THEN 0 WHEN 'index' THEN 1 WHEN 'view' THEN 2 WHEN 'trigger' THEN 3 ELSE 4 END, name",
-        &[],
-    )?;
-    rows.iter()
-        .map(|row| {
-            Ok(SchemaObject {
-                kind: row_string(row, 0)?,
-                name: row_string(row, 1)?,
-                sql: row_string(row, 2)?,
-            })
-        })
-        .collect()
-}
-
-fn copy_table_rows(
-    source: &SqliteConnection,
-    destination: &SqliteConnection,
-    table_name: &str,
-) -> Result<(), DactylError> {
-    let columns = table_columns(source, table_name)?;
-    if columns.is_empty() {
-        return Ok(());
-    }
-    let quoted_columns = columns
-        .iter()
-        .map(|column| quote_identifier(column))
-        .collect::<Vec<_>>();
-    let select_sql = format!(
-        "SELECT {} FROM {} NOT INDEXED",
-        quoted_columns.join(", "),
-        quote_identifier(table_name)
-    );
-    let placeholders = std::iter::repeat("?")
-        .take(columns.len())
-        .collect::<Vec<_>>()
-        .join(", ");
-    let insert_sql = format!(
-        "INSERT INTO {} ({}) VALUES ({})",
-        quote_identifier(table_name),
-        quoted_columns.join(", "),
-        placeholders
-    );
-    let mut statement = Statement::prepare(source, &select_sql)?;
-    while statement.step()? == ffi::SQLITE_ROW {
-        let params = (0..columns.len())
-            .map(|index| {
-                let index = c_int::try_from(index).map_err(|_| {
-                    adapter_error(AdapterErrorKind::Value, "too many SQLite table columns")
-                })?;
-                parameter_from_value(statement.value(index)?)
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        execute_write(destination, &insert_sql, &params)?;
-    }
-    Ok(())
-}
-
-fn table_columns(source: &SqliteConnection, table_name: &str) -> Result<Vec<String>, DactylError> {
-    let rows = query_rows(
-        source,
-        &format!("PRAGMA table_info({})", quote_identifier(table_name)),
-        &[],
-    )?;
-    rows.iter().map(|row| row_string(row, 1)).collect()
-}
-
-fn has_sqlite_sequence(source: &SqliteConnection) -> Result<bool, DactylError> {
-    Ok(!query_rows(
-        source,
-        "SELECT name FROM sqlite_schema WHERE type = 'table' AND name = 'sqlite_sequence'",
-        &[],
-    )?
-    .is_empty())
-}
-
-fn parameter_from_value(value: serde_json::Value) -> Result<Parameter, DactylError> {
-    match value {
-        serde_json::Value::Null => Ok(Parameter::Null),
-        serde_json::Value::Bool(value) => Ok(Parameter::Bool(value)),
-        serde_json::Value::Number(value) => value
-            .as_i64()
-            .map(Parameter::Integer)
-            .or_else(|| value.as_f64().map(Parameter::Real))
-            .ok_or_else(|| adapter_error(AdapterErrorKind::Value, "SQLite number is out of range")),
-        serde_json::Value::String(value) => Ok(Parameter::Text(value)),
-        serde_json::Value::Array(values) => values
-            .into_iter()
-            .map(|value| {
-                value
-                    .as_u64()
-                    .and_then(|byte| u8::try_from(byte).ok())
-                    .ok_or_else(|| {
-                        adapter_error(AdapterErrorKind::Value, "SQLite blob byte is out of range")
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()
-            .map(Parameter::Blob),
-        serde_json::Value::Object(_) => Err(adapter_error(
-            AdapterErrorKind::Value,
-            "SQLite row value cannot be restored as a parameter",
-        )),
-    }
-}
-
-fn validate_recovery_paths(source: &Path, archive: &Path) -> Result<(), DactylError> {
-    let source_parent = source.parent().unwrap_or_else(|| Path::new("."));
-    let archive_parent = archive.parent().unwrap_or_else(|| Path::new("."));
-    if source_parent != archive_parent || source == archive {
-        return Err(DactylError::adapter_with_code(
-            AdapterErrorKind::InvalidOperation,
-            "recovery_paths_must_share_parent",
-            "SQLite recovery archive must be a different path in the database directory",
-        ));
-    }
-    Ok(())
-}
-
-fn move_original_to_archive(source: &Path, archive: &Path) -> Result<(bool, bool), DactylError> {
-    fs::rename(source, archive)
-        .map_err(|error| storage_io("preserve original SQLite database", error))?;
-    let source_wal = sidecar_path(source, "-wal");
-    let archive_wal = sidecar_path(archive, "-wal");
-    let moved_wal = source_wal.exists();
-    if moved_wal {
-        if let Err(error) = fs::rename(&source_wal, &archive_wal) {
-            let _ = fs::rename(archive, source);
-            return Err(storage_io("preserve original SQLite WAL sidecar", error));
-        }
-    }
-    let source_shm = sidecar_path(source, "-shm");
-    let archive_shm = sidecar_path(archive, "-shm");
-    let moved_shm = source_shm.exists();
-    if moved_shm {
-        if let Err(error) = fs::rename(&source_shm, &archive_shm) {
-            if moved_wal {
-                let _ = fs::rename(&archive_wal, &source_wal);
-            }
-            let _ = fs::rename(archive, source);
-            return Err(storage_io("preserve original SQLite SHM sidecar", error));
-        }
-    }
-    Ok((moved_wal, moved_shm))
-}
-
-fn restore_original_from_archive(
-    source: &Path,
-    archive: &Path,
-    moved_sidecars: (bool, bool),
-) -> Result<(), DactylError> {
-    fs::rename(archive, source)
-        .map_err(|error| storage_io("rollback original SQLite database", error))?;
-    if moved_sidecars.0 {
-        fs::rename(sidecar_path(archive, "-wal"), sidecar_path(source, "-wal"))
-            .map_err(|error| storage_io("rollback original SQLite WAL sidecar", error))?;
-    }
-    if moved_sidecars.1 {
-        fs::rename(sidecar_path(archive, "-shm"), sidecar_path(source, "-shm"))
-            .map_err(|error| storage_io("rollback original SQLite SHM sidecar", error))?;
-    }
-    Ok(())
-}
-
-fn reopen_connection(adapter: &mut SqliteAdapter, path: &Path) -> Result<(), DactylError> {
-    let connection = adapter.connection.get_mut().map_err(|_| {
-        DactylError::adapter(AdapterErrorKind::Storage, "SQLite connection lock poisoned")
-    })?;
-    let database = open_database(
-        &connection.api,
-        &path.to_string_lossy(),
-        adapter.options.access_mode,
-    )?;
-    connection.database = database;
-    if let Err(error) = configure_connection(connection, adapter.options) {
-        let _ = connection.close();
-        return Err(error);
-    }
-    Ok(())
 }
 
 fn recovery_rollback_error(original: DactylError, rollback: DactylError) -> DactylError {
@@ -1011,7 +615,7 @@ fn perform_file_sync(path: &Path) -> Result<(), DactylError> {
 fn sync_database_files(path: &Path, include_sidecars: bool) -> Result<(), DactylError> {
     perform_file_sync(path)?;
     if include_sidecars {
-        for suffix in ["-wal", "-shm"] {
+        for suffix in ["-wal", "-shm", "-journal"] {
             let sidecar = sidecar_path(path, suffix);
             if sidecar.exists() {
                 perform_file_sync(&sidecar)?;
@@ -1114,40 +718,6 @@ fn temporary_path(base: &Path, label: &str) -> Result<PathBuf, DactylError> {
     Err(adapter_error(
         AdapterErrorKind::Storage,
         "could not allocate a unique SQLite maintenance temporary file",
-    ))
-}
-
-fn unused_path(base: &Path, label: &str) -> Result<PathBuf, DactylError> {
-    let parent = base
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-    let file_name = base
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| {
-            adapter_error(
-                AdapterErrorKind::InvalidOperation,
-                "SQLite path is not valid UTF-8",
-            )
-        })?;
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
-    for attempt in 0..32_u32 {
-        let candidate = parent.join(format!(
-            ".{file_name}.dactyl-{label}-{}-{}",
-            std::process::id(),
-            now.saturating_add(u128::from(attempt))
-        ));
-        if !candidate.exists() {
-            return Ok(candidate);
-        }
-    }
-    Err(adapter_error(
-        AdapterErrorKind::Storage,
-        "could not allocate a unique SQLite quarantine path",
     ))
 }
 

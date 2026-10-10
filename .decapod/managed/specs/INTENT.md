@@ -16,6 +16,10 @@
 
 <!-- decapod:declared-capabilities:end -->
 
+## Secure shared-directory SQLite recovery
+
+Explicit SQLite recovery supports intentionally shared Unix storage without exposing rebuild contents. Dactyl owns fresh private same-filesystem staging; callers retain filesystem policy and must quiesce clients and filesystem writers. No automatic repair or consumer integration is added.
+
 ## Product Outcome
 - Establish Dactyl as the small application-layer database provider for read/write-heavy apps, targeted for the v0.7.0 release. The same normalized reads, explicit writes, opaque atomic batches, and access modes must work against a real local SQLite file and remote Vercel Neon without exposing backend handles or adding database administration behavior.
 
@@ -132,8 +136,8 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad12e439947abe2541ead5800d94589dac76cfc2b6fb74423ea65338db52343f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (2 files)
+- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

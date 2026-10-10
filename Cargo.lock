@@ -147,6 +147,7 @@ dependencies = [
  "axum",
  "libloading",
  "reqwest",
+ "rustix",
  "serde",
  "serde_json",
  "tempfile",

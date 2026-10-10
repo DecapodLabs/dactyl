@@ -1,5 +1,9 @@
 # Security
 
+## Secure shared-directory SQLite recovery
+
+Private staging and creation-time modes protect rebuilt data under permissive umasks. Activation restores existing permission bits only after validation. Source access ACLs, inherited default ACLs and MAC/system access labels fail closed rather than being silently replaced; unrelated user attributes and unchanged parent POSIX access ACLs are permitted. Original/archive metadata remains untouched. Callers must quiesce filesystem name/content/metadata writers from connection open; inode checks are detection boundaries, not protection against arbitrary malicious concurrent directory writers.
+
 ## Threat Model
 ```mermaid
 flowchart LR
@@ -107,7 +111,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad12e439947abe2541ead5800d94589dac76cfc2b6fb74423ea65338db52343f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (2 files)
+- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
