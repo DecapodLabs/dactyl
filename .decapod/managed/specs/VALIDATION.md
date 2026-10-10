@@ -77,6 +77,30 @@ flowchart LR
 
 ## Promotion Gates
 
+### Real PostgreSQL Service Conformance Readiness (#93)
+
+`tests/supabase_service.rs` supplies separately selected local PostgreSQL and
+protected hosted profiles through the public `Connection` API. A trusted
+external harness owns the disposable database, fresh schema, authenticated
+principals and opaque contexts, policy, service lifecycle, and cleanup. The
+client must not create a production service, accept database credentials, or
+infer tenant authorization from caller-supplied context.
+
+Normal tests check the fixture and receipt contract without reaching an
+external service. CI also explicitly selects the local profile with its fixture
+unset and requires an unavailable failure, preventing a zero-test or skipped
+run from being mistaken for backend proof. Real profiles test bound types,
+explicit keys/counts, ordered batches, rejected mutations and read-only calls,
+and preserve typed failures without switching providers.
+
+A client receipt records client assertions and expected persisted observations;
+it is not independent proof of physical rollback, authorization enforcement,
+cleanup, or a hosted deployment. Backend acceptance additionally requires the
+external observer's actual PostgreSQL state, service/client revisions, and
+cleanup results. Unsupported constrained service SQL remains a failed or
+unavailable prerequisite. Direct local PostgreSQL is never evidence for an
+untested hosted Supabase connection or transaction/session pooler.
+
 ### Supabase HTTP Runtime and Boundaries
 
 The opt-in Supabase service contract suite uses synthetic loopback HTTP and must
@@ -192,7 +216,7 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2349ef9e7acd548bf008a7b14f1eb124f3a9fd13a84880fc762a0c01e68727a5`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
+- Repository signal fingerprint: `ad12e439947abe2541ead5800d94589dac76cfc2b6fb74423ea65338db52343f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (2 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

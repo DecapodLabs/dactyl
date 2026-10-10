@@ -73,6 +73,12 @@ client capability does not prove that every SQLite schema or Decapod subsystem
 can run on a configured service. Full PostgreSQL service conformance and live
 Supabase authorization remain separate release gates.
 
+The [real-service conformance profile](docs/supabase-conformance.md) is ready
+for an externally managed disposable PostgreSQL service. It is opt-in and
+separate from the default synthetic HTTP tests. No hosted Supabase instance is
+included or required to prepare the profile; an actual service and independent
+database observations are required before claiming backend conformance.
+
 ## Local SQLite route
 
 `DATASTORE=sqlite DATASTORE_ROUTE=/path/to/app.db` opens the file directly.

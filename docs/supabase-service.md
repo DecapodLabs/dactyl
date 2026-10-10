@@ -127,6 +127,13 @@ they need to keep an async executor responsive. No worker survives its request.
 
 ## Evidence boundaries
 
+The runnable [real-service conformance profile](supabase-conformance.md) uses
+the public `Connection` API with an externally provisioned protected fixture.
+Its local-PostgreSQL and hosted-Supabase tests are ignored by default. Selecting
+either without the required fixture fails explicitly. Network-free fixture and
+receipt tests establish harness readiness only; a successful client receipt
+must be paired with service-owned independent database and cleanup evidence.
+
 `tests/supabase_contract.rs` exercises real loopback HTTP with synthetic JSON
 responses: bearer/context forwarding, scalar/blob projection, explicit counts,
 zero-row CAS responses, ordered batch envelopes, denial/error mapping,
