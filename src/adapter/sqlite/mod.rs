@@ -161,7 +161,7 @@ impl SqliteAdapter {
                     })?;
                 }
             }
-            if !(options.access_mode == AccessMode::ReadWrite && !path_ref.exists()) {
+            if options.access_mode != AccessMode::ReadWrite || path_ref.exists() {
                 validate_existing_sqlite_header(path_ref)?;
             }
         }

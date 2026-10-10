@@ -57,3 +57,6 @@ provider = "decapod"
 
 [context]
 declared_sources = ["AGENTS.md"]
+
+[decision]
+provider = "none"

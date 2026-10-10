@@ -1,4 +1,4 @@
-//! Dactyl — a lightweight Rust storage driver for local and Neon routes.
+//! Dactyl — a lightweight Rust storage driver for local, Neon, and Supabase service routes.
 //!
 //! Dactyl owns backend selection, parameter binding, response normalization,
 //! physical atomic batches, access mode, and local durability. It does not own
@@ -29,14 +29,33 @@ use crate::adapter::Adapter;
 pub enum Datastore {
     Sqlite,
     Neon,
+    Supabase,
+}
+
+/// Physical connection transport, independent of the database provider.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DatastoreTransport {
+    Local,
+    Http,
 }
 
 /// The route needed to send an application read or write.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct DatastoreRoute {
     datastore: Datastore,
     route: String,
     token: Option<String>,
+}
+
+impl std::fmt::Debug for DatastoreRoute {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DatastoreRoute")
+            .field("datastore", &self.datastore)
+            .field("transport", &self.transport())
+            .field("route", &"[redacted]")
+            .field("token", &self.token.as_ref().map(|_| "[redacted]"))
+            .finish()
+    }
 }
 
 const DATASTORE_ENV: &str = "DATASTORE";
@@ -60,6 +79,49 @@ impl DatastoreRoute {
         }
     }
 
+    /// Connect to an authenticated, Supabase-backed storage service.
+    ///
+    /// The endpoint is an HTTPS service base exposing `/query` and `/batch`,
+    /// not a PostgreSQL URL or the Supabase REST API. Supply a user bearer
+    /// token and open with a caller-owned [`StorageContext`]. Database secrets
+    /// stay on the service. No native PostgreSQL transport is implied.
+    pub fn supabase(endpoint: impl Into<String>, token: Option<String>) -> Self {
+        Self {
+            datastore: Datastore::Supabase,
+            route: endpoint.into(),
+            token,
+        }
+    }
+
+    /// Validate the provider's endpoint policy without network I/O or credentials.
+    ///
+    /// Supabase enforces its secure service URL policy here so callers can check
+    /// an authentication origin before sending a token or refreshing a session.
+    /// This does not authenticate, check context, or verify service capabilities.
+    /// Existing SQLite and Neon endpoint acceptance remains unchanged.
+    pub fn validate(&self) -> Result<(), DactylError> {
+        if self.datastore == Datastore::Supabase {
+            #[cfg(feature = "supabase")]
+            {
+                return crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ());
+            }
+            #[cfg(not(feature = "supabase"))]
+            {
+                return Err(DactylError::Config(
+                    "supabase support is disabled; enable the `supabase` feature".into(),
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn transport(&self) -> DatastoreTransport {
+        match self.datastore {
+            Datastore::Sqlite => DatastoreTransport::Local,
+            Datastore::Neon | Datastore::Supabase => DatastoreTransport::Http,
+        }
+    }
+
     pub fn datastore(&self) -> Datastore {
         self.datastore
     }
@@ -75,12 +137,13 @@ impl DatastoreRoute {
     /// Resolve the ambient route configuration.
     ///
     /// `DATASTORE` is the sole selector. `DATASTORE_ROUTE` is required for
-    /// the selected backend, and `DATASTORE_TOKEN` is read only for Neon.
+    /// the selected backend, and `DATASTORE_TOKEN` is read only for remote providers.
     /// There is deliberately no implicit local fallback: a missing or empty
     /// selector/route fails before an adapter is constructed.
     pub fn from_env() -> Result<Self, DactylError> {
-        let datastore = std::env::var(DATASTORE_ENV)
-            .map_err(|_| DactylError::Config("DATASTORE is not set: use sqlite or neon".into()))?;
+        let datastore = std::env::var(DATASTORE_ENV).map_err(|_| {
+            DactylError::Config("DATASTORE is not set: use sqlite, neon or supabase".into())
+        })?;
         let route = std::env::var(DATASTORE_ROUTE_ENV)
             .map_err(|_| DactylError::Config("DATASTORE_ROUTE is not set".into()))?;
         Self::from_env_values(
@@ -96,7 +159,7 @@ impl DatastoreRoute {
         token: Option<&str>,
     ) -> Result<Self, DactylError> {
         let datastore = datastore.ok_or_else(|| {
-            DactylError::Config("DATASTORE is not set: use sqlite or neon".into())
+            DactylError::Config("DATASTORE is not set: use sqlite, neon or supabase".into())
         })?;
         let route =
             route.ok_or_else(|| DactylError::Config("DATASTORE_ROUTE is not set".into()))?;
@@ -114,9 +177,15 @@ impl DatastoreRoute {
                     .filter(|value| !value.trim().is_empty())
                     .map(str::to_owned),
             )),
-            other => Err(DactylError::Config(format!(
-                "invalid DATASTORE value {other:?}: use sqlite or neon"
-            ))),
+            "supabase" => Ok(Self::supabase(
+                route,
+                token
+                    .filter(|value| !value.trim().is_empty())
+                    .map(str::to_owned),
+            )),
+            _ => Err(DactylError::Config(
+                "invalid DATASTORE value: use sqlite, neon or supabase".into(),
+            )),
         }
     }
 }
@@ -142,7 +211,7 @@ impl Connection {
 
     /// Open a route with an optional caller-owned storage context.
     ///
-    /// Local routes ignore the context. Neon routes require it for every
+    /// Local routes ignore the context. Remote routes require it for every
     /// operation and forward it without interpreting its payload.
     pub fn open_with_context(
         route: DatastoreRoute,
@@ -291,6 +360,23 @@ fn build_adapter(
     _context: Option<StorageContext>,
 ) -> Result<Box<dyn Adapter>, DactylError> {
     match route.datastore {
+        Datastore::Supabase => {
+            #[cfg(feature = "supabase")]
+            {
+                Ok(Box::new(crate::adapter::supabase::SupabaseAdapter::new(
+                    &route.route,
+                    route.token.clone(),
+                    _options,
+                    _context,
+                )?))
+            }
+            #[cfg(not(feature = "supabase"))]
+            {
+                Err(DactylError::Config(
+                    "supabase support is disabled; enable the `supabase` feature".into(),
+                ))
+            }
+        }
         Datastore::Sqlite => {
             #[cfg(feature = "sqlite")]
             {
@@ -333,6 +419,19 @@ fn build_adapter(
 #[cfg(test)]
 mod tests {
     use super::{Datastore, DatastoreRoute};
+
+    #[test]
+    fn ambient_supabase_selector_is_explicit_and_keeps_credentials_out_of_debug() {
+        let route = DatastoreRoute::from_env_values(
+            Some("supabase"),
+            Some("https://storage.example"),
+            Some("user-token"),
+        )
+        .unwrap();
+        assert_eq!(route.datastore(), Datastore::Supabase);
+        assert_eq!(route.token(), Some("user-token"));
+        assert!(!format!("{route:?}").contains("user-token"));
+    }
 
     #[test]
     fn ambient_route_requires_selector_and_non_empty_route() {

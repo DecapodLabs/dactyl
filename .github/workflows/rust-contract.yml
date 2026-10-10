@@ -37,6 +37,18 @@ jobs:
           DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
         run: cargo test --all-features
 
+      - name: Preserve optional feature combinations
+        env:
+          DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
+        run: |
+          cargo test --locked --no-default-features
+          cargo test --locked --no-default-features --features sqlite
+          cargo test --locked --no-default-features --features neon
+          cargo test --locked --no-default-features --features supabase
+          cargo test --locked --no-default-features --features sqlite,neon
+          cargo test --locked --no-default-features --features sqlite,supabase
+          cargo test --locked --no-default-features --features neon,supabase
+
       - name: Run clippy
         env:
           DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}

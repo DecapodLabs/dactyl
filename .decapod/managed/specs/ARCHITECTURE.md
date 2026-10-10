@@ -169,7 +169,18 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `318c163c8b18aa39f4a67dc068d2150fe46536ee25b4251a3775680a554a5a61`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (9 files), `tests/` (1 files)
+- Repository signal fingerprint: `2349ef9e7acd548bf008a7b14f1eb124f3a9fd13a84880fc762a0c01e68727a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (1 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Supabase service adapter (issue 91)
+
+The provider selector and transport are separate concepts: SQLite uses Local;
+Neon and Supabase use Http. Supabase is an opt-in private adapter behind the same
+Connection read/write/atomic facade. It requires HTTPS, explicit authentication,
+and context before a request; has bounded network/body budgets; refuses redirects;
+and never falls back to local storage. A service route is not a Supabase REST URL
+or a PostgreSQL connection string. Physical transactions, PostgreSQL connection
+modes and authorization are service implementation responsibilities and must be
+proved separately from synthetic HTTP fixtures.
