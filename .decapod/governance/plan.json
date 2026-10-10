@@ -1,27 +1,27 @@
 {
   "schema_version": "1.0.0",
-  "title": "Prepare real-service Supabase adapter conformance",
-  "intent": "Provide an opt-in reusable public Connection profile against an externally managed disposable PostgreSQL HTTP service, with network-free readiness checks and explicit unavailable hosted evidence.",
+  "title": "Secure SQLite recovery staging",
+  "intent": "Implement Dactyl #95 private same-filesystem SQLite recovery staging, preserve final intended sharing and original archives, prove interrupted recovery, publish draft PR",
   "state": "APPROVED",
   "todo_ids": [
-    "data_01m4kt8pj6y9p6ap"
+    "secu_01m4kwvx7tvnhg3a"
   ],
   "proof_hooks": [
-    "cargo test --locked --all-features",
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "Explicit selected service test without fixture fails unavailable"
+    "cargo test --all-features",
+    "cargo clippy --all-features --all-targets -- -D warnings",
+    "cargo fmt --check"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "No hosted provisioning, production service duplication, deployment, credential creation, merge or release; independent database and cleanup proof remain service-owned"
+    "No release, merge, deployment, consumer changes or permission policy weakening"
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": 28
+    "file_touch_budget": 24
   },
   "phases": [],
-  "updated_at": "1791666567Z"
+  "updated_at": "1791669266Z"
 }

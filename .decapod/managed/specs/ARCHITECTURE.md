@@ -1,5 +1,9 @@
 # Architecture
 
+## Secure shared-directory SQLite recovery
+
+SQLite recovery is isolated in adapter/sqlite/recovery.rs. It creates a 0700 child directory and 0600 rebuild/journal, uses PERSIST during rebuilding and DELETE for final activation, preserves supported mode/owner/group, and uses atomic no-replace moves with inode checks. Both affected directories are synced. Rollback retains private diagnostics and never recursively cleans unknown entries.
+
 ## Direction
 library
 
@@ -169,8 +173,8 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad12e439947abe2541ead5800d94589dac76cfc2b6fb74423ea65338db52343f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (10 files), `tests/` (2 files)
+- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

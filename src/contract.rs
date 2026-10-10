@@ -184,10 +184,19 @@ pub enum RecoveryJournalMode {
 }
 
 /// Explicit operator input for logical SQLite recovery.
+///
+/// On Linux/Android, Dactyl allocates private same-filesystem staging itself,
+/// creates rebuilt data and its persistent rollback journal with mode 0600,
+/// and preserves supported source mode/owner/group before activation. Source
+/// access ACLs, inherited default ACLs, MAC labels and unsupported no-replace
+/// rename platforms return a typed error before destructive mutation. Callers
+/// must quiesce SQLite clients and filesystem/metadata writers throughout.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecoveryOptions {
     /// A new path at which Dactyl preserves the original database file and
-    /// any `-wal`/`-shm` sidecars before activating the replacement.
+    /// any `-wal`/`-shm`/`-journal` sidecars before activating the replacement.
+    /// Must be unused, in the active database's directory, and must not alias
+    /// the active database or one of its sidecar names.
     pub preserve_original_at: String,
     /// The journal mode used by the replacement. This is currently explicit
     /// and fixed to DELETE because it keeps activation a single-file atomic

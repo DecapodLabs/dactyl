@@ -1,6 +1,9 @@
 #![cfg(feature = "sqlite")]
 
-use std::fs::{self, OpenOptions};
+use std::fs;
+#[cfg(any(target_os = "linux", target_os = "android"))]
+use std::fs::OpenOptions;
+#[cfg(any(target_os = "linux", target_os = "android"))]
 use std::io::{Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
@@ -98,6 +101,7 @@ fn online_backup_reports_bounded_lock_contention() {
 }
 
 #[test]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn damaged_secondary_index_reindexes_badly_but_logical_recovery_succeeds() {
     let directory = TempDir::new().unwrap();
     let source_path = directory.path().join("corrupt.db");
@@ -210,8 +214,13 @@ fn recovery_refuses_open_sibling_connections_and_existing_archive_without_mutati
             RecoveryJournalMode::Delete,
         ))
         .unwrap_err();
-    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Conflict));
-    assert_eq!(error.adapter_code(), Some("path_exists"));
+    if cfg!(any(target_os = "linux", target_os = "android")) {
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Conflict));
+        assert_eq!(error.adapter_code(), Some("path_exists"));
+    } else {
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Capability));
+        assert_eq!(error.adapter_code(), Some("secure_recovery_unsupported"));
+    }
     assert_eq!(fs::read(&archive_path).unwrap(), b"operator-owned archive");
     assert_eq!(
         primary.read("select name from records", &[]).unwrap().len(),

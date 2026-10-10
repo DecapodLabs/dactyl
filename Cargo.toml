@@ -12,7 +12,7 @@ categories = ["database", "api-bindings"]
 
 [features]
 default = []
-sqlite = ["dep:libloading"]
+sqlite = ["dep:libloading", "dep:rustix"]
 neon = ["dep:reqwest"]
 supabase = ["dep:reqwest"]
 
@@ -22,6 +22,9 @@ serde_json = "1"
 thiserror = "1"
 libloading = { version = "0.8.9", optional = true }
 reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", optional = true, features = ["fs"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

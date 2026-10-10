@@ -138,10 +138,19 @@ SQLite route. Dactyl starts a bounded exclusive SQLite transaction, rebuilds a
 new database from schema and table data using full-table reads that bypass
 secondary indexes, restores `user_version`, `application_id`, and
 `sqlite_sequence`, validates the new database, syncs it, preserves the
-original database plus any `-wal`/`-shm` sidecars at `archive_path`, and then
-renames the verified replacement into place. The original is retained until
+original database plus any `-wal`/`-shm`/`-journal` sidecars at `archive_path`,
+and then activates the verified replacement with an atomic no-replace rename. The original is retained until
 activation is ready; rename, sync, and reopen failures attempt rollback and
-leave the original active. An existing archive path is a typed conflict.
+restore the original when possible; blocked rollback preserves the archived
+original and returns a typed error. An existing archive path is a typed conflict.
+
+Recovery now allocates private same-filesystem staging beneath the database
+parent. On Linux/Android, creation-time `0700` directories and `0600` rebuilt
+files/journals protect contents even under umask `000`; validated activation
+preserves supported source mode/owner/group, including trusted-group sharing.
+Unsupported access-policy metadata and platforms fail closed before destructive
+mutation. See [the secure recovery contract](docs/sqlite-recovery.md) for supported
+metadata, quiescence requirements, retained diagnostics and crash outcomes.
 
 Logical dump/reload intentionally does not preserve `PRAGMA journal_mode`.
 Dactyl always activates recovered databases in DELETE rollback-journal mode,
