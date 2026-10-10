@@ -37,6 +37,20 @@ jobs:
           DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
         run: cargo test --all-features
 
+      - name: Requested PostgreSQL proof must fail without its fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="$(mktemp)"
+          trap 'rm -f "$log"' EXIT
+          if env -u DACTYL_SUPABASE_FIXTURE -u DACTYL_SUPABASE_HOSTED_PROOF \
+            cargo test --locked --features supabase --test supabase_service \
+              local_postgres_service_contract -- --ignored --exact >"$log" 2>&1; then
+            echo "::error::Missing PostgreSQL fixture was incorrectly accepted."
+            exit 1
+          fi
+          grep -F 'unavailable is not a pass' "$log"
+
       - name: Preserve optional feature combinations
         env:
           DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
