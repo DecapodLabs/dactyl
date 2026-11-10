@@ -45,6 +45,11 @@
       "id": "native-rpc-spec-review",
       "summary": "Review source-bound native RPC architecture, security, atomicity and operational proof requirements",
       "input_digest": "sha256:50a006cfa86bc62b7d12478ed867d0df95b58d4df398d0be7ada6db213934a55"
+    },
+    {
+      "id": "proof-program-path",
+      "summary": "Align reviewed native proof command with the pinned Python executable",
+      "input_digest": "sha256:50a006cfa86bc62b7d12478ed867d0df95b58d4df398d0be7ada6db213934a55"
     }
   ],
   "intents": {
