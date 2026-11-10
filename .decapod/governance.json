@@ -55,6 +55,11 @@
       "id": "proof-command-path",
       "summary": "Correct proof command to exact pinned Python executable",
       "input_digest": "sha256:529fe100cea1d876e02ab6fa6308a80af6987a347d6e3b47e50799cbd26a3396"
+    },
+    {
+      "id": "proof-manifest",
+      "summary": "Capture controller-refreshed manifest for corrected proof configuration",
+      "input_digest": "sha256:d7169477dd74a6786bd81f8745318587855a8d6d309e33b8e38ee53a5bbcfb33"
     }
   ],
   "intents": {
