@@ -2,6 +2,8 @@
 
 --prepare only resolves/downloads dependencies, never compiles or tests Dactyl.
 Real-service/hosted proof and publication remain separate explicit operations.
+MSRV checks resolve their active graph through Cargo 1.75 itself, with network
+access: its registry cache identity differs from current Cargo.
 """
 import hashlib
 import json
@@ -20,6 +22,7 @@ checks = []
 def environment(tools, offline=True):
     env = dict(os.environ)
     env.update(RUSTC=str(tools / "rustc"), RUSTDOC=str(tools / "rustdoc"),
+               RUSTUP_HOME="/usr/local/rustup", RUSTUP_TOOLCHAIN=tools.parent.name,
                PATH=str(tools) + ":/opt/dactyl-proof-tools", CARGO_NET_OFFLINE=str(offline).lower())
     env.pop("DACTYL_SUPABASE_FIXTURE", None)
     env.pop("DACTYL_SUPABASE_HOSTED_PROOF", None)
@@ -28,7 +31,7 @@ def environment(tools, offline=True):
 
 def run(name, args, tools=STABLE, expected_missing=False):
     command = [str(tools / "cargo"), *args]
-    result = subprocess.run(command, env=environment(tools), text=True,
+    result = subprocess.run(command, env=environment(tools, offline=(tools != MSRV)), text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     passed = result.returncode == 0
     if expected_missing:
@@ -49,9 +52,7 @@ def consumer(directory):
 
 
 if sys.argv[1:] == ["--prepare"]:
-    subprocess.run([str(STABLE / "cargo"), "fetch", "--locked"], env=environment(STABLE, False), check=True)
-    with tempfile.TemporaryDirectory(prefix="dactyl-consumer-preparation-") as scratch:
-        subprocess.run([str(STABLE / "cargo"), "fetch", "--manifest-path", consumer(scratch)], env=environment(STABLE, False), check=True)
+    subprocess.run([str(STABLE / "cargo"), "metadata", "--format-version", "1", "--all-features", "--locked", "--filter-platform", "aarch64-unknown-linux-gnu"], env=environment(STABLE, False), stdout=subprocess.DEVNULL, check=True)
     raise SystemExit(0)
 if len(sys.argv) != 1:
     raise SystemExit("Only --prepare is supported in addition to complete proof")
@@ -61,9 +62,9 @@ for feature in ["", "sqlite", "neon", "supabase", "sqlite,neon", "sqlite,supabas
     run("features-" + (feature or "none"), ["test", "--locked", "--offline", "--no-default-features"] + (["--features", feature] if feature else []))
 run("clippy", ["clippy", "--locked", "--offline", "--all-targets", "--all-features", "--", "-D", "warnings"])
 run("missing-real-fixture", ["test", "--locked", "--offline", "--features", "supabase", "--test", "supabase_service", "local_postgres_service_contract", "--", "--ignored", "--exact"], expected_missing=True)
-run("msrv-locked", ["test", "--locked", "--offline", "--all-features"], tools=MSRV)
+run("msrv-locked", ["test", "--locked", "--all-features"], tools=MSRV)
 with tempfile.TemporaryDirectory(prefix="dactyl-consumer-proof-") as scratch:
-    run("msrv-clean-consumer", ["check", "--offline", "--manifest-path", consumer(scratch)], tools=MSRV)
+    run("msrv-clean-consumer", ["check", "--manifest-path", consumer(scratch)], tools=MSRV)
 run("package", ["package", "--locked", "--offline", "--allow-dirty"])
 print(json.dumps(dict(scope="local_rust_contract", checks=checks, real_postgres="unexecuted", hosted="unexecuted", publication="unexecuted")), flush=True)
 raise SystemExit(0 if all(c["passed"] for c in checks) else 1)

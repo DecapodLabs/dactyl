@@ -60,6 +60,11 @@
       "id": "proof-manifest",
       "summary": "Capture controller-refreshed manifest for corrected proof configuration",
       "input_digest": "sha256:d7169477dd74a6786bd81f8745318587855a8d6d309e33b8e38ee53a5bbcfb33"
+    },
+    {
+      "id": "rpc-proof-repairs",
+      "summary": "Repair metadata expectation, pin clean MSRV dependency bounds, and make complete Linux proof toolchain explicit",
+      "input_digest": "sha256:8b9e7afe305074a532f6611c9e0912dd8e7b6c145702c7519e7813c0ee9bd62f"
     }
   ],
   "intents": {
@@ -100,24 +105,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled actual SQLite, Neon, Supabase service and explicit RPC adapters, private SQL authorization ownership and release-please publication against current source.",
-          "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
+          "reason": "Optional HTTP compatibility constraints unify existing dependencies without enabling QUIC or adding another driver; datastore ownership and adapter boundaries remain as documented.",
+          "reviewed_code_fingerprint": "90856f54b521904a850ee724be2d0e7f086d578aa4a68b49ad9bd0bbbd645cf2",
           "spec_material_hash": "ff518612ed1cffe0a4f62864910343b17b3ead099f8b26df77d2f6ece35d9b76"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed new explicit SupabaseRpcConfig route, named request/version headers and strict result/error mapping against source; session custody and private policy remain outside Dactyl.",
-          "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
+          "reason": "Dependency bounds preserve Rust1.75 consumers; no public operation, value, route or v1 contract change since reviewed implementation.",
+          "reviewed_code_fingerprint": "90856f54b521904a850ee724be2d0e7f086d578aa4a68b49ad9bd0bbbd645cf2",
           "spec_material_hash": "ae9a8b11d62c1dfb7707a1e269157ad688b56d05361cce31468870c126c280eb"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed credential redaction, origin/schema validation, bounded transport and private authorization ownership against adapter and contract tests.",
-          "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
+          "reason": "Existing SQLite SELinux refusal retained; required Linux proof moves to unlabeled Apple-container filesystem. RPC authentication and bounded transport policies unchanged.",
+          "reviewed_code_fingerprint": "90856f54b521904a850ee724be2d0e7f086d578aa4a68b49ad9bd0bbbd645cf2",
           "spec_material_hash": "d6bd78e17efe2910815e09eff50f4ecc9bfb9877fbf0813b0e7e854f5144e984"
         }
       ],
@@ -129,7 +134,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794291254Z"
+      "updated_at": "1794301387Z"
     },
     "trajectory": {
       "active_boundaries": [

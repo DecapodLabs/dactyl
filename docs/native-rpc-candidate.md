@@ -22,3 +22,12 @@ execution. The existing release-please workflow and protected release environmen
 retain GitHub App/registry credential ownership. After exact-candidate validation
 and review, use that normal process and verify the actual registry artifact before
 updating consumer dependencies. Temporary path dependencies are development only.
+
+The Linux proof environment must support the SQLite recovery preconditions.
+Podman SELinux labels cause the existing recovery contract to refuse files;
+Apple’s headless Linux runtime supplies an unlabeled filesystem without changing
+that security policy. The complete profile pins Rust and required tools, exercises
+the metadata regression test, and lets Cargo 1.75 resolve a clean active consumer
+graph online rather than treating a newer Cargo lockfile as compatibility proof.
+Optional HTTP dependency bounds preserve the declared minimum without enabling
+QUIC, adding another transport, or changing non-HTTP feature builds.

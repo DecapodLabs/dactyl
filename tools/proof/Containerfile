@@ -5,4 +5,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends libsqlite3-0 py
 RUN cargo install decapod --version =0.136.0 --locked --root /opt/decapod --jobs 2
 RUN rustup toolchain install 1.75.0 --profile minimal --component rustfmt,clippy && rustup component add rustfmt clippy --toolchain 1.96.1
 RUN mkdir -p /opt/dactyl-proof-tools && ln -s /usr/bin/aarch64-linux-gnu-as /opt/dactyl-proof-tools/as && ln -s /usr/bin/aarch64-linux-gnu-ld.bfd /opt/dactyl-proof-tools/ld
+RUN ln -s /bin/dash /opt/dactyl-proof-tools/sh
 ENV PATH="/opt/decapod/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

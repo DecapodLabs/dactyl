@@ -75,3 +75,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.75.0
       - name: Verify declared Rust minimum
         run: cargo test --locked --all-features
+      - name: Verify clean consumer without the library lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          consumer="$(mktemp -d)"
+          mkdir "$consumer/src"
+          printf '%s\n' '[package]' 'name="dactyl-msrv-consumer"' 'version="0.0.0"' 'edition="2021"' '[dependencies]' "dactyl-db={path=\"$GITHUB_WORKSPACE\",features=[\"sqlite\",\"neon\",\"supabase\"]}" > "$consumer/Cargo.toml"
+          printf '%s\n' 'fn main() { let _ = dactyl_db::SupabaseRpcConfig::v1("https://project.example", "sb_publishable_fixture"); }' > "$consumer/src/main.rs"
+          cargo check --manifest-path "$consumer/Cargo.toml"
