@@ -26,13 +26,13 @@ validation_buildkite_preflights = false
 
 [[proof.commands]]
 args = ["tools/proof/check.py"]
-command = "python3"
+command = "/usr/bin/python3.11"
 description = "Complete feature matrix, formatting, lint, fixture guard, MSRV locked/clean consumer and package verification"
 name = "rust-contract"
 required = true
 
 [proof.repository_contract]
-reviewed_commands_digest = "sha256:7745689cf626c69e4663e3811ce5d2ba888bbfa7473719bb452fb3e0b16093e5"
+reviewed_commands_digest = "sha256:ed8ca3d46c3375550471bdd516ca8fba6e0a5476c8976d0c407c82ce9896e74b"
 
 [proof.repository_contract.executions.rust-contract]
 directory = "."
