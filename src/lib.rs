@@ -8,6 +8,7 @@ mod adapter;
 mod contract;
 mod rows;
 mod schema;
+mod supabase_rpc;
 
 pub mod error;
 
@@ -21,6 +22,8 @@ pub use crate::rows::{Parameter, Row, Rows};
 pub use crate::schema::{
     ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
 };
+
+pub use crate::supabase_rpc::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
 
 use crate::adapter::Adapter;
 
@@ -45,6 +48,7 @@ pub struct DatastoreRoute {
     datastore: Datastore,
     route: String,
     token: Option<String>,
+    rpc: Option<SupabaseRpcConfig>,
 }
 
 impl std::fmt::Debug for DatastoreRoute {
@@ -68,6 +72,7 @@ impl DatastoreRoute {
             datastore: Datastore::Sqlite,
             route: path.into(),
             token: None,
+            rpc: None,
         }
     }
 
@@ -76,6 +81,7 @@ impl DatastoreRoute {
             datastore: Datastore::Neon,
             route: endpoint.into(),
             token,
+            rpc: None,
         }
     }
 
@@ -90,7 +96,21 @@ impl DatastoreRoute {
             datastore: Datastore::Supabase,
             route: endpoint.into(),
             token,
+            rpc: None,
         }
+    }
+
+    /// Explicit native RPC; existing Supabase service routes retain their meaning.
+    pub fn supabase_rpc(config: SupabaseRpcConfig, token: Option<String>) -> Self {
+        Self {
+            datastore: Datastore::Supabase,
+            route: config.project_origin().to_owned(),
+            token,
+            rpc: Some(config),
+        }
+    }
+    pub fn supabase_rpc_config(&self) -> Option<&SupabaseRpcConfig> {
+        self.rpc.as_ref()
     }
 
     /// Validate the provider's endpoint policy without network I/O or credentials.
@@ -103,7 +123,10 @@ impl DatastoreRoute {
         if self.datastore == Datastore::Supabase {
             #[cfg(feature = "supabase")]
             {
-                return crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ());
+                return match &self.rpc {
+                    Some(config) => crate::adapter::supabase::validate_rpc(config).map(|_| ()),
+                    None => crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ()),
+                };
             }
             #[cfg(not(feature = "supabase"))]
             {
@@ -368,6 +391,7 @@ fn build_adapter(
                     route.token.clone(),
                     _options,
                     _context,
+                    route.rpc.as_ref(),
                 )?))
             }
             #[cfg(not(feature = "supabase"))]

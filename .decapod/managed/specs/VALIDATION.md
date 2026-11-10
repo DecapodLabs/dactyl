@@ -162,10 +162,12 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Background Processing Validation Overlay
 
 ### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
+- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
 - Idempotency key verification
 - Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
 
@@ -177,10 +179,12 @@ where required; a clean-tree validation relaxation is not container evidence.
 ### Shutdown Tests
 - Graceful drain on signal
 - In-flight job completion or safe requeue
-- No data loss on forced termination
+- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
 <!-- decapod:capability-overlay:background-processing:end -->
 
 <!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
 
 ## Persistent State Validation Overlay
 
@@ -202,6 +206,8 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Validation Overlay
 
 ### Contract Tests
@@ -220,7 +226,11 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (13 files), `tests/` (13 files), `tools/` (1 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native Supabase RPC integration
+
+tests/supabase_rpc.rs checks native envelopes, opaque context, values, keys/counts, ordered atomic transport, redaction, strict results, readonly mode and no retries. tests/supabase_service.rs supports an explicit protected rpc_v1 fixture; generic fixture SQL remains disposable. Complete feature, formatting, lint, MSRV and clean-consumer proof is required. Real SQL policy, hosted execution and registry delivery remain separately evidenced.

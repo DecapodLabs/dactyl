@@ -79,6 +79,41 @@ separate from the default synthetic HTTP tests. No hosted Supabase instance is
 included or required to prepare the profile; an actual service and independent
 database observations are required before claiming backend conformance.
 
+## Native Supabase RPC v1 (unpublished candidate)
+
+Enable `supabase` and construct the native route explicitly:
+
+```rust,ignore
+use dactyl_db::{Connection, DatastoreRoute, SupabaseRpcConfig};
+let config = SupabaseRpcConfig::v1(project_origin, publishable_project_key)
+    .with_schema("dactyl_api");
+let route = DatastoreRoute::supabase_rpc(config, Some(current_user_bearer));
+let db = Connection::open_with_context(route, Some(application_context))?;
+```
+
+This API is not in registry 0.11.1. Use the next validated release containing
+it; a temporary path dependency does not establish registry delivery.
+
+| Setting | Meaning |
+|---|---|
+| Project origin | HTTPS project/API origin, with no path, query or credentials |
+| Publishable key | `sb_publishable_...` project key, separate from user identity |
+| Current bearer | Access token supplied/refreshed by the existing session owner |
+| Schema | Explicit exposed API schema; default `dactyl_api` |
+| StorageContext | Opaque application resource context, never authorization |
+
+One atomic call sends one versioned batch RPC. The private endpoint must execute
+it in one PostgreSQL transaction and recognize its supported SQL profile. Dactyl
+owns no OAuth, refresh-token storage, repository grants, task SQL, or entitlement
+policy. It never retries a lost write or batch response. A decoding failure may
+follow a commit and does not prove rollback.
+
+`supabase(endpoint, token)` and ambient `DATASTORE=supabase` retain the existing
+service protocol. No hostname inference or new ambient defaults are introduced.
+See the [shared RPC contract](docs/supabase-rpc-v1.md),
+[protected conformance profiles](docs/supabase-conformance.md), and
+[release candidate evidence](docs/native-rpc-candidate.md).
+
 ## Local SQLite route
 
 `DATASTORE=sqlite DATASTORE_ROUTE=/path/to/app.db` opens the file directly.
@@ -192,7 +227,7 @@ does not invent a version-conflict policy for the local store.
 
 ```toml
 [dependencies]
-dactyl-db = { version = "0.8.0", features = ["sqlite", "neon"] }
+dactyl-db = { version = "0.11.1", features = ["sqlite", "neon"] }
 ```
 
 Select the backend with environment variables:

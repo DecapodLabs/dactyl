@@ -67,3 +67,11 @@ jobs:
         env:
           DACTYL_SQLITE_LIBRARY: ${{ steps.sqlite.outputs.path }}
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.75.0
+      - name: Verify declared Rust minimum
+        run: cargo test --locked --all-features

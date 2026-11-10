@@ -1,7 +1,16 @@
 schema_version = "1.0.0"
 
+[context]
+declared_sources = ["AGENTS.md"]
+
+[custody]
+isolation = "container"
+
+[governance]
+approval_categories = ["destructive_operations"]
+protected_paths = []
+
 [init]
-specs = true
 ci = true
 diagram_style = "mermaid"
 entrypoints = [
@@ -10,22 +19,93 @@ entrypoints = [
     "GEMINI.md",
     "CODEX.md",
 ]
+specs = true
+
+[proof]
+validation_buildkite_preflights = false
+
+[[proof.commands]]
+args = ["tools/proof/check.py"]
+command = "python3"
+description = "Complete feature matrix, formatting, lint, fixture guard, MSRV locked/clean consumer and package verification"
+name = "rust-contract"
+required = true
+
+[proof.repository_contract]
+reviewed_commands_digest = "sha256:7745689cf626c69e4663e3811ce5d2ba888bbfa7473719bb452fb3e0b16093e5"
+
+[proof.repository_contract.executions.rust-contract]
+directory = "."
+program = "/usr/bin/python3.11"
+timeout_seconds = 3600
+
+[proof.repository_contract.executions.rust-contract.environment]
+AR = "/usr/bin/aarch64-linux-gnu-ar"
+CARGO_BUILD_JOBS = "2"
+CARGO_HOME = "/usr/local/cargo"
+CARGO_NET_OFFLINE = "true"
+CARGO_TARGET_DIR = "/opt/dactyl-contract-target"
+CC = "/usr/bin/aarch64-linux-gnu-gcc-12"
+DACTYL_MSRV_TOOLS = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin"
+DACTYL_SQLITE_LIBRARY = "/usr/lib/aarch64-linux-gnu/libsqlite3.so.0.8.6"
+DACTYL_STABLE_TOOLS = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin"
+RUSTFLAGS = "-C linker=/usr/bin/aarch64-linux-gnu-gcc-12"
+
+[proof.repository_contract.executions.rust-contract.toolchain_files]
+ar = "/usr/bin/aarch64-linux-gnu-ar"
+as = "/usr/bin/aarch64-linux-gnu-as"
+cc = "/usr/bin/aarch64-linux-gnu-gcc-12"
+cc1 = "/usr/lib/gcc/aarch64-linux-gnu/12/cc1"
+collect2 = "/usr/lib/gcc/aarch64-linux-gnu/12/collect2"
+ld = "/usr/bin/aarch64-linux-gnu-ld.bfd"
+msrv_cargo = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/cargo"
+msrv_cargo_clippy = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/cargo-clippy"
+msrv_cargo_fmt = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/cargo-fmt"
+msrv_clippy_driver = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/clippy-driver"
+msrv_rust_gdb = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/rust-gdb"
+msrv_rust_gdbgui = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/rust-gdbgui"
+msrv_rust_lldb = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/rust-lldb"
+msrv_rustc = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/rustc"
+msrv_rustdoc = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/rustdoc"
+msrv_rustfmt = "/usr/local/rustup/toolchains/1.75.0-aarch64-unknown-linux-gnu/bin/rustfmt"
+python = "/usr/bin/python3.11"
+sqlite = "/usr/lib/aarch64-linux-gnu/libsqlite3.so.0.8.6"
+stable_cargo = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/cargo"
+stable_cargo_clippy = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/cargo-clippy"
+stable_cargo_fmt = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/cargo-fmt"
+stable_clippy_driver = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/clippy-driver"
+stable_rust_gdb = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/rust-gdb"
+stable_rust_gdbgui = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/rust-gdbgui"
+stable_rust_lldb = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/rust-lldb"
+stable_rustc = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/rustc"
+stable_rustdoc = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/rustdoc"
+stable_rustfmt = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin/rustfmt"
+
+[[proof.repository_contract.source_coverage]]
+commands = ["rust-contract"]
+source = ".github/workflows/rust-contract.yml"
+
+[[proof.repository_contract.source_coverage]]
+commands = ["rust-contract"]
+source = ".github/workflows/decapod-validate.yml"
+
+[[proof.repository_contract.source_coverage]]
+commands = ["rust-contract"]
+source = ".github/workflows/pages.yml"
+
+[[proof.repository_contract.source_coverage]]
+commands = ["rust-contract"]
+source = ".github/workflows/release.yml"
+
+[proof.required_profile]
+id = "repo.pr-readiness.v1"
+reviewed_sources_digest = "sha256:c26eb7fcc6b539cee4c38f243d6a6efedc955191776f8d21240eea69077344ad"
 
 [repo]
-product_name = "dactyl"
-product_summary = "Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals."
 architecture_direction = "library"
-product_type = "service_or_library"
-done_criteria = "The outcome is complete when equivalent queries across all nine Decapod stores produce equivalent row projections through both adapters, compile-time query analysis works for literal queries, runtime analysis works for dynamic queries, inline datastore directives are honored, and the full formatting, linting, and conformance suite passes."
-base_branch = "main"
-primary_languages = ["Rust"]
-detected_surfaces = [
-    "cargo",
-    "rust",
-]
-external_tracker = false
-container_workspaces = true
 backend = "local"
+base_branch = "main"
+container_workspaces = true
 declared_capabilities = [
     "authentication",
     "background-processing",
@@ -37,26 +117,16 @@ declared_capabilities = [
     "scheduled-jobs",
     "secrets-handling",
 ]
-
-[governance]
-protected_paths = []
-approval_categories = ["destructive_operations"]
-
-[[proof.commands]]
-name = "migration_validation"
-command = "cargo test --all-features"
-args = []
-description = "Guided init proof command 1"
-required = true
-
-[custody]
-isolation = "container"
+detected_surfaces = [
+    "cargo",
+    "rust",
+]
+done_criteria = "The outcome is complete when equivalent queries across all nine Decapod stores produce equivalent row projections through both adapters, compile-time query analysis works for literal queries, runtime analysis works for dynamic queries, inline datastore directives are honored, and the full formatting, linting, and conformance suite passes."
+external_tracker = false
+primary_languages = ["Rust"]
+product_name = "dactyl-db"
+product_summary = "Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals."
+product_type = "service_or_library"
 
 [tracker]
 provider = "decapod"
-
-[context]
-declared_sources = ["AGENTS.md"]
-
-[decision]
-provider = "none"

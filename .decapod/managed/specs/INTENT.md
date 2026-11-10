@@ -1,21 +1,5 @@
 # Intent
 
-<!-- decapod:declared-capabilities:start -->
-
-## Declared Capability Surfaces
-
-- `authentication`
-- `background-processing`
-- `event-driven`
-- `external-integrations`
-- `infrastructure-management`
-- `persistent-state`
-- `public-api`
-- `scheduled-jobs`
-- `secrets-handling`
-
-<!-- decapod:declared-capabilities:end -->
-
 ## Secure shared-directory SQLite recovery
 
 Explicit SQLite recovery supports intentionally shared Unix storage without exposing rebuild contents. Dactyl owns fresh private same-filesystem staging; callers retain filesystem policy and must quiesce clients and filesystem writers. No automatic repair or consumer integration is added.
@@ -132,13 +116,31 @@ flowchart LR
 | Which interfaces are versioned at launch? | TBD | YYYY-MM-DD | |
 | Which non-functional target is hardest to hit? | TBD | YYYY-MM-DD | |
 
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
+
+- `authentication`
+- `background-processing`
+- `event-driven`
+- `external-integrations`
+- `infrastructure-management`
+- `persistent-state`
+- `public-api`
+- `scheduled-jobs`
+- `secrets-handling`
+
+<!-- decapod:declared-capabilities:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (13 files), `tests/` (13 files), `tools/` (1 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase provider boundary (issue 91)
@@ -150,3 +152,7 @@ and the opaque versioned StorageContext. Database passwords and service-role
 keys belong exclusively to a separately authorized service/operator boundary.
 No native Postgres transport, deployment, data migration, or identity policy is
 introduced by the client adapter.
+
+## Native Supabase RPC integration
+
+Dactyl provides one generic datastore surface across local SQLite, Neon HTTP services and explicit Supabase service/native RPC routes. This change adds RPC v1 while preserving existing route meanings. Applications retain workflows and session custody; private hosted SQL retains access and entitlement policy.

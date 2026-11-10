@@ -1,0 +1,205 @@
+{
+  "schema_version": "1.0.0",
+  "baseline": {
+    "accepted_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "release": "v0.11.1",
+    "policy": {
+      "change_control": {
+        "requires_human_review": true,
+        "requires_issue": true,
+        "requires_validation": true
+      },
+      "new_capability_rule": "Every new capability must map to an existing claim or introduce a new falsifiable claim before it is treated as research-relevant.",
+      "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and schema compatibility is preserved."
+    },
+    "unresolved": {
+      "claim:replace-template-claim:question:project-specific-claim": {
+        "decision_impact": "Determines the first repository-specific research claim and its required proof.",
+        "id": "project-specific-claim",
+        "owner": "Project maintainers",
+        "question": "Which project capability should replace this template claim first?",
+        "status": "open"
+      },
+      "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof"
+    }
+  },
+  "change": {
+    "id": "change_01M71HMGHATC39AJQGPCYN3Y26",
+    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "target_base": "origin/main"
+  },
+  "claims": {
+    "native-rpc-v1": {
+      "statement": "Explicit native RPC preserves generic operation and legacy route behavior with bounded authenticated transport",
+      "falsifier": "RPC contract, feature regressions or clean MSRV consumer fail",
+      "status": "open"
+    }
+  },
+  "checkpoints": [
+    {
+      "id": "native-rpc-reconstruction",
+      "summary": "Add explicit native Supabase RPC transport, bounded generic normalization, synthetic contract tests and complete release proof profile",
+      "input_digest": "sha256:b049465b36c1f56e5935b297619222bea7e2ae91ad7c7c3170425fb1c52a3a8e"
+    }
+  ],
+  "intents": {
+    "intent:change_01M71HMGHATC39AJQGPCYN3Y26": {
+      "acceptance_criteria": [],
+      "assumptions": [],
+      "boundaries": [
+        "Current claimed task and isolated work branch"
+      ],
+      "constraints": [
+        "root"
+      ],
+      "created_sequence": 1,
+      "id": "intent:change_01M71HMGHATC39AJQGPCYN3Y26",
+      "out_of_scope": [],
+      "proof_requirements": [],
+      "raw_intent": "Finish native Supabase RPC transport and compatible registry handoff\n\nResume recovered c37dceb candidate; shared Propodus v1 contract, full generic transport feature/MSRV validation, independent real-profile limits, separate PR and protected release.",
+      "refined_intent": "Finish native Supabase RPC transport and compatible registry handoff\n\nResume recovered c37dceb candidate; shared Propodus v1 contract, full generic transport feature/MSRV validation, independent real-profile limits, separate PR and protected release.",
+      "status": "refined",
+      "updated_sequence": 3
+    }
+  },
+  "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Add explicit generic RPC v1 transport while preserving all existing routes and datastore operations; session owner supplies bearer, private service owns SQL authorization. Validate all feature combinations, typed boundaries, Rust1.75 including clean consumer, and release through normal protected process.",
+      "phases": [],
+      "proof_hooks": [
+        "RPC synthetic transport and existing feature matrix",
+        "Rust1.75 clean consumer plus locked package checks",
+        "Separate local PostgreSQL, private policy, actual CLI and hosted evidence"
+      ],
+      "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed new explicit SupabaseRpcConfig route, named request/version headers and strict result/error mapping against source; session custody and private policy remain outside Dactyl.",
+          "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
+          "spec_material_hash": "ae9a8b11d62c1dfb7707a1e269157ad688b56d05361cce31468870c126c280eb"
+        }
+      ],
+      "state": "APPROVED",
+      "stop_conditions": [],
+      "title": "Native Supabase RPC integration and registry handoff",
+      "todo_ids": [
+        "code_01m71hjy2gceqhq0"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794277138Z"
+    },
+    "trajectory": {
+      "active_boundaries": [
+        "Current claimed task and isolated work branch"
+      ],
+      "artifact_hash": "sha256:9ab86e48f1661541b0de7e7b54570046bf6658cf67b725d319c77323ce49af28",
+      "checks": [
+        {
+          "name": "controller-image",
+          "status": "passed"
+        },
+        {
+          "name": "native-rpc-proof",
+          "status": "unavailable"
+        }
+      ],
+      "current_phase": "intent",
+      "custody": {
+        "events": [
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:change_01M71HMGHATC39AJQGPCYN3Y26",
+            "kind": "created",
+            "sequence": 2
+          },
+          {
+            "event_id": "event:3",
+            "intent_id": "intent:change_01M71HMGHATC39AJQGPCYN3Y26",
+            "kind": "refined",
+            "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M71HMGNWKAGSA52TK1A54GKP",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M71HMGHATC39AJQGPCYN3Y26",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
+          }
+        ],
+        "knowledge_candidates": [],
+        "next_sequence": 4,
+        "schema_version": "1.0.0",
+        "trajectories": {
+          "branch_01M71HMGNWKAGSA52TK1A54GKP": {
+            "evidence_only": true,
+            "id": "branch_01M71HMGNWKAGSA52TK1A54GKP",
+            "intent_id": "intent:change_01M71HMGHATC39AJQGPCYN3Y26",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/adapter/supabase.rs",
+                  "docs/supabase-rpc-v1.md",
+                  "src/supabase_rpc.rs",
+                  "tests/supabase_rpc.rs",
+                  "Published 0.136.0 controller image unavailable; built published crate in explicit local proof image. Prior temporary Git tree lost; reconstructed source, no inherited test pass."
+                ],
+                "proof_refs": [
+                  "native-rpc-proof",
+                  "controller-image"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
+      },
+      "declared_commands": [],
+      "destination": "pull request",
+      "evidence": [
+        "Published 0.136.0 controller image unavailable; built published crate in explicit local proof image. Prior temporary Git tree lost; reconstructed source, no inherited test pass."
+      ],
+      "inspected_files": [
+        "docs/supabase-rpc-v1.md",
+        "src/adapter/supabase.rs"
+      ],
+      "intent_id": "intent:change_01M71HMGHATC39AJQGPCYN3Y26",
+      "modified_files": [
+        "src/supabase_rpc.rs",
+        "tests/supabase_rpc.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
+      ],
+      "repo_scope": [
+        "root"
+      ],
+      "run_id": "branch_01M71HMGNWKAGSA52TK1A54GKP",
+      "schema_version": "1.1.0",
+      "shortcut_risk_signals": [],
+      "task_id": "code_01m71hjy2gceqhq0",
+      "tool_calls": [],
+      "unresolved_assumptions": []
+    }
+  },
+  "legacy_digests": {
+    ".decapod/governance/claims.json": "sha256:acd769e1e4f8c1773a97f4e5cc678b6e6ec78560c63d98062328234920fac85b",
+    ".decapod/governance/plan.json": "sha256:952d1e328f328f7a26f089e0e98a6df210f9f857d97a007608cffdf6062e5b79",
+    ".decapod/governance/trajectory.json": "sha256:a40fa527242d27550c641846f76bbb5eab9be1026a7bc461c7a65d3a85deb6c4",
+    ".decapod/governance/validation.json": "sha256:fab053a216d28d707a0e8a3b54cbf527ffd5ee9cead63d1488b456391b9e685c"
+  }
+}

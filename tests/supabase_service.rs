@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use dactyl_db::{
     AdapterErrorKind, Connection, DactylError, Datastore, DatastoreRoute, DatastoreTransport,
     GeneratedKey, Operation, OperationResult, Parameter, RecoveryJournalMode, RecoveryOptions, Row,
-    Rows, StorageContext, WriteResult,
+    Rows, StorageContext, SupabaseRpcConfig, WriteResult,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -71,6 +71,13 @@ struct Principal {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct RpcFixture {
+    publishable_key: String,
+    schema: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Fixture {
     version: u16,
     profile: Profile,
@@ -78,6 +85,8 @@ struct Fixture {
     independent_principals: bool,
     sql_profile: String,
     endpoint: String,
+    #[serde(default)]
+    rpc_v1: Option<RpcFixture>,
     allowed: [Principal; 2],
     authentication_denied: Principal,
     authorization_denied: Principal,
@@ -134,7 +143,7 @@ fn parse_fixture(
             "authorization-denied pair must differ from allowed pairs",
         ));
     }
-    DatastoreRoute::supabase(&fixture.endpoint, None)
+    route(&fixture, None)
         .validate()
         .map_err(|_| FixtureError("invalid service endpoint"))?;
     let url = reqwest::Url::parse(&fixture.endpoint)
@@ -263,10 +272,19 @@ fn denied<T>(
     }
 }
 
+fn route(fixture: &Fixture, token: Option<String>) -> DatastoreRoute {
+    match &fixture.rpc_v1 {
+        Some(rpc) => DatastoreRoute::supabase_rpc(
+            SupabaseRpcConfig::v1(&fixture.endpoint, &rpc.publishable_key).with_schema(&rpc.schema),
+            token,
+        ),
+        None => DatastoreRoute::supabase(&fixture.endpoint, token),
+    }
+}
 fn open(fixture: &Fixture, principal: &Principal) -> Check<Connection> {
     let db = checked(
         Connection::open_with_context(
-            DatastoreRoute::supabase(&fixture.endpoint, Some(principal.token.clone())),
+            route(fixture, Some(principal.token.clone())),
             Some(principal.context.clone()),
         ),
         "open explicit Supabase route",
@@ -720,8 +738,13 @@ fn run(profile: Profile) {
         // Never Debug-print a result, fixture, context, row, or remote error.
         panic!("service client assertion failed: {}; category={:?}; independent database outcome requires external verification", error.stage, error.kind)
     });
-    write_receipt(&mut output, &receipt(profile, &checks, true))
-        .unwrap_or_else(|error| panic!("{error}"));
+    let mut evidence = receipt(profile, &checks, true);
+    evidence["wire_contract"] = json!(if fixture.rpc_v1.is_some() {
+        "supabase_rpc_v1"
+    } else {
+        "service_v1"
+    });
+    write_receipt(&mut output, &evidence).unwrap_or_else(|error| panic!("{error}"));
 }
 
 #[test]

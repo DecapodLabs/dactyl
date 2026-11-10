@@ -151,6 +151,8 @@ sequenceDiagram
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Persistent State Architecture Overlay
 
 ### State Ownership
@@ -159,9 +161,9 @@ sequenceDiagram
 - Cross-boundary state access MUST go through defined interfaces
 
 ### Transaction Boundaries
-- All multi-entity mutations MUST occur within explicit transactions
+- Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store
 - Transaction boundaries MUST be documented in ARCHITECTURE.md
-- Compensating transactions for distributed operations
+- Document compensation or other partial-failure treatment if distributed operations exist
 
 ### Storage Abstraction
 - Storage ownership, consistency behavior, and access boundaries MUST be explicit
@@ -173,9 +175,9 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (13 files), `tests/` (13 files), `tools/` (1 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase service adapter (issue 91)
@@ -188,3 +190,7 @@ and never falls back to local storage. A service route is not a Supabase REST UR
 or a PostgreSQL connection string. Physical transactions, PostgreSQL connection
 modes and authorization are service implementation responsibilities and must be
 proved separately from synthetic HTTP fixtures.
+
+## Native Supabase RPC integration
+
+src/supabase_rpc.rs defines explicit project/key/schema configuration. src/lib.rs adds supabase_rpc without changing OpenOptions or existing constructors. src/adapter/supabase.rs shares bounded transport and normalization across service and native wires, selecting named versioned RPC requests only when configured. One atomic call is one HTTP batch; no write retry or business SQL dispatch is introduced.

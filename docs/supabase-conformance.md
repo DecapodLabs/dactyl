@@ -185,3 +185,14 @@ resources are gone. A killed client or failed assertion must not skip teardown.
 Do not claim all of #93, production onboarding, tenant authorization or hosted
 acceptance from network-free tests or the client receipt alone. Local service
 proof, hosted proof and each pooler mode remain separate results.
+
+## Native RPC selection
+
+A protected fixture may explicitly add
+`"rpc_v1": {"publishable_key":"sb_publishable_FIXTURE", "schema":"dactyl_api"}`.
+Its `endpoint` then names the project/API origin. The harness constructs the
+native route and labels `wire_contract` in the client receipt. Omission retains
+the service protocol. The same generic disposable `dactyl_service_v1` SQL fixture,
+independent identities, database observations and scoped cleanup remain required.
+Do not broaden a task-only production profile to satisfy this generic fixture.
+Synthetic tests and fixture availability are not real PostgreSQL or hosted proof.
