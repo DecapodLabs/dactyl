@@ -106,3 +106,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (13 files), `tests/` (13 files), `tools/` (1 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native RPC atomicity
+
+`DatastoreRoute::supabase_rpc` is an additive explicit selection. Existing service routes retain `/query` and `/batch`. Native version 1 wraps the same opaque operation/context envelope in a named `request` argument and sends one atomic call as one batch RPC. Only server-side errors before return establish rollback. A lost response or client decoding error may follow a commit; Dactyl does not retry the write. Zero affected rows remain an observation, not an invented task conflict.

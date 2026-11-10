@@ -117,3 +117,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (13 files), `tests/` (13 files), `tools/` (1 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native Supabase RPC credentials
+
+The caller supplies an ordinary current bearer and a distinct publishable project key. `SupabaseRpcConfig` debug output redacts supplied configuration; the adapter validates an origin, schema identifier and publishable key before connecting, disables redirects and retries, bounds bodies and deadlines, and accepts only portable scalar/blob result values. Dactyl does not acquire sessions, store refresh tokens, interpret repository grants or authorize caller SQL. The private RPC service owns those policies.

@@ -8,7 +8,7 @@ SQLite recovery is isolated in adapter/sqlite/recovery.rs. It creates a 0700 chi
 library
 
 ## What This Project Is
-dactyl-db is a small Rust application driver: one normalized operation surface over a real local SQLite file and Vercel Neon. It is not a database-administration layer and does not reimplement SQLite.
+dactyl-db is a small Rust application driver: one normalized operation surface over local SQLite, Neon service transport, Supabase service transport and explicitly selected native Supabase RPC. It is not a database-administration layer and does not reimplement SQLite.
 
 The one maintenance exception is a narrow, explicit local-storage contract:
 Dactyl can verify a SQLite file, make an online-backup snapshot, and perform a
@@ -35,7 +35,7 @@ This project's architecture consists of the following key layers/directories:
 
 ## Data Flows
 - The application supplies SQL, bound values, and caller-owned schema operations.
-- Dactyl selects the local or Neon adapter and enforces the operation/access boundary.
+- Dactyl selects the explicit local or cloud adapter and enforces the operation/access boundary.
 - For Neon, Dactyl validates the context envelope, attaches it to `/query` and
   `/batch`, and fails closed before transport when it is absent or malformed.
 - The adapter returns normalized rows, explicit write results, typed errors, or an ordered atomic result.
@@ -111,13 +111,13 @@ sequenceDiagram
 ## Deployment Topology
 - Runtime units: none (library).
 - Region/zone model: n/a.
-- Rollout strategy: library releases via release-plz.
+- Rollout strategy: library releases via the protected release-please workflow.
 - Rollback trigger and blast-radius scope: callers pin a dactyl version; breaking changes are recorded in CHANGELOG.md.
 
 ## Data and Contracts
 - Inbound contracts (application calls): `read`, `write_result`, `atomic`, `OpenOptions`, `StorageContext`, and owned row/result values.
-- Outbound dependencies (datastores/queues/external APIs): optional runtime-loaded host SQLite and Neon/Propodus HTTP transport. The local C-ABI loader is isolated behind the private adapter module; no SQLite wrapper or bundled SQLite implementation is compiled into consumers.
-- Data ownership boundaries: callers own schema definitions and migration policy; Decapod owns context meaning; Propodus owns cloud authorization; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
+- Outbound dependencies (datastores/queues/external APIs): optional runtime-loaded host SQLite and Neon/Supabase HTTP transport. The local C-ABI loader is isolated behind the private adapter module; no SQLite wrapper or bundled SQLite implementation is compiled into consumers.
+- Data ownership boundaries: callers own schema definitions and migration policy; Decapod owns context meaning; the selected hosted implementation owns cloud authorization; Dactyl executes only the documented caller-supplied schema subset and physical atomicity.
 - Schema evolution + migration policy: outside Dactyl's scope.
 
 ### Issue #77 Direct SQLite Proof Boundary

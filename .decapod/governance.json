@@ -40,6 +40,11 @@
       "id": "native-rpc-reconstruction",
       "summary": "Add explicit native Supabase RPC transport, bounded generic normalization, synthetic contract tests and complete release proof profile",
       "input_digest": "sha256:b049465b36c1f56e5935b297619222bea7e2ae91ad7c7c3170425fb1c52a3a8e"
+    },
+    {
+      "id": "native-rpc-spec-review",
+      "summary": "Review source-bound native RPC architecture, security, atomicity and operational proof requirements",
+      "input_digest": "sha256:50a006cfa86bc62b7d12478ed867d0df95b58d4df398d0be7ada6db213934a55"
     }
   ],
   "intents": {
@@ -81,10 +86,24 @@
       "spec_reviews": [
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reconciled actual SQLite, Neon, Supabase service and explicit RPC adapters, private SQL authorization ownership and release-please publication against current source.",
+          "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
+          "spec_material_hash": "ff518612ed1cffe0a4f62864910343b17b3ead099f8b26df77d2f6ece35d9b76"
+        },
+        {
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Reviewed new explicit SupabaseRpcConfig route, named request/version headers and strict result/error mapping against source; session custody and private policy remain outside Dactyl.",
           "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
           "spec_material_hash": "ae9a8b11d62c1dfb7707a1e269157ad688b56d05361cce31468870c126c280eb"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed credential redaction, origin/schema validation, bounded transport and private authorization ownership against adapter and contract tests.",
+          "reviewed_code_fingerprint": "12e47a50f0575323d3bdeeaa9dd89a010f2999cf99a2819a9ccf6cdaa1ed7b89",
+          "spec_material_hash": "d6bd78e17efe2910815e09eff50f4ecc9bfb9877fbf0813b0e7e854f5144e984"
         }
       ],
       "state": "APPROVED",
@@ -95,7 +114,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794277138Z"
+      "updated_at": "1794291254Z"
     },
     "trajectory": {
       "active_boundaries": [

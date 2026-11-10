@@ -176,3 +176,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (13 files), `tests/` (13 files), `tools/` (1 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native RPC delivery
+
+`tools/proof/Containerfile` builds a local published-controller image for the complete `decapod validate` Rust proof profile. A missing released controller image is not a passed check. Synthetic transport, real PostgreSQL profile, private application policy, actual consumer and hosted execution evidence remain separate. Protected release-please publication must produce a registry artifact before a final consumer version handoff.
