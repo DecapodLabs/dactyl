@@ -1,5 +1,15 @@
 # Validation
 
+## Offline connector and Rust compatibility proof
+
+`tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
+checks only through `decapod validate`. Its declared private TMPDIR is resolved
+before fixture creation. Local Podman proof uses the source bind's filesystem
+there because overlay temporary files carry unsupported MAC labels; CI creates
+the same private directory in the reviewed proof image. Recovery's metadata and
+ACL checks remain intact. Hosted OAuth, checkout, deployment and registry
+publication require separate evidence.
+
 ## Secure shared-directory SQLite recovery
 
 The SQLite recovery unit suite inspects 0700/0600 creation checkpoints and populated PERSIST journals under subprocess umask 000, tests accepted 0660/2770 sharing and original inode/group custody, rejects metadata and symlink/collision/replacement hazards, injects seven recovery failure boundaries plus diagnostic-sync failure, and kills subprocesses at seven stages to verify private artifacts and recoverable originals. Existing sqlite_maintenance regressions remain required. Platform capability limits are explicit; Linux test evidence is not proof on other hosts.
@@ -226,7 +236,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a`
+- Repository signal fingerprint: `92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

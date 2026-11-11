@@ -32,7 +32,7 @@ name = "rust-contract"
 required = true
 
 [proof.repository_contract]
-reviewed_commands_digest = "sha256:d9cd30361e537066c9a472960d1803f35351f8468b839c4f90a912971190e5c9"
+reviewed_commands_digest = "sha256:ccdcc5e348db022ed46dca0e6a83df92b892299bdf8374aa3a0fb05431ceabf0"
 
 [proof.repository_contract.executions.rust-contract]
 directory = "."
@@ -52,6 +52,7 @@ DACTYL_SQLITE_LIBRARY = "/usr/lib/aarch64-linux-gnu/libsqlite3.so.0.8.6"
 DACTYL_STABLE_TOOLS = "/usr/local/rustup/toolchains/1.96.1-aarch64-unknown-linux-gnu/bin"
 RUSTFLAGS = "-C linker=/usr/bin/aarch64-linux-gnu-gcc-12"
 RUSTUP_HOME = "/usr/local/rustup"
+TMPDIR = "/opt/dactyl-proof-tmp"
 
 [proof.repository_contract.executions.rust-contract.toolchain_files]
 ar = "/usr/bin/aarch64-linux-gnu-ar"
@@ -107,7 +108,7 @@ source = ".github/workflows/release.yml"
 
 [proof.required_profile]
 id = "repo.pr-readiness.v1"
-reviewed_sources_digest = "sha256:0cc8a44fc4950788f55ee6ed2a3d5ef66ac9eac635f403e3edfb4deffc118e21"
+reviewed_sources_digest = "sha256:661e90decb054ca68a4e704b004afa8b642a8a7161154d2bc9becc8f078ac091"
 
 [repo]
 architecture_direction = "library"

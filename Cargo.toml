@@ -13,8 +13,8 @@ categories = ["database", "api-bindings"]
 [features]
 default = []
 sqlite = ["dep:libloading", "dep:rustix"]
-neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize"]
-supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:base64", "dep:getrandom", "dep:sha2"]
+neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:quinn-proto", "dep:quinn-udp"]
+supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:base64", "dep:getrandom", "dep:sha2", "dep:quinn-proto", "dep:quinn-udp"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -40,6 +40,12 @@ zeroize = { version = ">=1.8, <1.9", optional = true, default-features = false }
 
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1", optional = true, features = ["fs"] }
+
+# Cargo 1.75 parses the inactive reqwest HTTP/3 graph while resolving.
+# Keep that graph compatible without compiling or enabling HTTP/3 on any target.
+[target.'cfg(any())'.dependencies]
+quinn-proto = { version = ">=0.11.7, <0.11.10", optional = true, default-features = false }
+quinn-udp = { version = ">=0.5.0, <0.5.15", optional = true, default-features = false }
 
 [dev-dependencies]
 tokio = { version = ">=1.0, <1.54", features = ["full"] }

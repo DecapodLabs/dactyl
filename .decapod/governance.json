@@ -63,6 +63,11 @@
       "id": "connector-account-scm-profile-v1",
       "summary": "Bounded origin-bound logical connector, stateless managed auth/account transport, explicit SCM metadata isolation, canonical offline Rust proof and reproducible dependency preparation.",
       "input_digest": "sha256:8e0ee77416f547f73682cd310ed3db282ba0e30759e550fd1530ce96d7ba3cd5"
+    },
+    {
+      "id": "connector-msrv-filesystem-v1",
+      "summary": "Repair actual required-proof failures with inactive HTTP3 resolver bounds for Cargo 1.75 and canonical private fixture storage while preserving the full suite and SQLite MAC/ACL security policy.",
+      "input_digest": "sha256:36d9a28de2c37dbdc7ff7b0f67bdb4a5fdd4a5f5f30873dae4dd2f87117b3a0e"
     }
   ],
   "intents": {
@@ -103,24 +108,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed stateless connector ownership, origin-bound profile, private caller session ownership, retry/redirect refusal and separate opaque account channel; current profile is public metadata only.",
-          "reviewed_code_fingerprint": "f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a",
+          "reason": "Inactive HTTP3 dependency bounds add no active transport or public feature; proof filesystem repair leaves datastore architecture and fail-closed metadata policy unchanged.",
+          "reviewed_code_fingerprint": "92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4",
           "spec_material_hash": "4efec3fe8da76aeabca4e3a2ad2cacca3a2674eaca28d89384996ee24b6c59ef"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed logical backend API, fixed account routes, typed explicitly supplied SCM credentials, optional provider-token custody and bounded native RPC/Auth behavior against current source and tests.",
-          "reviewed_code_fingerprint": "f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a",
+          "reason": "Public connector/account/Auth API unchanged by inactive-target resolver bounds and explicit private proof TMPDIR; reviewed against current source and full-failure diagnostics.",
+          "reviewed_code_fingerprint": "92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4",
           "spec_material_hash": "f7ce9d436db9b386261623fdb7f092ce7fbd36e516f57a474de3c7e5aef894ad"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed credential redaction, same-origin paths, no automatic replay and SCM headers isolated from ordinary Supabase bearer data access; backend owns paid-seat and tenant policy.",
-          "reviewed_code_fingerprint": "f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a",
+          "reason": "SCM isolation and bearer ownership unchanged; SQLite metadata checks remain intact and proof uses a supported private filesystem instead of relaxing MAC/ACL checks.",
+          "reviewed_code_fingerprint": "92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4",
           "spec_material_hash": "b56e78f8a70f5faec19dcadf960b43647571038962ba4fe4b4c7a992d994e21e"
         }
       ],
@@ -134,15 +139,16 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794439992Z"
+      "updated_at": "1794440782Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Auth provider tokens are never inferred to be SCM credentials; ordinary account access uses only the Supabase bearer.",
         "Current claimed task and isolated work branch",
-        "No deployment or credential commits; server grants remain authoritative"
+        "No deployment or credential commits; server grants remain authoritative",
+        "Retain Cargo 1.75 and complete feature matrix; preserve recovery metadata/ACL policy and all existing tests."
       ],
-      "artifact_hash": "sha256:354262bc5d475b89f9da38efa1bd8f1ba538c5132046151e4156ab45d38abab5",
+      "artifact_hash": "sha256:9098db4b4b3241a9208a37d0757613cc31f06dc06b60167f6cf45d4916528b12",
       "checks": [
         {
           "name": "connector-review",
@@ -158,10 +164,10 @@
         },
         {
           "name": "rust-contract",
-          "status": "unavailable"
+          "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -196,10 +202,17 @@
             "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M753PEC49T92VW92KVGX0Y8M": {
@@ -278,6 +291,29 @@
                 "validation_findings": [
                   "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "tools/proof/check.py",
+                  "tools/proof/Containerfile",
+                  ".decapod/config.toml",
+                  "/private/tmp/dactyl-validation7-evidence/native-0.stdout"
+                ],
+                "proof_refs": [
+                  "rust-contract"
+                ],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+                  "tests/"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -291,6 +327,7 @@
         "/private/tmp/connector-profile-verification.json",
         "/private/tmp/dactyl-proof-preparation.patch",
         "/private/tmp/dactyl-typed-scm-credential.patch",
+        "/private/tmp/dactyl-validation7-evidence/native-0.stdout",
         "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
       ],
       "inspected_files": [
@@ -301,9 +338,12 @@
       "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
       "modified_files": [
         ".decapod/config.toml",
+        "Cargo.lock",
+        "Cargo.toml",
         "src/adapter/supabase.rs",
         "src/cloud.rs",
         "tests/cloud_connector.rs",
+        "tools/proof/Containerfile",
         "tools/proof/check.py",
         "tools/proof/prepare.py"
       ],
