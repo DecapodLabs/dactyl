@@ -1,20 +1,8 @@
 # Intent
 
-<!-- decapod:declared-capabilities:start -->
+## Logical connector boundary (issue 100)
 
-## Declared Capability Surfaces
-
-- `authentication`
-- `background-processing`
-- `event-driven`
-- `external-integrations`
-- `infrastructure-management`
-- `persistent-state`
-- `public-api`
-- `scheduled-jobs`
-- `secrets-handling`
-
-<!-- decapod:declared-capabilities:end -->
+Dactyl resolves an application’s logical local/cloud selection into an instance-scoped physical connection while retaining the existing explicit SQLite, Neon and Supabase service APIs. Cloud selection uses reviewed public discovery and native RPC. The caller owns durable credential and pending-flow custody, browser interaction and retry decisions. Dactyl transports typed session/account coordination results; membership, pricing, entitlement and repository authority remain service decisions. Local selection requires no cloud credentials and a cloud failure never selects SQLite. Source: `src/lib.rs`, `src/cloud.rs`, `src/supabase_rpc.rs` and `src/adapter/supabase.rs`.
 
 ## Secure shared-directory SQLite recovery
 
@@ -132,13 +120,31 @@ flowchart LR
 | Which interfaces are versioned at launch? | TBD | YYYY-MM-DD | |
 | Which non-functional target is hardest to hit? | TBD | YYYY-MM-DD | |
 
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
+
+- `authentication`
+- `background-processing`
+- `event-driven`
+- `external-integrations`
+- `infrastructure-management`
+- `persistent-state`
+- `public-api`
+- `scheduled-jobs`
+- `secrets-handling`
+
+<!-- decapod:declared-capabilities:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase provider boundary (issue 91)

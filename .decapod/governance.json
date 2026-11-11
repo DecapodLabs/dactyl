@@ -1,0 +1,219 @@
+{
+  "schema_version": "1.0.0",
+  "baseline": {
+    "accepted_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "release": "v0.11.1",
+    "policy": {
+      "change_control": {
+        "requires_human_review": true,
+        "requires_issue": true,
+        "requires_validation": true
+      },
+      "new_capability_rule": "Every new capability must map to an existing claim or introduce a new falsifiable claim before it is treated as research-relevant.",
+      "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and schema compatibility is preserved."
+    },
+    "unresolved": {
+      "claim:replace-template-claim:question:project-specific-claim": {
+        "decision_impact": "Determines the first repository-specific research claim and its required proof.",
+        "id": "project-specific-claim",
+        "owner": "Project maintainers",
+        "question": "Which project capability should replace this template claim first?",
+        "status": "open"
+      },
+      "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof"
+    }
+  },
+  "change": {
+    "id": "change_01M76FZSY3A4RA7ARS5V5A3FW2",
+    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "target_base": "origin/main"
+  },
+  "claims": {
+    "claim:dactyl-cloud-connector": {
+      "statement": "Implement Dactyl #100 for Decapod #1628: recover and harden the additive instance-scoped local/cloud connector, typed auth/account coordination and current-bearer native RPC while preserving private caller custody, strict origin/repository isolation, uncertain mutation outcomes and all existing adapter/feature/MSRV contracts. Reconcile the required repository-local proof profile through independently reviewed workflow/helper/runtime declarations and current released controller. Publish only after full native readiness; no hosted PostgreSQL, managed Auth, deployment, merge, release or registry publication is claimed.",
+      "falsifier": "Any cloud failure falls back to SQLite; any cross-origin/repository/session leak; missing bearer accepted; one-time exchange replayed after uncertainty; optional feature/MSRV/adapter regression; skipped required proof or fabricated hosted evidence; unrelated policy change; exact source/base/checkpoint/custody mismatch.",
+      "status": "open",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
+    }
+  },
+  "checkpoints": [
+    {
+      "id": "dactyl-cloud-connector-1628",
+      "summary": "Recover and harden the logical cloud connector/native RPC contract, preserve auth uncertainty and private caller custody, and adopt the complete reviewed local Rust proof under current released controller. Full readiness remains pending.",
+      "input_digest": "sha256:dfaf72b921b51c14bc0e9e29afcb9024df13ab44a4d40d5d3f6ad73c2ac0d748",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
+    }
+  ],
+  "intents": {
+    "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2": {
+      "acceptance_criteria": [],
+      "assumptions": [],
+      "boundaries": [
+        "Current claimed task and isolated work branch"
+      ],
+      "constraints": [
+        "root"
+      ],
+      "created_sequence": 1,
+      "id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+      "out_of_scope": [],
+      "proof_requirements": [],
+      "raw_intent": "Add logical connector and cloud auth/account transport for decapod\n\nThis must be solved. Do so now:\n\nhttps://github.com/DecapodLabs/decapod/issues/1628\n\nImplement Dactyl issue #100 as the dependency for decapod #1628: an additive instance-scoped logical local/cloud connector, public discovery, supported managed authentication/onboarding/account transport and current-bearer native data connections. Preserve caller-owned private custody, strict origin isolation, bounded redacted transport, server-owned entitlement/policy, and separation of fixture evidence from hosted acceptance.\n\nEarlier ephemeral bootstrap {\"disposition\": \"historical admission only; no product changes or remote branch; ephemeral runner ended after yield and failed custody export; this is a new task, not restored custody or inherited proof\", \"run_id\": 43112637243, \"task\": \"feat_01m76bwjb7637nj6\"}",
+      "refined_intent": "Add logical connector and cloud auth/account transport for decapod\n\nThis must be solved. Do so now:\n\nhttps://github.com/DecapodLabs/decapod/issues/1628\n\nImplement Dactyl issue #100 as the dependency for decapod #1628: an additive instance-scoped logical local/cloud connector, public discovery, supported managed authentication/onboarding/account transport and current-bearer native data connections. Preserve caller-owned private custody, strict origin isolation, bounded redacted transport, server-owned entitlement/policy, and separation of fixture evidence from hosted acceptance.\n\nEarlier ephemeral bootstrap {\"disposition\": \"historical admission only; no product changes or remote branch; ephemeral runner ended after yield and failed custody export; this is a new task, not restored custody or inherited proof\", \"run_id\": 43112637243, \"task\": \"feat_01m76bwjb7637nj6\"}",
+      "status": "refined",
+      "updated_sequence": 3
+    }
+  },
+  "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": 42,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Implement Dactyl #100 for Decapod #1628: recover and harden the additive instance-scoped local/cloud connector, typed auth/account coordination and current-bearer native RPC while preserving private caller custody, strict origin/repository isolation, uncertain mutation outcomes and all existing adapter/feature/MSRV contracts. Reconcile the required repository-local proof profile through independently reviewed workflow/helper/runtime declarations and current released controller. Publish only after full native readiness; no hosted PostgreSQL, managed Auth, deployment, merge, release or registry publication is claimed.",
+      "phases": [],
+      "proof_hooks": [
+        "decapod workspace publish"
+      ],
+      "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "The facade/adapter split remains intact. The new logical connector and typed native RPC/session boundary are additive; detailed contracts are authored in INTENT, INTERFACES, SECURITY and VALIDATION.",
+          "reviewed_code_fingerprint": "8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0",
+          "spec_material_hash": "c19ae430bfeccdb0dd21bed85e967493c84e35a6b2543b8e4791d385e56583bd"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented logical route selection, public discovery, native RPC, typed repository/expiry-bound auth states, caller-private secret restoration and distinct denial/uncertainty results.",
+          "reviewed_code_fingerprint": "8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0",
+          "spec_material_hash": "7e4755c502c752621818e11914222e9937f3936a64f3110fcf9e9b3e80256512"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented strict origin/handoff checks, current bearer, caller-owned private custody, redaction, bounds, and no replay after outcome_unknown; hosted policy remains unproven.",
+          "reviewed_code_fingerprint": "8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0",
+          "spec_material_hash": "d6dbe72d9557795291147b98a070f60f066869d37e17ea418a9993287f89f90e"
+        }
+      ],
+      "state": "APPROVED",
+      "stop_conditions": [],
+      "title": "feat: add logical cloud connectors and managed session transport",
+      "todo_ids": [
+        "feat_01m76c2002nnt3za"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794440705Z"
+    },
+    "trajectory": {
+      "active_boundaries": [
+        "Current claimed task and isolated work branch",
+        "Independently reviewed recovered source and initial repository proof adoption; hosted service and registry publication remain separate"
+      ],
+      "artifact_hash": "sha256:6dbd5a8417a52c48cd0c3568dcbd08252ac042f0ffacd5e3d3e8db5b5888f941",
+      "checks": [
+        {
+          "name": "full-workbranch-proof-result",
+          "status": "unavailable"
+        },
+        {
+          "name": "source-review",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "validation",
+      "custody": {
+        "events": [
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+            "kind": "created",
+            "sequence": 2
+          },
+          {
+            "event_id": "event:3",
+            "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+            "kind": "refined",
+            "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M76FZSYY65BBRT817017VAV5",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
+          }
+        ],
+        "knowledge_candidates": [],
+        "next_sequence": 4,
+        "schema_version": "1.0.0",
+        "trajectories": {
+          "branch_01M76FZSYY65BBRT817017VAV5": {
+            "evidence_only": true,
+            "id": "branch_01M76FZSYY65BBRT817017VAV5",
+            "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+            "steps": [
+              {
+                "action": "validation",
+                "command": "cargo fmt --all",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "Same original task restored from native sealed successor after run43120599440. Authored pending source recovered with independently reviewed terminal-blank cleanup from verified encrypted archive sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db; native projections regenerated through CLI. Prior MSRV dependency fetch failed on rand_pcg0.10.2 edition2024 before build/test/checkpoint. This checkpoint preserves that source before repair; full proof has not run and unavailable describes the absent result."
+                ],
+                "proof_refs": [
+                  "source-review",
+                  "full-workbranch-proof-result"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
+      },
+      "declared_commands": [
+        "cargo fmt --all",
+        "decapod rpc --op specs.refresh"
+      ],
+      "destination": "pull request",
+      "evidence": [
+        "Same original task restored from native sealed successor after run43120599440. Authored pending source recovered with independently reviewed terminal-blank cleanup from verified encrypted archive sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db; native projections regenerated through CLI. Prior MSRV dependency fetch failed on rand_pcg0.10.2 edition2024 before build/test/checkpoint. This checkpoint preserves that source before repair; full proof has not run and unavailable describes the absent result."
+      ],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+      "modified_files": [],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
+      ],
+      "repo_scope": [
+        "dactyl-cloud-connector",
+        "root"
+      ],
+      "run_id": "branch_01M76FZSYY65BBRT817017VAV5",
+      "schema_version": "1.1.0",
+      "shortcut_risk_signals": [],
+      "task_id": "feat_01m76c2002nnt3za",
+      "tool_calls": [],
+      "unresolved_assumptions": []
+    }
+  },
+  "legacy_digests": {
+    ".decapod/governance/claims.json": "sha256:acd769e1e4f8c1773a97f4e5cc678b6e6ec78560c63d98062328234920fac85b",
+    ".decapod/governance/plan.json": "sha256:952d1e328f328f7a26f089e0e98a6df210f9f857d97a007608cffdf6062e5b79",
+    ".decapod/governance/trajectory.json": "sha256:a40fa527242d27550c641846f76bbb5eab9be1026a7bc461c7a65d3a85deb6c4",
+    ".decapod/governance/validation.json": "sha256:fab053a216d28d707a0e8a3b54cbf527ffd5ee9cead63d1488b456391b9e685c"
+  }
+}

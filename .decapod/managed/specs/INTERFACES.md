@@ -1,5 +1,11 @@
 # Interfaces
 
+## Logical connector and managed-session contract (issue 100)
+
+`Backend::{Local,Cloud}` and `DatastoreRoute::for_backend` select per-instance routes. `CloudConnector::discover` accepts exactly public profile v1, the selected origin, a publishable key and the reviewed `dactyl_api` schema; discovery receives no bearer or project key. The built-in origin is independent of environment. Explicit discovery/configuration is the controlled development seam. Existing `DatastoreRoute::supabase` remains the service contract; `supabase_rpc` uses the additive named native RPC envelope with the current bearer and opaque `StorageContext`.
+
+`AuthenticationSecrets::from_parts` restores caller-private verifier and polling secret. `authentication_status` returns a typed `AuthenticationState` plus repository and RFC3339 expiry. `exchange_authentication_code` preserves the repository with its one-time code. `complete_authentication` accepts only an authenticated `complete` result and returns the confirmed repository. Callers must compare that identity and expiry to private custody before advancing. Browser `ready` and public service readiness are insufficient. Known `entitlement_required` and `authorization_denied` remain distinct; no seat/payment reason or account URL is inferred. See `docs/cloud-connectors.md` for the exact bounded transport and recovery contract.
+
 ## Secure shared-directory SQLite recovery
 
 RecoveryOptions remains unchanged. Linux/Android secure recovery supports plain mode/owner/group access and trusted-group/setgid directories; unsupported platforms, ACL/MAC metadata, ownership reproduction, symlinks/hardlinks, path replacement and cross-filesystem staging return typed errors before destructive mutation where applicable. Recovery archive names cannot alias active sidecars. See docs/sqlite-recovery.md for exact failure/rollback outcomes.
@@ -170,6 +176,8 @@ live cloud deployment proof remain service-side concerns.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Capability Overlay
 
 ### API Contract Requirements
@@ -193,9 +201,9 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase HTTP contract (issue 91)

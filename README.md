@@ -21,11 +21,14 @@ SQLite, Neon, and Supabase expose the same application contract:
 - `write(sql, params)` returns the affected-row count for compatibility;
   `write_result` also returns explicit generated keys.
 - `atomic(&[Operation])` executes an opaque all-or-nothing batch and preserves
-  result order. Empty batches are no-ops, and a failed batch persists nothing.
-  It does not implement retry, nesting, or idempotency policy.
+  result order. Empty batches are no-ops. Server-side transaction failures abort
+  the batch; a lost response or client decoding failure may follow a commit and
+  requires independent outcome recovery. Dactyl does not retry mutations or
+  implement nesting or application idempotency policy.
 - `OpenOptions { access_mode: ReadOnly, .. }` opens a non-mutating handle.
 - Values are bound as `Null`, `Bool`, `Integer`, `Real`, `Text`, or `Blob`.
-- The HTTP adapters forward SQL to `/query` and atomic batches to `/batch`.
+- Explicit HTTP service routes forward SQL to `/query` and batches to `/batch`.
+  The additive native RPC route uses the versioned named-parameter RPC contract.
 - `StorageContext` is a versioned opaque `{ version, payload }` envelope. It
   is ignored by local storage and forwarded unchanged by remote adapters; Dactyl does not
   interpret tenancy or authorization fields.
@@ -41,6 +44,15 @@ shared SQLite library at runtime; Dactyl does not compile or bundle SQLite,
 and does not duplicate SQLite's file format, parser, pager, journal, or query
 planner. The route name and `DATASTORE=sqlite` setting therefore mean what
 they say: the requested path is an ordinary SQLite database.
+
+## Logical local/cloud connectors
+
+Applications can select `Backend::Local` or `Backend::Cloud` through
+`DatastoreRoute::for_backend`. Dactyl resolves SQLite or native Supabase RPC;
+`CloudConnector` discovers the public deployment profile and provides managed
+authentication transport. The application owns browser interaction and private
+session storage. Propodus is the IaC for the Supabase backend, where identity,
+repository roles and RLS are enforced. See [the connector and auth contract](docs/cloud-connectors.md).
 
 ## Supabase service route (opt-in)
 
@@ -272,19 +284,23 @@ let result = db.atomic(&[
 
 | Variable | Meaning |
 |---|---|
-| `DATASTORE` | `sqlite` or `neon` |
-| `DATASTORE_ROUTE` | Dactyl local-store path or Neon service endpoint |
-| `DATASTORE_TOKEN` | Optional opaque bearer token for Neon |
+| `DATASTORE` | Explicit physical `sqlite`, `neon`, or `supabase` service route |
+| `DATASTORE_ROUTE` | Local-store path or selected HTTP service endpoint |
+| `DATASTORE_TOKEN` | Current user bearer for a remote service route |
 | `DACTYL_SQLITE_LIBRARY` | Optional explicit host SQLite shared-library path for non-standard loader paths |
 
 `DATASTORE` is the only ambient selector. Dactyl requires a non-empty
 `DATASTORE_ROUTE` for whichever selector is chosen and fails before adapter
 construction when either value is missing, empty, or unsupported. There is no
 implicit SQLite fallback, so a deployment cannot silently write to a local
-file when its Neon configuration is malformed. `DATASTORE_TOKEN` is read only
-for `neon`; an unset or blank token is treated as absent and does not change
-the context requirement. Explicit `Connection::open` routes bypass ambient
-selection without changing the free-function signatures.
+file when cloud configuration is malformed. `DATASTORE_TOKEN` is read only
+for remote providers; an unset or blank token is absent and does not change the
+context requirement. `supabase` in this compatibility table selects the existing
+HTTP service contract, never native RPC by inference from a hostname. Logical
+`Backend::Cloud` uses public discovery and native RPC through `CloudConnector`.
+It has no ambient deployment-origin or publishable-key overrides. Explicit
+`Connection::open` routes bypass ambient selection without changing the
+free-function signatures.
 
 The database schema and backend endpoint contract are application-owned. Dactyl
 executes caller-supplied schema statements but does not assign migration ids,

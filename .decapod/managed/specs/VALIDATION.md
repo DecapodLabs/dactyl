@@ -1,5 +1,11 @@
 # Validation
 
+## Logical cloud connector proof (issue 100)
+
+`tests/cloud_connector.rs` exercises public discovery without credentials, independent origins, exact version/schema/key and handoff validation, typed repository/expiry preservation, restoration of pending secrets, missing/expired/revoked credentials, explicit entitlement versus authority denial, successful session exchange/refresh, malformed or lost mutation responses without replay, response bounds and redaction through real loopback HTTP. `tests/supabase_rpc.rs` proves native named envelopes, bearer/context forwarding, ordered batch normalization, read-only failure, PostgREST errors, redirects and lost-response behavior. `tests/supabase_disabled.rs` retains no-feature failure and local independence. SQLite, Neon and explicit Supabase service regressions remain required across supported features, Rust 1.75, formatting, clippy and packaging.
+
+Offline fixtures establish client transport behavior only. Real PostgreSQL, hosted managed Auth, seat/payment policy, production deployment and registry publication remain independent profiles. An unavailable fixture is never a passing result. Earlier branch receipts are historical only; this candidate needs fresh governed proof against its accepted target.
+
 ## Secure shared-directory SQLite recovery
 
 The SQLite recovery unit suite inspects 0700/0600 creation checkpoints and populated PERSIST journals under subprocess umask 000, tests accepted 0660/2770 sharing and original inode/group custody, rejects metadata and symlink/collision/replacement hazards, injects seven recovery failure boundaries plus diagnostic-sync failure, and kills subprocesses at seven stages to verify private artifacts and recoverable originals. Existing sqlite_maintenance regressions remain required. Platform capability limits are explicit; Linux test evidence is not proof on other hosts.
@@ -162,10 +168,12 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Background Processing Validation Overlay
 
 ### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
+- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
 - Idempotency key verification
 - Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
 
@@ -177,10 +185,12 @@ where required; a clean-tree validation relaxation is not container evidence.
 ### Shutdown Tests
 - Graceful drain on signal
 - In-flight job completion or safe requeue
-- No data loss on forced termination
+- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
 <!-- decapod:capability-overlay:background-processing:end -->
 
 <!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
 
 ## Persistent State Validation Overlay
 
@@ -202,6 +212,8 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Validation Overlay
 
 ### Contract Tests
@@ -220,7 +232,7 @@ where required; a clean-tree validation relaxation is not container evidence.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

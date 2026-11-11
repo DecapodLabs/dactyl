@@ -2,59 +2,65 @@ name: Decapod Validate
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+
+permissions:
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Cache cargo-binstall and Decapod
-        id: cache_decapod_tools
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-tools-v1-${{ hashFiles('AGENTS.md') }}
-      - name: Install cargo-binstall
-        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
-        uses: cargo-bins/cargo-binstall@main
-      - name: Install Decapod
-        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
-        run: cargo binstall --no-confirm decapod@0.105.0
-      - name: Decapod Validate
-        env:
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          # Post-merge: tree-local binary fingerprints lag the last published pin.
-          # PRs still enforce release-bound pins + drift, unless it's a release-please PR.
-          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-please')) && '1' || '' }}
-        run: |
-          if [ ! -d .decapod ]; then
-            decapod init --proof
-          fi
-          decapod validate --refresh-specs
-      - name: Ensure no spec or entrypoint drift
-        # release-please bumps Cargo.toml without pins; fingerprint gates skip; pins advance on next user PR.
-        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-please')
-        # validate rewrites generated_at every run; that is not semantic drift.
-        # Normalize it to HEAD before the exit-code check so only real content,
-        # entrypoint, Dockerfile, or manifest hash drift fails CI.
+      - name: Install controller runtime dependencies
+        shell: bash
         run: |
           set -euo pipefail
-          MANIFEST=".decapod/managed/specs/.manifest.json"
-          if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
-            OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
-            if [ -n "${OLD}" ]; then
-              sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
-            fi
-          fi
-          if ! git diff --exit-code -- . ':!.decapod/governance/'; then
-            echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
-            echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
-            exit 1
-          fi
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git python3 openssl ca-certificates curl xz-utils
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Evaluate native CI gates with the release bound to this source
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
+          # Preserve the existing release-only fingerprint exception.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-please')) && '1' || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /root/dactyl-ci-tmp
+          export TMPDIR=/root/dactyl-ci-tmp
+          git clone --no-hardlinks --no-checkout "$GITHUB_WORKSPACE" /root/dactyl-ci
+          cd /root/dactyl-ci
+          git remote set-url origin https://github.com/DecapodLabs/dactyl.git
+          git checkout --detach "$GITHUB_SHA"
+          python3 scripts/proof/install_controller.py /root/dactyl-controller
+          # Real provider identity remains present: this is ci_local and cannot authorize publication.
+          /root/dactyl-controller/decapod validate --refresh-specs
+      - name: Require exact entrypoint and authored spec stability
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-please')
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /root/dactyl-ci
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          manifest = '.decapod/managed/specs/.manifest.json'
+          previous = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + manifest]))
+          current = json.loads(Path(manifest).read_bytes())
+          previous.pop('generated_at', None)
+          current.pop('generated_at', None)
+          if previous != current:
+              raise SystemExit('Native spec manifest changed beyond its observation timestamp.')
+          subprocess.run(['git', 'diff', '--exit-code', '--', '.', ':!.decapod/governance/',
+                          ':!.decapod/governance.json', ':!' + manifest], check=True)
+          PY

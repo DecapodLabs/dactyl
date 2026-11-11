@@ -1,5 +1,11 @@
 # Security
 
+## Managed cloud credential and origin boundary (issue 100)
+
+Cloud profile discovery is deliberately unauthenticated and database-independent; it never receives a user bearer, API key or cookie. Its fixed origin, version, schema and public-key validation precede credential transport. The browser handoff is restricted to that origin, fixed begin path and exactly the flow identifier plus a valid one-time ticket. Redirects and automatic HTTP retries are disabled. Credentials are ephemeral transport inputs, redact Debug, never enter `StorageContext`, and are persisted only by the caller. Authentication responses retain repository/expiry bindings so the caller can reject cross-repository or stale flow state. Dactyl never infers a role from email, SCM username or payment.
+
+Auth/discovery requests have five-second connect and fifteen-second full-request deadlines and 16 KiB body limits. Joined workers leave no daemon. After a dispatched mutation, transport or response-validation failure reports `outcome_unknown`; the caller must resolve its private journal rather than blindly repeat a one-time exchange or rotation. Fixed service denial codes remain explicit, while raw messages, unknown codes, details, hints and transport URLs are redacted. These client checks do not prove hosted policy, PostgreSQL grants or managed Auth replay behavior.
+
 ## Secure shared-directory SQLite recovery
 
 Private staging and creation-time modes protect rebuilt data under permissive umasks. Activation restores existing permission bits only after validation. Source access ACLs, inherited default ACLs and MAC/system access labels fail closed rather than being silently replaced; unrelated user attributes and unchanged parent POSIX access ACLs are permitted. Original/archive metadata remains untouched. Callers must quiesce filesystem name/content/metadata writers from connection open; inode checks are detection boundaries, not protection against arbitrary malicious concurrent directory writers.
@@ -89,6 +95,8 @@ Describe the security primitives and security controls implemented in this repos
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Security Overlay
 
 ### Authentication Requirements
@@ -111,7 +119,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
