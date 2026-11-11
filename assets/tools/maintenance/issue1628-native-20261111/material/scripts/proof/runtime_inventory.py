@@ -29,8 +29,6 @@ for label, path in {
     "python": "/usr/bin/python3.12",
     "rustup": "/usr/local/cargo/bin/rustup",
     "cc": "/usr/bin/x86_64-linux-gnu-gcc-13",
-    "cc1": "/usr/lib/gcc/x86_64-linux-gnu/13/cc1",
-    "collect2": "/usr/lib/gcc/x86_64-linux-gnu/13/collect2",
     "ar": "/usr/bin/x86_64-linux-gnu-ar",
     "as": "/usr/bin/x86_64-linux-gnu-as",
     "ld": "/usr/bin/x86_64-linux-gnu-ld.bfd",
@@ -38,6 +36,36 @@ for label, path in {
     "sqlite": "/usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6",
 }.items():
     add(label, path)
+
+
+def installed_gcc_file(argument):
+    # Debian places compiler internals in lib/, while Ubuntu uses libexec/.
+    # Ask the fixed installed compiler rather than guessing its packaging.
+    env = dict(os.environ)
+    for name in ("GCC_EXEC_PREFIX", "COMPILER_PATH", "LIBRARY_PATH"):
+        env.pop(name, None)
+    result = subprocess.run(
+        [FILES["cc"], argument], env=env, text=True, capture_output=True, check=True
+    )
+    name = result.stdout.strip()
+    path = Path(name)
+    if not name or "\n" in name or not path.is_absolute():
+        raise SystemExit("GCC13 did not report an absolute installed runtime file")
+    resolved = path.resolve(strict=True)
+    installed_roots = (
+        Path("/usr/lib/gcc/x86_64-linux-gnu/13"),
+        Path("/usr/libexec/gcc/x86_64-linux-gnu/13"),
+    )
+    if not resolved.is_file() or not any(
+        resolved.is_relative_to(root) for root in installed_roots
+    ):
+        raise SystemExit("GCC13 runtime file is outside its installed runtime roots")
+    return resolved
+
+
+add("cc1", installed_gcc_file("-print-prog-name=cc1"))
+add("collect2", installed_gcc_file("-print-prog-name=collect2"))
+gcc_archives = installed_gcc_file("-print-file-name=libgcc.a").parent
 
 for name, variable in (
     ("stable", "DACTYL_STABLE_TOOLS"), ("msrv", "DACTYL_MSRV_TOOLS")
@@ -55,7 +83,7 @@ for name, variable in (
             label = name + "_runtime_" + hashlib.sha256(str(path).encode()).hexdigest()[:16]
             add(label, path)
 
-for path in sorted(Path("/usr/lib/gcc/x86_64-linux-gnu/13").glob("*")):
+for path in sorted(gcc_archives.glob("*")):
     if path.is_file() and path.suffix in (".a", ".o"):
         add("gcc_" + path.name.replace(".", "_"), path)
 for name in ("crt1.o", "crti.o", "crtn.o", "Scrt1.o", "libc.so", "libc_nonshared.a"):

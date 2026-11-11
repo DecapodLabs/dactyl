@@ -63,8 +63,8 @@
     },
     {
       "path": "scripts/proof/runtime_inventory.py",
-      "bytes": 3928,
-      "sha256": "sha256:3d0ec58726bd36ac0ba0ba2351b3b058d94222a3a30c5f4584fbee2bf7e492b5"
+      "bytes": 5006,
+      "sha256": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa"
     },
     {
       "path": "src/adapter/supabase.rs",
@@ -123,7 +123,7 @@
     "scripts/proof/check.py": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
     "scripts/proof/install_controller.py": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323",
     "scripts/proof/prepare.py": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf",
-    "scripts/proof/runtime_inventory.py": "sha256:3d0ec58726bd36ac0ba0ba2351b3b058d94222a3a30c5f4584fbee2bf7e492b5"
+    "scripts/proof/runtime_inventory.py": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa"
   },
   "proof_config_sha256": "sha256:a4313575f021136075f981e9d64a61e7c5a8d2166ac64a89b3f507d4dd2f5963",
   "spec_additions": {
