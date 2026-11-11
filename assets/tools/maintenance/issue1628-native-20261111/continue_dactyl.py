@@ -180,7 +180,7 @@ def main():
         certificate_verified = True
         # Reuse the reviewed metadata/digest-checked installer, never a candidate build.
         installer = material.parent / "install_controller.py"
-        run("install exact official released controller", "/usr/bin/python3.11", str(installer), str(private))
+        run("install exact official released controller", "/usr/bin/python3.12", str(installer), str(private))
         controller = private / "decapod"
         if hashlib.sha256(controller.read_bytes()).hexdigest() != CONTROLLER:
             raise Blocked("released controller bytes differ")
@@ -284,13 +284,13 @@ def main():
         if review != {"runtime_inventory_sha256": digest(runtime_bytes), "reviewed": True,
                       "scope": "installed canonical Rust1.96.1 and Rust1.75.0 x86 runtime for required local proof"}:
             raise Blocked("installed runtime closure lacks independent bound review")
-        observed_runtime = run("verify reviewed installed runtime closure", "/usr/bin/python3.11", "scripts/proof/runtime_inventory.py", cwd=work)
+        observed_runtime = run("verify reviewed installed runtime closure", "/usr/bin/python3.12", "scripts/proof/runtime_inventory.py", cwd=work)
         if json.loads(observed_runtime) != runtime:
             raise Blocked("installed runtime closure changed after independent review")
         tools = runtime["toolchain_files"]
-        if (not tools or tools.get("python") != "/usr/bin/python3.11"
-                or any(not (str(p).startswith(("/usr/", "/lib/", "/bin/"))
-                            or p == "/etc/python3.11/sitecustomize.py") for p in tools.values())):
+        if (not tools or tools.get("python") != "/usr/bin/python3.12"
+                or any(not str(p).startswith(("/usr/", "/lib/", "/bin/", "/etc/python3.12/"))
+                       for p in tools.values())):
             raise Blocked("runtime closure contains an unexpected tool source")
         rendered_tools = "\n".join(json.dumps(k) + " = " + json.dumps(v) for k, v in sorted(tools.items()))
         config_template = template.decode()
@@ -307,7 +307,7 @@ def main():
         (work / ".decapod/config.toml").write_text(config_template)
         # Formatting and dependency acquisition are preparation, not test/build proof.
         run("format reviewed source", "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/cargo", "fmt", "--all", cwd=work)
-        run("prepare locked dependency cache", "/usr/bin/python3.11", "scripts/proof/prepare.py", cwd=work, timeout=1200)
+        run("prepare locked dependency cache", "/usr/bin/python3.12", "scripts/proof/prepare.py", cwd=work, timeout=1200)
         candidate = reconciliation(doc("measure reviewed proof declaration", "rpc", "--op", "agent.init", cwd=work))
         if candidate["discovered_sources"] != manifest["candidate_sources"]:
             raise Blocked("complete candidate source inventory differs from reviewed workflow/helper/build contract")

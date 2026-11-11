@@ -1,7 +1,7 @@
 """Print installed native runtime files for independent configuration review.
 
 This read-only aid does not modify configuration or produce approval pins.
-Run it only in the designated rust:1.96.1-bookworm x86 container. Its output
+Run it only in the designated ubuntu:24.04 x86 container. Its output
 must be reviewed before being used as a toolchain_files declaration.
 """
 
@@ -26,11 +26,11 @@ def add(label, path):
 
 
 for label, path in {
-    "python": "/usr/bin/python3.11",
+    "python": "/usr/bin/python3.12",
     "rustup": "/usr/local/cargo/bin/rustup",
-    "cc": "/usr/bin/x86_64-linux-gnu-gcc-12",
-    "cc1": "/usr/lib/gcc/x86_64-linux-gnu/12/cc1",
-    "collect2": "/usr/lib/gcc/x86_64-linux-gnu/12/collect2",
+    "cc": "/usr/bin/x86_64-linux-gnu-gcc-13",
+    "cc1": "/usr/lib/gcc/x86_64-linux-gnu/13/cc1",
+    "collect2": "/usr/lib/gcc/x86_64-linux-gnu/13/collect2",
     "ar": "/usr/bin/x86_64-linux-gnu-ar",
     "as": "/usr/bin/x86_64-linux-gnu-as",
     "ld": "/usr/bin/x86_64-linux-gnu-ld.bfd",
@@ -55,7 +55,7 @@ for name, variable in (
             label = name + "_runtime_" + hashlib.sha256(str(path).encode()).hexdigest()[:16]
             add(label, path)
 
-for path in sorted(Path("/usr/lib/gcc/x86_64-linux-gnu/12").glob("*")):
+for path in sorted(Path("/usr/lib/gcc/x86_64-linux-gnu/13").glob("*")):
     if path.is_file() and path.suffix in (".a", ".o"):
         add("gcc_" + path.name.replace(".", "_"), path)
 for name in ("crt1.o", "crti.o", "crtn.o", "Scrt1.o", "libc.so", "libc_nonshared.a"):
@@ -66,7 +66,11 @@ for name in ("crt1.o", "crti.o", "crtn.o", "Scrt1.o", "libc.so", "libc_nonshared
 for module in tuple(sys.modules.values()):
     for attribute in ("__file__", "__cached__"):
         path = getattr(module, attribute, None)
-        if path and path.startswith("/usr/lib/python3.11/") and Path(path).is_file():
+        if path and (
+            path.startswith("/usr/lib/python3.12/")
+            or path == "/etc/python3.12/sitecustomize.py"
+            or path.startswith("/etc/python3.12/__pycache__/sitecustomize.")
+        ) and Path(path).is_file():
             label = "python_runtime_" + hashlib.sha256(path.encode()).hexdigest()[:16]
             add(label, path)
 

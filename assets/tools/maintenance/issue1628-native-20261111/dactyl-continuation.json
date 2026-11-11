@@ -13,8 +13,8 @@
   "files": [
     {
       "path": ".github/workflows/decapod-validate.yml",
-      "bytes": 2827,
-      "sha256": "sha256:b7bd94dbb6f3c76075a084195c8553c5526d8bdc03397560ecc8da4d66df16c6"
+      "bytes": 2819,
+      "sha256": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf"
     },
     {
       "path": "Cargo.lock",
@@ -23,8 +23,8 @@
     },
     {
       "path": "Cargo.toml",
-      "bytes": 2452,
-      "sha256": "sha256:92129c4c069d7c6d011f6fee5274077afa7458994e885fb53ccdd7096d376682"
+      "bytes": 2450,
+      "sha256": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff"
     },
     {
       "path": "README.md",
@@ -43,8 +43,8 @@
     },
     {
       "path": "scripts/proof/Containerfile",
-      "bytes": 1807,
-      "sha256": "sha256:0f8cd9d60848b45ed8d4959cc861ee3e0e7674cbf1cddac562cc93d49abc0b80"
+      "bytes": 2220,
+      "sha256": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce"
     },
     {
       "path": "scripts/proof/check.py",
@@ -63,8 +63,8 @@
     },
     {
       "path": "scripts/proof/runtime_inventory.py",
-      "bytes": 3777,
-      "sha256": "sha256:baf35e0fe3fc92bc2831226af36ec5a31e44e5f413297d5f9bc52074db61d947"
+      "bytes": 3928,
+      "sha256": "sha256:3d0ec58726bd36ac0ba0ba2351b3b058d94222a3a30c5f4584fbee2bf7e492b5"
     },
     {
       "path": "src/adapter/supabase.rs",
@@ -113,19 +113,19 @@
   },
   "candidate_sources": {
     ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
-    ".github/workflows/decapod-validate.yml": "sha256:b7bd94dbb6f3c76075a084195c8553c5526d8bdc03397560ecc8da4d66df16c6",
+    ".github/workflows/decapod-validate.yml": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf",
     ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
     ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
     ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
     "Cargo.lock": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240",
-    "Cargo.toml": "sha256:92129c4c069d7c6d011f6fee5274077afa7458994e885fb53ccdd7096d376682",
-    "scripts/proof/Containerfile": "sha256:0f8cd9d60848b45ed8d4959cc861ee3e0e7674cbf1cddac562cc93d49abc0b80",
+    "Cargo.toml": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff",
+    "scripts/proof/Containerfile": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce",
     "scripts/proof/check.py": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
     "scripts/proof/install_controller.py": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323",
     "scripts/proof/prepare.py": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf",
-    "scripts/proof/runtime_inventory.py": "sha256:baf35e0fe3fc92bc2831226af36ec5a31e44e5f413297d5f9bc52074db61d947"
+    "scripts/proof/runtime_inventory.py": "sha256:3d0ec58726bd36ac0ba0ba2351b3b058d94222a3a30c5f4584fbee2bf7e492b5"
   },
-  "proof_config_sha256": "sha256:e1128e8180082cb5d78d20d8f69c068ff31949f05357c6d313277e52068794d2",
+  "proof_config_sha256": "sha256:a4313575f021136075f981e9d64a61e7c5a8d2166ac64a89b3f507d4dd2f5963",
   "spec_additions": {
     ".decapod/managed/specs/INTENT.md": "## Logical connector boundary (issue 100)\n\nDactyl resolves an application\u2019s logical local/cloud selection into an instance-scoped physical connection while retaining the existing explicit SQLite, Neon and Supabase service APIs. Cloud selection uses reviewed public discovery and native RPC. The caller owns durable credential and pending-flow custody, browser interaction and retry decisions. Dactyl transports typed session/account coordination results; membership, pricing, entitlement and repository authority remain service decisions. Local selection requires no cloud credentials and a cloud failure never selects SQLite. Source: `src/lib.rs`, `src/cloud.rs`, `src/supabase_rpc.rs` and `src/adapter/supabase.rs`.\n",
     ".decapod/managed/specs/INTERFACES.md": "## Logical connector and managed-session contract (issue 100)\n\n`Backend::{Local,Cloud}` and `DatastoreRoute::for_backend` select per-instance routes. `CloudConnector::discover` accepts exactly public profile v1, the selected origin, a publishable key and the reviewed `dactyl_api` schema; discovery receives no bearer or project key. The built-in origin is independent of environment. Explicit discovery/configuration is the controlled development seam. Existing `DatastoreRoute::supabase` remains the service contract; `supabase_rpc` uses the additive named native RPC envelope with the current bearer and opaque `StorageContext`.\n\n`AuthenticationSecrets::from_parts` restores caller-private verifier and polling secret. `authentication_status` returns a typed `AuthenticationState` plus repository and RFC3339 expiry. `exchange_authentication_code` preserves the repository with its one-time code. `complete_authentication` accepts only an authenticated `complete` result and returns the confirmed repository. Callers must compare that identity and expiry to private custody before advancing. Browser `ready` and public service readiness are insufficient. Known `entitlement_required` and `authorization_denied` remain distinct; no seat/payment reason or account URL is inferred. See `docs/cloud-connectors.md` for the exact bounded transport and recovery contract.\n",
@@ -145,5 +145,12 @@
       "disposition": "updated",
       "reason": "Documented strict origin/handoff checks, current bearer, caller-owned private custody, redaction, bounds, and no replay after outcome_unknown; hosted policy remains unproven."
     }
-  }
+  },
+  "runtime_preparation_history": {
+    "run_id": 43115774181,
+    "stage": "ingest native doctrine",
+    "imported": false,
+    "reason": "Official0.138.2 requiresGLIBC2.39; corrected actual runtime toUbuntu24.04 before original native task import."
+  },
+  "source_material_manifest_sha256": "sha256:befec6ca4ca3bc4a604afa2b760a3ca6fe3c6bdbaad27c5eaa4c9f7370ce8eab"
 }

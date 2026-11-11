@@ -1,0 +1,37 @@
+{
+  "schema": "decapod.issue1628-dactyl-continuation.v1",
+  "repository": "DecapodLabs/dactyl",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "operations_sha": "602387f83c9f6486bab5c89548b4ac9d9c0eb967",
+  "status": "blocked",
+  "imported": false,
+  "admitted": false,
+  "container_observed": true,
+  "checkpoints": false,
+  "publication_ready": false,
+  "full_boundary_passed": false,
+  "custody_exported": false,
+  "head_sha": null,
+  "pr_url": null,
+  "pushed": false,
+  "controller": {
+    "release": "v0.138.2",
+    "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+  },
+  "blocker": {
+    "stage": "ingest native doctrine",
+    "exit_code": 1,
+    "timeout": false,
+    "codes": [],
+    "diagnostic": "/root/issue1628-dactyl-private-gny8qgra/decapod: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by /root/issue1628-dactyl-private-gny8qgra/decapod)\n",
+    "reason": "native or source preparation command failed"
+  },
+  "diagnostics": {
+    "artifact": "native-diagnostics.der",
+    "plaintext_sha256": "sha256:57502d93d60119675811bf433150a950147dabacf806b2da8fc7584b36f1115a",
+    "ciphertext_sha256": "sha256:6dfc94a6d8750f0dc78aa3fc3ac630791006ae6cafdbb4e637e8461feabedf1c"
+  }
+}

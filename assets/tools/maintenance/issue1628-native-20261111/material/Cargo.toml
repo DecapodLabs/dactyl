@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/DecapodLabs/dactyl"
 description = "A generic datastore boundary for SQLite, Neon HTTP services, and authenticated Supabase service or RPC routes."
 readme = "README.md"
-keywords = ["datastore", "supabase", "postgres", "sql", "sqlite"]
+keywords = ["datastore", "vercel", "postgres", "sql", "sqlite"]
 categories = ["database", "api-bindings"]
 
 [features]
