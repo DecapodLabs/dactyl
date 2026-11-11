@@ -2,28 +2,28 @@
   "schema": "decapod.issue1628-dactyl-dependency-repair.v1",
   "repository": "DecapodLabs/dactyl",
   "task": "feat_01m76c2002nnt3za",
-  "source_recovery_sha256": "sha256:bf8f2faeaf56c3430ea7d784a1c251be978384303dd1054f310c5d39c7990c63",
+  "source_recovery_sha256": "sha256:a78faa3d169647b92dafe6c6f430b841a801b50be10db6c17bd1a05d5bc74f8e",
   "reviewed_repair_manifest_sha256": "sha256:9b4b3fb69fef1ab67cd8b5c947e3296143f1154e2d256fcc9c34162e3bfc9105",
   "files": [
     {
       "path": "Cargo.toml",
-      "bytes": 2943,
-      "sha256": "sha256:f3d85a700d64929411ad7bde902cc28a84ab5c8063c3f74fc103e0561a57c703"
+      "bytes": 2942,
+      "sha256": "sha256:c6640f92bc92443ef7330b03bb271776d229938e1187e93422a9df9e1c26d52c"
     },
     {
       "path": "src/lib.rs",
-      "bytes": 18246,
-      "sha256": "sha256:803408c47b2204edc26e64a7ad72eb723d61ced9fb2ac722d0f1c01d005b76d8"
+      "bytes": 18245,
+      "sha256": "sha256:e5e6ecb101703992470d43c092d79c32331a7eba5b4db3e85c026d9fac4ac75f"
     },
     {
       "path": "src/cloud.rs",
-      "bytes": 24505,
-      "sha256": "sha256:915a0e48ef3c745c54bc1a9548c61ebe9a6d4e9449970407b191429a113787b1"
+      "bytes": 24504,
+      "sha256": "sha256:cbff0876fa3b4564bef61c81ae3c6967ac2148fe4fe1ad7ce3f2d487202117a0"
     },
     {
       "path": "src/adapter/supabase.rs",
-      "bytes": 23891,
-      "sha256": "sha256:3cb719ca10bce0f83cddaa73a2bb01497de9148221cf6c0e61aa4e0e6650a083"
+      "bytes": 23890,
+      "sha256": "sha256:0395ab3d6b2c8756621c981ab29764d75138aa6fd600934398ba9363cf2c5972"
     },
     {
       "path": "src/adapter/neon/mod.rs",
@@ -65,5 +65,35 @@
     "hyper-rustls": "0.27.7",
     "webpki-roots": "1.0.11"
   },
-  "scope": "Dependency-only lock/metadata preparation. No compiler/test execution, no lock digest admission and no PR. Independent graph review required before unchanged MSRV/clean-consumer fetch and full native proof."
+  "scope": "Dependency-only lock/metadata preparation. No compiler/test execution, no lock digest admission and no PR. Independent graph review required before unchanged MSRV/clean-consumer fetch and full native proof.",
+  "whitespace_adjustments": [
+    {
+      "path": "Cargo.toml",
+      "before_sha256": "sha256:f3d85a700d64929411ad7bde902cc28a84ab5c8063c3f74fc103e0561a57c703",
+      "after_sha256": "sha256:c6640f92bc92443ef7330b03bb271776d229938e1187e93422a9df9e1c26d52c",
+      "removed_bytes": 1,
+      "operation": "remove exactly one blank final line; retain one terminal newline"
+    },
+    {
+      "path": "src/lib.rs",
+      "before_sha256": "sha256:803408c47b2204edc26e64a7ad72eb723d61ced9fb2ac722d0f1c01d005b76d8",
+      "after_sha256": "sha256:e5e6ecb101703992470d43c092d79c32331a7eba5b4db3e85c026d9fac4ac75f",
+      "removed_bytes": 1,
+      "operation": "remove exactly one blank final line; retain one terminal newline"
+    },
+    {
+      "path": "src/cloud.rs",
+      "before_sha256": "sha256:915a0e48ef3c745c54bc1a9548c61ebe9a6d4e9449970407b191429a113787b1",
+      "after_sha256": "sha256:cbff0876fa3b4564bef61c81ae3c6967ac2148fe4fe1ad7ce3f2d487202117a0",
+      "removed_bytes": 1,
+      "operation": "remove exactly one blank final line; retain one terminal newline"
+    },
+    {
+      "path": "src/adapter/supabase.rs",
+      "before_sha256": "sha256:3cb719ca10bce0f83cddaa73a2bb01497de9148221cf6c0e61aa4e0e6650a083",
+      "after_sha256": "sha256:0395ab3d6b2c8756621c981ab29764d75138aa6fd600934398ba9363cf2c5972",
+      "removed_bytes": 1,
+      "operation": "remove exactly one blank final line; retain one terminal newline"
+    }
+  ]
 }

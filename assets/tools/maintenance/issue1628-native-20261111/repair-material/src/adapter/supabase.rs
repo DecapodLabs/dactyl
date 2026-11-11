@@ -618,4 +618,3 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
         format!("Supabase service returned HTTP status {status}"),
     )
 }
-

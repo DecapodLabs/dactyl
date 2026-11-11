@@ -128,4 +128,3 @@ Normative external mechanics:
 - [PostgREST function arguments](https://docs.postgrest.org/en/v12/references/api/functions.html)
 - [PostgREST errors](https://docs.postgrest.org/en/v12/references/errors.html)
 - [Supabase JWT trust](https://supabase.com/docs/guides/auth/jwts)
-

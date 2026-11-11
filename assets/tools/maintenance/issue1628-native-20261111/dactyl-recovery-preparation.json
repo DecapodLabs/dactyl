@@ -4,7 +4,7 @@
   "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
   "task": "feat_01m76c2002nnt3za",
   "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
-  "incoming_source_branch": "issue1628-dactyl-continuation-767f55fe2aef",
+  "incoming_source_branch": "issue1628-dactyl-recovery-18624dfcd8d6",
   "title": "feat: add logical cloud connectors and managed session transport",
   "intent": "Implement Dactyl #100 for Decapod #1628: recover and harden the additive instance-scoped local/cloud connector, typed auth/account coordination and current-bearer native RPC while preserving private caller custody, strict origin/repository isolation, uncertain mutation outcomes and all existing adapter/feature/MSRV contracts. Reconcile the required repository-local proof profile through independently reviewed workflow/helper/runtime declarations and current released controller. Publish only after full native readiness; no hosted PostgreSQL, managed Auth, deployment, merge, release or registry publication is claimed.",
   "falsifier": "Any cloud failure falls back to SQLite; any cross-origin/repository/session leak; missing bearer accepted; one-time exchange replayed after uncertainty; optional feature/MSRV/adapter regression; skipped required proof or fabricated hosted evidence; unrelated policy change; exact source/base/checkpoint/custody mismatch.",
@@ -18,28 +18,28 @@
     },
     {
       "path": "Cargo.lock",
-      "bytes": 41568,
-      "sha256": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240"
+      "bytes": 41567,
+      "sha256": "sha256:0aab0ab171184e19a61b02ab68b2fe88fa71d696f5999f28a67c2c6da34916a8"
     },
     {
       "path": "Cargo.toml",
-      "bytes": 2450,
-      "sha256": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff"
+      "bytes": 2449,
+      "sha256": "sha256:b52c313e8c5fba635db42f756eb6452fdce62b257420bc52a0d44aa33350340c"
     },
     {
       "path": "README.md",
-      "bytes": 16232,
-      "sha256": "sha256:ba180094a1ce982d892ac6dbe6ddcc5b47945f53b6773b5c1f9490ea6a01d0ce"
+      "bytes": 16231,
+      "sha256": "sha256:c615f2035a00462d5661a50728b82b1d94021cada5e1c93cd04413a61e1e3f2d"
     },
     {
       "path": "docs/cloud-connectors.md",
-      "bytes": 5893,
-      "sha256": "sha256:b057758206c84b1b377d425f8d504269992ed4d75714ec7f6f1af56690345ba8"
+      "bytes": 5892,
+      "sha256": "sha256:55dfd4773e4ea173288c7f92978b8d7d49776849dc088e7c980bafdc5f373ea6"
     },
     {
       "path": "docs/supabase-rpc-v1.md",
-      "bytes": 6940,
-      "sha256": "sha256:092f4a31efd49344081e848584b60cef88d3be2118ca2d94e827a52103f67533"
+      "bytes": 6939,
+      "sha256": "sha256:e764badd674afbb1dbaf892bdcda6fcb6f07a667be8bb1f6ec8c858fa48fdb97"
     },
     {
       "path": "scripts/proof/Containerfile",
@@ -117,8 +117,8 @@
     ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
     ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
     ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
-    "Cargo.lock": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240",
-    "Cargo.toml": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff",
+    "Cargo.lock": "sha256:0aab0ab171184e19a61b02ab68b2fe88fa71d696f5999f28a67c2c6da34916a8",
+    "Cargo.toml": "sha256:b52c313e8c5fba635db42f756eb6452fdce62b257420bc52a0d44aa33350340c",
     "scripts/proof/Containerfile": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce",
     "scripts/proof/check.py": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
     "scripts/proof/install_controller.py": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323",
@@ -154,16 +154,61 @@
   },
   "source_material_manifest_sha256": "sha256:befec6ca4ca3bc4a604afa2b760a3ca6fe3c6bdbaad27c5eaa4c9f7370ce8eab",
   "source_recovery": {
-    "source_run_id": 43117913670,
-    "source_operations_sha": "e551567a8828efaaf066250003ad8d0e46eb1f81",
-    "archive_plaintext_sha256": "sha256:d1fd7a8a3d20c9d2474f50328a075e9398bb01446ffbce8da6e456000d2f66f6",
-    "prior_failure": {
-      "stage": "prepare locked dependency cache",
-      "cargo": "1.75.0",
-      "dependency": "rand_pcg0.10.2",
-      "reason": "edition2024 manifest unavailable to Cargo1.75; no build or tests executed"
-    },
-    "restored_scope": "exact authored product/proof/CI bytes only; no machine-owned state restored directly",
-    "authored_manifest_sha256": "sha256:bf8f2faeaf56c3430ea7d784a1c251be978384303dd1054f310c5d39c7990c63"
+    "source_run_id": 43120599440,
+    "source_operations_sha": "ee87dd4becc23c01d06b7c1eab44383f5f1dc393",
+    "archive_plaintext_sha256": "sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db",
+    "observed_preparation_failures": [
+      {
+        "stage": "prepare locked dependency cache",
+        "cargo": "1.75.0",
+        "dependency": "rand_pcg0.10.2",
+        "reason": "edition2024 manifest unavailable to Cargo1.75; no build or tests executed"
+      },
+      {
+        "run_id": 43120599440,
+        "stage": "verify prepared source whitespace",
+        "reason": "git diff --check found new blank EOF lines; no dependency repair/resolution or build executed"
+      }
+    ],
+    "restored_scope": "Archived authored product/proof/CI bytes with nine independently reviewed terminal-blank normalizations across recovered foundation and repair proposal; machine projections regenerated only through native CLI",
+    "whitespace_adjustments": [
+      {
+        "path": "Cargo.lock",
+        "before_sha256": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240",
+        "after_sha256": "sha256:0aab0ab171184e19a61b02ab68b2fe88fa71d696f5999f28a67c2c6da34916a8",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "Cargo.toml",
+        "before_sha256": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff",
+        "after_sha256": "sha256:b52c313e8c5fba635db42f756eb6452fdce62b257420bc52a0d44aa33350340c",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "README.md",
+        "before_sha256": "sha256:ba180094a1ce982d892ac6dbe6ddcc5b47945f53b6773b5c1f9490ea6a01d0ce",
+        "after_sha256": "sha256:c615f2035a00462d5661a50728b82b1d94021cada5e1c93cd04413a61e1e3f2d",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "docs/cloud-connectors.md",
+        "before_sha256": "sha256:b057758206c84b1b377d425f8d504269992ed4d75714ec7f6f1af56690345ba8",
+        "after_sha256": "sha256:55dfd4773e4ea173288c7f92978b8d7d49776849dc088e7c980bafdc5f373ea6",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "docs/supabase-rpc-v1.md",
+        "before_sha256": "sha256:092f4a31efd49344081e848584b60cef88d3be2118ca2d94e827a52103f67533",
+        "after_sha256": "sha256:e764badd674afbb1dbaf892bdcda6fcb6f07a667be8bb1f6ec8c858fa48fdb97",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      }
+    ],
+    "previous_authored_manifest_sha256": "sha256:bf8f2faeaf56c3430ea7d784a1c251be978384303dd1054f310c5d39c7990c63",
+    "authored_manifest_sha256": "sha256:a78faa3d169647b92dafe6c6f430b841a801b50be10db6c17bd1a05d5bc74f8e"
   }
 }

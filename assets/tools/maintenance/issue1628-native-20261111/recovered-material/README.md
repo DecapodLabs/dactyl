@@ -309,4 +309,3 @@ order migrations, create hidden tables, or administer recovery policy.
 ## License
 
 MIT.
-

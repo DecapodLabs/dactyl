@@ -26,8 +26,8 @@ BINDINGS = {
         "repository": "DecapodLabs/dactyl",
         "task": "feat_01m76c2002nnt3za",
         "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
-        "transfer_id": "01M76ECR9VQ0AAG72VHGBSNPDQ",
-        "digest": "sha256:0cd7b60d0c74f001bd852306086e816a14fd8983cb606760e4002790277f15c7",
+        "transfer_id": "01M76FGKDG70VGTN9GKQ4E4NFM",
+        "digest": "sha256:bdd1146489e8c4ad8e4fff95cae1c5a801f2661f6444347628b71e3648b32081",
     },
 }
 
@@ -64,7 +64,7 @@ def main():
     assert report["transfer"]["transfer_id"] == binding["transfer_id"]
     assert report["transfer"]["plaintext_sha256"] == binding["digest"]
     assert report["transfer"]["source_sealed"]
-    receiver = "chatgpt-issue1628-dactyl" if args.slug == "dactyl" else "chatgpt-issue1628-decapod-next"
+    receiver = "chatgpt-issue1628-" + args.slug + "-next"
     assert report["transfer"]["receiver"] == receiver
     root = args.directory.resolve()
     assert root.parent == Path("/root"), "Native private custody requires owned /root ancestry"

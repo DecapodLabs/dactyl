@@ -540,4 +540,3 @@ mod tests {
         assert_eq!(blank_token.token(), None);
     }
 }
-

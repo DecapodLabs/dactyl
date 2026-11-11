@@ -85,4 +85,3 @@ The native RPC and connector foundation was reconciled from source commit
 work at `24c549cbd5390c6dba8735f9a43675c0cb624723`. Their original branches,
 worktrees and governance evidence remain untouched. This task requires fresh
 exact-candidate proof; earlier source or receipts do not establish readiness.
-

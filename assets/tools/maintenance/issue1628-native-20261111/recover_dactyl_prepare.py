@@ -18,11 +18,11 @@ BASE = "1fa52a232e1d34a27be28d158298805ffc175ffc"
 SOURCE = "bef1a565819c67f5403dd24ed6a35163a3a788eb"
 TASK = "feat_01m76c2002nnt3za"
 BRANCH = "agent/chatgpt-issue1628-dactyl/" + TASK + "-cloud-connector"
-ACTOR = "chatgpt-issue1628-dactyl"
-RECEIVER = "chatgpt-issue1628-dactyl-next"
+ACTOR = "chatgpt-issue1628-dactyl-next"
+RECEIVER = "chatgpt-issue1628-dactyl"
 OPS = "ops/issue1628-native-20261111"
-TRANSFER = "01M76ECR9VQ0AAG72VHGBSNPDQ"
-INCOMING = "sha256:0cd7b60d0c74f001bd852306086e816a14fd8983cb606760e4002790277f15c7"
+TRANSFER = "01M76FGKDG70VGTN9GKQ4E4NFM"
+INCOMING = "sha256:bdd1146489e8c4ad8e4fff95cae1c5a801f2661f6444347628b71e3648b32081"
 CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
 CERT = "c54fbd6b328ebc89c57a0b158cbdddc434e37f48b8283b0e9af532506600f6dc"
 SPEC = ".decapod/managed/specs/"
@@ -361,12 +361,13 @@ def main():
             "--phase", "validation", "--scope", "dactyl-cloud-connector", "--boundary", "Independently reviewed recovered source and initial repository proof adoption; hosted service and registry publication remain separate",
             "--command", "cargo fmt --all", "--command", "decapod rpc --op specs.refresh",
             "--check", "source-review=passed", "--check", "full-workbranch-proof-result=unavailable",
-            "--evidence", "Same original task restored from native sealed successor after run43117913670. Exact authored pending source recovered from verified encrypted archive " + manifest["source_recovery"]["archive_plaintext_sha256"] + "; native projections regenerated through CLI. Prior MSRV dependency fetch failed on rand_pcg0.10.2 edition2024 before build/test/checkpoint. This checkpoint preserves that source before repair; full proof has not run and unavailable describes the absent result.", cwd=work)
+            "--evidence", "Same original task restored from native sealed successor after run43120599440. Authored pending source recovered with independently reviewed terminal-blank cleanup from verified encrypted archive " + manifest["source_recovery"]["archive_plaintext_sha256"] + "; native projections regenerated through CLI. Prior MSRV dependency fetch failed on rand_pcg0.10.2 edition2024 before build/test/checkpoint. This checkpoint preserves that source before repair; full proof has not run and unavailable describes the absent result.", cwd=work)
         prepared_hashes = {p: digest((work / p).read_bytes()) for p in files}
         prepared_hashes[".decapod/config.toml"] = digest((work / ".decapod/config.toml").read_bytes())
         authored_specs = {str(p.relative_to(work)): BLOCKS.sub("", p.read_text()).strip() for p in (work / SPEC).glob("*.md")}
         verify_candidate("prepared candidate")
         run("stage reviewed candidate", "git", "add", "-A", cwd=work)
+        run("verify complete staged source whitespace", "git", "diff", "--cached", "--check", cwd=work)
         doc("checkpoint exact source and initial proof adoption", "govern", "artifacts", "checkpoint", "--id", "dactyl-cloud-connector-1628",
             "--summary", "Recover and harden the logical cloud connector/native RPC contract, preserve auth uncertainty and private caller custody, and adopt the complete reviewed local Rust proof under current released controller. Full readiness remains pending.",
             "--proof-ref", SPEC + "VALIDATION.md", cwd=work)

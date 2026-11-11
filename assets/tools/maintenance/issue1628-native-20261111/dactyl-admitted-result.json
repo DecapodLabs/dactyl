@@ -5,9 +5,23 @@
   "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
   "task": "feat_01m76c2002nnt3za",
   "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
-  "operations_sha": "e551567a8828efaaf066250003ad8d0e46eb1f81",
+  "operations_sha": "ee87dd4becc23c01d06b7c1eab44383f5f1dc393",
   "status": "blocked",
   "imported": true,
+  "source_recovery": {
+    "source_run_id": 43117913670,
+    "source_operations_sha": "e551567a8828efaaf066250003ad8d0e46eb1f81",
+    "archive_plaintext_sha256": "sha256:d1fd7a8a3d20c9d2474f50328a075e9398bb01446ffbce8da6e456000d2f66f6",
+    "prior_failure": {
+      "stage": "prepare locked dependency cache",
+      "cargo": "1.75.0",
+      "dependency": "rand_pcg0.10.2",
+      "reason": "edition2024 manifest unavailable to Cargo1.75; no build or tests executed"
+    },
+    "restored_scope": "exact authored product/proof/CI bytes only; no machine-owned state restored directly",
+    "authored_manifest_sha256": "sha256:bf8f2faeaf56c3430ea7d784a1c251be978384303dd1054f310c5d39c7990c63"
+  },
+  "preparation_validation": "not_run",
   "admitted": true,
   "container_observed": true,
   "checkpoints": false,
@@ -89,32 +103,38 @@
     "status": "needs_reconciliation"
   },
   "source_history": "already_proven",
+  "profile_review": {
+    "inventory_digest": "sha256:6e3d705aff433fe84f19b65f783c7e5939ea6f1a88fde33b836bb68639b7d465",
+    "command_contract_digest": "sha256:93722d8030d15d64e93c05bbbb0601e3b7c53d9a8adcc42a2593d3e0ecc21d37",
+    "source_inventory_verified": true,
+    "execution_proof": false
+  },
   "blocker": {
-    "stage": "prepare locked dependency cache",
-    "exit_code": 1,
+    "stage": "verify prepared source whitespace",
+    "exit_code": 2,
     "timeout": false,
     "codes": [],
-    "diagnostic": "    Updating crates.io index\n Downloading crates ...\n  Downloaded zeroize v1.8.2\n  Downloaded utf16_iter v1.0.5\n  Downloaded utf8_iter v1.0.4\n  Downloaded crypto-common v0.1.7\n  Downloaded windows-link v0.2.1\n  Downloaded cfg-if v1.0.5\n  Downloaded tokio-macros v2.7.2\n  Downloaded scopeguard v1.2.0\n  Downloaded version_check v0.9.5\n  Downloaded generic-array v0.14.7\n  Downloaded wasi v0.11.1+wasi-snapshot-preview1\n  Downloaded icu_provider_macros v1.5.0\n  Downloaded yoke-derive v0.7.5\n  Downloaded stable_deref_trait v1.2.1\n  Downloaded cpufeatures v0.2.17\n  Downloaded zerofrom-derive v0.1.8\n  Downloaded wasm-bindgen-macro v0.2.130\n  Downloaded rustls-pki-types v1.15.1\n  Downloaded icu_locid_transform_data v1.5.1\n  Downloaded untrusted v0.9.0\n  Downloaded icu_normalizer v1.5.0\n  Downloaded icu_locid_transform v1.5.0\n  Downloaded subtle v2.6.1\n  Downloaded sync_wrapper v1.0.2\n  Downloaded icu_properties v1.5.1\n  Downloaded bumpalo v3.20.3\n  Downloaded atomic-waker v1.1.2\n  Downloaded httpdate v1.0.3\n  Downloaded idna v1.1.0\n  Downloaded cpufeatures v0.3.1\n  Downloaded futures-util v0.3.34\n  Downloaded try-lock v0.2.5\n  Downloaded async-trait v0.1.92\n  Downloaded icu_properties_data v1.5.1\n  Downloaded axum-core v0.4.5\n  Downloaded futures-channel v0.3.34\n  Downloaded chacha20 v0.10.2\n  Downloaded tracing-core v0.1.36\n  Downloaded quinn-udp v0.5.16\n  Downloaded hyper-rustls v0.27.7\n  Downloaded ryu v1.0.23\n  Downloaded r-efi v6.0.0\n  Downloaded base64 v0.22.1\n  Downloaded hyper-util v0.1.20\n  Downloaded rustix v1.1.6\n  Downloaded axum v0.7.9\n  Downloaded cc v1.11.1\n  Downloaded hyper v1.12.0\n  Downloaded tower-http v0.6.11\n  Downloaded windows_i686_gnullvm v0.52.6\n  Downloaded rand v0.10.3\n  Downloaded rustls-webpki v0.103.16\n  Downloaded quinn-proto v0.11.19\n  Downloaded http v1.5.0\n  Downloaded tower v0.5.3\n  Downloaded windows_aarch64_gnullvm v0.52.6\n  Downloaded windows_x86_64_gnullvm v0.52.6\n  Downloaded web-sys v0.3.107\n  Downloaded rustls v0.23.46\n  Downloaded quinn v0.11.12\n  Downloaded icu_collections v1.5.0\n  Downloaded rustix v0.38.44\n  Downloaded log v0.4.35\n  Downloaded icu_normalizer_data v1.5.1\n  Downloaded tracing v0.1.44\n  Downloaded windows_aarch64_msvc v0.52.6\n  Downloaded windows_i686_gnu v0.52.6\n  Downloaded windows_x86_64_gnu v0.52.6\n  Downloaded windows_i686_msvc v0.52.6\n  Downloaded tokio v1.53.3\n  Downloaded windows_x86_64_msvc v0.52.6\n  Downloaded libc v0.2.191\n  Downloaded getrandom v0.4.3\n  Downloaded tinyvec v1.13.3\n  Downloaded getrandom v0.2.17\n  Downloaded syn v2.0.119\n  Downloaded syn v3.0.10\n  Downloaded libloading v0.8.9\n  Downloaded http-body-util v0.1.5\n  Downloaded httparse v1.10.1\n  Downloaded ipnet v2.12.2\n  Downloaded shlex v2.0.1\n  Downloaded matchit v0.7.3\n  Downloaded mime v0.3.18\n  Downloaded serde_path_to_error v0.1.20\n  Downloaded rand_core v0.10.1\n  Downloaded rustc-hash v2.1.3\n  Downloaded thiserror-impl v2.0.21\n  Downloaded thiserror v2.0.21\n  Downloaded find-msvc-tools v0.1.15\n  Downloaded tokio-rustls v0.26.6\n  Downloaded http-body v1.1.0\n  Downloaded webpki-roots v1.0.11\n  Downloaded want v0.3.2\n  Downloaded lru-slab v0.1.3\n  Downloaded rand_pcg v0.10.2\n  Downloaded cfg_aliases v0.2.2\n  Downloaded serde_json v1.0.154\n  Downloaded js-sys v0.3.107\n  Downloaded reqwest v0.12.28\n  Downloaded serde_urlencoded v0.7.1\n  Downloaded zerovec v0.10.4\n  Downloaded wasm-bindgen-macro-support v0.2.130\n  Downloaded memchr v2.8.3\n  Downloaded url v2.5.8\n  Downloaded serde v1.0.229\n  Downloaded typenum v1.20.1\n  Downloaded mio v1.2.4\n  Downloaded tower-service v0.3.3\n  Downloaded form_urlencoded v1.2.2\n  Downloaded wasm-bindgen v0.2.130\n  Downloaded tower-layer v0.3.3\n  Downloaded icu_provider v1.5.0\n  Downloaded rustversion v1.0.23\n  Downloaded serde_derive v1.0.229\n  Downloaded serde_core v1.0.229\n  Downloaded once_cell v1.21.4\n  Downloaded bytes v1.12.1\n  Downloaded ring v0.17.14\n  Downloaded unicode-ident v1.0.27\n  Downloaded litemap v0.7.4\n  Downloaded displaydoc v0.2.7\n  Downloaded tinystr v0.7.6\n  Downloaded synstructure v0.14.0\n  Downloaded bitflags v2.13.2\n  Downloaded parking_lot v0.12.5\n  Downloaded proc-macro2 v1.0.107\n  Downloaded zerovec-derive v0.10.4\n  Downloaded digest v0.10.7\n  Downloaded write16 v1.0.0\n  Downloaded icu_locid v1.5.0\n  Downloaded zmij v1.0.23\n  Downloaded socket2 v0.6.5\n  Downloaded writeable v0.5.5\n  Downloaded synstructure v0.13.2\n  Downloaded yoke v0.7.5\n  Downloaded futures-io v0.3.34\n  Downloaded linux-raw-sys v0.4.15\n  Downloaded futures-task v0.3.34\n  Downloaded slab v0.4.12\n  Downloaded wasm-bindgen-shared v0.2.130\n  Downloaded web-time v1.1.0\n  Downloaded fastrand v2.5.0\n  Downloaded tempfile v3.14.0\n  Downloaded itoa v1.0.19\n  Downloaded sha2 v0.10.9\n  Downloaded idna_adapter v1.2.0\n  Downloaded futures-core v0.3.34\n  Downloaded windows-sys v0.59.0\n  Downloaded wasm-bindgen-futures v0.4.80\n  Downloaded thiserror-impl v1.0.69\n  Downloaded smallvec v1.16.5\n  Downloaded windows-sys v0.61.2\n  Downloaded parking_lot_core v0.9.12\n  Downloaded pin-project-lite v0.2.17\n  Downloaded zerofrom v0.1.8\n  Downloaded percent-encoding v2.3.2\n  Downloaded futures-sink v0.3.34\n  Downloaded block-buffer v0.10.4\n  Downloaded windows-targets v0.52.6\n  Downloaded thiserror v1.0.69\n  Downloaded redox_syscall v0.5.18\n  Downloaded signal-hook-registry v1.4.8\n  Downloaded quote v1.0.47\n  Downloaded lock_api v0.4.14\n  Downloaded errno v0.3.14\n  Downloaded windows-sys v0.52.0\n  Downloaded linux-raw-sys v0.12.1\n    Updating crates.io index\n Downloading crates ...\n  Downloaded tokio-macros v2.7.2\n  Downloaded windows-link v0.2.1\n  Downloaded utf16_iter v1.0.5\n  Downloaded zeroize v1.8.2\n  Downloaded utf8_iter v1.0.4\n  Downloaded errno v0.3.14\n  Downloaded futures-sink v0.3.34\n  Downloaded version_check v0.9.5\n  Downloaded thiserror-impl v1.0.69\n  Downloaded writeable v0.5.5\n  Downloaded parking_lot_core v0.9.12\n  Downloaded scopeguard v1.2.0\n  Downloaded zerofrom v0.1.8\n  Downloaded cpufeatures v0.2.17\n  Downloaded sha2 v0.10.9\n  Downloaded fastrand v2.5.0\n  Downloaded stable_deref_trait v1.2.1\n  Downloaded futures-io v0.3.34\n  Downloaded percent-encoding v2.3.2\n  Downloaded generic-array v0.14.7\n  Downloaded wasm-bindgen-futures v0.4.80\n  Downloaded itoa v1.0.19\n  Downloaded icu_provider_macros v1.5.0\n  Downloaded serde_derive v1.0.229\n  Downloaded tinystr v0.7.6\n  Downloaded litemap v0.7.4\n  Downloaded rustls-webpki v0.103.16\n  Downloaded untrusted v0.9.0\n  Downloaded rustls-pki-types v1.15.1\n  Downloaded icu_properties v1.5.1\n  Downloaded subtle v2.6.1\n  Downloaded icu_provider v1.5.0\n  Downloaded getrandom v0.2.17\n  Downloaded cfg_aliases v0.2.2\n  Downloaded idna v1.1.0\n  Downloaded want v0.3.2\n  Downloaded rand_pcg v0.10.2\nerror: failed to download replaced source registry `crates-io`\n\nCaused by:\n  failed to parse manifest at `/usr/local/cargo/registry/src/index.crates.io-6f17d22bba15001f/rand_pcg-0.10.2/Cargo.toml`\n\nCaused by:\n  feature `edition2024` is required\n\n  The package requires the Cargo feature called `edition2024`, but that feature is not stabilized in this version of Cargo (1.75.0 (1d8b05cdd 2023-11-20)).\n  Consider trying a newer version of Cargo (this may require the nightly release).\n  See https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#edition-2024 for more information about the status of this feature.\nTraceback (most recent call last):\n  File \"/root/issue1628-subject/.decapod/workspaces/chatgpt-issue1628-dactyl-next-todo-01m76c-agent-chatgpt-issue1628-dactyl-feat_01m76c2002nnt3za-cloud-connector/scripts/proof/prepare.py\", line 32, in <module>\n    fetch(MSRV, [\"--locked\"])\n  File \"/root/issue1628-subject/.decapod/workspaces/chatgpt-issue1628-dactyl-next-todo-01m76c-agent-chatgpt-issue1628-dactyl-feat_01m76c2002nnt3za-cloud-connector/scripts/proof/prepare.py\", line 28, in fetch\n    subprocess.run([str(tools / \"cargo\"), \"fetch\", *args], env=env, check=True)\n  File \"/usr/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/cargo', 'fetch', '--locked']' returned non-zero exit status 101.\n",
+    "diagnostic": "Cargo.lock:1673: new blank line at EOF.\nCargo.toml:54: new blank line at EOF.\nREADME.md:312: new blank line at EOF.\n",
     "reason": "native or source preparation command failed"
   },
   "transfer": {
     "task_id": "feat_01m76c2002nnt3za",
-    "transfer_id": "01M76ECR9VQ0AAG72VHGBSNPDQ",
-    "receiver": "chatgpt-issue1628-dactyl",
+    "transfer_id": "01M76FGKDG70VGTN9GKQ4E4NFM",
+    "receiver": "chatgpt-issue1628-dactyl-next",
     "source_sealed": true,
     "native_source_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
-    "native_source_branch": "issue1628-dactyl-continuation-767f55fe2aef",
+    "native_source_branch": "issue1628-dactyl-recovery-18624dfcd8d6",
     "candidate_branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
     "candidate_sha": null,
     "artifact": "native-custody.der",
-    "plaintext_sha256": "sha256:0cd7b60d0c74f001bd852306086e816a14fd8983cb606760e4002790277f15c7",
-    "ciphertext_sha256": "sha256:91aa426df58530d06f888a0cdddabd1986b004f8937931555457436599e4ed84"
+    "plaintext_sha256": "sha256:bdd1146489e8c4ad8e4fff95cae1c5a801f2661f6444347628b71e3648b32081",
+    "ciphertext_sha256": "sha256:a8d9a8c937eeb99593718da578798f610c79dc9cff2678c23ad332f45cf1fd1d"
   },
   "final_head_sha": "1fa52a232e1d34a27be28d158298805ffc175ffc",
   "source_dirty": true,
   "diagnostics": {
     "artifact": "native-diagnostics.der",
-    "plaintext_sha256": "sha256:d1fd7a8a3d20c9d2474f50328a075e9398bb01446ffbce8da6e456000d2f66f6",
-    "ciphertext_sha256": "sha256:3e2275392ae48d0544fc3eb011fb613e7657c7216c8a686274adc78959fece61"
+    "plaintext_sha256": "sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db",
+    "ciphertext_sha256": "sha256:db763702f18ca92484ebedd1b4eb946ff169d5f315acc4f499214c07a7234f2b"
   }
 }

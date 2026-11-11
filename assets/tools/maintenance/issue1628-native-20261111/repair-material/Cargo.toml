@@ -56,4 +56,3 @@ resolver = "2"
 members = [
     ".",
 ]
-

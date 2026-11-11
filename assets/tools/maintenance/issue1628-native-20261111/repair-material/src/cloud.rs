@@ -635,4 +635,3 @@ fn remote_error(status: u16, bytes: &[u8]) -> DactylError {
     };
     DactylError::adapter(kind, format!("cloud service returned HTTP status {status}"))
 }
-
