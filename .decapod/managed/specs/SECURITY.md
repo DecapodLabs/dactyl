@@ -1,5 +1,19 @@
 # Security
 
+## Cloud connector and managed-auth credentials
+
+`src/cloud.rs` discovers only public profile metadata before sending credentials.
+The selected HTTPS origin is trusted configuration; profile-origin mismatches,
+redirects, secret/service-role keys and invalid schemas fail before native RPC
+construction. Literal loopback HTTP exists only for disposable tests. Access
+bearers accompany data calls and authenticated completion; refresh tokens and
+PKCE verifiers are sent only to fixed managed Auth paths on that same origin.
+Dactyl stores no durable sessions and does not open the browser. The caller owns
+private pending-flow checkpoints and must not replay unknown one-time exchange
+or rotation outcomes. Credential types redact Debug and auth errors omit remote
+messages. Propodus-managed Auth/RLS/grants enforce identity and permissions;
+caller context and local agent labels cannot elevate cloud authority.
+
 ## Secure shared-directory SQLite recovery
 
 Private staging and creation-time modes protect rebuilt data under permissive umasks. Activation restores existing permission bits only after validation. Source access ACLs, inherited default ACLs and MAC/system access labels fail closed rather than being silently replaced; unrelated user attributes and unchanged parent POSIX access ACLs are permitted. Original/archive metadata remains untouched. Callers must quiesce filesystem name/content/metadata writers from connection open; inode checks are detection boundaries, not protection against arbitrary malicious concurrent directory writers.
@@ -113,7 +127,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6f4ba9d339a95b0fa24306805ad9d4dd85f0460ea46654bc4749823c33e8de51`
+- Repository signal fingerprint: `66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
