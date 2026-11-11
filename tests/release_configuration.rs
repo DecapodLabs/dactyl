@@ -57,6 +57,6 @@ fn package_metadata_has_the_application_driver_tags() {
         env!("CARGO_PKG_VERSION")
     );
     assert!(DATABASE_MANIFEST
-        .contains("keywords = [\"datastore\", \"vercel\", \"postgres\", \"sql\", \"sqlite\"]"));
+        .contains("keywords = [\"datastore\", \"supabase\", \"postgres\", \"sql\", \"sqlite\"]"));
     assert!(!DATABASE_MANIFEST.contains("#decapod"));
 }

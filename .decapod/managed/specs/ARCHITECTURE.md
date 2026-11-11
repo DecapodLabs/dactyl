@@ -10,6 +10,13 @@ callbacks/browser interaction and private session persistence remain caller-owne
 The hosted runtime is Supabase Auth, PostgreSQL/RPC and deployed functions,
 provisioned by Propodus IaC. No additional Propodus task server is required.
 
+The separate account channel accepts an `AccountOperation`, an opaque JSON body,
+the current Supabase bearer and optional explicit `ScmCredential`. Fixed provider
+and host metadata accompany only that linking credential. A managed sign-in
+provider token may be Google and is never inferred to be an SCM credential.
+All connector HTTP disables redirects and retries, including one-time exchanges,
+rotating refresh and account mutations. The caller owns unknown-outcome recovery.
+
 ## Secure shared-directory SQLite recovery
 
 SQLite recovery is isolated in adapter/sqlite/recovery.rs. It creates a 0700 child directory and 0600 rebuild/journal, uses PERSIST during rebuilding and DELETE for final activation, preserves supported mode/owner/group, and uses atomic no-replace moves with inode checks. Both affected directories are synced. Rollback retains private diagnostics and never recursively cleans unknown entries.
@@ -185,8 +192,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
+- Repository signal fingerprint: `f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

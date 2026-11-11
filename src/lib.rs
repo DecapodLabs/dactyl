@@ -27,7 +27,8 @@ pub use crate::schema::{
 
 #[cfg(feature = "supabase")]
 pub use crate::cloud::{
-    AuthenticationSecrets, AuthenticationStart, CloudConnector, UserSession, DEFAULT_CLOUD_ORIGIN,
+    AccountOperation, AuthenticationSecrets, AuthenticationStart, CloudConnector, ScmCredential,
+    ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
 };
 pub use crate::supabase_rpc::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
 

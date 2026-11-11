@@ -36,7 +36,33 @@ The same connector provides stateless authentication transport:
    only to the same origin's managed Auth token endpoint. Session revocation
    uses managed logout. Neither Dactyl nor Propodus issues a parallel session.
 
-All auth/discovery HTTP requests are bounded to a 5-second connect timeout,
+`UserSession::provider_token` preserves an optional credential returned by the
+sign-in provider and redacts it in Debug. A refresh response may omit it; callers
+own any decision to retain a prior provider credential in private storage.
+Sign-in may use Google or another provider. Dactyl never infers an SCM provider
+from that token. The account backend independently verifies a fresh linking
+credential before granting SCM authority.
+
+`CloudConnector::account_request` provides a separate stateless account channel.
+Its `AccountOperation` selects one fixed POST endpoint beneath
+`/functions/v1/propodus-onboarding`: `Register` uses `account-register`, `Status`
+uses `account-status`, `Quote` uses `billing-quote`, and `Checkout` uses
+`billing-checkout`. The JSON request and response remain opaque Propodus policy.
+Ordinary registration, status and paid-seat access use the current Supabase user
+bearer and `None` for the optional SCM credential. An explicit SCM-linking call
+may pass `Some(&ScmCredential::github(token)?)` or the corresponding `gitlab`
+constructor. Each validates an opaque header-safe token, keeps it private and
+redacts Debug. `ScmProvider::{GitHub,GitLab}` labels transport metadata; it does
+not establish authorization. The connector sends `X-SCM-Token` together with
+`X-SCM-Provider: github` and `X-SCM-Host: github.com`, or the fixed `gitlab` and
+`gitlab.com` pair. Caller-selected hosts are unsupported.
+
+These three headers are added only to the selected account request, never to
+managed Auth, discovery or native data requests. Dactyl does not persist SCM
+credentials. Callers decide consent and handling of an unknown checkout outcome;
+Dactyl does not automatically replay account requests.
+
+Auth, account and discovery HTTP requests are bounded to a 5-second connect timeout,
 15-second request timeout and 16 KiB bodies. A joined worker owns the complete
 blocking HTTP lifecycle so synchronous callers can enter from an async runtime.
 No redirect or automatic request replay follows an error. A lost one-time
@@ -44,13 +70,16 @@ exchange or refresh response has an unknown outcome; the caller must not replay
 it as though the server did nothing. Credential-bearing types redact Debug,
 and server error bodies are not exposed in diagnostics.
 
-GitHub identities, repository roles, membership, entitlement and revocation are
-enforced by the Propodus-managed PostgreSQL functions and RLS. Dactyl forwards
-opaque application context and credentials; neither a local agent label nor a
-caller-supplied role creates backend authority.
+Person identity, tenant/project isolation, assigned-seat entitlement and
+revocation are backend policy enforced by the Propodus-managed infrastructure.
+Linked SCM identity is separate from code-host permission hierarchies. Dactyl
+forwards opaque application context and credentials; neither a local agent label
+nor a caller-supplied role creates backend authority. Privileged governance
+operations remain separately controlled by the backend.
 
-`tests/cloud_connector.rs` proves discovery, secret separation, managed Auth
-requests, redirect/replay behavior and async-runtime safety using local HTTP
+`tests/cloud_connector.rs` proves discovery, account route and credential
+separation, optional provider-token preservation, managed Auth requests,
+handoff validation, redirect/replay behavior and async-runtime safety using local HTTP
 fixtures. `tests/supabase_rpc.rs` proves native request/result normalization.
 Those tests are not hosted OAuth, real PostgreSQL or deployment evidence. The
 profile endpoint must be deployed before rolling out discovery-based clients.

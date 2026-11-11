@@ -58,6 +58,11 @@
       "id": "complete-spec-review",
       "summary": "Complete current-content interface, architecture and security review; preserve exact candidate custody and all required Rust verification gates.",
       "input_digest": "sha256:a4af82c9d1c1bb2b411c4fdc23a0a07853baa3cdc640faa3573305fcf34356ef"
+    },
+    {
+      "id": "connector-account-scm-profile-v1",
+      "summary": "Bounded origin-bound logical connector, stateless managed auth/account transport, explicit SCM metadata isolation, canonical offline Rust proof and reproducible dependency preparation.",
+      "input_digest": "sha256:8e0ee77416f547f73682cd310ed3db282ba0e30759e550fd1530ce96d7ba3cd5"
     }
   ],
   "intents": {
@@ -100,23 +105,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed joined bounded HTTP workers and native Supabase topology; Propodus is the IaC for Auth/PostgreSQL/functions and no additional task server is required.",
-          "reviewed_code_fingerprint": "66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa",
-          "spec_material_hash": "a9a9a0082396e7c1bba0a9787abb1d0d32dd3fa2e03abf358721cd86e2a2571c"
+          "reason": "Reviewed stateless connector ownership, origin-bound profile, private caller session ownership, retry/redirect refusal and separate opaque account channel; current profile is public metadata only.",
+          "reviewed_code_fingerprint": "f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a",
+          "spec_material_hash": "4efec3fe8da76aeabca4e3a2ad2cacca3a2674eaca28d89384996ee24b6c59ef"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed logical backend mapping, profile v1 discovery and origin validation, native RPC envelopes, typed managed-auth operations, caller session custody and bounded redacted failures against src/lib.rs, src/cloud.rs and transport tests.",
-          "reviewed_code_fingerprint": "66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa",
-          "spec_material_hash": "08d0c56649525b841eb124cc392ab02581ac14e9d6ea69353654f485defe7a19"
+          "reason": "Reviewed logical backend API, fixed account routes, typed explicitly supplied SCM credentials, optional provider-token custody and bounded native RPC/Auth behavior against current source and tests.",
+          "reviewed_code_fingerprint": "f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a",
+          "spec_material_hash": "f7ce9d436db9b386261623fdb7f092ce7fbd36e516f57a474de3c7e5aef894ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed credential isolation, public metadata discovery, HTTPS origin checks, no redirects or replay, bounded responses and caller-owned durable auth state against source and regression fixtures.",
-          "reviewed_code_fingerprint": "66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa",
-          "spec_material_hash": "fd6d10988e56f657c45c68d197e1ad4e395a2d3f8cb21806fefe1458f2c349f0"
+          "reason": "Reviewed credential redaction, same-origin paths, no automatic replay and SCM headers isolated from ordinary Supabase bearer data access; backend owns paid-seat and tenant policy.",
+          "reviewed_code_fingerprint": "f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a",
+          "spec_material_hash": "b56e78f8a70f5faec19dcadf960b43647571038962ba4fe4b4c7a992d994e21e"
         }
       ],
       "state": "APPROVED",
@@ -129,15 +134,33 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794433984Z"
+      "updated_at": "1794439992Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Auth provider tokens are never inferred to be SCM credentials; ordinary account access uses only the Supabase bearer.",
         "Current claimed task and isolated work branch",
         "No deployment or credential commits; server grants remain authoritative"
       ],
-      "artifact_hash": "sha256:88cc1be95876c1448cb52bbcfcf7975f4d2ccc02a4efbf029543e3a6cf7f6c3d",
-      "checks": [],
+      "artifact_hash": "sha256:354262bc5d475b89f9da38efa1bd8f1ba538c5132046151e4156ab45d38abab5",
+      "checks": [
+        {
+          "name": "connector-review",
+          "status": "partial"
+        },
+        {
+          "name": "dependency-preparation",
+          "status": "passed"
+        },
+        {
+          "name": "public-profile-v1",
+          "status": "passed"
+        },
+        {
+          "name": "rust-contract",
+          "status": "unavailable"
+        }
+      ],
       "current_phase": "implementation",
       "custody": {
         "events": [
@@ -159,10 +182,24 @@
             "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M753PEC49T92VW92KVGX0Y8M": {
@@ -192,14 +229,68 @@
                 "validation_findings": [
                   "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed"
                 ]
+              },
+              {
+                "action": "implementation",
+                "command": "decapod validate",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/cloud.rs",
+                  "tests/cloud_connector.rs",
+                  "src/adapter/supabase.rs",
+                  ".decapod/config.toml",
+                  "/private/tmp/dactyl-typed-scm-credential.patch"
+                ],
+                "proof_refs": [
+                  "connector-review",
+                  "rust-contract"
+                ],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+                  "tests/"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tools/proof/prepare.py",
+                  "/private/tmp/connector-profile-verification.json",
+                  "/private/tmp/dactyl-proof-preparation.patch"
+                ],
+                "proof_refs": [
+                  "public-profile-v1",
+                  "dependency-preparation"
+                ],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+                  "tests/"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/connector-profile-verification.json",
+        "/private/tmp/dactyl-proof-preparation.patch",
+        "/private/tmp/dactyl-typed-scm-credential.patch",
         "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
       ],
       "inspected_files": [
@@ -209,9 +300,12 @@
       ],
       "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
       "modified_files": [
+        ".decapod/config.toml",
+        "src/adapter/supabase.rs",
         "src/cloud.rs",
         "tests/cloud_connector.rs",
-        "tools/proof/check.py"
+        "tools/proof/check.py",
+        "tools/proof/prepare.py"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -228,6 +322,8 @@
       "task_id": "code_01m753ng4cans8xx",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof.",
+        "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested.",
         "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed"
       ]
     }

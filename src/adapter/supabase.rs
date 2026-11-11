@@ -329,7 +329,7 @@ fn validate_rpc_result(value: &serde_json::Value) -> Result<(), DactylError> {
     rows_from_response(result).map(|_| ())
 }
 
-fn body_read_timed_out(error: &std::io::Error) -> bool {
+pub(crate) fn body_read_timed_out(error: &std::io::Error) -> bool {
     // reqwest's Read implementation wraps its typed timeout in an Other I/O
     // error. Preserve that identity without inspecting potentially secret text.
     error.kind() == std::io::ErrorKind::TimedOut

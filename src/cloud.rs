@@ -29,6 +29,94 @@ pub struct CloudConnector {
     config: SupabaseRpcConfig,
 }
 
+/// Account operations have fixed backend routes; their versioned payloads and
+/// authorization policy remain opaque to the connector.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AccountOperation {
+    Register,
+    Status,
+    Quote,
+    Checkout,
+}
+
+impl AccountOperation {
+    fn action(self) -> &'static str {
+        match self {
+            Self::Register => "account-register",
+            Self::Status => "account-status",
+            Self::Quote => "billing-quote",
+            Self::Checkout => "billing-checkout",
+        }
+    }
+}
+
+/// Transport labels for an explicitly supplied SCM linking credential.
+/// These labels do not establish identity or backend authorization.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScmProvider {
+    GitHub,
+    GitLab,
+}
+
+impl ScmProvider {
+    fn label(self) -> &'static str {
+        match self {
+            Self::GitHub => "github",
+            Self::GitLab => "gitlab",
+        }
+    }
+
+    fn host(self) -> &'static str {
+        match self {
+            Self::GitHub => "github.com",
+            Self::GitLab => "gitlab.com",
+        }
+    }
+}
+
+/// An optional, explicit SCM linking credential for the account channel.
+/// The backend independently verifies its provider, subject and freshness.
+#[derive(Clone)]
+pub struct ScmCredential {
+    provider: ScmProvider,
+    token: String,
+}
+
+impl std::fmt::Debug for ScmCredential {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ScmCredential")
+            .field("provider", &self.provider)
+            .field("host", &self.host())
+            .field("token", &"[redacted]")
+            .finish()
+    }
+}
+
+impl ScmCredential {
+    pub fn github(token: impl Into<String>) -> Result<Self, DactylError> {
+        Self::new(ScmProvider::GitHub, token.into())
+    }
+
+    pub fn gitlab(token: impl Into<String>) -> Result<Self, DactylError> {
+        Self::new(ScmProvider::GitLab, token.into())
+    }
+
+    pub fn provider(&self) -> ScmProvider {
+        self.provider
+    }
+
+    pub fn host(&self) -> &'static str {
+        self.provider.host()
+    }
+
+    fn new(provider: ScmProvider, token: String) -> Result<Self, DactylError> {
+        opaque(&token)?;
+        reqwest::header::HeaderValue::from_str(&token)
+            .map_err(|_| protocol("invalid SCM credential"))?;
+        Ok(Self { provider, token })
+    }
+}
+
 /// Durable pending-flow secrets. Serialize only to the caller's private store.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AuthenticationSecrets {
@@ -93,6 +181,11 @@ pub struct UserSession {
     pub access_token: String,
     pub refresh_token: String,
     pub expires_at_unix: u64,
+    /// Optional credential returned by the sign-in provider. This is not proof
+    /// of a linked SCM identity; the account backend verifies that binding.
+    /// Refresh may omit it. The caller decides whether to retain prior custody.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider_token: Option<String>,
 }
 
 impl std::fmt::Debug for UserSession {
@@ -126,6 +219,7 @@ impl CloudConnector {
             None,
             "GET",
             &format!("{ONBOARDING}/config"),
+            None,
             None,
             None,
         )?;
@@ -164,6 +258,28 @@ impl CloudConnector {
 
     pub fn route(&self, bearer: Option<String>) -> DatastoreRoute {
         DatastoreRoute::supabase_rpc(self.config.clone(), bearer)
+    }
+
+    /// Transport an opaque versioned account request using the current user
+    /// bearer. Optional SCM credentials are for explicit account linking only,
+    /// never data or Auth token requests. Dactyl does not infer identity, roles,
+    /// pricing or consent, including from a managed Auth provider token.
+    pub fn account_request(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+    ) -> Result<serde_json::Value, DactylError> {
+        request(
+            self.origin(),
+            Some(self.config.publishable_key()),
+            "POST",
+            &format!("{ONBOARDING}/{}", operation.action()),
+            Some(body.clone()),
+            Some(bearer),
+            scm,
+        )
     }
 
     pub fn start_authentication(
@@ -210,6 +326,7 @@ impl CloudConnector {
                 .filter(|(k, v)| k == "ticket" && !v.is_empty())
                 .count()
                 != 1
+            || browser.query_pairs().filter(|(k, _)| k == "ticket").count() != 1
         {
             return Err(protocol(
                 "authentication handoff must remain on the selected cloud origin",
@@ -291,6 +408,7 @@ impl CloudConnector {
             "/auth/v1/logout?scope=local",
             None,
             Some(bearer),
+            None,
         )?;
         Ok(())
     }
@@ -305,6 +423,8 @@ impl CloudConnector {
             access_token: String,
             refresh_token: String,
             expires_in: u64,
+            #[serde(default)]
+            provider_token: Option<String>,
         }
         let response: Response = request(
             self.origin(),
@@ -313,9 +433,13 @@ impl CloudConnector {
             &format!("/auth/v1/token?grant_type={grant}"),
             Some(body),
             None,
+            None,
         )?;
         opaque(&response.access_token)?;
         opaque(&response.refresh_token)?;
+        if let Some(token) = response.provider_token.as_deref() {
+            opaque(token)?;
+        }
         if response.expires_in == 0 || response.expires_in > 86400 {
             return Err(protocol("invalid managed session lifetime"));
         }
@@ -327,6 +451,7 @@ impl CloudConnector {
             access_token: response.access_token,
             refresh_token: response.refresh_token,
             expires_at_unix: now + response.expires_in,
+            provider_token: response.provider_token,
         })
     }
 
@@ -343,6 +468,7 @@ impl CloudConnector {
             &format!("{ONBOARDING}/{action}"),
             Some(body.clone()),
             bearer,
+            None,
         )
     }
 }
@@ -400,6 +526,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     path: &str,
     body: Option<serde_json::Value>,
     bearer: Option<&str>,
+    scm: Option<&ScmCredential>,
 ) -> Result<T, DactylError> {
     validate_origin(origin)?;
     let endpoint = format!("{}{path}", origin.trim_end_matches('/'));
@@ -416,6 +543,15 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
         .map(|value| {
             opaque(value)?;
             header(&format!("Bearer {value}"))
+        })
+        .transpose()?;
+    let scm = scm
+        .map(|credential| {
+            Ok::<_, DactylError>((
+                credential.provider.label(),
+                credential.host(),
+                header(&credential.token)?,
+            ))
         })
         .transpose()?;
     let body = body
@@ -437,6 +573,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
                 .connect_timeout(Duration::from_secs(5))
                 .timeout(Duration::from_secs(15))
                 .redirect(reqwest::redirect::Policy::none())
+                .retry(reqwest::retry::never())
                 .build()
                 .map_err(|_| transport())?;
             let mut request = client
@@ -447,6 +584,12 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
             }
             if let Some(bearer) = bearer {
                 request = request.header(reqwest::header::AUTHORIZATION, bearer);
+            }
+            if let Some((provider, host, token)) = scm {
+                request = request
+                    .header("X-SCM-Provider", provider)
+                    .header("X-SCM-Host", host)
+                    .header("X-SCM-Token", token);
             }
             if let Some(body) = body {
                 request = request
@@ -468,7 +611,16 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
             response
                 .take(BODY_LIMIT + 1)
                 .read_to_end(&mut bytes)
-                .map_err(|_| transport())?;
+                .map_err(|error| {
+                    if crate::adapter::supabase::body_read_timed_out(&error) {
+                        DactylError::adapter(
+                            AdapterErrorKind::Timeout,
+                            "cloud authentication timed out",
+                        )
+                    } else {
+                        transport()
+                    }
+                })?;
             if bytes.len() as u64 > BODY_LIMIT {
                 return Err(protocol("auth response exceeds body limit"));
             }
@@ -480,6 +632,43 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
                     500..=599 => AdapterErrorKind::Unavailable,
                     _ => AdapterErrorKind::Protocol,
                 };
+                let envelope = serde_json::from_slice::<serde_json::Value>(&bytes).ok();
+                let code = envelope
+                    .as_ref()
+                    .and_then(|v| {
+                        v.get("error")
+                            .and_then(|v| v.get("code"))
+                            .or_else(|| v.get("code"))
+                    })
+                    .and_then(|v| v.as_str());
+                if let Some(
+                    code @ ("authentication_required"
+                    | "invalid_token"
+                    | "invalid_grant"
+                    | "refresh_token_not_found"
+                    | "authorization_denied"
+                    | "entitlement_required"
+                    | "seat_required"
+                    | "seat_unassigned"
+                    | "account_setup_required"
+                    | "identity_link_required"
+                    | "quote_confirmation_required"
+                    | "billing_binding_required"
+                    | "billing_unavailable"
+                    | "provider_unavailable"
+                    | "invalid_request"
+                    | "rate_limited"
+                    | "flow_expired"
+                    | "flow_not_found"
+                    | "invalid_flow_state"),
+                ) = code
+                {
+                    return Err(DactylError::adapter_with_code(
+                        kind,
+                        code,
+                        "cloud request was rejected",
+                    ));
+                }
                 return Err(DactylError::adapter(
                     kind,
                     "cloud authentication request was rejected",

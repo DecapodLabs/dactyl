@@ -12,6 +12,15 @@ service constructors preserve `/query` and `/batch`. See
 `docs/cloud-connectors.md` and `docs/supabase-rpc-v1.md` for bounded execution,
 unknown-outcome handling and the boundary between offline and hosted proof.
 
+`CloudConnector::account_request(AccountOperation, &Value, bearer,
+Option<&ScmCredential>)` selects fixed account-register, account-status,
+billing-quote or billing-checkout POST paths. Ordinary account access passes no
+SCM credential. Explicit linking accepts only validated `ScmCredential::github`
+or `::gitlab`, paired with github.com or gitlab.com respectively. These opaque
+credentials and optional `UserSession::provider_token` redact Debug; a provider
+token is never automatically forwarded. Public error-code allowlisting preserves
+actionable account denials while omitting remote messages and unknown codes.
+
 ## Secure shared-directory SQLite recovery
 
 RecoveryOptions remains unchanged. Linux/Android secure recovery supports plain mode/owner/group access and trusted-group/setgid directories; unsupported platforms, ACL/MAC metadata, ownership reproduction, symlinks/hardlinks, path replacement and cross-filesystem staging return typed errors before destructive mutation where applicable. Recovery archive names cannot alias active sidecars. See docs/sqlite-recovery.md for exact failure/rollback outcomes.
@@ -207,8 +216,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
+- Repository signal fingerprint: `f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

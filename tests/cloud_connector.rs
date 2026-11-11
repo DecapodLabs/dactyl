@@ -2,8 +2,9 @@
 #![cfg(feature = "supabase")]
 
 use dactyl_db::{
-    AdapterErrorKind, AuthenticationSecrets, Backend, CloudConnector, Datastore, DatastoreRoute,
-    SupabaseRpcConfig,
+    AccountOperation, AdapterErrorKind, AuthenticationSecrets, AuthenticationStart, Backend,
+    CloudConnector, Connection, Datastore, DatastoreRoute, ScmCredential, ScmProvider,
+    StorageContext, SupabaseRpcConfig, UserSession,
 };
 use serde_json::{json, Value};
 use std::io::{Read, Write};
@@ -87,11 +88,285 @@ fn server(
 fn profile() -> Value {
     json!({"version":1,"project_origin":"ORIGIN","publishable_key":KEY,"schema":"dactyl_api"})
 }
+
+#[test]
+fn account_denial_preserves_only_the_public_code() {
+    let (origin, received, handle) = server(vec![(
+        403,
+        json!({"error":{"code":"seat_required","message":"private-provider-secret"}}),
+    )]);
+    let error = connector(&origin)
+        .account_request(
+            dactyl_db::AccountOperation::Status,
+            &json!({"version":1}),
+            "user-bearer",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authorization));
+    assert_eq!(error.adapter_code(), Some("seat_required"));
+    assert!(!format!("{error:?}{error}").contains("private-provider-secret"));
+    received.recv().unwrap();
+    handle.join().unwrap();
+}
 fn connector(origin: &str) -> CloudConnector {
     CloudConnector::with_config(SupabaseRpcConfig::v1(origin, KEY)).unwrap()
 }
 fn session() -> Value {
     json!({"access_token":"user-access","refresh_token":"user-refresh","expires_in":900})
+}
+
+fn header<'a>(headers: &'a str, name: &str) -> Option<&'a str> {
+    headers.lines().find_map(|line| {
+        let (key, value) = line.split_once(':')?;
+        key.eq_ignore_ascii_case(name).then(|| value.trim())
+    })
+}
+
+#[test]
+fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
+    let operations = [
+        (AccountOperation::Register, "account-register"),
+        (AccountOperation::Status, "account-status"),
+        (AccountOperation::Quote, "billing-quote"),
+        (AccountOperation::Checkout, "billing-checkout"),
+    ];
+    let result = json!({"future":{"opaque":[1,false,"provider-policy"]}});
+    let mut responses = vec![(200, result.clone()); operations.len() + 1];
+    responses.push((200, session()));
+    responses.push((
+        200,
+        json!({"columns":[],"rows":[],"affected_rows":0,"generated_keys":[]}),
+    ));
+    let (origin, rx, handle) = server(responses);
+    let connector = connector(&origin);
+    let github = ScmCredential::github("scm-credential").unwrap();
+    let gitlab = ScmCredential::gitlab("scm-credential").unwrap();
+    assert_eq!(github.provider(), ScmProvider::GitHub);
+    assert_eq!(github.host(), "github.com");
+    assert_eq!(gitlab.provider(), ScmProvider::GitLab);
+    assert_eq!(gitlab.host(), "gitlab.com");
+    assert!(!format!("{github:?}{gitlab:?}").contains("scm-credential"));
+    let payload =
+        json!({"version":71,"future":{"scm":{"provider":"gitlab","opaque":[1,null,false]}}});
+    for (index, (operation, _)) in operations.iter().enumerate() {
+        let scm = if index % 2 == 0 { &github } else { &gitlab };
+        assert_eq!(
+            connector
+                .account_request(*operation, &payload, "user-access", Some(scm))
+                .unwrap(),
+            result
+        );
+    }
+    connector
+        .account_request(AccountOperation::Status, &payload, "user-access", None)
+        .unwrap();
+    connector.refresh_session("user-refresh").unwrap();
+    Connection::open_with_context(
+        connector.route(Some("user-access".into())),
+        Some(StorageContext::new(1, json!({"opaque":true})).unwrap()),
+    )
+    .unwrap()
+    .read("select fixture", &[])
+    .unwrap();
+    let requests: Vec<_> = (0..7).map(|_| rx.recv().unwrap()).collect();
+    for (index, ((_, action), (headers, body))) in operations.iter().zip(&requests).enumerate() {
+        assert!(headers.starts_with(&format!("POST /functions/v1/propodus-onboarding/{action} ")));
+        assert_eq!(header(headers, "authorization"), Some("Bearer user-access"));
+        assert_eq!(header(headers, "x-scm-token"), Some("scm-credential"));
+        let (provider, host) = if index % 2 == 0 {
+            ("github", "github.com")
+        } else {
+            ("gitlab", "gitlab.com")
+        };
+        assert_eq!(header(headers, "x-scm-provider"), Some(provider));
+        assert_eq!(header(headers, "x-scm-host"), Some(host));
+        assert_eq!(header(headers, "apikey"), Some(KEY));
+        assert_eq!(*body, payload);
+        assert!(!body.to_string().contains("scm-credential"));
+    }
+    for (headers, _) in &requests[4..] {
+        for name in ["x-scm-token", "x-scm-provider", "x-scm-host"] {
+            assert_eq!(header(headers, name), None);
+        }
+    }
+    assert_eq!(header(&requests[5].0, "authorization"), None);
+    assert!(requests[6]
+        .0
+        .starts_with("POST /rest/v1/rpc/dactyl_query_v1 "));
+    assert_eq!(
+        header(&requests[6].0, "authorization"),
+        Some("Bearer user-access")
+    );
+    assert!(!requests[6].1.to_string().contains("user-refresh"));
+    handle.join().unwrap();
+}
+
+#[test]
+fn account_failures_redact_credentials_and_never_redirect_or_replay() {
+    for (status, kind) in [
+        (302, AdapterErrorKind::Protocol),
+        (0, AdapterErrorKind::Unavailable),
+        (403, AdapterErrorKind::Authorization),
+        (500, AdapterErrorKind::Unavailable),
+    ] {
+        let (origin, rx, handle) = server(vec![(
+            status,
+            json!({"message":"user-access scm-credential sb_publishable_fixture private-payload"}),
+        )]);
+        let scm = ScmCredential::github("scm-credential").unwrap();
+        let error = connector(&origin)
+            .account_request(
+                AccountOperation::Checkout,
+                &json!({"opaque":"private-payload"}),
+                "user-access",
+                Some(&scm),
+            )
+            .unwrap_err();
+        assert_eq!(error.adapter_kind(), Some(kind));
+        let diagnostic = format!("{error} {error:?}");
+        for secret in ["user-access", "scm-credential", KEY, "private-payload"] {
+            assert!(!diagnostic.contains(secret));
+        }
+        rx.recv().unwrap();
+        handle.join().unwrap();
+    }
+}
+
+#[test]
+fn account_credentials_and_body_are_validated_before_network_io() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let connector = connector(&format!("http://{}", listener.local_addr().unwrap()));
+    for invalid in [
+        String::new(),
+        "has space".into(),
+        "injected\r\nheader: value".into(),
+        "x".repeat(16385),
+    ] {
+        let error = connector
+            .account_request(AccountOperation::Register, &json!({}), &invalid, None)
+            .unwrap_err();
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+        for invalid_scm in [
+            ScmCredential::github(invalid.clone()),
+            ScmCredential::gitlab(invalid.clone()),
+        ] {
+            let error = invalid_scm.unwrap_err();
+            assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+        }
+    }
+    let error = connector
+        .account_request(
+            AccountOperation::Register,
+            &json!({"opaque":"x".repeat(16384)}),
+            "user-access",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+    assert!(listener.accept().is_err());
+}
+
+#[test]
+fn sign_in_provider_token_stays_out_of_normal_account_requests_and_refresh_may_omit_it() {
+    let mut issued = session();
+    issued["provider_token"] = json!("google-sign-in-provider-credential");
+    let (origin, rx, handle) = server(vec![
+        (200, issued),
+        (200, json!({"opaque":"registration"})),
+        (200, json!({"opaque":"account-status"})),
+        (200, session()),
+    ]);
+    let connector = connector(&origin);
+    let secrets = AuthenticationSecrets::generate().unwrap();
+    let user = connector
+        .exchange_session("one-time-code", &secrets)
+        .unwrap();
+    assert_eq!(
+        user.provider_token.as_deref(),
+        Some("google-sign-in-provider-credential")
+    );
+    assert!(!format!("{user:?}").contains("google-sign-in-provider-credential"));
+    let stored = serde_json::to_value(&user).unwrap();
+    let restored: UserSession = serde_json::from_value(stored).unwrap();
+    assert_eq!(restored.provider_token, user.provider_token);
+    for operation in [AccountOperation::Register, AccountOperation::Status] {
+        connector
+            .account_request(operation, &json!({"version":1}), &user.access_token, None)
+            .unwrap();
+    }
+    let refreshed = connector.refresh_session(&user.refresh_token).unwrap();
+    assert!(refreshed.provider_token.is_none());
+    assert!(serde_json::to_value(&refreshed)
+        .unwrap()
+        .get("provider_token")
+        .is_none());
+    let legacy: UserSession = serde_json::from_value(
+        json!({"access_token":"old-access","refresh_token":"old-refresh","expires_at_unix":900}),
+    )
+    .unwrap();
+    assert!(legacy.provider_token.is_none());
+    for index in 0..4 {
+        let (headers, body) = rx.recv().unwrap();
+        for name in ["x-scm-token", "x-scm-provider", "x-scm-host"] {
+            assert_eq!(header(&headers, name), None);
+        }
+        if index == 1 || index == 2 {
+            assert_eq!(
+                header(&headers, "authorization"),
+                Some("Bearer user-access")
+            );
+        }
+        assert!(!body
+            .to_string()
+            .contains("google-sign-in-provider-credential"));
+    }
+    handle.join().unwrap();
+}
+
+#[test]
+fn malformed_provider_token_is_rejected_without_echoing_it() {
+    let mut issued = session();
+    issued["provider_token"] = json!("private malformed credential");
+    let (origin, rx, handle) = server(vec![(200, issued)]);
+    let error = connector(&origin)
+        .refresh_session("user-refresh")
+        .unwrap_err();
+    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+    assert!(!format!("{error} {error:?}").contains("private malformed credential"));
+    rx.recv().unwrap();
+    handle.join().unwrap();
+}
+
+#[test]
+fn handoff_rejects_ambiguous_tickets_and_malformed_origin_metadata() {
+    let connector = connector("https://project.example");
+    let valid = format!(
+        "https://project.example/functions/v1/propodus-onboarding/begin?flow_id={FLOW}&ticket=one"
+    );
+    for browser_url in [
+        format!("{valid}&ticket="),
+        format!("{valid}&ticket=two"),
+        format!("{valid}&flow_id={FLOW}"),
+        format!("{valid}#fragment"),
+        valid.replace("https://project.example", "https://other.example"),
+        valid.replace(
+            "https://project.example",
+            "https://user:password@project.example",
+        ),
+        valid.replace("/begin?", "/exchange?"),
+    ] {
+        let error = connector
+            .validate_start(&AuthenticationStart {
+                flow_id: FLOW.into(),
+                browser_url,
+                expires_at: "2099-01-01T00:00:00Z".into(),
+            })
+            .unwrap_err();
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+        assert!(!error.to_string().contains("ticket=one"));
+    }
 }
 
 #[test]

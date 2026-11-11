@@ -8,7 +8,11 @@ Supabase connector through `Backend`, `DatastoreRoute::for_backend` and
 the hosted backend. Dactyl discovers its public deployment profile and transports
 managed Auth requests and current-user RPC credentials. The application retains
 browser interaction, durable pending-flow state and private session custody.
-Backend identity, GitHub role grants and RLS remain infrastructure-owned policy.
+Ordinary cloud authority is the authenticated Supabase user and active assigned
+seat within the tenant/project. Linked code-host identities and separately scoped
+governance grants remain backend policy; repository permissions are not mirrored
+as ordinary data authority. Dactyl transports opaque account registration, status,
+quote and checkout requests without interpreting entitlement or purchase consent.
 Offline connector/auth fixtures establish transport behavior only; hosted OAuth
 and deployed profile availability require separate rollout evidence.
 
@@ -150,8 +154,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
+- Repository signal fingerprint: `f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

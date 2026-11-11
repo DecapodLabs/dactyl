@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build the reviewed Rust proof environment
+      - name: Prepare the reviewed Rust proof environment and dependency caches
         run: docker build -t dactyl-proof -f tools/proof/Containerfile .
       - name: Decapod Validate
         env:

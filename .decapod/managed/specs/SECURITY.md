@@ -14,6 +14,14 @@ or rotation outcomes. Credential types redact Debug and auth errors omit remote
 messages. Propodus-managed Auth/RLS/grants enforce identity and permissions;
 caller context and local agent labels cannot elevate cloud authority.
 
+Normal account and data access depend on the Supabase user session, paid-seat
+assignment and backend tenant/project isolation. Optional explicit SCM linking
+adds X-SCM-Token, X-SCM-Provider and X-SCM-Host only to the account channel, with
+fixed GitHub/GitLab hosts; it never supplies ordinary data authority. Dactyl does
+not infer this channel from a sign-in provider token. Redirects and automatic
+retries are disabled for auth, discovery and account requests. Only allowlisted
+public denial codes appear in errors; remote messages and credentials do not.
+
 ## Secure shared-directory SQLite recovery
 
 Private staging and creation-time modes protect rebuilt data under permissive umasks. Activation restores existing permission bits only after validation. Source access ACLs, inherited default ACLs and MAC/system access labels fail closed rather than being silently replaced; unrelated user attributes and unchanged parent POSIX access ACLs are permitted. Original/archive metadata remains untouched. Callers must quiesce filesystem name/content/metadata writers from connection open; inode checks are detection boundaries, not protection against arbitrary malicious concurrent directory writers.
@@ -127,7 +135,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66b9dc0aed59a27d1f15abed59fe2096a3e697bbebddb0fe7bb8f68857db28aa`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
+- Repository signal fingerprint: `f308bc8a28e7eaf2dddaa272a1cb1ab2c22404c690128c2b9c7f468e854c511a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
