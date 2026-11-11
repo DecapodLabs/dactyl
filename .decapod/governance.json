@@ -68,6 +68,11 @@
       "id": "connector-msrv-filesystem-v1",
       "summary": "Repair actual required-proof failures with inactive HTTP3 resolver bounds for Cargo 1.75 and canonical private fixture storage while preserving the full suite and SQLite MAC/ACL security policy.",
       "input_digest": "sha256:36d9a28de2c37dbdc7ff7b0f67bdb4a5fdd4a5f5f30873dae4dd2f87117b3a0e"
+    },
+    {
+      "id": "connector-native-owned-temp-v1",
+      "summary": "Preserve native-owned temporary paths and configured command contract; run proof on a private physical filesystem with required recovery metadata semantics.",
+      "input_digest": "sha256:bf9b0ef37a274dfdbc5463ffc2fd2b3afbe2f988ffde19e5ad783cd76ed7f64d"
     }
   ],
   "intents": {
@@ -110,22 +115,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Inactive HTTP3 dependency bounds add no active transport or public feature; proof filesystem repair leaves datastore architecture and fail-closed metadata policy unchanged.",
-          "reviewed_code_fingerprint": "92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4",
+          "reason": "The proof container now supplies a private supported physical temporary filesystem; architecture and inactive HTTP3 bounds are unchanged, with no extra active provider.",
+          "reviewed_code_fingerprint": "21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71",
           "spec_material_hash": "4efec3fe8da76aeabca4e3a2ad2cacca3a2674eaca28d89384996ee24b6c59ef"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public connector/account/Auth API unchanged by inactive-target resolver bounds and explicit private proof TMPDIR; reviewed against current source and full-failure diagnostics.",
-          "reviewed_code_fingerprint": "92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4",
+          "reason": "Current source retains the reviewed connector/account/native RPC API. The proof repair removes the unsupported reserved TMPDIR override and preserves native temporary-path ownership.",
+          "reviewed_code_fingerprint": "21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71",
           "spec_material_hash": "f7ce9d436db9b386261623fdb7f092ce7fbd36e516f57a474de3c7e5aef894ad"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SCM isolation and bearer ownership unchanged; SQLite metadata checks remain intact and proof uses a supported private filesystem instead of relaxing MAC/ACL checks.",
-          "reviewed_code_fingerprint": "92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4",
+          "reason": "Full metadata/ACL recovery checks and native adapter temporary-path isolation remain enforced; only the actual proof filesystem differs from the MAC-labelled overlay.",
+          "reviewed_code_fingerprint": "21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71",
           "spec_material_hash": "b56e78f8a70f5faec19dcadf960b43647571038962ba4fe4b4c7a992d994e21e"
         }
       ],
@@ -139,16 +144,17 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794440782Z"
+      "updated_at": "1794441172Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Auth provider tokens are never inferred to be SCM credentials; ordinary account access uses only the Supabase bearer.",
         "Current claimed task and isolated work branch",
         "No deployment or credential commits; server grants remain authoritative",
+        "Preserve adapter-owned temporary-path custody. Recreate only the owned proof container with a private physical /tmp bind; no reserved environment override and no MAC/ACL policy removal.",
         "Retain Cargo 1.75 and complete feature matrix; preserve recovery metadata/ACL policy and all existing tests."
       ],
-      "artifact_hash": "sha256:9098db4b4b3241a9208a37d0757613cc31f06dc06b60167f6cf45d4916528b12",
+      "artifact_hash": "sha256:98ade1a8fbdf20a2c9124154ebb1e1732b591e729993c77da8f6a1afd522b29f",
       "checks": [
         {
           "name": "connector-review",
@@ -157,6 +163,10 @@
         {
           "name": "dependency-preparation",
           "status": "passed"
+        },
+        {
+          "name": "native-temporary-path-contract",
+          "status": "failed"
         },
         {
           "name": "public-profile-v1",
@@ -209,10 +219,17 @@
             "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M753PEC49T92VW92KVGX0Y8M": {
@@ -314,18 +331,43 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod validate --format json",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/dactyl-connector-validation8.json",
+                  "/private/tmp/dactyl-proof-temp-investigation.json"
+                ],
+                "proof_refs": [
+                  "native-temporary-path-contract"
+                ],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+                  "tests/"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "decapod validate"
+        "decapod validate",
+        "decapod validate --format json"
       ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/connector-profile-verification.json",
+        "/private/tmp/dactyl-connector-validation8.json",
         "/private/tmp/dactyl-proof-preparation.patch",
+        "/private/tmp/dactyl-proof-temp-investigation.json",
         "/private/tmp/dactyl-typed-scm-credential.patch",
         "/private/tmp/dactyl-validation7-evidence/native-0.stdout",
         "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
@@ -338,6 +380,7 @@
       "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         "Cargo.lock",
         "Cargo.toml",
         "src/adapter/supabase.rs",

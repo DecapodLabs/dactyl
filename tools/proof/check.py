@@ -11,9 +11,6 @@ import subprocess
 import tempfile
 
 ROOT = Path.cwd()
-# Resolve the configured private filesystem before fixture creation. Some local
-# container /tmp mounts carry MAC labels that recovery deliberately rejects.
-os.environ["TMPDIR"] = str(Path(os.environ["TMPDIR"]).resolve(strict=True))
 STABLE = Path(os.environ["DACTYL_STABLE_TOOLS"])
 MSRV = Path(os.environ["DACTYL_MSRV_TOOLS"])
 checks = []

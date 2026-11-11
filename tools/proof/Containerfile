@@ -8,7 +8,6 @@ RUN mkdir -p /opt/dactyl-proof-tools && ln -s /usr/bin/aarch64-linux-gnu-as /opt
 RUN ln -s /bin/dash /opt/dactyl-proof-tools/sh
 ENV PATH="/opt/decapod/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV DECAPOD_CONTAINER=1
-RUN mkdir -m 700 /opt/dactyl-proof-tmp
 COPY Cargo.toml Cargo.lock /opt/dactyl-proof-input/
 COPY tools/proof/prepare.py /opt/dactyl-proof-input/prepare.py
 # Dependency preparation only. Required builds/tests remain owned by validate.

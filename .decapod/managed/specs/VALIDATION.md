@@ -3,11 +3,11 @@
 ## Offline connector and Rust compatibility proof
 
 `tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
-checks only through `decapod validate`. Its declared private TMPDIR is resolved
-before fixture creation. Local Podman proof uses the source bind's filesystem
-there because overlay temporary files carry unsupported MAC labels; CI creates
-the same private directory in the reviewed proof image. Recovery's metadata and
-ACL checks remain intact. Hosted OAuth, checkout, deployment and registry
+checks only through `decapod validate`. The native adapter owns temporary paths.
+Local Podman proof binds a private supported filesystem at the container's `/tmp`
+because its default overlay carries unsupported MAC labels. CI uses its normal
+Linux temporary filesystem. Recovery's metadata and ACL checks remain intact.
+Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
 
 ## Secure shared-directory SQLite recovery
@@ -236,7 +236,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92fe0d570423482b45fe44df746aca4ec60c5f89a9e46dc3358549bcf9c2b5e4`
+- Repository signal fingerprint: `21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
