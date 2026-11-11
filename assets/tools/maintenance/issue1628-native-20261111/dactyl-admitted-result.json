@@ -1,0 +1,120 @@
+{
+  "schema": "decapod.issue1628-dactyl-continuation.v1",
+  "repository": "DecapodLabs/dactyl",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "operations_sha": "e551567a8828efaaf066250003ad8d0e46eb1f81",
+  "status": "blocked",
+  "imported": true,
+  "admitted": true,
+  "container_observed": true,
+  "checkpoints": false,
+  "publication_ready": false,
+  "full_boundary_passed": false,
+  "custody_exported": true,
+  "head_sha": null,
+  "pr_url": null,
+  "pushed": false,
+  "controller": {
+    "release": "v0.138.2",
+    "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+  },
+  "evaluation": {
+    "schema_version": "1.0.0",
+    "status": "allow",
+    "prompt_sha256": "1f32c401cdcff8c930b1a63464ab428202a104d3c66f05dd4c3c3d81a65f3e97",
+    "prompt_bytes": 707,
+    "findings": [],
+    "action": "Proceed with the prompt under the normal Decapod contract."
+  },
+  "baseline_reconciliation": {
+    "discovered_sources": {
+      ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+      ".github/workflows/decapod-validate.yml": "sha256:c1f947ff1655e0a03d48bfe06c6234b291f1df880960b8e2ebe6153e39ce0c75",
+      ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+      ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+      ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+      "Cargo.lock": "sha256:eabb49f4e68e0abb19e10b02d87dcefc6e795db36372f151b946f5d9d5eaa4f4",
+      "Cargo.toml": "sha256:f352f5917dab13330a1aba27f23631987c557c295932662c21af1c7bc1087e52"
+    },
+    "inventory_digest": "sha256:ee1c3a208b9173a072b8533c95576ced24d59d3d77e2c81705bb87b8cf7f2cc0",
+    "merge_ready": false,
+    "proof_status": "not_run",
+    "provider": "native",
+    "repair_tasks": [
+      {
+        "action": "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof.",
+        "code": "MISSING_REQUIRED_PROFILE",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml"
+        ],
+        "title": "Select and review a complete required profile"
+      },
+      {
+        "action": "Preserve these authored workflows. Review their jobs, conditions, matrices and helpers, then add a faithful supported profile adapter or an explicit proven exclusion. Discovery does not execute YAML or assume these checks passed.",
+        "code": "UNKNOWN_CI_CONTRACT",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".github/workflows/pages.yml",
+          ".github/workflows/rust-contract.yml"
+        ],
+        "title": "Adopt unsupported CI contracts into required proof"
+      },
+      {
+        "action": "The authored product name \"dactyl\" differs from Cargo package \"dactyl-db\". Confirm the intended relationship and update only the contract that is wrong; init preserves the authored name.",
+        "code": "INTENT_BUILD_MISMATCH",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml",
+          "Cargo.toml"
+        ],
+        "title": "Reconcile product intent with the build manifest"
+      },
+      {
+        "action": "Agent: once source and the required checkpoint are ready, run decapod validate. Validation owns configured build prerequisites, verification, tests and artifact-bound evidence through the selected provider; do not build separately first. Repair reported source or build/test/CI configuration failures and revalidate. Native and Buildkite still require the complete applicable source-PR checks and candidate-build obligations; missing adapters fail closed. Stop for unresolved human intent, decision gates, missing authorization or unavailable access. Release-only packaging remains separately scoped; validation success is not authority to distribute or deploy.",
+        "code": "REQUIRED_PROOF_NOT_RUN",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [],
+        "title": "Run the complete required proof suite"
+      }
+    ],
+    "schema_version": "1.0.0",
+    "status": "needs_reconciliation"
+  },
+  "source_history": "already_proven",
+  "blocker": {
+    "stage": "prepare locked dependency cache",
+    "exit_code": 1,
+    "timeout": false,
+    "codes": [],
+    "diagnostic": "    Updating crates.io index\n Downloading crates ...\n  Downloaded zeroize v1.8.2\n  Downloaded utf16_iter v1.0.5\n  Downloaded utf8_iter v1.0.4\n  Downloaded crypto-common v0.1.7\n  Downloaded windows-link v0.2.1\n  Downloaded cfg-if v1.0.5\n  Downloaded tokio-macros v2.7.2\n  Downloaded scopeguard v1.2.0\n  Downloaded version_check v0.9.5\n  Downloaded generic-array v0.14.7\n  Downloaded wasi v0.11.1+wasi-snapshot-preview1\n  Downloaded icu_provider_macros v1.5.0\n  Downloaded yoke-derive v0.7.5\n  Downloaded stable_deref_trait v1.2.1\n  Downloaded cpufeatures v0.2.17\n  Downloaded zerofrom-derive v0.1.8\n  Downloaded wasm-bindgen-macro v0.2.130\n  Downloaded rustls-pki-types v1.15.1\n  Downloaded icu_locid_transform_data v1.5.1\n  Downloaded untrusted v0.9.0\n  Downloaded icu_normalizer v1.5.0\n  Downloaded icu_locid_transform v1.5.0\n  Downloaded subtle v2.6.1\n  Downloaded sync_wrapper v1.0.2\n  Downloaded icu_properties v1.5.1\n  Downloaded bumpalo v3.20.3\n  Downloaded atomic-waker v1.1.2\n  Downloaded httpdate v1.0.3\n  Downloaded idna v1.1.0\n  Downloaded cpufeatures v0.3.1\n  Downloaded futures-util v0.3.34\n  Downloaded try-lock v0.2.5\n  Downloaded async-trait v0.1.92\n  Downloaded icu_properties_data v1.5.1\n  Downloaded axum-core v0.4.5\n  Downloaded futures-channel v0.3.34\n  Downloaded chacha20 v0.10.2\n  Downloaded tracing-core v0.1.36\n  Downloaded quinn-udp v0.5.16\n  Downloaded hyper-rustls v0.27.7\n  Downloaded ryu v1.0.23\n  Downloaded r-efi v6.0.0\n  Downloaded base64 v0.22.1\n  Downloaded hyper-util v0.1.20\n  Downloaded rustix v1.1.6\n  Downloaded axum v0.7.9\n  Downloaded cc v1.11.1\n  Downloaded hyper v1.12.0\n  Downloaded tower-http v0.6.11\n  Downloaded windows_i686_gnullvm v0.52.6\n  Downloaded rand v0.10.3\n  Downloaded rustls-webpki v0.103.16\n  Downloaded quinn-proto v0.11.19\n  Downloaded http v1.5.0\n  Downloaded tower v0.5.3\n  Downloaded windows_aarch64_gnullvm v0.52.6\n  Downloaded windows_x86_64_gnullvm v0.52.6\n  Downloaded web-sys v0.3.107\n  Downloaded rustls v0.23.46\n  Downloaded quinn v0.11.12\n  Downloaded icu_collections v1.5.0\n  Downloaded rustix v0.38.44\n  Downloaded log v0.4.35\n  Downloaded icu_normalizer_data v1.5.1\n  Downloaded tracing v0.1.44\n  Downloaded windows_aarch64_msvc v0.52.6\n  Downloaded windows_i686_gnu v0.52.6\n  Downloaded windows_x86_64_gnu v0.52.6\n  Downloaded windows_i686_msvc v0.52.6\n  Downloaded tokio v1.53.3\n  Downloaded windows_x86_64_msvc v0.52.6\n  Downloaded libc v0.2.191\n  Downloaded getrandom v0.4.3\n  Downloaded tinyvec v1.13.3\n  Downloaded getrandom v0.2.17\n  Downloaded syn v2.0.119\n  Downloaded syn v3.0.10\n  Downloaded libloading v0.8.9\n  Downloaded http-body-util v0.1.5\n  Downloaded httparse v1.10.1\n  Downloaded ipnet v2.12.2\n  Downloaded shlex v2.0.1\n  Downloaded matchit v0.7.3\n  Downloaded mime v0.3.18\n  Downloaded serde_path_to_error v0.1.20\n  Downloaded rand_core v0.10.1\n  Downloaded rustc-hash v2.1.3\n  Downloaded thiserror-impl v2.0.21\n  Downloaded thiserror v2.0.21\n  Downloaded find-msvc-tools v0.1.15\n  Downloaded tokio-rustls v0.26.6\n  Downloaded http-body v1.1.0\n  Downloaded webpki-roots v1.0.11\n  Downloaded want v0.3.2\n  Downloaded lru-slab v0.1.3\n  Downloaded rand_pcg v0.10.2\n  Downloaded cfg_aliases v0.2.2\n  Downloaded serde_json v1.0.154\n  Downloaded js-sys v0.3.107\n  Downloaded reqwest v0.12.28\n  Downloaded serde_urlencoded v0.7.1\n  Downloaded zerovec v0.10.4\n  Downloaded wasm-bindgen-macro-support v0.2.130\n  Downloaded memchr v2.8.3\n  Downloaded url v2.5.8\n  Downloaded serde v1.0.229\n  Downloaded typenum v1.20.1\n  Downloaded mio v1.2.4\n  Downloaded tower-service v0.3.3\n  Downloaded form_urlencoded v1.2.2\n  Downloaded wasm-bindgen v0.2.130\n  Downloaded tower-layer v0.3.3\n  Downloaded icu_provider v1.5.0\n  Downloaded rustversion v1.0.23\n  Downloaded serde_derive v1.0.229\n  Downloaded serde_core v1.0.229\n  Downloaded once_cell v1.21.4\n  Downloaded bytes v1.12.1\n  Downloaded ring v0.17.14\n  Downloaded unicode-ident v1.0.27\n  Downloaded litemap v0.7.4\n  Downloaded displaydoc v0.2.7\n  Downloaded tinystr v0.7.6\n  Downloaded synstructure v0.14.0\n  Downloaded bitflags v2.13.2\n  Downloaded parking_lot v0.12.5\n  Downloaded proc-macro2 v1.0.107\n  Downloaded zerovec-derive v0.10.4\n  Downloaded digest v0.10.7\n  Downloaded write16 v1.0.0\n  Downloaded icu_locid v1.5.0\n  Downloaded zmij v1.0.23\n  Downloaded socket2 v0.6.5\n  Downloaded writeable v0.5.5\n  Downloaded synstructure v0.13.2\n  Downloaded yoke v0.7.5\n  Downloaded futures-io v0.3.34\n  Downloaded linux-raw-sys v0.4.15\n  Downloaded futures-task v0.3.34\n  Downloaded slab v0.4.12\n  Downloaded wasm-bindgen-shared v0.2.130\n  Downloaded web-time v1.1.0\n  Downloaded fastrand v2.5.0\n  Downloaded tempfile v3.14.0\n  Downloaded itoa v1.0.19\n  Downloaded sha2 v0.10.9\n  Downloaded idna_adapter v1.2.0\n  Downloaded futures-core v0.3.34\n  Downloaded windows-sys v0.59.0\n  Downloaded wasm-bindgen-futures v0.4.80\n  Downloaded thiserror-impl v1.0.69\n  Downloaded smallvec v1.16.5\n  Downloaded windows-sys v0.61.2\n  Downloaded parking_lot_core v0.9.12\n  Downloaded pin-project-lite v0.2.17\n  Downloaded zerofrom v0.1.8\n  Downloaded percent-encoding v2.3.2\n  Downloaded futures-sink v0.3.34\n  Downloaded block-buffer v0.10.4\n  Downloaded windows-targets v0.52.6\n  Downloaded thiserror v1.0.69\n  Downloaded redox_syscall v0.5.18\n  Downloaded signal-hook-registry v1.4.8\n  Downloaded quote v1.0.47\n  Downloaded lock_api v0.4.14\n  Downloaded errno v0.3.14\n  Downloaded windows-sys v0.52.0\n  Downloaded linux-raw-sys v0.12.1\n    Updating crates.io index\n Downloading crates ...\n  Downloaded tokio-macros v2.7.2\n  Downloaded windows-link v0.2.1\n  Downloaded utf16_iter v1.0.5\n  Downloaded zeroize v1.8.2\n  Downloaded utf8_iter v1.0.4\n  Downloaded errno v0.3.14\n  Downloaded futures-sink v0.3.34\n  Downloaded version_check v0.9.5\n  Downloaded thiserror-impl v1.0.69\n  Downloaded writeable v0.5.5\n  Downloaded parking_lot_core v0.9.12\n  Downloaded scopeguard v1.2.0\n  Downloaded zerofrom v0.1.8\n  Downloaded cpufeatures v0.2.17\n  Downloaded sha2 v0.10.9\n  Downloaded fastrand v2.5.0\n  Downloaded stable_deref_trait v1.2.1\n  Downloaded futures-io v0.3.34\n  Downloaded percent-encoding v2.3.2\n  Downloaded generic-array v0.14.7\n  Downloaded wasm-bindgen-futures v0.4.80\n  Downloaded itoa v1.0.19\n  Downloaded icu_provider_macros v1.5.0\n  Downloaded serde_derive v1.0.229\n  Downloaded tinystr v0.7.6\n  Downloaded litemap v0.7.4\n  Downloaded rustls-webpki v0.103.16\n  Downloaded untrusted v0.9.0\n  Downloaded rustls-pki-types v1.15.1\n  Downloaded icu_properties v1.5.1\n  Downloaded subtle v2.6.1\n  Downloaded icu_provider v1.5.0\n  Downloaded getrandom v0.2.17\n  Downloaded cfg_aliases v0.2.2\n  Downloaded idna v1.1.0\n  Downloaded want v0.3.2\n  Downloaded rand_pcg v0.10.2\nerror: failed to download replaced source registry `crates-io`\n\nCaused by:\n  failed to parse manifest at `/usr/local/cargo/registry/src/index.crates.io-6f17d22bba15001f/rand_pcg-0.10.2/Cargo.toml`\n\nCaused by:\n  feature `edition2024` is required\n\n  The package requires the Cargo feature called `edition2024`, but that feature is not stabilized in this version of Cargo (1.75.0 (1d8b05cdd 2023-11-20)).\n  Consider trying a newer version of Cargo (this may require the nightly release).\n  See https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#edition-2024 for more information about the status of this feature.\nTraceback (most recent call last):\n  File \"/root/issue1628-subject/.decapod/workspaces/chatgpt-issue1628-dactyl-next-todo-01m76c-agent-chatgpt-issue1628-dactyl-feat_01m76c2002nnt3za-cloud-connector/scripts/proof/prepare.py\", line 32, in <module>\n    fetch(MSRV, [\"--locked\"])\n  File \"/root/issue1628-subject/.decapod/workspaces/chatgpt-issue1628-dactyl-next-todo-01m76c-agent-chatgpt-issue1628-dactyl-feat_01m76c2002nnt3za-cloud-connector/scripts/proof/prepare.py\", line 28, in fetch\n    subprocess.run([str(tools / \"cargo\"), \"fetch\", *args], env=env, check=True)\n  File \"/usr/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/cargo', 'fetch', '--locked']' returned non-zero exit status 101.\n",
+    "reason": "native or source preparation command failed"
+  },
+  "transfer": {
+    "task_id": "feat_01m76c2002nnt3za",
+    "transfer_id": "01M76ECR9VQ0AAG72VHGBSNPDQ",
+    "receiver": "chatgpt-issue1628-dactyl",
+    "source_sealed": true,
+    "native_source_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "native_source_branch": "issue1628-dactyl-continuation-767f55fe2aef",
+    "candidate_branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+    "candidate_sha": null,
+    "artifact": "native-custody.der",
+    "plaintext_sha256": "sha256:0cd7b60d0c74f001bd852306086e816a14fd8983cb606760e4002790277f15c7",
+    "ciphertext_sha256": "sha256:91aa426df58530d06f888a0cdddabd1986b004f8937931555457436599e4ed84"
+  },
+  "final_head_sha": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source_dirty": true,
+  "diagnostics": {
+    "artifact": "native-diagnostics.der",
+    "plaintext_sha256": "sha256:d1fd7a8a3d20c9d2474f50328a075e9398bb01446ffbce8da6e456000d2f66f6",
+    "ciphertext_sha256": "sha256:3e2275392ae48d0544fc3eb011fb613e7657c7216c8a686274adc78959fece61"
+  }
+}

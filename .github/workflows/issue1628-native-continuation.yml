@@ -1,4 +1,4 @@
-name: Continue issue 1628 Dactyl native custody
+name: Recover issue 1628 Dactyl dependency preparation
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:24.04
-    timeout-minutes: 160
+    timeout-minutes: 90
     permissions:
       contents: write
       actions: read
@@ -76,9 +76,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/material/scripts/proof/runtime_inventory.py" > /root/issue1628-runtime.json
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" prepare \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_recovery.py" prepare \
             --slug dactyl \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-bootstrap-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-admitted-result.json" \
             --directory /root/issue1628-relay \
             --runtime-inventory /root/issue1628-runtime.json
       - name: Publish only the ephemeral receiver certificate
@@ -94,11 +94,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" receive \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_recovery.py" receive \
             --slug dactyl \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-bootstrap-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-admitted-result.json" \
             --directory /root/issue1628-relay
-      - name: Continue original task and publish only through full native readiness
+      - name: Checkpoint recovered source and prepare MSRV-compatible dependencies
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -112,19 +112,21 @@ jobs:
           git config user.name 'ChatGPT'
           git config user.email 'chatgpt@users.noreply.github.com'
           gh auth setup-git
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continue_dactyl.py" \
-            --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/material" \
-            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-continuation.json" \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/recover_dactyl_prepare.py" \
+            --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/recovered-material" \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-recovery-preparation.json" \
+            --repair-material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/repair-material" \
+            --repair-manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-dependency-repair.json" \
             --native-transfer /root/issue1628-relay/native-transfer.json \
             --runtime-inventory /root/issue1628-relay/public/runtime-inventory.json \
             --runtime-review /root/issue1628-relay/runtime-review.json \
             --certificate "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
-            --output "$RUNNER_TEMP/issue1628-dactyl-continuation"
+            --output "$RUNNER_TEMP/issue1628-dactyl-dependency-preparation"
       - name: Preserve actual readiness and encrypted native custody
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: issue1628-dactyl-continuation
-          path: ${{ runner.temp }}/issue1628-dactyl-continuation/
+          name: issue1628-dactyl-dependency-preparation
+          path: ${{ runner.temp }}/issue1628-dactyl-dependency-preparation/
           if-no-files-found: warn
           retention-days: 90

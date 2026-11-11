@@ -1,0 +1,169 @@
+{
+  "repository": "DecapodLabs/dactyl",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "incoming_source_branch": "issue1628-dactyl-continuation-767f55fe2aef",
+  "title": "feat: add logical cloud connectors and managed session transport",
+  "intent": "Implement Dactyl #100 for Decapod #1628: recover and harden the additive instance-scoped local/cloud connector, typed auth/account coordination and current-bearer native RPC while preserving private caller custody, strict origin/repository isolation, uncertain mutation outcomes and all existing adapter/feature/MSRV contracts. Reconcile the required repository-local proof profile through independently reviewed workflow/helper/runtime declarations and current released controller. Publish only after full native readiness; no hosted PostgreSQL, managed Auth, deployment, merge, release or registry publication is claimed.",
+  "falsifier": "Any cloud failure falls back to SQLite; any cross-origin/repository/session leak; missing bearer accepted; one-time exchange replayed after uncertainty; optional feature/MSRV/adapter regression; skipped required proof or fabricated hosted evidence; unrelated policy change; exact source/base/checkpoint/custody mismatch.",
+  "commit_message": "feat(cloud): recover governed connector source before MSRV repair",
+  "body": "## Why\n\nDecapod #1628 needs an instance-scoped local/cloud connector and typed managed authentication/account transport. Existing adapter selection alone does not provide this lifecycle.\n\n## Changes\n\n- Recover connector/native RPC source from immutable bef1a565819c67f5403dd24ed6a35163a3a788eb under a newly admitted task without inheriting earlier proof.\n- Bind public discovery, browser handoff, repository identity and expiry; preserve explicit entitlement/authority denials and uncertain mutation outcomes without replay. Caller retains private credential and pending-flow custody.\n- Retain explicit SQLite, Neon and Supabase service APIs, optional feature combinations, Rust 1.75 and current-bearer native RPC.\n- Adopt a reviewed repository-local native proof contract and match the CI controller to the release-bound entrypoints.\n\n## Evidence\n\nThis PR is created only by the released native workspace publisher after its complete workbranch boundary on candidate {{HEAD_SHA}} against accepted main {{BASE_SHA}}. Configured local proof covers formatting, all features, seven other feature combinations, clippy with warnings denied, specific missing-real-fixture failure, Rust 1.75, clean consumer resolution and package verification. Hosted controller CI, Pages and release remain explicit separate execution scopes.\n\n## Remaining boundary\n\nLoopback tests establish client transport behavior. No hosted PostgreSQL, managed Auth, seat/payment policy, deployment or registry publication is asserted. This ordinary library PR retains package version 0.11.1. Decapod #1628 remains blocked on the subsequent released Dactyl dependency; no downstream registry check or package handoff is weakened.\n\nCloses #100.\n",
+  "files": [
+    {
+      "path": ".github/workflows/decapod-validate.yml",
+      "bytes": 2819,
+      "sha256": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 41568,
+      "sha256": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 2450,
+      "sha256": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff"
+    },
+    {
+      "path": "README.md",
+      "bytes": 16232,
+      "sha256": "sha256:ba180094a1ce982d892ac6dbe6ddcc5b47945f53b6773b5c1f9490ea6a01d0ce"
+    },
+    {
+      "path": "docs/cloud-connectors.md",
+      "bytes": 5893,
+      "sha256": "sha256:b057758206c84b1b377d425f8d504269992ed4d75714ec7f6f1af56690345ba8"
+    },
+    {
+      "path": "docs/supabase-rpc-v1.md",
+      "bytes": 6940,
+      "sha256": "sha256:092f4a31efd49344081e848584b60cef88d3be2118ca2d94e827a52103f67533"
+    },
+    {
+      "path": "scripts/proof/Containerfile",
+      "bytes": 2220,
+      "sha256": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce"
+    },
+    {
+      "path": "scripts/proof/check.py",
+      "bytes": 4235,
+      "sha256": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f"
+    },
+    {
+      "path": "scripts/proof/install_controller.py",
+      "bytes": 2222,
+      "sha256": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323"
+    },
+    {
+      "path": "scripts/proof/prepare.py",
+      "bytes": 1539,
+      "sha256": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf"
+    },
+    {
+      "path": "scripts/proof/runtime_inventory.py",
+      "bytes": 5006,
+      "sha256": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa"
+    },
+    {
+      "path": "src/adapter/supabase.rs",
+      "bytes": 23892,
+      "sha256": "sha256:a100419c38160848676f368f5ad9834dabc00281ac06b45847f391473118260c"
+    },
+    {
+      "path": "src/cloud.rs",
+      "bytes": 25787,
+      "sha256": "sha256:31baf4b091c11ee9d0f286d695f21eca92603f43bf73d45cfe229fe165ac76ee"
+    },
+    {
+      "path": "src/lib.rs",
+      "bytes": 18178,
+      "sha256": "sha256:e5beaec3bd3e46ffca563af78095b332f546bf72799cd29481ee5634f7ffd1b3"
+    },
+    {
+      "path": "src/supabase_rpc.rs",
+      "bytes": 1706,
+      "sha256": "sha256:5ce3e24cec22fd0f0aa24379be7c2f8d40c3dc79b5d86f5c376826ade48143be"
+    },
+    {
+      "path": "tests/cloud_connector.rs",
+      "bytes": 19129,
+      "sha256": "sha256:e66786d177e27f097054d162c14098691fb23d65bee22ba9eaed84d30390d581"
+    },
+    {
+      "path": "tests/supabase_disabled.rs",
+      "bytes": 1379,
+      "sha256": "sha256:0471dc9baffb968d4a736e7e21b42e63f651f8afbf61b56ff21b8ba1e1ab1673"
+    },
+    {
+      "path": "tests/supabase_rpc.rs",
+      "bytes": 13058,
+      "sha256": "sha256:34e744038849fef44ce59def2f394bb5c655ff56619b9cab70245943dc3f0f6e"
+    }
+  ],
+  "accepted_sources": {
+    ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+    ".github/workflows/decapod-validate.yml": "sha256:c1f947ff1655e0a03d48bfe06c6234b291f1df880960b8e2ebe6153e39ce0c75",
+    ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+    ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+    ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+    "Cargo.lock": "sha256:eabb49f4e68e0abb19e10b02d87dcefc6e795db36372f151b946f5d9d5eaa4f4",
+    "Cargo.toml": "sha256:f352f5917dab13330a1aba27f23631987c557c295932662c21af1c7bc1087e52"
+  },
+  "candidate_sources": {
+    ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+    ".github/workflows/decapod-validate.yml": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf",
+    ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+    ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+    ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+    "Cargo.lock": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240",
+    "Cargo.toml": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff",
+    "scripts/proof/Containerfile": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce",
+    "scripts/proof/check.py": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
+    "scripts/proof/install_controller.py": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323",
+    "scripts/proof/prepare.py": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf",
+    "scripts/proof/runtime_inventory.py": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa"
+  },
+  "proof_config_sha256": "sha256:a4313575f021136075f981e9d64a61e7c5a8d2166ac64a89b3f507d4dd2f5963",
+  "spec_additions": {
+    ".decapod/managed/specs/INTENT.md": "## Logical connector boundary (issue 100)\n\nDactyl resolves an application\u2019s logical local/cloud selection into an instance-scoped physical connection while retaining the existing explicit SQLite, Neon and Supabase service APIs. Cloud selection uses reviewed public discovery and native RPC. The caller owns durable credential and pending-flow custody, browser interaction and retry decisions. Dactyl transports typed session/account coordination results; membership, pricing, entitlement and repository authority remain service decisions. Local selection requires no cloud credentials and a cloud failure never selects SQLite. Source: `src/lib.rs`, `src/cloud.rs`, `src/supabase_rpc.rs` and `src/adapter/supabase.rs`.\n",
+    ".decapod/managed/specs/INTERFACES.md": "## Logical connector and managed-session contract (issue 100)\n\n`Backend::{Local,Cloud}` and `DatastoreRoute::for_backend` select per-instance routes. `CloudConnector::discover` accepts exactly public profile v1, the selected origin, a publishable key and the reviewed `dactyl_api` schema; discovery receives no bearer or project key. The built-in origin is independent of environment. Explicit discovery/configuration is the controlled development seam. Existing `DatastoreRoute::supabase` remains the service contract; `supabase_rpc` uses the additive named native RPC envelope with the current bearer and opaque `StorageContext`.\n\n`AuthenticationSecrets::from_parts` restores caller-private verifier and polling secret. `authentication_status` returns a typed `AuthenticationState` plus repository and RFC3339 expiry. `exchange_authentication_code` preserves the repository with its one-time code. `complete_authentication` accepts only an authenticated `complete` result and returns the confirmed repository. Callers must compare that identity and expiry to private custody before advancing. Browser `ready` and public service readiness are insufficient. Known `entitlement_required` and `authorization_denied` remain distinct; no seat/payment reason or account URL is inferred. See `docs/cloud-connectors.md` for the exact bounded transport and recovery contract.\n",
+    ".decapod/managed/specs/SECURITY.md": "## Managed cloud credential and origin boundary (issue 100)\n\nCloud profile discovery is deliberately unauthenticated and database-independent; it never receives a user bearer, API key or cookie. Its fixed origin, version, schema and public-key validation precede credential transport. The browser handoff is restricted to that origin, fixed begin path and exactly the flow identifier plus a valid one-time ticket. Redirects and automatic HTTP retries are disabled. Credentials are ephemeral transport inputs, redact Debug, never enter `StorageContext`, and are persisted only by the caller. Authentication responses retain repository/expiry bindings so the caller can reject cross-repository or stale flow state. Dactyl never infers a role from email, SCM username or payment.\n\nAuth/discovery requests have five-second connect and fifteen-second full-request deadlines and 16 KiB body limits. Joined workers leave no daemon. After a dispatched mutation, transport or response-validation failure reports `outcome_unknown`; the caller must resolve its private journal rather than blindly repeat a one-time exchange or rotation. Fixed service denial codes remain explicit, while raw messages, unknown codes, details, hints and transport URLs are redacted. These client checks do not prove hosted policy, PostgreSQL grants or managed Auth replay behavior.\n",
+    ".decapod/managed/specs/VALIDATION.md": "## Logical cloud connector proof (issue 100)\n\n`tests/cloud_connector.rs` exercises public discovery without credentials, independent origins, exact version/schema/key and handoff validation, typed repository/expiry preservation, restoration of pending secrets, missing/expired/revoked credentials, explicit entitlement versus authority denial, successful session exchange/refresh, malformed or lost mutation responses without replay, response bounds and redaction through real loopback HTTP. `tests/supabase_rpc.rs` proves native named envelopes, bearer/context forwarding, ordered batch normalization, read-only failure, PostgREST errors, redirects and lost-response behavior. `tests/supabase_disabled.rs` retains no-feature failure and local independence. SQLite, Neon and explicit Supabase service regressions remain required across supported features, Rust 1.75, formatting, clippy and packaging.\n\nOffline fixtures establish client transport behavior only. Real PostgreSQL, hosted managed Auth, seat/payment policy, production deployment and registry publication remain independent profiles. An unavailable fixture is never a passing result. Earlier branch receipts are historical only; this candidate needs fresh governed proof against its accepted target.\n"
+  },
+  "spec_reviews": {
+    "ARCHITECTURE": {
+      "disposition": "unchanged-with-reason",
+      "reason": "The facade/adapter split remains intact. The new logical connector and typed native RPC/session boundary are additive; detailed contracts are authored in INTENT, INTERFACES, SECURITY and VALIDATION."
+    },
+    "INTERFACES": {
+      "disposition": "updated",
+      "reason": "Documented logical route selection, public discovery, native RPC, typed repository/expiry-bound auth states, caller-private secret restoration and distinct denial/uncertainty results."
+    },
+    "SECURITY": {
+      "disposition": "updated",
+      "reason": "Documented strict origin/handoff checks, current bearer, caller-owned private custody, redaction, bounds, and no replay after outcome_unknown; hosted policy remains unproven."
+    }
+  },
+  "runtime_preparation_history": {
+    "run_id": 43115774181,
+    "stage": "ingest native doctrine",
+    "imported": false,
+    "reason": "Official0.138.2 requiresGLIBC2.39; corrected actual runtime toUbuntu24.04 before original native task import."
+  },
+  "source_material_manifest_sha256": "sha256:befec6ca4ca3bc4a604afa2b760a3ca6fe3c6bdbaad27c5eaa4c9f7370ce8eab",
+  "source_recovery": {
+    "source_run_id": 43117913670,
+    "source_operations_sha": "e551567a8828efaaf066250003ad8d0e46eb1f81",
+    "archive_plaintext_sha256": "sha256:d1fd7a8a3d20c9d2474f50328a075e9398bb01446ffbce8da6e456000d2f66f6",
+    "prior_failure": {
+      "stage": "prepare locked dependency cache",
+      "cargo": "1.75.0",
+      "dependency": "rand_pcg0.10.2",
+      "reason": "edition2024 manifest unavailable to Cargo1.75; no build or tests executed"
+    },
+    "restored_scope": "exact authored product/proof/CI bytes only; no machine-owned state restored directly",
+    "authored_manifest_sha256": "sha256:bf8f2faeaf56c3430ea7d784a1c251be978384303dd1054f310c5d39c7990c63"
+  }
+}
