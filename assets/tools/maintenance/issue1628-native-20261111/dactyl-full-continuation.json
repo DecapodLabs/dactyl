@@ -1,0 +1,179 @@
+{
+  "repository": "DecapodLabs/dactyl",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "incoming_source_branch": "issue1628-dactyl-recovery-ba4e4cfaa087",
+  "title": "feat: add logical cloud connectors and managed session transport",
+  "intent": "Implement Dactyl #100 for Decapod #1628: recover and harden the additive instance-scoped local/cloud connector, typed auth/account coordination and current-bearer native RPC while preserving private caller custody, strict origin/repository isolation, uncertain mutation outcomes and all existing adapter/feature/MSRV contracts. Reconcile the required repository-local proof profile through independently reviewed workflow/helper/runtime declarations and current released controller. Publish only after full native readiness; no hosted PostgreSQL, managed Auth, deployment, merge, release or registry publication is claimed.",
+  "falsifier": "Any cloud failure falls back to SQLite; any cross-origin/repository/session leak; missing bearer accepted; one-time exchange replayed after uncertainty; optional feature/MSRV/adapter regression; skipped required proof or fabricated hosted evidence; unrelated policy change; exact source/base/checkpoint/custody mismatch.",
+  "commit_message": "fix(cloud): preserve Rust 1.75 with private per-client TLS",
+  "body": "## Why\n\nDecapod #1628 needs an instance-scoped local/cloud connector and typed managed authentication/account transport. Existing adapter selection alone does not provide this lifecycle.\n\n## Changes\n\n- Recover connector/native RPC source from immutable bef1a565819c67f5403dd24ed6a35163a3a788eb under a newly admitted task without inheriting earlier proof.\n- Bind public discovery, browser handoff, repository identity and expiry; preserve explicit entitlement/authority denials and uncertain mutation outcomes without replay. Caller retains private credential and pending-flow custody.\n- Retain explicit SQLite, Neon and Supabase service APIs, optional feature combinations, Rust 1.75 and current-bearer native RPC.\n- Configure ring and WebPKI roots per HTTPS client, preserving normal TLS verification without ambient provider effects or the unused HTTP/3 dependency graph. The independently reviewed lock removes 17 unused packages without dependency upgrades or replacements.\n- Adopt a reviewed repository-local native proof contract and match the CI controller to the release-bound entrypoints.\n\n## Evidence\n\nThis PR is created only by the released native workspace publisher after its complete workbranch boundary on candidate {{HEAD_SHA}} against accepted main {{BASE_SHA}}. Configured local proof covers formatting, all features, seven other feature combinations, clippy with warnings denied, specific missing-real-fixture failure, Rust 1.75, clean consumer resolution and package verification. Hosted controller CI, Pages and release remain explicit separate execution scopes.\n\n## Remaining boundary\n\nLoopback tests establish client transport behavior. No hosted PostgreSQL, managed Auth, seat/payment policy, deployment or registry publication is asserted. This ordinary library PR retains package version 0.11.1. Decapod #1628 remains blocked on the subsequent released Dactyl dependency; no downstream registry check or package handoff is weakened.\n\nCloses #100.\n",
+  "accepted_sources": {
+    ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+    ".github/workflows/decapod-validate.yml": "sha256:c1f947ff1655e0a03d48bfe06c6234b291f1df880960b8e2ebe6153e39ce0c75",
+    ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+    ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+    ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+    "Cargo.lock": "sha256:eabb49f4e68e0abb19e10b02d87dcefc6e795db36372f151b946f5d9d5eaa4f4",
+    "Cargo.toml": "sha256:f352f5917dab13330a1aba27f23631987c557c295932662c21af1c7bc1087e52"
+  },
+  "candidate_sources": {
+    ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+    ".github/workflows/decapod-validate.yml": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf",
+    ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+    ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+    ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+    "Cargo.lock": "sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c",
+    "Cargo.toml": "sha256:c6640f92bc92443ef7330b03bb271776d229938e1187e93422a9df9e1c26d52c",
+    "scripts/proof/Containerfile": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce",
+    "scripts/proof/check.py": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
+    "scripts/proof/install_controller.py": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323",
+    "scripts/proof/prepare.py": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf",
+    "scripts/proof/runtime_inventory.py": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa"
+  },
+  "proof_config_sha256": "sha256:a4313575f021136075f981e9d64a61e7c5a8d2166ac64a89b3f507d4dd2f5963",
+  "spec_reviews": {
+    "ARCHITECTURE": {
+      "disposition": "updated",
+      "reason": "Authored private http_tls module, feature gating, per-client configuration and unchanged facade/adapter ownership."
+    },
+    "INTERFACES": {
+      "disposition": "unchanged-with-reason",
+      "reason": "The connector and native RPC/auth contracts authored in the preserved checkpoint remain current; the private TLS repair adds no public API or route change."
+    },
+    "SECURITY": {
+      "disposition": "updated",
+      "reason": "Authored explicit ring/WebPKI/SNI/safe TLS invariants, no ambient provider effects or insecure verifier, and precise fixture versus hosted proof limits."
+    }
+  },
+  "runtime_preparation_history": {
+    "run_id": 43115774181,
+    "stage": "ingest native doctrine",
+    "imported": false,
+    "reason": "Official0.138.2 requiresGLIBC2.39; corrected actual runtime toUbuntu24.04 before original native task import."
+  },
+  "source_material_manifest_sha256": "sha256:befec6ca4ca3bc4a604afa2b760a3ca6fe3c6bdbaad27c5eaa4c9f7370ce8eab",
+  "resume_head": "ca8454b5fc818845abb80f1043f155b19224442f",
+  "reviewed_lock_sha256": "sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c",
+  "reviewed_metadata_sha256": "sha256:c76f124bcfea4b51fbcf760c523a86e9863329400496ad8cacd744c0ffeb1bf9",
+  "preserved_command_contract_digest": "sha256:93722d8030d15d64e93c05bbbb0601e3b7c53d9a8adcc42a2593d3e0ecc21d37",
+  "preserved_source_inventory_digest": "sha256:8db4d78a50eb1b32a2ef259fb4223342c91e57bd2b90478a1c98819f6a8d2db0",
+  "files": [
+    {
+      "path": ".github/workflows/decapod-validate.yml",
+      "bytes": 2819,
+      "sha256": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 37285,
+      "sha256": "sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 2942,
+      "sha256": "sha256:c6640f92bc92443ef7330b03bb271776d229938e1187e93422a9df9e1c26d52c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 16231,
+      "sha256": "sha256:c615f2035a00462d5661a50728b82b1d94021cada5e1c93cd04413a61e1e3f2d"
+    },
+    {
+      "path": "docs/cloud-connectors.md",
+      "bytes": 5892,
+      "sha256": "sha256:55dfd4773e4ea173288c7f92978b8d7d49776849dc088e7c980bafdc5f373ea6"
+    },
+    {
+      "path": "docs/supabase-rpc-v1.md",
+      "bytes": 6939,
+      "sha256": "sha256:e764badd674afbb1dbaf892bdcda6fcb6f07a667be8bb1f6ec8c858fa48fdb97"
+    },
+    {
+      "path": "scripts/proof/Containerfile",
+      "bytes": 2220,
+      "sha256": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce"
+    },
+    {
+      "path": "scripts/proof/check.py",
+      "bytes": 4235,
+      "sha256": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f"
+    },
+    {
+      "path": "scripts/proof/install_controller.py",
+      "bytes": 2222,
+      "sha256": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323"
+    },
+    {
+      "path": "scripts/proof/prepare.py",
+      "bytes": 1539,
+      "sha256": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf"
+    },
+    {
+      "path": "scripts/proof/runtime_inventory.py",
+      "bytes": 5006,
+      "sha256": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa"
+    },
+    {
+      "path": "src/adapter/neon/mod.rs",
+      "bytes": 11165,
+      "sha256": "sha256:95b5d1ee6590b277f7b5dd1ff92610fc8c9f817a938457d1da732ca81fd385f1"
+    },
+    {
+      "path": "src/adapter/supabase.rs",
+      "bytes": 23890,
+      "sha256": "sha256:0395ab3d6b2c8756621c981ab29764d75138aa6fd600934398ba9363cf2c5972"
+    },
+    {
+      "path": "src/cloud.rs",
+      "bytes": 25785,
+      "sha256": "sha256:dd60df9bd5348f5e5ba75163d6885abcca74637472e354f396c581824c04684a"
+    },
+    {
+      "path": "src/http_tls.rs",
+      "bytes": 3240,
+      "sha256": "sha256:76dad29249e1c88483a7bb29ce05a5c23a8b936cc56298d26ccb25f3ea3761dc"
+    },
+    {
+      "path": "src/lib.rs",
+      "bytes": 18245,
+      "sha256": "sha256:e5e6ecb101703992470d43c092d79c32331a7eba5b4db3e85c026d9fac4ac75f"
+    },
+    {
+      "path": "src/supabase_rpc.rs",
+      "bytes": 1706,
+      "sha256": "sha256:5ce3e24cec22fd0f0aa24379be7c2f8d40c3dc79b5d86f5c376826ade48143be"
+    },
+    {
+      "path": "tests/cloud_connector.rs",
+      "bytes": 19129,
+      "sha256": "sha256:e66786d177e27f097054d162c14098691fb23d65bee22ba9eaed84d30390d581"
+    },
+    {
+      "path": "tests/supabase_disabled.rs",
+      "bytes": 1379,
+      "sha256": "sha256:0471dc9baffb968d4a736e7e21b42e63f651f8afbf61b56ff21b8ba1e1ab1673"
+    },
+    {
+      "path": "tests/supabase_rpc.rs",
+      "bytes": 13058,
+      "sha256": "sha256:34e744038849fef44ce59def2f394bb5c655ff56619b9cab70245943dc3f0f6e"
+    }
+  ],
+  "source_recovery": {
+    "source_run_id": 43121813036,
+    "source_operations_sha": "ed6ed4342d5199655feb6806c30a63dbdf133efd",
+    "candidate_sha": "ca8454b5fc818845abb80f1043f155b19224442f",
+    "candidate_bundle_sha256": "sha256:12e89a96239fe95f1d46514bad9fc2b14408f120da8b20b736497697d58b9cb4",
+    "archive_plaintext_sha256": "sha256:6460fb158e6c140c31e4b61626f85deec6cf9725c72ef7a6bbf4c4c088ae8bbc",
+    "prior_status": "dependency_graph_prepared_for_independent_review",
+    "build_or_test_executed": false,
+    "root_lock_review": "approved exact generated lock/metadata for unchanged MSRV preparation and subsequent full proof; no prior readiness inherited"
+  },
+  "spec_additions": {
+    ".decapod/managed/specs/ARCHITECTURE.md": "## Private HTTPS configuration boundary (issue 100)\n\n`src/http_tls.rs` is a private module shared by the existing Neon, Supabase service/RPC and managed-auth transports, compiled only with an HTTP adapter feature. It builds an explicit rustls client configuration and passes it to reqwest through `use_preconfigured_tls`. The transport constructors retain their existing route, request and response contracts; the helper does not introduce a public adapter or session API. Client configuration errors propagate through `DactylError`.\n\nReqwest uses its WebPKI-roots feature without an implicit crypto provider. Dactyl explicitly selects ring and the same WebPKI root set per client, without enabling HTTP/3 or relying on the unused optional Quinn resolution edge. This preserves the supported Rust 1.75 consumer contract without activating an obsolete QUIC dependency. The generated lock and all-features dependency metadata must be reviewed, then the existing minimum-Rust, clean-consumer, feature and package checks must run against the admitted source. Dependency preparation alone is not a build or proof result.\n",
+    ".decapod/managed/specs/SECURITY.md": "## Per-client TLS provider invariant (issue 100)\n\nEvery HTTPS adapter constructs its own ring provider and WebPKI trust store through `src/http_tls.rs`. The helper uses rustls safe default protocol versions, normal certificate and hostname verification, SNI and no client certificate. It neither installs nor reads a process-global crypto provider. An application's ambient provider cannot silently alter this connector's crypto policy, and Dactyl's client construction cannot change the application's provider. The repair does not add a custom verifier, insecure certificate option or HTTP/3 transport.\n\nThe isolated child-process regression must verify successful client construction with no ambient provider, absence of global installation as a side effect, and successful construction with an unrelated unusable ambient provider. It checks the configured TLS 1.2/1.3 cipher-suite policy and enabled SNI. Existing loopback transport fixtures remain required to catch a mismatched preconfigured TLS type. These checks establish configuration and client-construction behavior; they do not claim hosted TLS, managed Auth, account policy or deployment acceptance.\n"
+  }
+}

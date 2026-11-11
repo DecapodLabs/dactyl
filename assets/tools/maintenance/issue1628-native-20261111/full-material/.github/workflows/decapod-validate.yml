@@ -1,0 +1,66 @@
+name: Decapod Validate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+    timeout-minutes: 30
+    steps:
+      - name: Install controller runtime dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git python3 openssl ca-certificates curl xz-utils
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Evaluate native CI gates with the release bound to this source
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
+          # Preserve the existing release-only fingerprint exception.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-please')) && '1' || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /root/dactyl-ci-tmp
+          export TMPDIR=/root/dactyl-ci-tmp
+          git clone --no-hardlinks --no-checkout "$GITHUB_WORKSPACE" /root/dactyl-ci
+          cd /root/dactyl-ci
+          git remote set-url origin https://github.com/DecapodLabs/dactyl.git
+          git checkout --detach "$GITHUB_SHA"
+          python3 scripts/proof/install_controller.py /root/dactyl-controller
+          # Real provider identity remains present: this is ci_local and cannot authorize publication.
+          /root/dactyl-controller/decapod validate --refresh-specs
+      - name: Require exact entrypoint and authored spec stability
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-please')
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /root/dactyl-ci
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          manifest = '.decapod/managed/specs/.manifest.json'
+          previous = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + manifest]))
+          current = json.loads(Path(manifest).read_bytes())
+          previous.pop('generated_at', None)
+          current.pop('generated_at', None)
+          if previous != current:
+              raise SystemExit('Native spec manifest changed beyond its observation timestamp.')
+          subprocess.run(['git', 'diff', '--exit-code', '--', '.', ':!.decapod/governance/',
+                          ':!.decapod/governance.json', ':!' + manifest], check=True)
+          PY

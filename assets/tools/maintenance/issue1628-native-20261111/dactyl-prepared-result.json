@@ -1,0 +1,852 @@
+{
+  "schema": "decapod.issue1628-dactyl-continuation.v1",
+  "repository": "DecapodLabs/dactyl",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "operations_sha": "ed6ed4342d5199655feb6806c30a63dbdf133efd",
+  "status": "dependency_graph_prepared_for_independent_review",
+  "imported": true,
+  "source_recovery": {
+    "source_run_id": 43120599440,
+    "source_operations_sha": "ee87dd4becc23c01d06b7c1eab44383f5f1dc393",
+    "archive_plaintext_sha256": "sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db",
+    "observed_preparation_failures": [
+      {
+        "stage": "prepare locked dependency cache",
+        "cargo": "1.75.0",
+        "dependency": "rand_pcg0.10.2",
+        "reason": "edition2024 manifest unavailable to Cargo1.75; no build or tests executed"
+      },
+      {
+        "run_id": 43120599440,
+        "stage": "verify prepared source whitespace",
+        "reason": "git diff --check found new blank EOF lines; no dependency repair/resolution or build executed"
+      }
+    ],
+    "restored_scope": "Archived authored product/proof/CI bytes with nine independently reviewed terminal-blank normalizations across recovered foundation and repair proposal; machine projections regenerated only through native CLI",
+    "whitespace_adjustments": [
+      {
+        "path": "Cargo.lock",
+        "before_sha256": "sha256:36207997b01c7e5e98be019b3d61ca13a6bebebc2acb2f00d6ea47f4ba1c8240",
+        "after_sha256": "sha256:0aab0ab171184e19a61b02ab68b2fe88fa71d696f5999f28a67c2c6da34916a8",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "Cargo.toml",
+        "before_sha256": "sha256:2cbe9c1b1cd19ba2d28a9acfa86572e22fc34fe1987a8bdba2425171d41d65ff",
+        "after_sha256": "sha256:b52c313e8c5fba635db42f756eb6452fdce62b257420bc52a0d44aa33350340c",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "README.md",
+        "before_sha256": "sha256:ba180094a1ce982d892ac6dbe6ddcc5b47945f53b6773b5c1f9490ea6a01d0ce",
+        "after_sha256": "sha256:c615f2035a00462d5661a50728b82b1d94021cada5e1c93cd04413a61e1e3f2d",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "docs/cloud-connectors.md",
+        "before_sha256": "sha256:b057758206c84b1b377d425f8d504269992ed4d75714ec7f6f1af56690345ba8",
+        "after_sha256": "sha256:55dfd4773e4ea173288c7f92978b8d7d49776849dc088e7c980bafdc5f373ea6",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      },
+      {
+        "path": "docs/supabase-rpc-v1.md",
+        "before_sha256": "sha256:092f4a31efd49344081e848584b60cef88d3be2118ca2d94e827a52103f67533",
+        "after_sha256": "sha256:e764badd674afbb1dbaf892bdcda6fcb6f07a667be8bb1f6ec8c858fa48fdb97",
+        "removed_bytes": 1,
+        "operation": "remove exactly one blank final line; retain one terminal newline"
+      }
+    ],
+    "previous_authored_manifest_sha256": "sha256:bf8f2faeaf56c3430ea7d784a1c251be978384303dd1054f310c5d39c7990c63",
+    "authored_manifest_sha256": "sha256:a78faa3d169647b92dafe6c6f430b841a801b50be10db6c17bd1a05d5bc74f8e"
+  },
+  "preparation_validation": "not_run",
+  "admitted": true,
+  "container_observed": true,
+  "checkpoints": true,
+  "publication_ready": false,
+  "full_boundary_passed": false,
+  "custody_exported": true,
+  "head_sha": "ca8454b5fc818845abb80f1043f155b19224442f",
+  "pr_url": null,
+  "pushed": false,
+  "controller": {
+    "release": "v0.138.2",
+    "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+  },
+  "evaluation": {
+    "schema_version": "1.0.0",
+    "status": "allow",
+    "prompt_sha256": "1f32c401cdcff8c930b1a63464ab428202a104d3c66f05dd4c3c3d81a65f3e97",
+    "prompt_bytes": 707,
+    "findings": [],
+    "action": "Proceed with the prompt under the normal Decapod contract."
+  },
+  "baseline_reconciliation": {
+    "discovered_sources": {
+      ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+      ".github/workflows/decapod-validate.yml": "sha256:c1f947ff1655e0a03d48bfe06c6234b291f1df880960b8e2ebe6153e39ce0c75",
+      ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+      ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+      ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+      "Cargo.lock": "sha256:eabb49f4e68e0abb19e10b02d87dcefc6e795db36372f151b946f5d9d5eaa4f4",
+      "Cargo.toml": "sha256:f352f5917dab13330a1aba27f23631987c557c295932662c21af1c7bc1087e52"
+    },
+    "inventory_digest": "sha256:ee1c3a208b9173a072b8533c95576ced24d59d3d77e2c81705bb87b8cf7f2cc0",
+    "merge_ready": false,
+    "proof_status": "not_run",
+    "provider": "native",
+    "repair_tasks": [
+      {
+        "action": "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof.",
+        "code": "MISSING_REQUIRED_PROFILE",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml"
+        ],
+        "title": "Select and review a complete required profile"
+      },
+      {
+        "action": "Preserve these authored workflows. Review their jobs, conditions, matrices and helpers, then add a faithful supported profile adapter or an explicit proven exclusion. Discovery does not execute YAML or assume these checks passed.",
+        "code": "UNKNOWN_CI_CONTRACT",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".github/workflows/pages.yml",
+          ".github/workflows/rust-contract.yml"
+        ],
+        "title": "Adopt unsupported CI contracts into required proof"
+      },
+      {
+        "action": "The authored product name \"dactyl\" differs from Cargo package \"dactyl-db\". Confirm the intended relationship and update only the contract that is wrong; init preserves the authored name.",
+        "code": "INTENT_BUILD_MISMATCH",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml",
+          "Cargo.toml"
+        ],
+        "title": "Reconcile product intent with the build manifest"
+      },
+      {
+        "action": "Agent: once source and the required checkpoint are ready, run decapod validate. Validation owns configured build prerequisites, verification, tests and artifact-bound evidence through the selected provider; do not build separately first. Repair reported source or build/test/CI configuration failures and revalidate. Native and Buildkite still require the complete applicable source-PR checks and candidate-build obligations; missing adapters fail closed. Stop for unresolved human intent, decision gates, missing authorization or unavailable access. Release-only packaging remains separately scoped; validation success is not authority to distribute or deploy.",
+        "code": "REQUIRED_PROOF_NOT_RUN",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [],
+        "title": "Run the complete required proof suite"
+      }
+    ],
+    "schema_version": "1.0.0",
+    "status": "needs_reconciliation"
+  },
+  "source_history": "already_proven",
+  "profile_review": {
+    "inventory_digest": "sha256:8db4d78a50eb1b32a2ef259fb4223342c91e57bd2b90478a1c98819f6a8d2db0",
+    "command_contract_digest": "sha256:93722d8030d15d64e93c05bbbb0601e3b7c53d9a8adcc42a2593d3e0ecc21d37",
+    "source_inventory_verified": true,
+    "execution_proof": false
+  },
+  "checkpoint_verification": {
+    "schema": "decapod.checkpoint-history.v1",
+    "scope": "checkpoint_history",
+    "disposition": "proven",
+    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "head_commit": "ca8454b5fc818845abb80f1043f155b19224442f",
+    "history_proven": true,
+    "inspection_complete": true,
+    "publication_ready": false,
+    "verified_commits": [
+      "ca8454b5fc818845abb80f1043f155b19224442f"
+    ],
+    "findings": []
+  },
+  "recovered_checkpoint_sha": "ca8454b5fc818845abb80f1043f155b19224442f",
+  "repaired_lock_sha256": "sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c",
+  "repaired_source_hashes": {
+    ".github/workflows/decapod-validate.yml": "sha256:2764724d1e8b627111a42cdeb6117e8d77b5b9ab34215e90a5e415211bac45cf",
+    "Cargo.lock": "sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c",
+    "Cargo.toml": "sha256:c6640f92bc92443ef7330b03bb271776d229938e1187e93422a9df9e1c26d52c",
+    "README.md": "sha256:c615f2035a00462d5661a50728b82b1d94021cada5e1c93cd04413a61e1e3f2d",
+    "docs/cloud-connectors.md": "sha256:55dfd4773e4ea173288c7f92978b8d7d49776849dc088e7c980bafdc5f373ea6",
+    "docs/supabase-rpc-v1.md": "sha256:e764badd674afbb1dbaf892bdcda6fcb6f07a667be8bb1f6ec8c858fa48fdb97",
+    "scripts/proof/Containerfile": "sha256:1ba4adc8be74a527f401eb49ff8aaeb5cf562dda8607ec515188e2887b3d4fce",
+    "scripts/proof/check.py": "sha256:624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
+    "scripts/proof/install_controller.py": "sha256:77bcc1f281f42dca9a3da1e2c4a65d956b129143754fbda645cf9fb293bdc323",
+    "scripts/proof/prepare.py": "sha256:556d03168d15d0c70d6d383232f8b26cb7bbe34acaefd9f7e1f7941d07054cdf",
+    "scripts/proof/runtime_inventory.py": "sha256:e4857f6ba37bdef49c8d3483cfebf15b4fa8a16b0a80c16ef4a50df7f47a4daa",
+    "src/adapter/supabase.rs": "sha256:0395ab3d6b2c8756621c981ab29764d75138aa6fd600934398ba9363cf2c5972",
+    "src/cloud.rs": "sha256:dd60df9bd5348f5e5ba75163d6885abcca74637472e354f396c581824c04684a",
+    "src/lib.rs": "sha256:e5e6ecb101703992470d43c092d79c32331a7eba5b4db3e85c026d9fac4ac75f",
+    "src/supabase_rpc.rs": "sha256:5ce3e24cec22fd0f0aa24379be7c2f8d40c3dc79b5d86f5c376826ade48143be",
+    "tests/cloud_connector.rs": "sha256:e66786d177e27f097054d162c14098691fb23d65bee22ba9eaed84d30390d581",
+    "tests/supabase_disabled.rs": "sha256:0471dc9baffb968d4a736e7e21b42e63f651f8afbf61b56ff21b8ba1e1ab1673",
+    "tests/supabase_rpc.rs": "sha256:34e744038849fef44ce59def2f394bb5c655ff56619b9cab70245943dc3f0f6e",
+    "src/adapter/neon/mod.rs": "sha256:95b5d1ee6590b277f7b5dd1ff92610fc8c9f817a938457d1da732ca81fd385f1",
+    "src/http_tls.rs": "sha256:76dad29249e1c88483a7bb29ce05a5c23a8b936cc56298d26ccb25f3ea3761dc",
+    ".decapod/config.toml": "sha256:1b31bc319d1d0dc36d08a368095ccd75801c4135fa3b9adadcdb53bf84cf1660"
+  },
+  "dependency_graph_packages": [
+    [
+      "async-trait",
+      "0.1.92"
+    ],
+    [
+      "atomic-waker",
+      "1.1.2"
+    ],
+    [
+      "axum",
+      "0.7.9"
+    ],
+    [
+      "axum-core",
+      "0.4.5"
+    ],
+    [
+      "base64",
+      "0.22.1"
+    ],
+    [
+      "bitflags",
+      "2.13.2"
+    ],
+    [
+      "block-buffer",
+      "0.10.4"
+    ],
+    [
+      "bumpalo",
+      "3.20.3"
+    ],
+    [
+      "bytes",
+      "1.12.1"
+    ],
+    [
+      "cc",
+      "1.11.1"
+    ],
+    [
+      "cfg-if",
+      "1.0.5"
+    ],
+    [
+      "cpufeatures",
+      "0.2.17"
+    ],
+    [
+      "crypto-common",
+      "0.1.7"
+    ],
+    [
+      "dactyl-db",
+      "0.11.1"
+    ],
+    [
+      "digest",
+      "0.10.7"
+    ],
+    [
+      "displaydoc",
+      "0.2.7"
+    ],
+    [
+      "errno",
+      "0.3.14"
+    ],
+    [
+      "fastrand",
+      "2.5.0"
+    ],
+    [
+      "find-msvc-tools",
+      "0.1.15"
+    ],
+    [
+      "form_urlencoded",
+      "1.2.2"
+    ],
+    [
+      "futures-channel",
+      "0.3.34"
+    ],
+    [
+      "futures-core",
+      "0.3.34"
+    ],
+    [
+      "futures-io",
+      "0.3.34"
+    ],
+    [
+      "futures-sink",
+      "0.3.34"
+    ],
+    [
+      "futures-task",
+      "0.3.34"
+    ],
+    [
+      "futures-util",
+      "0.3.34"
+    ],
+    [
+      "generic-array",
+      "0.14.7"
+    ],
+    [
+      "getrandom",
+      "0.2.17"
+    ],
+    [
+      "http",
+      "1.5.0"
+    ],
+    [
+      "http-body",
+      "1.1.0"
+    ],
+    [
+      "http-body-util",
+      "0.1.5"
+    ],
+    [
+      "httparse",
+      "1.10.1"
+    ],
+    [
+      "httpdate",
+      "1.0.3"
+    ],
+    [
+      "hyper",
+      "1.12.0"
+    ],
+    [
+      "hyper-rustls",
+      "0.27.7"
+    ],
+    [
+      "hyper-util",
+      "0.1.20"
+    ],
+    [
+      "icu_collections",
+      "1.5.0"
+    ],
+    [
+      "icu_locid",
+      "1.5.0"
+    ],
+    [
+      "icu_locid_transform",
+      "1.5.0"
+    ],
+    [
+      "icu_locid_transform_data",
+      "1.5.1"
+    ],
+    [
+      "icu_normalizer",
+      "1.5.0"
+    ],
+    [
+      "icu_normalizer_data",
+      "1.5.1"
+    ],
+    [
+      "icu_properties",
+      "1.5.1"
+    ],
+    [
+      "icu_properties_data",
+      "1.5.1"
+    ],
+    [
+      "icu_provider",
+      "1.5.0"
+    ],
+    [
+      "icu_provider_macros",
+      "1.5.0"
+    ],
+    [
+      "idna",
+      "1.1.0"
+    ],
+    [
+      "idna_adapter",
+      "1.2.0"
+    ],
+    [
+      "ipnet",
+      "2.12.2"
+    ],
+    [
+      "itoa",
+      "1.0.19"
+    ],
+    [
+      "js-sys",
+      "0.3.107"
+    ],
+    [
+      "libc",
+      "0.2.191"
+    ],
+    [
+      "libloading",
+      "0.8.9"
+    ],
+    [
+      "linux-raw-sys",
+      "0.12.1"
+    ],
+    [
+      "linux-raw-sys",
+      "0.4.15"
+    ],
+    [
+      "litemap",
+      "0.7.4"
+    ],
+    [
+      "lock_api",
+      "0.4.14"
+    ],
+    [
+      "log",
+      "0.4.35"
+    ],
+    [
+      "matchit",
+      "0.7.3"
+    ],
+    [
+      "memchr",
+      "2.8.3"
+    ],
+    [
+      "mime",
+      "0.3.18"
+    ],
+    [
+      "mio",
+      "1.2.4"
+    ],
+    [
+      "once_cell",
+      "1.21.4"
+    ],
+    [
+      "parking_lot",
+      "0.12.5"
+    ],
+    [
+      "parking_lot_core",
+      "0.9.12"
+    ],
+    [
+      "percent-encoding",
+      "2.3.2"
+    ],
+    [
+      "pin-project-lite",
+      "0.2.17"
+    ],
+    [
+      "proc-macro2",
+      "1.0.107"
+    ],
+    [
+      "quote",
+      "1.0.47"
+    ],
+    [
+      "redox_syscall",
+      "0.5.18"
+    ],
+    [
+      "reqwest",
+      "0.12.28"
+    ],
+    [
+      "ring",
+      "0.17.14"
+    ],
+    [
+      "rustix",
+      "0.38.44"
+    ],
+    [
+      "rustix",
+      "1.1.6"
+    ],
+    [
+      "rustls",
+      "0.23.46"
+    ],
+    [
+      "rustls-pki-types",
+      "1.15.1"
+    ],
+    [
+      "rustls-webpki",
+      "0.103.16"
+    ],
+    [
+      "rustversion",
+      "1.0.23"
+    ],
+    [
+      "ryu",
+      "1.0.23"
+    ],
+    [
+      "scopeguard",
+      "1.2.0"
+    ],
+    [
+      "serde",
+      "1.0.229"
+    ],
+    [
+      "serde_core",
+      "1.0.229"
+    ],
+    [
+      "serde_derive",
+      "1.0.229"
+    ],
+    [
+      "serde_json",
+      "1.0.154"
+    ],
+    [
+      "serde_path_to_error",
+      "0.1.20"
+    ],
+    [
+      "serde_urlencoded",
+      "0.7.1"
+    ],
+    [
+      "sha2",
+      "0.10.9"
+    ],
+    [
+      "shlex",
+      "2.0.1"
+    ],
+    [
+      "signal-hook-registry",
+      "1.4.8"
+    ],
+    [
+      "slab",
+      "0.4.12"
+    ],
+    [
+      "smallvec",
+      "1.16.5"
+    ],
+    [
+      "socket2",
+      "0.6.5"
+    ],
+    [
+      "stable_deref_trait",
+      "1.2.1"
+    ],
+    [
+      "subtle",
+      "2.6.1"
+    ],
+    [
+      "syn",
+      "2.0.119"
+    ],
+    [
+      "syn",
+      "3.0.10"
+    ],
+    [
+      "sync_wrapper",
+      "1.0.2"
+    ],
+    [
+      "synstructure",
+      "0.13.2"
+    ],
+    [
+      "synstructure",
+      "0.14.0"
+    ],
+    [
+      "tempfile",
+      "3.14.0"
+    ],
+    [
+      "thiserror",
+      "1.0.69"
+    ],
+    [
+      "thiserror-impl",
+      "1.0.69"
+    ],
+    [
+      "tinystr",
+      "0.7.6"
+    ],
+    [
+      "tokio",
+      "1.53.3"
+    ],
+    [
+      "tokio-macros",
+      "2.7.2"
+    ],
+    [
+      "tokio-rustls",
+      "0.26.6"
+    ],
+    [
+      "tower",
+      "0.5.3"
+    ],
+    [
+      "tower-http",
+      "0.6.11"
+    ],
+    [
+      "tower-layer",
+      "0.3.3"
+    ],
+    [
+      "tower-service",
+      "0.3.3"
+    ],
+    [
+      "tracing",
+      "0.1.44"
+    ],
+    [
+      "tracing-core",
+      "0.1.36"
+    ],
+    [
+      "try-lock",
+      "0.2.5"
+    ],
+    [
+      "typenum",
+      "1.20.1"
+    ],
+    [
+      "unicode-ident",
+      "1.0.27"
+    ],
+    [
+      "untrusted",
+      "0.9.0"
+    ],
+    [
+      "url",
+      "2.5.8"
+    ],
+    [
+      "utf16_iter",
+      "1.0.5"
+    ],
+    [
+      "utf8_iter",
+      "1.0.4"
+    ],
+    [
+      "version_check",
+      "0.9.5"
+    ],
+    [
+      "want",
+      "0.3.2"
+    ],
+    [
+      "wasi",
+      "0.11.1+wasi-snapshot-preview1"
+    ],
+    [
+      "wasm-bindgen",
+      "0.2.130"
+    ],
+    [
+      "wasm-bindgen-futures",
+      "0.4.80"
+    ],
+    [
+      "wasm-bindgen-macro",
+      "0.2.130"
+    ],
+    [
+      "wasm-bindgen-macro-support",
+      "0.2.130"
+    ],
+    [
+      "wasm-bindgen-shared",
+      "0.2.130"
+    ],
+    [
+      "web-sys",
+      "0.3.107"
+    ],
+    [
+      "webpki-roots",
+      "1.0.11"
+    ],
+    [
+      "windows-link",
+      "0.2.1"
+    ],
+    [
+      "windows-sys",
+      "0.52.0"
+    ],
+    [
+      "windows-sys",
+      "0.59.0"
+    ],
+    [
+      "windows-sys",
+      "0.61.2"
+    ],
+    [
+      "windows-targets",
+      "0.52.6"
+    ],
+    [
+      "windows_aarch64_gnullvm",
+      "0.52.6"
+    ],
+    [
+      "windows_aarch64_msvc",
+      "0.52.6"
+    ],
+    [
+      "windows_i686_gnu",
+      "0.52.6"
+    ],
+    [
+      "windows_i686_gnullvm",
+      "0.52.6"
+    ],
+    [
+      "windows_i686_msvc",
+      "0.52.6"
+    ],
+    [
+      "windows_x86_64_gnu",
+      "0.52.6"
+    ],
+    [
+      "windows_x86_64_gnullvm",
+      "0.52.6"
+    ],
+    [
+      "windows_x86_64_msvc",
+      "0.52.6"
+    ],
+    [
+      "write16",
+      "1.0.0"
+    ],
+    [
+      "writeable",
+      "0.5.5"
+    ],
+    [
+      "yoke",
+      "0.7.5"
+    ],
+    [
+      "yoke-derive",
+      "0.7.5"
+    ],
+    [
+      "zerofrom",
+      "0.1.8"
+    ],
+    [
+      "zerofrom-derive",
+      "0.1.8"
+    ],
+    [
+      "zeroize",
+      "1.8.2"
+    ],
+    [
+      "zerovec",
+      "0.10.4"
+    ],
+    [
+      "zerovec-derive",
+      "0.10.4"
+    ],
+    [
+      "zmij",
+      "1.0.23"
+    ]
+  ],
+  "forbidden_dependencies_absent": [
+    "quinn",
+    "quinn-proto",
+    "quinn-udp"
+  ],
+  "dependency_metadata_sha256": "sha256:c76f124bcfea4b51fbcf760c523a86e9863329400496ad8cacd744c0ffeb1bf9",
+  "observed_http_tls_features": {
+    "reqwest": [
+      "__rustls",
+      "__tls",
+      "blocking",
+      "json",
+      "rustls-tls-webpki-roots-no-provider"
+    ],
+    "rustls": [
+      "ring",
+      "std",
+      "tls12"
+    ]
+  },
+  "next_action": "Independently review exact repaired lock/source, then run unchanged Cargo1.75/clean-consumer dependency preparation on this same task and checkpoint repair before full native proof. No build/test or PR performed.",
+  "transfer": {
+    "task_id": "feat_01m76c2002nnt3za",
+    "transfer_id": "01M76G0T7MQ29QMMCBPZ1P72RR",
+    "receiver": "chatgpt-issue1628-dactyl",
+    "source_sealed": true,
+    "native_source_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "native_source_branch": "issue1628-dactyl-recovery-ba4e4cfaa087",
+    "candidate_branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+    "candidate_sha": "ca8454b5fc818845abb80f1043f155b19224442f",
+    "artifact": "native-custody.der",
+    "plaintext_sha256": "sha256:c962709f116fb02abbaabd3146764bec7c3b64960c6492d137f0803d92c7e1f0",
+    "ciphertext_sha256": "sha256:4486d04c6056fd7354b2dd4b44f7e7ca3efc7c59aab29028c2f6f3dece698cd6"
+  },
+  "final_head_sha": "ca8454b5fc818845abb80f1043f155b19224442f",
+  "source_dirty": true,
+  "candidate_bundle": {
+    "artifact": "candidate.der",
+    "plaintext_sha256": "sha256:12e89a96239fe95f1d46514bad9fc2b14408f120da8b20b736497697d58b9cb4",
+    "ciphertext_sha256": "sha256:b7326696c9d38e7f805f2ead922555838cc97c8f53f0775b19902bae4aedf187"
+  },
+  "diagnostics": {
+    "artifact": "native-diagnostics.der",
+    "plaintext_sha256": "sha256:6460fb158e6c140c31e4b61626f85deec6cf9725c72ef7a6bbf4c4c088ae8bbc",
+    "ciphertext_sha256": "sha256:7e4ee94a4526c20e813677f2831cb5558ed923d899fb4f9746226a8a0ef7a1fb"
+  }
+}
