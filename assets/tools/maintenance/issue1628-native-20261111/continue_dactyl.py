@@ -289,7 +289,8 @@ def main():
             raise Blocked("installed runtime closure changed after independent review")
         tools = runtime["toolchain_files"]
         if (not tools or tools.get("python") != "/usr/bin/python3.11"
-                or any(not str(p).startswith(("/usr/", "/lib/", "/bin/")) for p in tools.values())):
+                or any(not (str(p).startswith(("/usr/", "/lib/", "/bin/"))
+                            or p == "/etc/python3.11/sitecustomize.py") for p in tools.values())):
             raise Blocked("runtime closure contains an unexpected tool source")
         rendered_tools = "\n".join(json.dumps(k) + " = " + json.dumps(v) for k, v in sorted(tools.items()))
         config_template = template.decode()

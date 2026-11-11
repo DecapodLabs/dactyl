@@ -1,0 +1,22 @@
+{
+  "identity": {
+    "schema": "decapod.issue1628-custody-relay.v1",
+    "repository": "DecapodLabs/dactyl",
+    "run_id": "43115473409",
+    "run_attempt": "1",
+    "operations_sha": "792a92c24c564eab4176b4ea5201a1051cba096a",
+    "slug": "dactyl",
+    "task_id": "feat_01m76c2002nnt3za",
+    "source_base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "transfer_id": "01M76C2MMAC26KJ982SYF1BAYJ",
+    "receiver": "chatgpt-issue1628-dactyl-next",
+    "plaintext_sha256": "sha256:55b7ab6f429f307790556ffa23e52af7f8f57b00bdc94c0b19ed0460613a2b78",
+    "recipient_certificate_sha256": "sha256:55816fde6178cf8ef5cc21b95867c060562acdd2a5740ebf50bf797c818aa17e",
+    "challenge": "b5ef728d898556caf4a688eb413317b72b199eb8e7aab90893f8831ef6b0a3f2",
+    "runtime_inventory_sha256": "sha256:5aef5169cfab7b1b676408c663e87f05affae72de70c51a16fa021b7652e25a8"
+  },
+  "runtime_review": {
+    "reviewed": false,
+    "reason": "Receiver preparation rejected before custody: canonical Debian Python sitecustomize.py path must be admitted explicitly in the continuation guard."
+  }
+}
