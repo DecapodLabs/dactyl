@@ -5,31 +5,46 @@ edition = "2021"
 rust-version = "1.75"
 license = "MIT"
 repository = "https://github.com/DecapodLabs/dactyl"
-description = "Interchangeably read and write to a lightweight Rust local store or cloud-hosted Vercel Neon instances behind one facade."
+description = "A generic datastore boundary for SQLite, Neon HTTP services, and authenticated Supabase service or RPC routes."
 readme = "README.md"
-keywords = ["datastore", "vercel", "postgres", "sql", "sqlite"]
+keywords = ["datastore", "supabase", "postgres", "sql", "sqlite"]
 categories = ["database", "api-bindings"]
 
 [features]
 default = []
 sqlite = ["dep:libloading", "dep:rustix"]
-neon = ["dep:reqwest"]
-supabase = ["dep:reqwest"]
+neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize"]
+supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:base64", "dep:getrandom", "dep:sha2"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
+base64 = { version = "0.22", optional = true }
+getrandom = { version = "0.2", optional = true }
+sha2 = { version = "0.10", optional = true }
 libloading = { version = "0.8.9", optional = true }
-reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
+reqwest = { version = "0.12.28", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
+
+# Keep clean Cargo 1.75 consumers compatible, not only this package lockfile.
+# These optional bounds constrain already-used HTTP/IDNA/TLS dependencies; they
+# add no new transport, crypto defaults, or work when HTTP features are disabled.
+hyper-rustls = { version = ">=0.27.7, <0.27.8", optional = true, default-features = false }
+hyper-util = { version = ">=0.1.20, <0.1.21", optional = true, default-features = false }
+idna_adapter = { version = ">=1.2.0, <1.2.1", optional = true, default-features = false }
+litemap = { version = ">=0.7.0, <0.7.5", optional = true, default-features = false }
+tokio = { version = ">=1.0, <1.54", optional = true, default-features = false }
+utf8_iter = { version = ">=1.0, <1.1", optional = true, default-features = false }
+utf16_iter = { version = ">=1.0, <1.1", optional = true, default-features = false }
+zeroize = { version = ">=1.8, <1.9", optional = true, default-features = false }
 
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1", optional = true, features = ["fs"] }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio = { version = ">=1.0, <1.54", features = ["full"] }
 axum = "0.7"
-tempfile = "3"
+tempfile = ">=3.0, <3.15"
 
 [workspace]
 resolver = "2"

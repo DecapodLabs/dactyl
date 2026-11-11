@@ -1,5 +1,15 @@
 # Architecture
 
+## Logical connector and authentication boundary
+
+`src/cloud.rs` resolves a public versioned deployment profile from a trusted
+origin and builds the existing native `SupabaseRpcConfig`. Discovery carries no
+user credential and cannot redirect the selected origin. Managed Auth and
+onboarding requests use fixed same-origin paths through Dactyl; application
+callbacks/browser interaction and private session persistence remain caller-owned.
+The hosted runtime is Supabase Auth, PostgreSQL/RPC and deployed functions,
+provisioned by Propodus IaC. No additional Propodus task server is required.
+
 ## Secure shared-directory SQLite recovery
 
 SQLite recovery is isolated in adapter/sqlite/recovery.rs. It creates a 0700 child directory and 0600 rebuild/journal, uses PERSIST during rebuilding and DELETE for final activation, preserves supported mode/owner/group, and uses atomic no-replace moves with inode checks. Both affected directories are synced. Rollback retains private diagnostics and never recursively cleans unknown entries.
@@ -151,6 +161,8 @@ sequenceDiagram
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Persistent State Architecture Overlay
 
 ### State Ownership
@@ -159,9 +171,9 @@ sequenceDiagram
 - Cross-boundary state access MUST go through defined interfaces
 
 ### Transaction Boundaries
-- All multi-entity mutations MUST occur within explicit transactions
+- Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store
 - Transaction boundaries MUST be documented in ARCHITECTURE.md
-- Compensating transactions for distributed operations
+- Document compensation or other partial-failure treatment if distributed operations exist
 
 ### Storage Abstraction
 - Storage ownership, consistency behavior, and access boundaries MUST be explicit
@@ -173,9 +185,9 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `6f4ba9d339a95b0fa24306805ad9d4dd85f0460ea46654bc4749823c33e8de51`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase service adapter (issue 91)

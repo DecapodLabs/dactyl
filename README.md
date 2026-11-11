@@ -42,6 +42,15 @@ and does not duplicate SQLite's file format, parser, pager, journal, or query
 planner. The route name and `DATASTORE=sqlite` setting therefore mean what
 they say: the requested path is an ordinary SQLite database.
 
+## Logical local/cloud connectors
+
+Applications can select `Backend::Local` or `Backend::Cloud` through
+`DatastoreRoute::for_backend`. Dactyl resolves SQLite or native Supabase RPC;
+`CloudConnector` discovers the public deployment profile and provides managed
+authentication transport. The application owns browser interaction and private
+session storage. Propodus is the IaC for the Supabase backend, where identity,
+repository roles and RLS are enforced. See [the connector and auth contract](docs/cloud-connectors.md).
+
 ## Supabase service route (opt-in)
 
 Enable the `supabase` feature and select `DATASTORE=supabase` with

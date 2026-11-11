@@ -1,5 +1,17 @@
 # Interfaces
 
+## Logical cloud connector and managed Auth
+
+`Backend::{Local,Cloud}` and `DatastoreRoute::for_backend` define application
+selection. `CloudConnector` discovers profile v1 (`version`, `project_origin`,
+`publishable_key`, `schema`) and exposes typed start/status/code/session exchange,
+completion, refresh and revocation methods. `AuthenticationSecrets` and
+`UserSession` serialize only for caller-controlled private custody and redact
+Debug. Data access uses the additive native Supabase RPC v1 route; existing
+service constructors preserve `/query` and `/batch`. See
+`docs/cloud-connectors.md` and `docs/supabase-rpc-v1.md` for bounded execution,
+unknown-outcome handling and the boundary between offline and hosted proof.
+
 ## Secure shared-directory SQLite recovery
 
 RecoveryOptions remains unchanged. Linux/Android secure recovery supports plain mode/owner/group access and trusted-group/setgid directories; unsupported platforms, ACL/MAC metadata, ownership reproduction, symlinks/hardlinks, path replacement and cross-filesystem staging return typed errors before destructive mutation where applicable. Recovery archive names cannot alias active sidecars. See docs/sqlite-recovery.md for exact failure/rollback outcomes.
@@ -170,6 +182,8 @@ live cloud deployment proof remain service-side concerns.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Capability Overlay
 
 ### API Contract Requirements
@@ -193,9 +207,9 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `6f4ba9d339a95b0fa24306805ad9d4dd85f0460ea46654bc4749823c33e8de51`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (1 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase HTTP contract (issue 91)

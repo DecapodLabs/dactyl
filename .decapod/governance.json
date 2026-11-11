@@ -1,0 +1,203 @@
+{
+  "schema_version": "1.0.0",
+  "baseline": {
+    "accepted_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "release": "v0.11.1",
+    "policy": {
+      "change_control": {
+        "requires_human_review": true,
+        "requires_issue": true,
+        "requires_validation": true
+      },
+      "new_capability_rule": "Every new capability must map to an existing claim or introduce a new falsifiable claim before it is treated as research-relevant.",
+      "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and schema compatibility is preserved."
+    },
+    "unresolved": {
+      "claim:replace-template-claim:question:project-specific-claim": {
+        "decision_impact": "Determines the first repository-specific research claim and its required proof.",
+        "id": "project-specific-claim",
+        "owner": "Project maintainers",
+        "question": "Which project capability should replace this template claim first?",
+        "status": "open"
+      },
+      "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof"
+    }
+  },
+  "change": {
+    "id": "change_01M753PE6YWGJBDRZMXQMMNHMY",
+    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "target_base": "origin/main"
+  },
+  "claims": {
+    "logical-cloud-connector": {
+      "statement": "Local/cloud selection resolves SQLite or native Supabase RPC, and managed-auth requests and user bearers pass through Dactyl with no redirect or automatic replay.",
+      "falsifier": "Required feature-matrix, native-RPC or cloud connector/auth fixtures fail; credential-bearing data leaks or a request is replayed after loss.",
+      "status": "open",
+      "proof_refs": [
+        "tools/proof/check.py"
+      ]
+    }
+  },
+  "checkpoints": [
+    {
+      "id": "connector-implementation",
+      "summary": "Logical local/cloud resolution, reconciled native RPC, public deployment discovery and stateless managed-auth transport with bounded no-replay fixtures; complete portable local Rust proof declared.",
+      "input_digest": "sha256:30eb68d03ba490d0bf850879ae31993f083798fc6f68a1deaa8a5fbf76a7933d"
+    }
+  ],
+  "intents": {
+    "intent:change_01M753PE6YWGJBDRZMXQMMNHMY": {
+      "acceptance_criteria": [],
+      "assumptions": [],
+      "boundaries": [
+        "Current claimed task and isolated work branch"
+      ],
+      "constraints": [
+        "src/",
+        "tests/",
+        "docs/"
+      ],
+      "created_sequence": 1,
+      "id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+      "out_of_scope": [],
+      "proof_requirements": [],
+      "raw_intent": "Provide logical local/cloud connectors and Supabase user-session transport",
+      "refined_intent": "Provide logical local/cloud connectors and Supabase user-session transport",
+      "status": "refined",
+      "updated_sequence": 3
+    }
+  },
+  "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Expose only local/cloud in Decapod; resolve native Supabase RPC and bounded authentication transport in Dactyl; define deployment profiles and GitHub role policy in Propodus IaC. Preserve local storage, machine-local sessions, no automatic write retries, and server-enforced grants. Publish validated coordinated PRs without deployment.",
+      "phases": [],
+      "proof_hooks": [
+        "decapod validate"
+      ],
+      "schema_version": "1.1.0",
+      "state": "APPROVED",
+      "stop_conditions": [
+        "Do not invent production deployment metadata or user grants; do not deploy; PR creation requires full current-candidate validation."
+      ],
+      "title": "Provide logical local/cloud connectors and Supabase user-session transport",
+      "todo_ids": [
+        "code_01m753ng4cans8xx"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794394920Z"
+    },
+    "trajectory": {
+      "active_boundaries": [
+        "Current claimed task and isolated work branch",
+        "No deployment or credential commits; server grants remain authoritative"
+      ],
+      "artifact_hash": "sha256:88cc1be95876c1448cb52bbcfcf7975f4d2ccc02a4efbf029543e3a6cf7f6c3d",
+      "checks": [],
+      "current_phase": "implementation",
+      "custody": {
+        "events": [
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "created",
+            "sequence": 2
+          },
+          {
+            "event_id": "event:3",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "refined",
+            "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
+          }
+        ],
+        "knowledge_candidates": [],
+        "next_sequence": 4,
+        "schema_version": "1.0.0",
+        "trajectories": {
+          "branch_01M753PEC49T92VW92KVGX0Y8M": {
+            "evidence_only": true,
+            "id": "branch_01M753PEC49T92VW92KVGX0Y8M",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "steps": [
+              {
+                "action": "implementation",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/lib.rs",
+                  "src/adapter/supabase.rs",
+                  "docs/supabase-rpc-v1.md",
+                  "src/cloud.rs",
+                  "tests/cloud_connector.rs",
+                  "tools/proof/check.py",
+                  "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "tests/"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "declared_commands": [],
+      "destination": "pull request",
+      "evidence": [
+        "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
+      ],
+      "inspected_files": [
+        "docs/supabase-rpc-v1.md",
+        "src/adapter/supabase.rs",
+        "src/lib.rs"
+      ],
+      "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+      "modified_files": [
+        "src/cloud.rs",
+        "tests/cloud_connector.rs",
+        "tools/proof/check.py"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
+      ],
+      "repo_scope": [
+        "docs/",
+        "src/",
+        "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+        "tests/"
+      ],
+      "run_id": "branch_01M753PEC49T92VW92KVGX0Y8M",
+      "schema_version": "1.1.0",
+      "shortcut_risk_signals": [],
+      "task_id": "code_01m753ng4cans8xx",
+      "tool_calls": [],
+      "unresolved_assumptions": [
+        "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed"
+      ]
+    }
+  },
+  "legacy_digests": {
+    ".decapod/governance/claims.json": "sha256:acd769e1e4f8c1773a97f4e5cc678b6e6ec78560c63d98062328234920fac85b",
+    ".decapod/governance/plan.json": "sha256:952d1e328f328f7a26f089e0e98a6df210f9f857d97a007608cffdf6062e5b79",
+    ".decapod/governance/trajectory.json": "sha256:a40fa527242d27550c641846f76bbb5eab9be1026a7bc461c7a65d3a85deb6c4",
+    ".decapod/governance/validation.json": "sha256:fab053a216d28d707a0e8a3b54cbf527ffd5ee9cead63d1488b456391b9e685c"
+  }
+}
