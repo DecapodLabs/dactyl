@@ -1,0 +1,120 @@
+name: Continue issue 1628 Dactyl native custody
+
+on:
+  push:
+    branches: [ops/issue1628-native-20261111]
+    paths-ignore:
+      - assets/tools/maintenance/issue1628-native-20261111/replies/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: issue1628-native-dactyl
+  cancel-in-progress: false
+
+jobs:
+  continue:
+    if: github.repository == 'DecapodLabs/dactyl' && github.ref == 'refs/heads/ops/issue1628-native-20261111'
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.96.1-bookworm
+    timeout-minutes: 160
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: write
+    env:
+      OPERATIONS_PATH: assets/tools/maintenance/issue1628-native-20261111
+      TMPDIR: /root/issue1628-tmp
+      DACTYL_STABLE_TOOLS: /usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin
+      DACTYL_MSRV_TOOLS: /usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin
+      DACTYL_PROOF_TOOLS: /opt/dactyl-proof-tools
+      DACTYL_SQLITE_LIBRARY: /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+      CARGO_BUILD_JOBS: 2
+      CARGO_TARGET_DIR: /opt/dactyl-contract-target
+      CC: /usr/bin/x86_64-linux-gnu-gcc-12
+      AR: /usr/bin/x86_64-linux-gnu-ar
+      RUSTFLAGS: -C linker=/usr/bin/x86_64-linux-gnu-gcc-12
+    steps:
+      - name: Prepare actual reviewed Rust container
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /root/issue1628-tmp /opt/dactyl-proof-tools /opt/dactyl-contract-target
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git gh python3 openssl ca-certificates curl xz-utils libsqlite3-0 pkg-config
+          rustup component add rustfmt clippy --toolchain 1.96.1
+          rustup toolchain install 1.75.0 --profile minimal --component rustfmt,clippy
+          ln -s /usr/bin/x86_64-linux-gnu-as /opt/dactyl-proof-tools/as
+          ln -s /usr/bin/x86_64-linux-gnu-ld.bfd /opt/dactyl-proof-tools/ld
+          ln -s /bin/dash /opt/dactyl-proof-tools/sh
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          path: operations
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 1fa52a232e1d34a27be28d158298805ffc175ffc
+          path: subject
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare exact private custody receiver
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/material/scripts/proof/runtime_inventory.py" > /root/issue1628-runtime.json
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" prepare \
+            --slug dactyl \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-bootstrap-result.json" \
+            --directory /root/issue1628-relay \
+            --runtime-inventory /root/issue1628-runtime.json
+      - name: Publish only the ephemeral receiver certificate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: issue1628-dactyl-receiver
+          path: /root/issue1628-relay/public/
+          if-no-files-found: error
+          retention-days: 2
+      - name: Receive authenticated private native transfer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" receive \
+            --slug dactyl \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-bootstrap-result.json" \
+            --directory /root/issue1628-relay
+      - name: Continue original task and publish only through full native readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          git clone --no-hardlinks --no-checkout "$GITHUB_WORKSPACE/subject" /root/issue1628-subject
+          cd /root/issue1628-subject
+          git remote set-url origin https://github.com/DecapodLabs/dactyl.git
+          git checkout --detach 1fa52a232e1d34a27be28d158298805ffc175ffc
+          git config user.name 'ChatGPT'
+          git config user.email 'chatgpt@users.noreply.github.com'
+          gh auth setup-git
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continue_dactyl.py" \
+            --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/material" \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-continuation.json" \
+            --native-transfer /root/issue1628-relay/native-transfer.json \
+            --runtime-inventory /root/issue1628-relay/public/runtime-inventory.json \
+            --runtime-review /root/issue1628-relay/runtime-review.json \
+            --certificate "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
+            --output "$RUNNER_TEMP/issue1628-dactyl-continuation"
+      - name: Preserve actual readiness and encrypted native custody
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: issue1628-dactyl-continuation
+          path: ${{ runner.temp }}/issue1628-dactyl-continuation/
+          if-no-files-found: warn
+          retention-days: 90

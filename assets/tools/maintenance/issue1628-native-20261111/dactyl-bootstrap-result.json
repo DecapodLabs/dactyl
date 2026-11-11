@@ -1,0 +1,188 @@
+{
+  "schema": "decapod.issue1628-bootstrap.v1",
+  "slug": "dactyl",
+  "repository": "DecapodLabs/dactyl",
+  "target": "main",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "operations_sha": "ccd48b6300d8eb35a25fa0e29a08f4cd945f100c",
+  "status": "admitted_no_implementation",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "admitted": true,
+  "container_observed": true,
+  "custody_exported": true,
+  "publication_ready": false,
+  "earlier_bootstrap": {
+    "run_id": 43112637243,
+    "task": "feat_01m76bwjb7637nj6",
+    "disposition": "historical admission only; no product changes or remote branch; ephemeral runner ended after yield and failed custody export; this is a new task, not restored custody or inherited proof"
+  },
+  "evaluation": {
+    "schema_version": "1.0.0",
+    "status": "allow",
+    "prompt_sha256": "370dc68c4ffbb9152998536c6976a47b21507935c495289f54819ff2ed4ca5c9",
+    "prompt_bytes": 370,
+    "findings": [],
+    "action": "Proceed with the prompt under the normal Decapod contract."
+  },
+  "controller": {
+    "release": "v0.138.2",
+    "release_id": 442229037,
+    "asset_id": 737052855,
+    "archive_sha256": "sha256:718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06",
+    "binary_sha256": "sha256:31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+  },
+  "reconciliation": {
+    "discovered_sources": {
+      ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+      ".github/workflows/decapod-validate.yml": "sha256:c1f947ff1655e0a03d48bfe06c6234b291f1df880960b8e2ebe6153e39ce0c75",
+      ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+      ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+      ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+      "Cargo.lock": "sha256:eabb49f4e68e0abb19e10b02d87dcefc6e795db36372f151b946f5d9d5eaa4f4",
+      "Cargo.toml": "sha256:f352f5917dab13330a1aba27f23631987c557c295932662c21af1c7bc1087e52"
+    },
+    "inventory_digest": "sha256:ee1c3a208b9173a072b8533c95576ced24d59d3d77e2c81705bb87b8cf7f2cc0",
+    "merge_ready": false,
+    "proof_status": "not_run",
+    "provider": "native",
+    "repair_tasks": [
+      {
+        "action": "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof.",
+        "code": "MISSING_REQUIRED_PROFILE",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml"
+        ],
+        "title": "Select and review a complete required profile"
+      },
+      {
+        "action": "Preserve these authored workflows. Review their jobs, conditions, matrices and helpers, then add a faithful supported profile adapter or an explicit proven exclusion. Discovery does not execute YAML or assume these checks passed.",
+        "code": "UNKNOWN_CI_CONTRACT",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".github/workflows/pages.yml",
+          ".github/workflows/rust-contract.yml"
+        ],
+        "title": "Adopt unsupported CI contracts into required proof"
+      },
+      {
+        "action": "The authored product name \"dactyl\" differs from Cargo package \"dactyl-db\". Confirm the intended relationship and update only the contract that is wrong; init preserves the authored name.",
+        "code": "INTENT_BUILD_MISMATCH",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml",
+          "Cargo.toml"
+        ],
+        "title": "Reconcile product intent with the build manifest"
+      },
+      {
+        "action": "Agent: once source and the required checkpoint are ready, run decapod validate. Validation owns configured build prerequisites, verification, tests and artifact-bound evidence through the selected provider; do not build separately first. Repair reported source or build/test/CI configuration failures and revalidate. Native and Buildkite still require the complete applicable source-PR checks and candidate-build obligations; missing adapters fail closed. Stop for unresolved human intent, decision gates, missing authorization or unavailable access. Release-only packaging remains separately scoped; validation success is not authority to distribute or deploy.",
+        "code": "REQUIRED_PROOF_NOT_RUN",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [],
+        "title": "Run the complete required proof suite"
+      }
+    ],
+    "schema_version": "1.0.0",
+    "status": "needs_reconciliation"
+  },
+  "admission": {
+    "blockers": [],
+    "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+    "can_work": true,
+    "docker_available": false,
+    "in_container": true,
+    "is_protected": false,
+    "required_actions": [],
+    "root_isolation": {
+      "files": [
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/automation.db.lock",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/broker-runtime/",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/broker.election",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/decapod.db",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/decapod.db.lock",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/federation/",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/governance.db.lock",
+          "status": "!!"
+        },
+        {
+          "class": "runtime_ephemeral",
+          "path": ".decapod/data/memory.db.lock",
+          "status": "!!"
+        },
+        {
+          "class": "deterministic_projection",
+          "path": ".decapod/managed/awareness/",
+          "status": "!!"
+        },
+        {
+          "class": "deterministic_projection",
+          "path": ".decapod/managed/migrations/",
+          "status": "!!"
+        },
+        {
+          "class": "deterministic_projection",
+          "path": ".decapod/managed/sessions/",
+          "status": "!!"
+        },
+        {
+          "class": "deterministic_projection",
+          "path": ".decapod/managed/version_counter.json",
+          "status": "!!"
+        }
+      ],
+      "source_root": "/root/issue1628-subject",
+      "strategy": "committed_base_only_preserve_source"
+    },
+    "status": "ok",
+    "worktree_path": "/root/issue1628-subject/.decapod/workspaces/chatgpt-issue1628-dactyl-todo-01m76c-agent-chatgpt-issue1628-dactyl-feat_01m76c2002nnt3za-cloud-connector"
+  },
+  "transfer": {
+    "task_id": "feat_01m76c2002nnt3za",
+    "transfer_id": "01M76C2MMAC26KJ982SYF1BAYJ",
+    "receiver": "chatgpt-issue1628-dactyl-next",
+    "source_sealed": true,
+    "native_source_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "native_source_branch": "issue1628-control-dactyl-194339da9450",
+    "artifact": "native-custody.der",
+    "plaintext_sha256": "sha256:55b7ab6f429f307790556ffa23e52af7f8f57b00bdc94c0b19ed0460613a2b78",
+    "ciphertext_sha256": "sha256:130373b732350052ec8e07d7fbaa8cbaf1698659f22bd44ad3acf34aae4595f6"
+  },
+  "workspace_status": " D .decapod/governance/claims.json\n D .decapod/governance/plan.json\n D .decapod/governance/trajectory.json\n D .decapod/governance/validation.json\n M .decapod/managed/Dockerfile.decapod\n M .decapod/managed/specs/.manifest.json\n M .decapod/managed/specs/ARCHITECTURE.md\n M .decapod/managed/specs/INTENT.md\n M .decapod/managed/specs/INTERFACES.md\n M .decapod/managed/specs/OPERATIONS.md\n M .decapod/managed/specs/README.md\n M .decapod/managed/specs/SECURITY.md\n M .decapod/managed/specs/SEMANTICS.md\n M .decapod/managed/specs/VALIDATION.md\n?? .decapod/governance.json\n",
+  "diagnostics": {
+    "artifact": "native-diagnostics.der",
+    "plaintext_sha256": "sha256:1f7dd770516bf160b488dac6bc85276710acfa3eff75d73bfe77c8b8952e0051",
+    "ciphertext_sha256": "sha256:df75ea2b9eb7ec3e13672e6c6a31f7055598f0e45caaa37965f0e20d3897ad74"
+  }
+}
