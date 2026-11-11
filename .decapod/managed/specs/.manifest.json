@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v4",
-  "generated_at": "1794396050Z",
+  "generated_at": "1794396223Z",
   "repo_signal_fingerprint": "6f4ba9d339a95b0fa24306805ad9d4dd85f0460ea46654bc4749823c33e8de51",
   "declared_capabilities": [
     "authentication",
@@ -15,32 +15,32 @@
     "secrets-handling"
   ],
   "capability_definition_version": "1.0.0",
-  "config_input_hash": "62fce4947f51163b391b360635673bd762037ceb878967fb755e571d7a03deba",
+  "config_input_hash": "77283ca4d6d0c5c013e7e5fe55d4806451ab2428dfc643df24cc8006e31ef3d1",
   "spec_input_hash": "935d8e3edab0147e8903ab705d3c08edc7a438568327cab8e32d6fdb104e9e98",
   "decapod_release": "0.136.2",
   "entrypoints": [
     {
       "path": "AGENTS.md",
       "template_hash": "d91a3b311837337958b4c684e2e0ddb1062b154b9a79bbd230081337001bc028",
-      "content_hash": "a1391c9292f7dd8921e20f7a06c5ffbc6948a677680d236869d76a2ce0b40cb0",
+      "content_hash": "d91a3b311837337958b4c684e2e0ddb1062b154b9a79bbd230081337001bc028",
       "fingerprint": "ff6a919568fb1202087670f550369025c3dbb57dde46c35d49e915d922b5a879"
     },
     {
       "path": "CLAUDE.md",
       "template_hash": "309e86fcd6253efe191019c2cea6c8a4f4005ef4b88ef77280de96b5c7672b3e",
-      "content_hash": "177e4ce5353b500544dae320c135426ed6c57e41e898d7cac718232e81a04c24",
+      "content_hash": "309e86fcd6253efe191019c2cea6c8a4f4005ef4b88ef77280de96b5c7672b3e",
       "fingerprint": "157996a793488ca42801602054689a1f9442280df0f16c02e511c0e1b3850a9d"
     },
     {
       "path": "GEMINI.md",
       "template_hash": "6ddb47cdedb4cad71e8f76ba9b174bbee96a397e6cb9ec4038ddb81e682ed425",
-      "content_hash": "b6f684f4d98c4d348002531535077a04cb040b9bfbcb17c58186cacc76a2b87e",
+      "content_hash": "6ddb47cdedb4cad71e8f76ba9b174bbee96a397e6cb9ec4038ddb81e682ed425",
       "fingerprint": "519ffa61d008543c8f11c404ea10e6b4d1baf2d552ad2ddfbb480d047e5d64a5"
     },
     {
       "path": "CODEX.md",
       "template_hash": "c1088501f522b70c8eb0243861f9d85e821cc6196637297fcfd03e73e04aeb15",
-      "content_hash": "b5d7bb9d7ac712a5132b9a4afedb5a5c9b538857110f1cc62bb30ec4c1e6d626",
+      "content_hash": "c1088501f522b70c8eb0243861f9d85e821cc6196637297fcfd03e73e04aeb15",
       "fingerprint": "295232b6036ae211d1645e3830c7abe03edf310723043132d09bf46f6cd4cdd3"
     }
   ],

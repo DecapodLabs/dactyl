@@ -43,6 +43,11 @@
       "id": "connector-implementation",
       "summary": "Logical local/cloud resolution, reconciled native RPC, public deployment discovery and stateless managed-auth transport with bounded no-replay fixtures; complete portable local Rust proof declared.",
       "input_digest": "sha256:30eb68d03ba490d0bf850879ae31993f083798fc6f68a1deaa8a5fbf76a7933d"
+    },
+    {
+      "id": "refresh-release-projections",
+      "summary": "Repair validation findings through init: update governed entrypoints to the independent controller release, preserve backups outside Git, and identify the actual headless Podman proof runtime.",
+      "input_digest": "sha256:41e03a132e2eb9e1a965f394fe11b4cd17bddf43c974d99549a9e31d6f13b886"
     }
   ],
   "intents": {
