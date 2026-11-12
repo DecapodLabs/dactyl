@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
-    "release": "v0.11.1",
+    "accepted_commit": "598415953b5ee568f6d42652982897c58b4433cc",
+    "release": "v0.12.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -13,6 +13,14 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and schema compatibility is preserved."
     },
     "unresolved": {
+      "claim:logical-cloud-connector": {
+        "falsifier": "Required feature-matrix, native-RPC or cloud connector/auth fixtures fail; credential-bearing data leaks or a request is replayed after loss.",
+        "proof_refs": [
+          "tools/proof/check.py"
+        ],
+        "statement": "Local/cloud selection resolves SQLite or native Supabase RPC, and managed-auth requests and user bearers pass through Dactyl with no redirect or automatic replay.",
+        "status": "open"
+      },
       "claim:replace-template-claim:question:project-specific-claim": {
         "decision_impact": "Determines the first repository-specific research claim and its required proof.",
         "id": "project-specific-claim",
@@ -20,89 +28,78 @@
         "question": "Which project capability should replace this template claim first?",
         "status": "open"
       },
-      "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof"
+      "trajectory:24c00c22af3b9e66": "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof.",
+      "trajectory:470ebd55a897e502": "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed",
+      "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof",
+      "trajectory:7ae8f2776cdb5fb2": "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested.",
+      "trajectory:84e472b97b0fa404": "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
     }
   },
   "change": {
-    "id": "change_01M753PE6YWGJBDRZMXQMMNHMY",
-    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "id": "change_01M76SWVTJ4SNGG504CNBFGDV8",
+    "base_commit": "598415953b5ee568f6d42652982897c58b4433cc",
     "target_base": "origin/main"
   },
   "claims": {
-    "logical-cloud-connector": {
-      "statement": "Local/cloud selection resolves SQLite or native Supabase RPC, and managed-auth requests and user bearers pass through Dactyl with no redirect or automatic replay.",
-      "falsifier": "Required feature-matrix, native-RPC or cloud connector/auth fixtures fail; credential-bearing data leaks or a request is replayed after loss.",
+    "bounded-snapshot": {
+      "statement": "A dedicated read-only SQLite snapshot exposes consistent caller-owned scans with shared native/decoded-result budgets, explicit early stop and cleanup on every exit; unsupported remote routes do not execute or fall back.",
+      "falsifier": "A concurrent write changes the observed snapshot, a mutation succeeds, exhausted results appear complete, cleanup leaves a transaction/callback active, or remote capability invokes an unimplemented operation.",
       "status": "open",
       "proof_refs": [
-        "tools/proof/check.py"
+        "tests/sqlite_inspection.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "connector-implementation",
-      "summary": "Logical local/cloud resolution, reconciled native RPC, public deployment discovery and stateless managed-auth transport with bounded no-replay fixtures; complete portable local Rust proof declared.",
-      "input_digest": "sha256:30eb68d03ba490d0bf850879ae31993f083798fc6f68a1deaa8a5fbf76a7933d"
+      "id": "snapshots-current-1",
+      "summary": "Reauthor the reviewed bounded snapshot API onto accepted Dactyl0.12.0; preserve original work branch, accepted connectors and full proof contract. Material specs reviewed; current exact-candidate validation pending.",
+      "input_digest": "sha256:8df0ec948542449c629d4831541a90ea678cad645c7d93ce8e44576ac0794187",
+      "proof_refs": [
+        "tests/sqlite_inspection.rs"
+      ]
     },
     {
-      "id": "refresh-release-projections",
-      "summary": "Repair validation findings through init: update governed entrypoints to the independent controller release, preserve backups outside Git, and identify the actual headless Podman proof runtime.",
-      "input_digest": "sha256:41e03a132e2eb9e1a965f394fe11b4cd17bddf43c974d99549a9e31d6f13b886"
+      "id": "snapshots-current-release-pin",
+      "summary": "Review current0.12.0 release manifest/lockfile and retain the accepted complete proof commands, toolchain and workflow coverage; reconcile the independently reported source inventory after release version changes.",
+      "input_digest": "sha256:51abde34982809a54fadec8ecb196ad7fd6326789d9650f92037e51eeabbb66f",
+      "proof_refs": [
+        "tools/proof/check.py"
+      ]
     },
     {
-      "id": "reviewed-connector-contract",
-      "summary": "Record current-content reviews of Intent, Architecture and Interfaces and the refreshed release-bound proof surfaces before full required Rust verification.",
-      "input_digest": "sha256:77475337f9323fe264c243fbbdfefe3a036659740986f5b2c898bd055446de05"
+      "id": "snapshots-native-preparation",
+      "summary": "Preserve the actual native preparation manifest emitted by independent v0.138.3;186 prerequisite checks passed, full readiness stopped on uncommitted generated timestamp and remains pending. No generated timestamp or proof was fabricated.",
+      "input_digest": "sha256:f889f749925eebebae7b8503f0299b70c204977abae463cbe3395d3a1f7fd63d",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     },
     {
-      "id": "complete-spec-review",
-      "summary": "Complete current-content interface, architecture and security review; preserve exact candidate custody and all required Rust verification gates.",
-      "input_digest": "sha256:a4af82c9d1c1bb2b411c4fdc23a0a07853baa3cdc640faa3573305fcf34356ef"
-    },
-    {
-      "id": "connector-account-scm-profile-v1",
-      "summary": "Bounded origin-bound logical connector, stateless managed auth/account transport, explicit SCM metadata isolation, canonical offline Rust proof and reproducible dependency preparation.",
-      "input_digest": "sha256:8e0ee77416f547f73682cd310ed3db282ba0e30759e550fd1530ce96d7ba3cd5"
-    },
-    {
-      "id": "connector-msrv-filesystem-v1",
-      "summary": "Repair actual required-proof failures with inactive HTTP3 resolver bounds for Cargo 1.75 and canonical private fixture storage while preserving the full suite and SQLite MAC/ACL security policy.",
-      "input_digest": "sha256:36d9a28de2c37dbdc7ff7b0f67bdb4a5fdd4a5f5f30873dae4dd2f87117b3a0e"
-    },
-    {
-      "id": "connector-native-owned-temp-v1",
-      "summary": "Preserve native-owned temporary paths and configured command contract; run proof on a private physical filesystem with required recovery metadata semantics.",
-      "input_digest": "sha256:bf9b0ef37a274dfdbc5463ffc2fd2b3afbe2f988ffde19e5ad783cd76ed7f64d"
-    },
-    {
-      "id": "connector-auth-handoff-readiness-v1",
-      "summary": "Align stateless auth/account transport with merged account contract and verify full native filesystem semantics without changing recovery security or native temporary-path custody.",
-      "input_digest": "sha256:81bd17c7e52052b7fa61f9729a8abbfbbb04ad96ccd2df84c167b6c8c395c28e"
-    },
-    {
-      "id": "connector-ci-checkout-owner-v1",
-      "summary": "Run hosted proof as the checkout owner, with owned private home/Cargo cache/build output, preserving storage ancestry checks and the complete required proof.",
-      "input_digest": "sha256:c577d49289164e13c00ad050cdbe5dacbfc12c34014d1e310884e7d106b15331"
+      "id": "snapshot-ci-controller",
+      "summary": "Align hosted proof image with independently released v0.138.3 already used by exact-candidate validation; preserve all Rust checks and generated drift enforcement",
+      "input_digest": "sha256:5cf6701aef9570347933c2b82ece8a54cc123c307ccf2b45b971aa9f565d6e2a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M753PE6YWGJBDRZMXQMMNHMY": {
+    "intent:change_01M76SWVTJ4SNGG504CNBFGDV8": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/",
-        "tests/",
-        "docs/"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+      "id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Provide logical local/cloud connectors and Supabase user-session transport",
-      "refined_intent": "Provide logical local/cloud connectors and Supabase user-session transport",
+      "raw_intent": "Support issue 1630 bounded read-only physical inventory and storage resource contract (dactyl 101)",
+      "refined_intent": "Support issue 1630 bounded read-only physical inventory and storage resource contract (dactyl 101)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -115,7 +112,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Expose only local/cloud in Decapod; resolve native Supabase RPC and bounded authentication transport in Dactyl; define deployment profiles and GitHub role policy in Propodus IaC. Preserve local storage, machine-local sessions, no automatic write retries, and server-enforced grants. Publish validated coordinated PRs without deployment.",
+      "intent": "Prerequisite for Decapod 1630 / Dactyl 101: additive bounded snapshot reader with explicit unsupported remote capability. Reauthor the reviewed snapshot source from preserved branch a21c54d onto accepted Dactyl0.12.0, retaining the newly merged connectors and accepted full proof contract. No semantic schema, destructive maintenance or hosted capability claim.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -123,373 +120,155 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The CI-only runtime ownership repair changes no product architecture, driver selection or backend/session policy.",
-          "reviewed_code_fingerprint": "8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f",
-          "spec_material_hash": "4efec3fe8da76aeabca4e3a2ad2cacca3a2674eaca28d89384996ee24b6c59ef"
+          "reason": "Reviewed additive snapshot reader, dedicated read-only route, scoped native and decoding budgets, explicit partial scan semantics and cleanup against current implementation and focused regression tests. Existing connector and hosted authorization contracts remain intact.",
+          "reviewed_code_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
+          "spec_material_hash": "d18a2d7b906c40ffb816ebaa85f4c38a0a6422d6b48e493be5d16005955449b8"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current source; caller/account/Auth/native RPC interfaces are unchanged by matching the CI process identity to its checkout owner.",
-          "reviewed_code_fingerprint": "8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f",
-          "spec_material_hash": "fbd78a432ca5d8bef0f717d2c52e29900a90ad4dc372e989939bfeb25595bb85"
+          "reason": "Reviewed additive snapshot reader, dedicated read-only route, scoped native and decoding budgets, explicit partial scan semantics and cleanup against current implementation and focused regression tests. Existing connector and hosted authorization contracts remain intact.",
+          "reviewed_code_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
+          "spec_material_hash": "115343873e7e4d45327c1f7501c81e1fdcf76b097d379557bf1d0b7ef03386db"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Storage ownership and private path checks remain enabled. CI uses its existing checkout owner and a private home/cache/build layout instead of a sharing or permission exception.",
-          "reviewed_code_fingerprint": "8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f",
-          "spec_material_hash": "b56e78f8a70f5faec19dcadf960b43647571038962ba4fe4b4c7a992d994e21e"
+          "reason": "Reviewed additive snapshot reader, dedicated read-only route, scoped native and decoding budgets, explicit partial scan semantics and cleanup against current implementation and focused regression tests. Existing connector and hosted authorization contracts remain intact.",
+          "reviewed_code_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
+          "spec_material_hash": "ee2cbfb0f34175e3bf1715f803b8d0af3cf56a1a5e5a393e6fbcf6be19c20bb7"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Do not invent production deployment metadata or user grants; do not deploy; PR creation requires full current-candidate validation."
-      ],
-      "title": "Provide logical local/cloud connectors and Supabase user-session transport",
+      "stop_conditions": [],
+      "title": "Add bounded read-only snapshot inspection for native storage inventory",
       "todo_ids": [
-        "code_01m753ng4cans8xx"
+        "bugs_01m76me4ng9z3d8w"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794448531Z"
+      "updated_at": "1794457561Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Auth completion is session handoff only; caller persists session and requires explicit backend_authorized=true from account status. Native filesystem proof preserves setgid and ACL checks.",
-        "Auth provider tokens are never inferred to be SCM credentials; ordinary account access uses only the Supabase bearer.",
-        "Current claimed task and isolated work branch",
-        "No deployment or credential commits; server grants remain authoritative",
-        "Preserve adapter-owned temporary-path custody. Recreate only the owned proof container with a private physical /tmp bind; no reserved environment override and no MAC/ACL policy removal.",
-        "Retain Cargo 1.75 and complete feature matrix; preserve recovery metadata/ACL policy and all existing tests.",
-        "Run CI as the checkout UID/GID with private home and owned Cargo cache/build output; keep storage ancestry checks enabled."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bc15d28218c325d2237fdd91e0399e68f18a0d4bc6c434c287ba9b25aac064a8",
+      "artifact_hash": "sha256:cc486beb78d4b35798ccef90b78e813f9948fb09a63a73f99b0c34d1658adab7",
       "checks": [
         {
-          "name": "connector-review",
-          "status": "partial"
-        },
-        {
-          "name": "dependency-preparation",
-          "status": "passed"
-        },
-        {
-          "name": "github-actions-owner",
-          "status": "failed"
-        },
-        {
-          "name": "native-temporary-path-contract",
-          "status": "failed"
-        },
-        {
-          "name": "public-profile-v1",
-          "status": "passed"
-        },
-        {
-          "name": "rust-contract",
+          "name": "hosted-generated-drift",
           "status": "failed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "detail": "trajectory:branch_01M76SWVXMPEW5EYHJXF3KTB4F",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "detail": "trajectory:branch_01M76SWVXMPEW5EYHJXF3KTB4F",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M753PEC49T92VW92KVGX0Y8M": {
+          "branch_01M76SWVXMPEW5EYHJXF3KTB4F": {
             "evidence_only": true,
-            "id": "branch_01M753PEC49T92VW92KVGX0Y8M",
-            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "id": "branch_01M76SWVXMPEW5EYHJXF3KTB4F",
+            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
             "steps": [
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/lib.rs",
-                  "src/adapter/supabase.rs",
-                  "docs/supabase-rpc-v1.md",
-                  "src/cloud.rs",
-                  "tests/cloud_connector.rs",
-                  "tools/proof/check.py",
-                  "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
+                  "src/inspection.rs",
+                  "src/adapter/sqlite/inspection.rs",
+                  "tests/sqlite_inspection.rs",
+                  "Reviewed reauthoring of snapshot-only source from preserved a21c54d onto5984159; prior focused tests3/3 are historical, exact current candidate full proof remains pending."
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "docs/",
-                  "src/",
-                  "tests/"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed"
+                  "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized."
                 ]
               },
               {
-                "action": "implementation",
-                "command": "decapod validate",
+                "action": "validation-repair",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/cloud.rs",
-                  "tests/cloud_connector.rs",
-                  "src/adapter/supabase.rs",
-                  ".decapod/config.toml",
-                  "/private/tmp/dactyl-typed-scm-credential.patch"
+                  "tools/proof/Containerfile",
+                  "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
                 ],
                 "proof_refs": [
-                  "connector-review",
-                  "rust-contract"
+                  "hosted-generated-drift"
                 ],
                 "scope": [
-                  "docs/",
-                  "src/",
-                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-                  "tests/"
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": [
-                  "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof."
+                  "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate"
                 ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "tools/proof/prepare.py",
-                  "/private/tmp/connector-profile-verification.json",
-                  "/private/tmp/dactyl-proof-preparation.patch"
-                ],
-                "proof_refs": [
-                  "public-profile-v1",
-                  "dependency-preparation"
-                ],
-                "scope": [
-                  "docs/",
-                  "src/",
-                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-                  "tests/"
-                ],
-                "sequence": 6,
-                "validation_findings": [
-                  "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested."
-                ]
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "tools/proof/check.py",
-                  "tools/proof/Containerfile",
-                  ".decapod/config.toml",
-                  "/private/tmp/dactyl-validation7-evidence/native-0.stdout"
-                ],
-                "proof_refs": [
-                  "rust-contract"
-                ],
-                "scope": [
-                  "docs/",
-                  "src/",
-                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-                  "tests/"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "decapod validate --format json",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "/private/tmp/dactyl-connector-validation8.json",
-                  "/private/tmp/dactyl-proof-temp-investigation.json"
-                ],
-                "proof_refs": [
-                  "native-temporary-path-contract"
-                ],
-                "scope": [
-                  "docs/",
-                  "src/",
-                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-                  "tests/"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "src/cloud.rs",
-                  "tests/cloud_connector.rs",
-                  "docs/cloud-connectors.md",
-                  "/private/tmp/dactyl-connector-validation9.json",
-                  "/private/tmp/propodus-person-seat-contract-pr99-final.json",
-                  "/private/tmp/propodus-schema-009-hosted-proof.json"
-                ],
-                "proof_refs": [
-                  "rust-contract"
-                ],
-                "scope": [
-                  "docs/",
-                  "src/",
-                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-                  "tests/"
-                ],
-                "sequence": 9,
-                "validation_findings": [
-                  "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "tools/proof/Containerfile",
-                  ".github/workflows/decapod-validate.yml",
-                  "https://github.com/DecapodLabs/dactyl/actions/runs/43134530359/job/130906546535"
-                ],
-                "proof_refs": [
-                  "github-actions-owner"
-                ],
-                "scope": [
-                  "docs/",
-                  "src/",
-                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-                  "tests/"
-                ],
-                "sequence": 10,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate",
-        "decapod validate --format json"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/connector-profile-verification.json",
-        "/private/tmp/dactyl-connector-validation8.json",
-        "/private/tmp/dactyl-connector-validation9.json",
-        "/private/tmp/dactyl-proof-preparation.patch",
-        "/private/tmp/dactyl-proof-temp-investigation.json",
-        "/private/tmp/dactyl-typed-scm-credential.patch",
-        "/private/tmp/dactyl-validation7-evidence/native-0.stdout",
-        "/private/tmp/propodus-person-seat-contract-pr99-final.json",
-        "/private/tmp/propodus-schema-009-hosted-proof.json",
-        "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched",
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43134530359/job/130906546535"
+        "Reviewed reauthoring of snapshot-only source from preserved a21c54d onto5984159; prior focused tests3/3 are historical, exact current candidate full proof remains pending.",
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
       ],
-      "inspected_files": [
-        "docs/supabase-rpc-v1.md",
-        "src/adapter/supabase.rs",
-        "src/lib.rs"
-      ],
-      "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/VALIDATION.md",
-        ".github/workflows/decapod-validate.yml",
-        "Cargo.lock",
-        "Cargo.toml",
-        "docs/cloud-connectors.md",
-        "src/adapter/supabase.rs",
-        "src/cloud.rs",
-        "tests/cloud_connector.rs",
-        "tools/proof/Containerfile",
-        "tools/proof/check.py",
-        "tools/proof/prepare.py"
+        "src/adapter/sqlite/inspection.rs",
+        "src/inspection.rs",
+        "tests/sqlite_inspection.rs",
+        "tools/proof/Containerfile"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "docs/",
-        "src/",
-        "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
-        "tests/"
+        "root"
       ],
-      "run_id": "branch_01M753PEC49T92VW92KVGX0Y8M",
+      "run_id": "branch_01M76SWVXMPEW5EYHJXF3KTB4F",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m753ng4cans8xx",
+      "task_id": "bugs_01m76me4ng9z3d8w",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof.",
-        "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested.",
-        "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed",
-        "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
+        "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate",
+        "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized."
       ]
     }
   },
