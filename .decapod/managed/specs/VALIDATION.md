@@ -8,7 +8,7 @@ checks passed; aligning the pin preserves the full Rust contract and drift gate.
 
 ## Offline connector and Rust compatibility proof
 
-`tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
+`tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.85
 checks only through `decapod validate`. The native adapter owns temporary paths.
 The local headless Linux proof runtime must support unlabelled temporary files,
 setgid directory modes and POSIX ACL fixtures; the Podman overlay and macOS
@@ -19,6 +19,37 @@ Cargo cache/build directories prepared for that UID/GID. Storage ancestry
 ownership checks remain enabled.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
+
+The MSRV proposal preserves all fifteen existing Rust checks, including both
+locked all-feature execution and fresh-consumer resolution, with the actual
+Rust 1.85 toolchain. Two additional lock inspections require patched or absent
+quinn-proto entries in the repository and clean-consumer graphs. They record
+the observed versions and lock hashes; they do not enable HTTP/3 or replace a
+full advisory audit. Dependency preparation fetches archives only, and required
+builds/tests remain inside full native validation. No current-candidate success
+is inferred from the earlier Rust 1.75 release proof.
+
+The Rust 1.85 floor permits `std::iter::repeat_n` when SQLite recovery builds
+bound-value placeholders. The implementation uses it to satisfy the existing
+warnings-as-errors Clippy check while preserving the same SQL placeholders.
+
+The initial full native attempt for this proposal stopped at governance admission
+before executing SDK checks, despite successful project prerequisites. Such an
+attempt supplies no feature-matrix or MSRV evidence. A hosted Rust check or a
+read-only Git inventory cannot replace the complete exact-candidate native run;
+current-content spec reviews and the committed governance bundle remain required.
+
+The accepted 0.13.1 target adds the native read-only batch fixture absence guard.
+That guard and its fixture-environment removal remain required in the integrated
+proposal, making seventeen checks with the two Quinn lock inspections. The real
+accepted target is merged before renewed proof; old-target evidence does not
+establish readiness of this combined source.
+
+Refresh generated specs after reconciling the final proof configuration and
+authored spec content, then checkpoint and commit the resulting bundle. The
+manifest binds that configuration through `config_input_hash`; a configuration
+pin changed after refresh correctly causes full validation to reject the stale
+committed bundle before executing SDK checks.
 
 ## Secure shared-directory SQLite recovery
 
@@ -246,7 +277,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

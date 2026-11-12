@@ -2,7 +2,7 @@
 name = "dactyl-db"
 version = "0.13.1"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.85"
 license = "MIT"
 repository = "https://github.com/DecapodLabs/dactyl"
 description = "A generic datastore boundary for SQLite, Neon HTTP services, and authenticated Supabase service or RPC routes."
@@ -13,8 +13,8 @@ categories = ["database", "api-bindings"]
 [features]
 default = []
 sqlite = ["dep:libloading", "dep:rustix"]
-neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:quinn-proto", "dep:quinn-udp"]
-supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:base64", "dep:getrandom", "dep:sha2", "dep:quinn-proto", "dep:quinn-udp"]
+neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:quinn-proto"]
+supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:base64", "dep:getrandom", "dep:sha2", "dep:quinn-proto"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -26,7 +26,7 @@ sha2 = { version = "0.10", optional = true }
 libloading = { version = "0.8.9", optional = true }
 reqwest = { version = "0.12.28", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
-# Keep clean Cargo 1.75 consumers compatible, not only this package lockfile.
+# Keep the active HTTP graph compatible for clean consumers, not only this lockfile.
 # These optional bounds constrain already-used HTTP/IDNA/TLS dependencies; they
 # add no new transport, crypto defaults, or work when HTTP features are disabled.
 hyper-rustls = { version = ">=0.27.7, <0.27.8", optional = true, default-features = false }
@@ -41,11 +41,11 @@ zeroize = { version = ">=1.8, <1.9", optional = true, default-features = false }
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1", optional = true, features = ["fs"] }
 
-# Cargo 1.75 parses the inactive reqwest HTTP/3 graph while resolving.
-# Keep that graph compatible without compiling or enabling HTTP/3 on any target.
+# Cargo resolves reqwest's inactive HTTP/3 graph too. Require the patched
+# protocol package without compiling or enabling HTTP/3 on any target.
+# Its dependency manifests require Cargo/Rust 1.85 even when HTTP/3 is inactive.
 [target.'cfg(any())'.dependencies]
-quinn-proto = { version = ">=0.11.7, <0.11.10", optional = true, default-features = false }
-quinn-udp = { version = ">=0.5.0, <0.5.15", optional = true, default-features = false }
+quinn-proto = { version = ">=0.11.19, <0.12", optional = true, default-features = false }
 
 [dev-dependencies]
 tokio = { version = ">=1.0, <1.54", features = ["full"] }

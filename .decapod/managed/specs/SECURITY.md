@@ -1,5 +1,17 @@
 # Security
 
+## Patched inactive dependency graph
+
+The manifest no longer constrains quinn-proto to the vulnerable pre-0.11.10
+range. It requires >=0.11.19, covering the published RustSec Quinn remediation
+without an advisory ignore or inactive-package exemption. HTTP/3 remains
+disabled, so this is a resolution and consumer-audit correction rather than a
+claim of observed runtime exposure. `tools/proof/check.py` verifies the floor in
+both the repository and clean-consumer locks. These targeted guards do not
+constitute a complete advisory audit. Rust/Cargo 1.85 replaces the old 1.75 floor
+because the patched graph contains Edition 2024 manifests; no transport, token,
+identity, authorization or secret-custody behavior changes.
+
 ## Diagnostic read boundary
 
 Snapshot inspection accepts only SELECT/WITH and rechecks native statement
@@ -143,7 +155,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

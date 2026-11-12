@@ -21,6 +21,20 @@ design, migration ids and ordering, grouping policy, retries, analytics, and
 business intelligence. Dactyl owns only physical execution, local durability,
 atomic batch boundaries, access mode, and result/error normalization.
 
+## Rust compatibility
+
+Dactyl requires Rust and Cargo 1.85 or newer. Consumers using Rust 1.75 must
+upgrade their toolchain before adopting the next 0.x minor release. Public
+Rust APIs and transport behavior are unchanged by this MSRV increase.
+
+Cargo resolves reqwest's inactive HTTP/3 dependencies even though Dactyl does
+not enable HTTP/3. The manifest requires patched `quinn-proto` 0.11.19 or newer
+in that graph. Its Rand dependency uses Edition 2024, which Cargo 1.75 cannot
+parse. The proof suite checks both this package's lock and a lock-free consumer
+on Rust 1.85, alongside the existing feature matrix, lint and package checks.
+An inactive dependency is not an advisory exemption; the version-floor checks
+are specific regression guards and do not replace a consumer's full audit.
+
 ## What is shared
 
 SQLite, Neon, and Supabase expose the same application contract:
