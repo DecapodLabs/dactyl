@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v4",
-  "generated_at": "1794457555Z",
+  "generated_at": "1794457669Z",
   "repo_signal_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
   "declared_capabilities": [
     "authentication",
@@ -15,7 +15,7 @@
     "secrets-handling"
   ],
   "capability_definition_version": "1.0.0",
-  "config_input_hash": "2e172fb2f3ac7ae45ee03e2d831cd63336783f2a7a613ded83403101888a4835",
+  "config_input_hash": "3d246618ae57cd487863ca8d6ca4ad2dce3478eb5a27d002a4835fb7e609eb83",
   "spec_input_hash": "cdbaa666ba745ad401fb915d3638ad2d4bdcea132ead6353d501954898a3830b",
   "decapod_release": "0.138.3",
   "entrypoints": [

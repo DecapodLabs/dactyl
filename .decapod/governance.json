@@ -58,6 +58,14 @@
       "proof_refs": [
         "tests/sqlite_inspection.rs"
       ]
+    },
+    {
+      "id": "snapshots-current-release-pin",
+      "summary": "Review current0.12.0 release manifest/lockfile and retain the accepted complete proof commands, toolchain and workflow coverage; reconcile the independently reported source inventory after release version changes.",
+      "input_digest": "sha256:51abde34982809a54fadec8ecb196ad7fd6326789d9650f92037e51eeabbb66f",
+      "proof_refs": [
+        "tools/proof/check.py"
+      ]
     }
   ],
   "intents": {
