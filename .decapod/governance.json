@@ -78,6 +78,11 @@
       "id": "connector-auth-handoff-readiness-v1",
       "summary": "Align stateless auth/account transport with merged account contract and verify full native filesystem semantics without changing recovery security or native temporary-path custody.",
       "input_digest": "sha256:81bd17c7e52052b7fa61f9729a8abbfbbb04ad96ccd2df84c167b6c8c395c28e"
+    },
+    {
+      "id": "connector-ci-checkout-owner-v1",
+      "summary": "Run hosted proof as the checkout owner, with owned private home/Cargo cache/build output, preserving storage ancestry checks and the complete required proof.",
+      "input_digest": "sha256:c577d49289164e13c00ad050cdbe5dacbfc12c34014d1e310884e7d106b15331"
     }
   ],
   "intents": {
@@ -120,22 +125,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Managed Auth and account channels remain stateless origin-bound transport. New account readiness facts remain caller/backend policy; Linux-native proof filesystem adds no runtime provider or API.",
-          "reviewed_code_fingerprint": "b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7",
+          "reason": "The CI-only runtime ownership repair changes no product architecture, driver selection or backend/session policy.",
+          "reviewed_code_fingerprint": "8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f",
           "spec_material_hash": "4efec3fe8da76aeabca4e3a2ad2cacca3a2674eaca28d89384996ee24b6c59ef"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Aligned with merged Propodus99 account contract: auth completion preserves unpaid session, readiness is explicit account backend_authorized, project references/capacities stay opaque and billing_not_configured is a safe public code.",
-          "reviewed_code_fingerprint": "b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7",
+          "reason": "Reviewed current source; caller/account/Auth/native RPC interfaces are unchanged by matching the CI process identity to its checkout owner.",
+          "reviewed_code_fingerprint": "8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f",
           "spec_material_hash": "fbd78a432ca5d8bef0f717d2c52e29900a90ad4dc372e989939bfeb25595bb85"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Managed bearer and explicit optional SCM channels remain separate; one new public billing code is allowlisted without propagating bodies. Existing setgid and MAC/ACL recovery tests are preserved on a capable native Linux filesystem.",
-          "reviewed_code_fingerprint": "b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7",
+          "reason": "Storage ownership and private path checks remain enabled. CI uses its existing checkout owner and a private home/cache/build layout instead of a sharing or permission exception.",
+          "reviewed_code_fingerprint": "8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f",
           "spec_material_hash": "b56e78f8a70f5faec19dcadf960b43647571038962ba4fe4b4c7a992d994e21e"
         }
       ],
@@ -149,7 +154,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794445860Z"
+      "updated_at": "1794448531Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -158,9 +163,10 @@
         "Current claimed task and isolated work branch",
         "No deployment or credential commits; server grants remain authoritative",
         "Preserve adapter-owned temporary-path custody. Recreate only the owned proof container with a private physical /tmp bind; no reserved environment override and no MAC/ACL policy removal.",
-        "Retain Cargo 1.75 and complete feature matrix; preserve recovery metadata/ACL policy and all existing tests."
+        "Retain Cargo 1.75 and complete feature matrix; preserve recovery metadata/ACL policy and all existing tests.",
+        "Run CI as the checkout UID/GID with private home and owned Cargo cache/build output; keep storage ancestry checks enabled."
       ],
-      "artifact_hash": "sha256:380277dcb8141d78802730dd5d090fb2a948969fc57db07451f40a6bbc3dc21f",
+      "artifact_hash": "sha256:bc15d28218c325d2237fdd91e0399e68f18a0d4bc6c434c287ba9b25aac064a8",
       "checks": [
         {
           "name": "connector-review",
@@ -169,6 +175,10 @@
         {
           "name": "dependency-preparation",
           "status": "passed"
+        },
+        {
+          "name": "github-actions-owner",
+          "status": "failed"
         },
         {
           "name": "native-temporary-path-contract",
@@ -239,10 +249,17 @@
             "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M753PEC49T92VW92KVGX0Y8M": {
@@ -391,6 +408,26 @@
                 "validation_findings": [
                   "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "tools/proof/Containerfile",
+                  ".github/workflows/decapod-validate.yml",
+                  "https://github.com/DecapodLabs/dactyl/actions/runs/43134530359/job/130906546535"
+                ],
+                "proof_refs": [
+                  "github-actions-owner"
+                ],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+                  "tests/"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -411,7 +448,8 @@
         "/private/tmp/dactyl-validation7-evidence/native-0.stdout",
         "/private/tmp/propodus-person-seat-contract-pr99-final.json",
         "/private/tmp/propodus-schema-009-hosted-proof.json",
-        "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
+        "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched",
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43134530359/job/130906546535"
       ],
       "inspected_files": [
         "docs/supabase-rpc-v1.md",
@@ -422,6 +460,7 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
+        ".github/workflows/decapod-validate.yml",
         "Cargo.lock",
         "Cargo.toml",
         "docs/cloud-connectors.md",

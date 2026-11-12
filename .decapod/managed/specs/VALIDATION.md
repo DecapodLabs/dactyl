@@ -8,6 +8,9 @@ The local headless Linux proof runtime must support unlabelled temporary files,
 setgid directory modes and POSIX ACL fixtures; the Podman overlay and macOS
 shared temporary mounts do not meet all those requirements. CI uses its normal
 Linux temporary filesystem. Recovery's metadata and ACL checks remain intact.
+The hosted container runs as the checkout owner, with a private home and writable
+Cargo cache/build directories prepared for that UID/GID. Storage ancestry
+ownership checks remain enabled.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
 
@@ -237,7 +240,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7`
+- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
