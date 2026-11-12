@@ -192,8 +192,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
+- Repository signal fingerprint: `51fb624909a95987a8b76a209f2c77d56db910010099d3cbea68cedab966fb83`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (15 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -207,3 +207,7 @@ and never falls back to local storage. A service route is not a Supabase REST UR
 or a PostgreSQL connection string. Physical transactions, PostgreSQL connection
 modes and authorization are service implementation responsibilities and must be
 proved separately from synthetic HTTP fixtures.
+
+## Native read-only batch boundary
+
+Native read-only batches select dactyl_read_batch_v1; the service marks read query/batch wrappers STABLE and PostgREST owns the physical transaction. Dactyl owns no PostgreSQL pool and never retries an unknown mutation outcome.
