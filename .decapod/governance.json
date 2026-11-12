@@ -100,6 +100,14 @@
       "proof_refs": [
         "tools/proof/check.py"
       ]
+    },
+    {
+      "id": "patched-quinn-msrv-v5",
+      "summary": "Refresh native generated projections after final reviewed config pin and authored spec material; preserves strict committed-bundle admission and all17checks. NativeSDKproof has not executed yet.",
+      "input_digest": "sha256:e2a0d127a9650f099b5c6f43ac5814341f9d07b52f5df28ece593869132aaf5b",
+      "proof_refs": [
+        "tools/proof/check.py"
+      ]
     }
   ],
   "intents": {
@@ -176,7 +184,7 @@
         "Current claimed task and isolated work branch",
         "No advisory suppression, release, deployment or runtime API change"
       ],
-      "artifact_hash": "sha256:bd47c6d37e1ae6754adadd2f71efdf096a0c69efeb6b3f4b83eda21c82890134",
+      "artifact_hash": "sha256:0ae8329f3c8e846e86f8dfeb658f9d82f0f59cddd1220dd72f6c81ce3b62ba3e",
       "checks": [
         {
           "name": "diff-hygiene",
@@ -195,7 +203,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "accepted-target-integration",
+      "current_phase": "projection-order-repair",
       "custody": {
         "events": [
           {
@@ -251,10 +259,17 @@
             "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77ARCEW4Z6SD85VJ5MW7535": {
@@ -390,6 +405,23 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "projection-order-repair",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Nativev5 at7d9638 failed UNCOMMITTED_PUBLICATION_CONTENT before SDK execution. Diff identifies only generated manifest config_input_hash and generated_at: final reviewed config pin was changed after specs.refresh during the merge. This is preparation order, not evidence of a controller defect.",
+                  "Repair uses authored validation-boundary prose and final native specs.refresh after configuration reconciliation; then staged checkpoint and commit. No manifest JSON handedit, no SDK manual build, no guard suppression.",
+                  "Read-only peer review of actual7d9638 vsbbe11d found no further defect, preserved all readonly source/test/doc bytes and15acceptedchecks plus2 Quinn guards."
+                ],
+                "proof_refs": [
+                  "full-native-proof"
+                ],
+                "scope": [
+                  "repo"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -407,10 +439,13 @@
         "Inspected all four workflow sources, release metadata, manifest/lock and complete proof helpers before reconciling agent.init source/command digests; runtime source unchanged.",
         "Issue107 records the vulnerable inactive bound and explicit MSRV proposal. Latest user explicitly requires publishing a PR now; draft review is authorized before full proof, with no readiness or check waiver.",
         "Nativev2 actual report at /private/tmp/dactyl-security-native-v2/report.json:187 project prerequisite passes, READINESS_BLOCKED required validation artifact not staged governance.json, no source execution and no evidence_path. Exact read-only Linux Git cached-file inventory succeeds for the tracked governance file; no missing artifact was fabricated.",
+        "Nativev5 at7d9638 failed UNCOMMITTED_PUBLICATION_CONTENT before SDK execution. Diff identifies only generated manifest config_input_hash and generated_at: final reviewed config pin was changed after specs.refresh during the merge. This is preparation order, not evidence of a controller defect.",
         "Primary RustSec0338 patched>=0.11.18; official crates.io metadata and checksum-verified0.11.18 manifest bothpatchedversions requireRust1.85 andrand0.10.1",
         "Private report-copy escalation returned successfully and active session21522 was reaped. Next native attempt adds private exec/wait process diagnostics to identify the inconsistent Git admission result without changing checks/controller.",
         "Read-only peer review found no additional concrete source/proof defect at423f. Actual Apple container proc inspection found no owned proof process; escalated operation approval had been interrupted before launch.",
+        "Read-only peer review of actual7d9638 vsbbe11d found no further defect, preserved all readonly source/test/doc bytes and15acceptedchecks plus2 Quinn guards.",
         "Real git merge --no-commit --no-ff bbe11d91123270841da44fee69e3556a0be96bc4 in progress: incoming accepted readonlyPR106 and released0.13.1 preserved; authentic own committed Gov journal chosen only for tracked merge conflict. Native specs.refresh resolved generated conflicts and retained incoming authored security/validation prose.",
+        "Repair uses authored validation-boundary prose and final native specs.refresh after configuration reconciliation; then staged checkpoint and commit. No manifest JSON handedit, no SDK manual build, no guard suppression.",
         "Reviewed changed accepted transport/tests/proof helpers and actual0.13.1 manifest/lock before reconciling native source inventory6d7a6416; command contract digest unchangeda6671cf7. Incoming accepted obligations replayed via native claim; no semantic Gov JSON handedit or history rewrite.",
         "cargo fmt --all and diff hygiene passed. No SDK build/test executed outside validate. Full exact-candidate proof remains required.",
         "git diff --check passed; semantic specs reviewed through native plan review-spec. Initial INTENT review was rejected because only ARCHITECTURE/INTERFACES/SECURITY paths are eligible; all three eligible current-content reviews succeeded."
@@ -441,6 +476,7 @@
         "Checkpoint authentic review and validation-boundary material; run configured native validation with private process diagnostics",
         "Checkpoint candidate and run full native proof in an inspected headless ARM Linux environment",
         "Checkpoint lint repair, push, and run the complete configured 16-check contract",
+        "Commit final-order projections and execute all17 required native checks on the exact candidate",
         "Finish native current-content review/checkpoint of the real accepted-target merge, then exact full native proof without ambient Git overrides",
         "Native checkpoint, commit, push and draft publication; then full configured validation",
         "Refine plan and declare falsifiable checks"

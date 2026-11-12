@@ -45,6 +45,12 @@ proposal, making seventeen checks with the two Quinn lock inspections. The real
 accepted target is merged before renewed proof; old-target evidence does not
 establish readiness of this combined source.
 
+Refresh generated specs after reconciling the final proof configuration and
+authored spec content, then checkpoint and commit the resulting bundle. The
+manifest binds that configuration through `config_input_hash`; a configuration
+pin changed after refresh correctly causes full validation to reject the stale
+committed bundle before executing SDK checks.
+
 ## Secure shared-directory SQLite recovery
 
 The SQLite recovery unit suite inspects 0700/0600 creation checkpoints and populated PERSIST journals under subprocess umask 000, tests accepted 0660/2770 sharing and original inode/group custody, rejects metadata and symlink/collision/replacement hazards, injects seven recovery failure boundaries plus diagnostic-sync failure, and kills subprocesses at seven stages to verify private artifacts and recoverable originals. Existing sqlite_maintenance regressions remain required. Platform capability limits are explicit; Linux test evidence is not proof on other hosts.
