@@ -36,70 +36,62 @@
     }
   },
   "change": {
-    "id": "change_01M76SWVTJ4SNGG504CNBFGDV8",
+    "id": "change_01M77022NBGX1MHS9CQZF1KFG5",
     "base_commit": "598415953b5ee568f6d42652982897c58b4433cc",
     "target_base": "origin/main"
   },
-  "claims": {
-    "bounded-snapshot": {
-      "statement": "A dedicated read-only SQLite snapshot exposes consistent caller-owned scans with shared native/decoded-result budgets, explicit early stop and cleanup on every exit; unsupported remote routes do not execute or fall back.",
-      "falsifier": "A concurrent write changes the observed snapshot, a mutation succeeds, exhausted results appear complete, cleanup leaves a transaction/callback active, or remote capability invokes an unimplemented operation.",
-      "status": "open",
-      "proof_refs": [
-        "tests/sqlite_inspection.rs"
-      ]
-    }
-  },
   "checkpoints": [
     {
-      "id": "snapshots-current-1",
-      "summary": "Reauthor the reviewed bounded snapshot API onto accepted Dactyl0.12.0; preserve original work branch, accepted connectors and full proof contract. Material specs reviewed; current exact-candidate validation pending.",
-      "input_digest": "sha256:8df0ec948542449c629d4831541a90ea678cad645c7d93ce8e44576ac0794187",
-      "proof_refs": [
-        "tests/sqlite_inspection.rs"
-      ]
+      "id": "native-read-only-batch",
+      "summary": "Select a separate native read-only batch RPC, preserve write/legacy semantics and add protected real-service and availability contracts.",
+      "input_digest": "sha256:b34a5e7982c26c888ba24c8d6c7191fb48ab3fbdf716f84b3d51b93e10fda3fd"
     },
     {
-      "id": "snapshots-current-release-pin",
-      "summary": "Review current0.12.0 release manifest/lockfile and retain the accepted complete proof commands, toolchain and workflow coverage; reconcile the independently reported source inventory after release version changes.",
-      "input_digest": "sha256:51abde34982809a54fadec8ecb196ad7fd6326789d9650f92037e51eeabbb66f",
-      "proof_refs": [
-        "tools/proof/check.py"
-      ]
+      "id": "native-readonly-linux-manifest",
+      "summary": "Commit the generated Linux admission timestamp after staging it; source checks unchanged",
+      "input_digest": "sha256:038519cca7686032f63dc50ca8fc9863d4a193bc878896a34a869e898d4e2111"
     },
     {
-      "id": "snapshots-native-preparation",
-      "summary": "Preserve the actual native preparation manifest emitted by independent v0.138.3;186 prerequisite checks passed, full readiness stopped on uncommitted generated timestamp and remains pending. No generated timestamp or proof was fabricated.",
-      "input_digest": "sha256:f889f749925eebebae7b8503f0299b70c204977abae463cbe3395d3a1f7fd63d",
-      "proof_refs": [
-        ".decapod/managed/specs/.manifest.json"
-      ]
+      "id": "native-readonly-clippy",
+      "summary": "Fix fixture Clippy error while retaining full Linux feature, MSRV, ownership and package checks",
+      "input_digest": "sha256:1cbeecdc029fda8deedb0a6cb29a8aad13c48b7cedd22e4e44a7cf0efe5c9fbb"
     },
     {
-      "id": "snapshot-ci-controller",
-      "summary": "Align hosted proof image with independently released v0.138.3 already used by exact-candidate validation; preserve all Rust checks and generated drift enforcement",
-      "input_digest": "sha256:5cf6701aef9570347933c2b82ece8a54cc123c307ccf2b45b971aa9f565d6e2a",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
-      ]
+      "id": "readonly-target-refresh-20261112",
+      "summary": "Record accepted 0.13.0 target and renewed task custody before integration.",
+      "input_digest": "sha256:6331f793a802641ae36b6416bada95fb60a50d0fc60d5073ac6090be47940bdd"
+    },
+    {
+      "id": "readonly-integrate-01328ac-20261112",
+      "summary": "Integrate accepted 0.13.0 snapshot inspection, preserving native read-only RPC transport and cumulative authored custody.",
+      "input_digest": "sha256:cc16464d6bb2516252cedae37e53eeeecfeac3ce689a219baca5d6a1024ff13b"
+    },
+    {
+      "id": "readonly-013-profile-20261112",
+      "summary": "Review accepted version source inventory and renew complete unchanged Linux feature matrix.",
+      "input_digest": "sha256:14e25e313e687ffd08e9fe462edfe1039b65b9a8cac7c9f1dbeee7c485d7d7a4"
     }
   ],
   "intents": {
-    "intent:change_01M76SWVTJ4SNGG504CNBFGDV8": {
+    "intent:change_01M77022NBGX1MHS9CQZF1KFG5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "paths:[\"src/adapter/supabase.rs\"",
+        "\"src/supabase_rpc.rs\"",
+        "\"tests\"",
+        "\"docs/supabase-rpc-v1.md\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+      "id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Support issue 1630 bounded read-only physical inventory and storage resource contract (dactyl 101)",
-      "refined_intent": "Support issue 1630 bounded read-only physical inventory and storage resource contract (dactyl 101)",
+      "raw_intent": "Add a physically read-only native RPC batch transport\n\nExtend the accepted generic native RPC connector with a separate physically read-only atomic batch endpoint; preserve existing legacy and write semantics, typed results, bounded TLS transport, no credential redirects or blind retries. Coordinate exact server contract and real-service proof; material specs, committed candidate and full required validation before PR. No commercial policy, identity issuance, release or deployment authority.",
+      "refined_intent": "Add a physically read-only native RPC batch transport\n\nExtend the accepted generic native RPC connector with a separate physically read-only atomic batch endpoint; preserve existing legacy and write semantics, typed results, bounded TLS transport, no credential redirects or blind retries. Coordinate exact server contract and real-service proof; material specs, committed candidate and full required validation before PR. No commercial policy, identity issuance, release or deployment authority.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -112,7 +104,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prerequisite for Decapod 1630 / Dactyl 101: additive bounded snapshot reader with explicit unsupported remote capability. Reauthor the reviewed snapshot source from preserved branch a21c54d onto accepted Dactyl0.12.0, retaining the newly merged connectors and accepted full proof contract. No semantic schema, destructive maintenance or hosted capability claim.",
+      "intent": "Extend the accepted generic connector with dactyl_read_batch_v1 for explicitly native read-only atomic batches; keep standard queries, write batches and legacy routes compatible. Preserve request/result types, TLS/origin isolation, bounds and no blind retries. The service enforces current authority and physical READ ONLY; Dactyl does not own policy or issue identities. Add transport and real-service proof, update material specs and run the entire governed feature/MSRV/package profile before PR. Release/publication and hosted acceptance remain separate.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -122,72 +114,72 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed additive snapshot reader, dedicated read-only route, scoped native and decoding budgets, explicit partial scan semantics and cleanup against current implementation and focused regression tests. Existing connector and hosted authorization contracts remain intact.",
-          "reviewed_code_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
-          "spec_material_hash": "d18a2d7b906c40ffb816ebaa85f4c38a0a6422d6b48e493be5d16005955449b8"
+          "reason": "Reviewed accepted 0.13.0 inspection architecture with read-only native transport; all required proof commands retained.",
+          "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
+          "spec_material_hash": "9e29da155ed2a72688f70e6d4fa074e3ecfa2b48f5098e656cabf58b1cfb1fb4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed additive snapshot reader, dedicated read-only route, scoped native and decoding budgets, explicit partial scan semantics and cleanup against current implementation and focused regression tests. Existing connector and hosted authorization contracts remain intact.",
-          "reviewed_code_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
-          "spec_material_hash": "115343873e7e4d45327c1f7501c81e1fdcf76b097d379557bf1d0b7ef03386db"
+          "reason": "Integrated accepted inspection API and explicit native read-only batch contract with no feature or authority removal.",
+          "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
+          "spec_material_hash": "e50beab672ad8c6d419c327ba594d5cf0149bb198b63601668ebd9e03830f90d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed additive snapshot reader, dedicated read-only route, scoped native and decoding budgets, explicit partial scan semantics and cleanup against current implementation and focused regression tests. Existing connector and hosted authorization contracts remain intact.",
-          "reviewed_code_fingerprint": "c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216",
-          "spec_material_hash": "ee2cbfb0f34175e3bf1715f803b8d0af3cf56a1a5e5a393e6fbcf6be19c20bb7"
+          "reason": "Source inventory changed only accepted Cargo version/lock; native fixture guard and physical read-only server obligation retained.",
+          "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
+          "spec_material_hash": "99ade8a60b541c493704a752394d548ca34372f45febf784be67da5b9b8cf72a"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Add bounded read-only snapshot inspection for native storage inventory",
+      "title": "Enforce native read-only batches at the physical service boundary",
       "todo_ids": [
-        "bugs_01m76me4ng9z3d8w"
+        "feat_01m76zy9fs677kpz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794457561Z"
+      "updated_at": "1794472051Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cc486beb78d4b35798ccef90b78e813f9948fb09a63a73f99b0c34d1658adab7",
+      "artifact_hash": "sha256:f020c9883d5dda95ee6ecc5951547884f94d8364f8bc74f96c9e545fcd6461a6",
       "checks": [
         {
-          "name": "hosted-generated-drift",
-          "status": "failed"
+          "name": "accepted-target-refresh",
+          "status": "partial"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+            "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+            "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M76SWVXMPEW5EYHJXF3KTB4F",
+            "detail": "trajectory:branch_01M77022R1GVPB5SWCJVBMRTZS",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+            "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M76SWVXMPEW5EYHJXF3KTB4F",
+            "detail": "trajectory:branch_01M77022R1GVPB5SWCJVBMRTZS",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+            "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -196,45 +188,49 @@
         "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M76SWVXMPEW5EYHJXF3KTB4F": {
+          "branch_01M77022R1GVPB5SWCJVBMRTZS": {
             "evidence_only": true,
-            "id": "branch_01M76SWVXMPEW5EYHJXF3KTB4F",
-            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+            "id": "branch_01M77022R1GVPB5SWCJVBMRTZS",
+            "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "validation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/inspection.rs",
-                  "src/adapter/sqlite/inspection.rs",
-                  "tests/sqlite_inspection.rs",
-                  "Reviewed reauthoring of snapshot-only source from preserved a21c54d onto5984159; prior focused tests3/3 are historical, exact current candidate full proof remains pending."
+                  "src/adapter/supabase.rs",
+                  "tests/supabase_rpc.rs",
+                  "tests/native_service.rs",
+                  "tools/proof/check.py",
+                  "The complete configured Linux feature/MSRV/package proof is retained. Project dependency preparation uses the kernel-created 0.138.3 workspace controller and installed pinned Rust toolchains in a headless Linux environment; no controller replacement, manual build/test or hosted acceptance."
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "root"
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/supabase-rpc-v1.md\"",
+                  "\"src/supabase_rpc.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/adapter/supabase.rs\""
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "validation-repair",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
-                "observations": [
-                  "tools/proof/Containerfile",
-                  "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
-                ],
+                "observations": [],
                 "proof_refs": [
-                  "hosted-generated-drift"
+                  "accepted-target-refresh"
                 ],
                 "scope": [
-                  "root"
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/supabase-rpc-v1.md\"",
+                  "\"src/supabase_rpc.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/adapter/supabase.rs\""
                 ],
                 "sequence": 5,
                 "validation_findings": [
-                  "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate"
+                  "Accepted main advanced to 01328ac and PR106 conflicts; merge accepted source and renew exact candidate proof."
                 ]
               }
             ]
@@ -244,31 +240,34 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Reviewed reauthoring of snapshot-only source from preserved a21c54d onto5984159; prior focused tests3/3 are historical, exact current candidate full proof remains pending.",
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
+        "The complete configured Linux feature/MSRV/package proof is retained. Project dependency preparation uses the kernel-created 0.138.3 workspace controller and installed pinned Rust toolchains in a headless Linux environment; no controller replacement, manual build/test or hosted acceptance."
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+      "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
       "modified_files": [
-        "src/adapter/sqlite/inspection.rs",
-        "src/inspection.rs",
-        "tests/sqlite_inspection.rs",
-        "tools/proof/Containerfile"
+        "src/adapter/supabase.rs",
+        "tests/native_service.rs",
+        "tests/supabase_rpc.rs",
+        "tools/proof/check.py"
       ],
       "next_transitions": [
+        "Commit exact candidate, run full configured validation and submit the source PR after readiness.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "\".decapod/managed/specs\"]",
+        "\"docs/supabase-rpc-v1.md\"",
+        "\"src/supabase_rpc.rs\"",
+        "\"tests\"",
+        "paths:[\"src/adapter/supabase.rs\""
       ],
-      "run_id": "branch_01M76SWVXMPEW5EYHJXF3KTB4F",
+      "run_id": "branch_01M77022R1GVPB5SWCJVBMRTZS",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m76me4ng9z3d8w",
+      "task_id": "feat_01m76zy9fs677kpz",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate",
-        "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized."
+        "Accepted main advanced to 01328ac and PR106 conflicts; merge accepted source and renew exact candidate proof."
       ]
     }
   },

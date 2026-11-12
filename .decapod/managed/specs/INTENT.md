@@ -161,8 +161,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -175,3 +175,7 @@ and the opaque versioned StorageContext. Database passwords and service-role
 keys belong exclusively to a separately authorized service/operator boundary.
 No native Postgres transport, deployment, data migration, or identity policy is
 introduced by the client adapter.
+
+## Native read-only batch boundary
+
+The generic native connector selects a separate physically read-only atomic batch boundary. Identity issuance and effective authorization remain service-owned; local and legacy transports retain their existing contracts.

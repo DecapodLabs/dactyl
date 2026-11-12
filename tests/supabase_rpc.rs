@@ -195,6 +195,25 @@ fn one_batch_retains_order_zero_cas_and_explicit_keys() {
         json!({"request":{"version":1,"operations":operations,"access_mode":"read_write","context":context()}})
     );
 }
+
+#[test]
+fn read_only_native_batch_uses_the_physical_read_transaction_boundary() {
+    let (origin, received, server) =
+        fixture(200, json!({"results":[empty_result(0),empty_result(0)]}));
+    let operations = vec![
+        Operation::read("first", vec![]),
+        Operation::read("second", vec![]),
+    ];
+    let result = open(&origin, AccessMode::ReadOnly)
+        .atomic(&operations)
+        .unwrap();
+    assert_eq!(result.results.len(), 2);
+    let (headers, body) = received.recv().unwrap();
+    server.join().unwrap();
+    assert!(headers.starts_with("POST /rest/v1/rpc/dactyl_read_batch_v1 "));
+    assert_eq!(body["request"]["access_mode"], "read_only");
+    assert_eq!(body["request"]["operations"], json!(operations));
+}
 #[test]
 fn native_configuration_is_explicit_and_secure() {
     for origin in [

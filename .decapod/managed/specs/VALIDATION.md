@@ -246,7 +246,11 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Accepted 0.13.0 integration
+
+The read-only native batch extension retains the accepted snapshot inspection API from `src/inspection.rs` and `src/adapter/sqlite/inspection.rs`. Its renewed proof runs the complete feature matrix, native-fixture absence guard, MSRV consumer and package checks on the integrated 0.13.0 source. Earlier 0.12.0 evidence does not establish readiness after this target change.

@@ -20,7 +20,7 @@ def run(name, args, tools=STABLE, expected_missing=False):
     env = dict(os.environ, RUSTC=str(tools / "rustc"), RUSTDOC=str(tools / "rustdoc"),
                RUSTUP_TOOLCHAIN=tools.parent.name, CARGO_NET_OFFLINE="true")
     env["PATH"] = str(tools) + ":" + os.environ["DACTYL_PROOF_TOOLS"]
-    for key in ("DACTYL_SUPABASE_FIXTURE", "DACTYL_SUPABASE_HOSTED_PROOF"):
+    for key in ("DACTYL_SUPABASE_FIXTURE", "DACTYL_SUPABASE_HOSTED_PROOF", "DACTYL_NATIVE_FIXTURE"):
         env.pop(key, None)
     result = subprocess.run([str(tools / "cargo"), *args], env=env, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=900)
@@ -44,6 +44,8 @@ run("clippy", ["clippy", "--locked", "--all-targets", "--all-features", "--", "-
 run("missing-real-fixture", ["test", "--locked", "--features", "supabase", "--test", "supabase_service",
                             "local_postgres_service_contract", "--", "--ignored", "--exact"], expected_missing=True)
 run("msrv", ["test", "--locked", "--all-features"], tools=MSRV)
+run("missing-native-fixture", ["test", "--locked", "--features", "supabase", "--test", "native_service",
+                              "local_native_read_only_contract", "--", "--ignored", "--exact"], expected_missing=True)
 with tempfile.TemporaryDirectory(prefix="dactyl-consumer-") as directory:
     root = Path(directory)
     (root / "src").mkdir()
