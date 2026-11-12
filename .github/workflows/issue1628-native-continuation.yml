@@ -1,4 +1,4 @@
-name: Refresh Dactyl native entrypoints and full proof
+name: Measure exact Dactyl proof runtime sizes
 
 on:
   push:
@@ -19,11 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:24.04
-    timeout-minutes: 160
+    timeout-minutes: 20
     permissions:
-      contents: write
+      contents: read
       actions: read
-      pull-requests: write
     env:
       OPERATIONS_PATH: assets/tools/maintenance/issue1628-native-20261111
       TMPDIR: /root/issue1628-tmp
@@ -71,61 +70,21 @@ jobs:
           python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/install_controller.py" /root/issue1628-controller-probe
           cd /root
           /root/issue1628-controller-probe/decapod system version > /root/issue1628-controller-version.txt
-      - name: Prepare exact private custody receiver
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/full-material/scripts/proof/runtime_inventory.py" > /root/issue1628-runtime.json
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_entrypoints.py" prepare \
-            --slug dactyl \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-entrypoint-result.json" \
-            --directory /root/issue1628-relay \
-            --runtime-inventory /root/issue1628-runtime.json
-      - name: Publish only the ephemeral receiver certificate
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: issue1628-dactyl-receiver
-          path: /root/issue1628-relay/public/
-          if-no-files-found: error
-          retention-days: 2
-      - name: Receive authenticated private native transfer
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_entrypoints.py" receive \
-            --slug dactyl \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-entrypoint-result.json" \
-            --directory /root/issue1628-relay
-      - name: Refresh native entrypoints on original task and run complete readiness
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Measure installed canonical runtime files without importing custody
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          git clone --no-hardlinks --no-checkout "$GITHUB_WORKSPACE/subject" /root/issue1628-subject
-          cd /root/issue1628-subject
-          git remote set-url origin https://github.com/DecapodLabs/dactyl.git
-          git checkout --detach 1fa52a232e1d34a27be28d158298805ffc175ffc
-          git config user.name 'ChatGPT'
-          git config user.email 'chatgpt@users.noreply.github.com'
-          gh auth setup-git
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/resume_dactyl_entrypoints.py" \
-            --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/full-material" \
-            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-entrypoint-continuation.json" \
-            --native-transfer /root/issue1628-relay/native-transfer.json \
-            --candidate-bundle /root/issue1628-relay/candidate.bundle \
-            --runtime-inventory /root/issue1628-relay/public/runtime-inventory.json \
-            --runtime-review /root/issue1628-relay/runtime-review.json \
-            --certificate "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
-            --output "$RUNNER_TEMP/issue1628-dactyl-entrypoints"
-      - name: Preserve actual readiness and encrypted native custody
+          mkdir -p /root/issue1628-runtime-stats
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/full-material/scripts/proof/runtime_inventory.py" > /root/issue1628-runtime-stats/runtime-inventory.json
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/measure_runtime_sizes.py" \
+            --inventory /root/issue1628-runtime-stats/runtime-inventory.json \
+            --output /root/issue1628-runtime-stats/runtime-sizes.json
+      - name: Preserve read-only runtime measurements
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: issue1628-dactyl-entrypoints
-          path: ${{ runner.temp }}/issue1628-dactyl-entrypoints/
+          name: issue1628-dactyl-runtime-sizes
+          path: /root/issue1628-runtime-stats/
           if-no-files-found: warn
           retention-days: 90
