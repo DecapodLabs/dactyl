@@ -1,5 +1,9 @@
 # Validation
 
+## Release-bound controller projections
+
+The four root agent entrypoints, managed container release pin and specification manifest must match the installed native controller before publication. Migrate stale generated entrypoints through supported native initialization on the same claimed task, preserve prior checkpoint history and authored requirements, and checkpoint the resulting projections before rerunning the complete required proof. Regeneration and dependency-cache preparation do not establish build, MSRV, fixture or package success. Hosted CI, hosted service acceptance and registry publication retain their separately declared evidence boundaries.
+
 ## Logical cloud connector proof (issue 100)
 
 `tests/cloud_connector.rs` exercises public discovery without credentials, independent origins, exact version/schema/key and handoff validation, typed repository/expiry preservation, restoration of pending secrets, missing/expired/revoked credentials, explicit entitlement versus authority denial, successful session exchange/refresh, malformed or lost mutation responses without replay, response bounds and redaction through real loopback HTTP. `tests/supabase_rpc.rs` proves native named envelopes, bearer/context forwarding, ordered batch normalization, read-only failure, PostgREST errors, redirects and lost-response behavior. `tests/supabase_disabled.rs` retains no-feature failure and local independence. SQLite, Neon and explicit Supabase service regressions remain required across supported features, Rust 1.75, formatting, clippy and packaging.
