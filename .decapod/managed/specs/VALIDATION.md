@@ -232,7 +232,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Repository signal fingerprint: `3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (15 files), `tests/` (14 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

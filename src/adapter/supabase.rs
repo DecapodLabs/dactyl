@@ -272,7 +272,7 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     body: Vec<u8>,
     rpc_headers: Option<reqwest::header::HeaderMap>,
 ) -> Result<T, DactylError> {
-    let client = reqwest::blocking::Client::builder()
+    let client = crate::http_tls::client_builder()?
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(REQUEST_TIMEOUT)
         .redirect(reqwest::redirect::Policy::none())

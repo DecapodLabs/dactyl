@@ -8,6 +8,8 @@ mod adapter;
 #[cfg(feature = "supabase")]
 mod cloud;
 mod contract;
+#[cfg(any(feature = "neon", feature = "supabase"))]
+mod http_tls;
 mod rows;
 mod schema;
 mod supabase_rpc;
@@ -472,7 +474,7 @@ fn build_adapter(
                         route.token.clone(),
                         _options,
                         _context,
-                    ),
+                    )?,
                 ))
             }
             #[cfg(not(feature = "neon"))]

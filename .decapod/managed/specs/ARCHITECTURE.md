@@ -1,5 +1,11 @@
 # Architecture
 
+## Private HTTPS configuration boundary (issue 100)
+
+`src/http_tls.rs` is a private module shared by the existing Neon, Supabase service/RPC and managed-auth transports, compiled only with an HTTP adapter feature. It builds an explicit rustls client configuration and passes it to reqwest through `use_preconfigured_tls`. The transport constructors retain their existing route, request and response contracts; the helper does not introduce a public adapter or session API. Client configuration errors propagate through `DactylError`.
+
+Reqwest uses its WebPKI-roots feature without an implicit crypto provider. Dactyl explicitly selects ring and the same WebPKI root set per client, without enabling HTTP/3 or relying on the unused optional Quinn resolution edge. This preserves the supported Rust 1.75 consumer contract without activating an obsolete QUIC dependency. The generated lock and all-features dependency metadata must be reviewed, then the existing minimum-Rust, clean-consumer, feature and package checks must run against the admitted source. Dependency preparation alone is not a build or proof result.
+
 ## Secure shared-directory SQLite recovery
 
 SQLite recovery is isolated in adapter/sqlite/recovery.rs. It creates a 0700 child directory and 0600 rebuild/journal, uses PERSIST during rebuilding and DELETE for final activation, preserves supported mode/owner/group, and uses atomic no-replace moves with inode checks. Both affected directories are synced. Rollback retains private diagnostics and never recursively cleans unknown entries.
@@ -175,8 +181,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Repository signal fingerprint: `3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (15 files), `tests/` (14 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

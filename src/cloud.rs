@@ -608,7 +608,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
                 }
                 DactylError::adapter(kind, "cloud authentication transport failed")
             };
-            let client = reqwest::blocking::Client::builder()
+            let client = crate::http_tls::client_builder()?
                 .connect_timeout(Duration::from_secs(5))
                 .timeout(Duration::from_secs(15))
                 .redirect(reqwest::redirect::Policy::none())

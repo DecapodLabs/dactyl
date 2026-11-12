@@ -69,7 +69,7 @@ required = true
 
 [proof.required_profile]
 id = "repo.pr-readiness.v1"
-reviewed_sources_digest = "sha256:8db4d78a50eb1b32a2ef259fb4223342c91e57bd2b90478a1c98819f6a8d2db0"
+reviewed_sources_digest = "sha256:660f4bf5365e99e7d5c56d3fedfa1b7d87a48329094766d957ae03ef455f55a4"
 
 [proof.repository_contract]
 reviewed_commands_digest = "sha256:93722d8030d15d64e93c05bbbb0601e3b7c53d9a8adcc42a2593d3e0ecc21d37"

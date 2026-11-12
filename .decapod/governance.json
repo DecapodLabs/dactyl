@@ -46,6 +46,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "dactyl-cloud-connector-msrv-1628",
+      "summary": "Preserve the original governed connector checkpoint and repair the unused HTTP3 dependency edge with private per-client TLS, independently reviewed lock/metadata and authored trust boundaries. The unchanged full native proof remains pending.",
+      "input_digest": "sha256:4fb069a40ae411c8eca7b27df5d9d59261f212e4e1ccc9b93432a335b4b58222",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -71,7 +79,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 42,
+        "file_touch_budget": 44,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -84,25 +92,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The facade/adapter split remains intact. The new logical connector and typed native RPC/session boundary are additive; detailed contracts are authored in INTENT, INTERFACES, SECURITY and VALIDATION.",
-          "reviewed_code_fingerprint": "8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0",
-          "spec_material_hash": "c19ae430bfeccdb0dd21bed85e967493c84e35a6b2543b8e4791d385e56583bd"
+          "reason": "Authored private http_tls module, feature gating, per-client configuration and unchanged facade/adapter ownership.",
+          "reviewed_code_fingerprint": "3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7",
+          "spec_material_hash": "a9a8ae2c05580ac0c5d65e43cd4b64acfb64890f45cecfd531d8257998c78c22"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented logical route selection, public discovery, native RPC, typed repository/expiry-bound auth states, caller-private secret restoration and distinct denial/uncertainty results.",
-          "reviewed_code_fingerprint": "8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0",
+          "reason": "The connector and native RPC/auth contracts authored in the preserved checkpoint remain current; the private TLS repair adds no public API or route change.",
+          "reviewed_code_fingerprint": "3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7",
           "spec_material_hash": "7e4755c502c752621818e11914222e9937f3936a64f3110fcf9e9b3e80256512"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented strict origin/handoff checks, current bearer, caller-owned private custody, redaction, bounds, and no replay after outcome_unknown; hosted policy remains unproven.",
-          "reviewed_code_fingerprint": "8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0",
-          "spec_material_hash": "d6dbe72d9557795291147b98a070f60f066869d37e17ea418a9993287f89f90e"
+          "reason": "Authored explicit ring/WebPKI/SNI/safe TLS invariants, no ambient provider effects or insecure verifier, and precise fixture versus hosted proof limits.",
+          "reviewed_code_fingerprint": "3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7",
+          "spec_material_hash": "0921c93dda210725078096f6aca44975684d3b902e3fc57c7570b8c4247327b8"
         }
       ],
       "state": "APPROVED",
@@ -113,14 +121,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794440705Z"
+      "updated_at": "1794441773Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Independently reviewed recovered source and initial repository proof adoption; hosted service and registry publication remain separate"
       ],
-      "artifact_hash": "sha256:6dbd5a8417a52c48cd0c3568dcbd08252ac042f0ffacd5e3d3e8db5b5888f941",
+      "artifact_hash": "sha256:040f52fb4837bfb8b87fb51f91ab759e70c4deeb66f87cf1e060e01d0f0fb545",
       "checks": [
         {
           "name": "full-workbranch-proof-result",
@@ -152,10 +160,17 @@
             "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M76FZSYY65BBRT817017VAV5",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76FZSYY65BBRT817017VAV5": {
@@ -179,6 +194,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "cargo fmt --all",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Preserved original checkpoint ca8454b5fc818845abb80f1043f155b19224442f; same task successor imported and original journal readmitted unchanged. Run43121813036 performed dependency-only update/metadata; independently reviewed lock sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c and metadata sha256:c76f124bcfea4b51fbcf760c523a86e9863329400496ad8cacd744c0ffeb1bf9 remove exactly 17 unused packages, with no added/version-replaced packages. Native build/MSRV/clean-consumer/feature/package proof has not run; unavailable describes the absent proof result. Hosted service acceptance, Decapod registry release dependency and publication remain separate."
+                ],
+                "proof_refs": [
+                  "source-review",
+                  "full-workbranch-proof-result"
+                ],
+                "scope": [
+                  "dactyl-cloud-connector",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -190,6 +223,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Preserved original checkpoint ca8454b5fc818845abb80f1043f155b19224442f; same task successor imported and original journal readmitted unchanged. Run43121813036 performed dependency-only update/metadata; independently reviewed lock sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c and metadata sha256:c76f124bcfea4b51fbcf760c523a86e9863329400496ad8cacd744c0ffeb1bf9 remove exactly 17 unused packages, with no added/version-replaced packages. Native build/MSRV/clean-consumer/feature/package proof has not run; unavailable describes the absent proof result. Hosted service acceptance, Decapod registry release dependency and publication remain separate.",
         "Same original task restored from native sealed successor after run43120599440. Authored pending source recovered with independently reviewed terminal-blank cleanup from verified encrypted archive sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db; native projections regenerated through CLI. Prior MSRV dependency fetch failed on rand_pcg0.10.2 edition2024 before build/test/checkpoint. This checkpoint preserves that source before repair; full proof has not run and unavailable describes the absent result."
       ],
       "inspected_files": [],

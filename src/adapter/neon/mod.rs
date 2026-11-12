@@ -65,7 +65,7 @@ struct BatchResponse {
 
 impl NeonAdapter {
     #[allow(dead_code)]
-    pub fn new(endpoint: &str, bearer: Option<String>) -> Self {
+    pub fn new(endpoint: &str, bearer: Option<String>) -> Result<Self, DactylError> {
         Self::new_with_options(endpoint, bearer, OpenOptions::default(), None)
     }
 
@@ -74,14 +74,19 @@ impl NeonAdapter {
         bearer: Option<String>,
         options: OpenOptions,
         context: Option<StorageContext>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, DactylError> {
+        Ok(Self {
             endpoint: endpoint.trim_end_matches('/').to_owned(),
             bearer,
-            client: reqwest::blocking::Client::new(),
+            client: crate::http_tls::client_builder()?.build().map_err(|_| {
+                DactylError::adapter(
+                    AdapterErrorKind::Transport,
+                    "Neon HTTP client initialization failed",
+                )
+            })?,
             access_mode: options.access_mode,
             context,
-        }
+        })
     }
 
     fn request(&self, sql: &str, params: &[Parameter]) -> Result<Response, DactylError> {

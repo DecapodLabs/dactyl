@@ -1,5 +1,11 @@
 # Security
 
+## Per-client TLS provider invariant (issue 100)
+
+Every HTTPS adapter constructs its own ring provider and WebPKI trust store through `src/http_tls.rs`. The helper uses rustls safe default protocol versions, normal certificate and hostname verification, SNI and no client certificate. It neither installs nor reads a process-global crypto provider. An application's ambient provider cannot silently alter this connector's crypto policy, and Dactyl's client construction cannot change the application's provider. The repair does not add a custom verifier, insecure certificate option or HTTP/3 transport.
+
+The isolated child-process regression must verify successful client construction with no ambient provider, absence of global installation as a side effect, and successful construction with an unrelated unusable ambient provider. It checks the configured TLS 1.2/1.3 cipher-suite policy and enabled SNI. Existing loopback transport fixtures remain required to catch a mismatched preconfigured TLS type. These checks establish configuration and client-construction behavior; they do not claim hosted TLS, managed Auth, account policy or deployment acceptance.
+
 ## Managed cloud credential and origin boundary (issue 100)
 
 Cloud profile discovery is deliberately unauthenticated and database-independent; it never receives a user bearer, API key or cookie. Its fixed origin, version, schema and public-key validation precede credential transport. The browser handoff is restricted to that origin, fixed begin path and exactly the flow identifier plus a valid one-time ticket. Redirects and automatic HTTP retries are disabled. Credentials are ephemeral transport inputs, redact Debug, never enter `StorageContext`, and are persisted only by the caller. Authentication responses retain repository/expiry bindings so the caller can reject cross-repository or stale flow state. Dactyl never infers a role from email, SCM username or payment.
@@ -119,7 +125,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8a9ab5b92e5701d2f7a599832f78cd6874d40e88c43f1bf38495d59b3fb272e0`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (14 files), `tests/` (14 files)
+- Repository signal fingerprint: `3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (15 files), `tests/` (14 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
