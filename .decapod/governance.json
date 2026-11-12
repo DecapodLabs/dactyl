@@ -45,6 +45,11 @@
       "id": "native-read-only-batch",
       "summary": "Select a separate native read-only batch RPC, preserve write/legacy semantics and add protected real-service and availability contracts.",
       "input_digest": "sha256:b34a5e7982c26c888ba24c8d6c7191fb48ab3fbdf716f84b3d51b93e10fda3fd"
+    },
+    {
+      "id": "native-readonly-linux-manifest",
+      "summary": "Commit the generated Linux admission timestamp after staging it; source checks unchanged",
+      "input_digest": "sha256:038519cca7686032f63dc50ca8fc9863d4a193bc878896a34a869e898d4e2111"
     }
   ],
   "intents": {
