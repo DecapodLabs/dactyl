@@ -67,6 +67,14 @@
       "proof_refs": [
         "tools/proof/check.py"
       ]
+    },
+    {
+      "id": "patched-quinn-msrv-v2",
+      "summary": "Repair concrete Clippy manual_repeat_n failure using the declared Rust 1.85 standard library; SQL placeholder behavior unchanged, no lint waiver. Full native proof remains required.",
+      "input_digest": "sha256:30c15b79b9382cdc5a46a53d9c8c9e3cb0b948ae7a06f3c93f9586a80bf718bf",
+      "proof_refs": [
+        "tools/proof/check.py"
+      ]
     }
   ],
   "intents": {
@@ -143,7 +151,7 @@
         "Current claimed task and isolated work branch",
         "No advisory suppression, release, deployment or runtime API change"
       ],
-      "artifact_hash": "sha256:3f44d184d30002c75c37e05a8ba84c0617cc15e7f198fc98114cdef61820c4ed",
+      "artifact_hash": "sha256:248e458f5ca8803585a32cf7134e4e2350723675d329b2f73f8fbaf8640761fb",
       "checks": [
         {
           "name": "diff-hygiene",
@@ -154,11 +162,15 @@
           "status": "unavailable"
         },
         {
+          "name": "hosted-clippy",
+          "status": "failed"
+        },
+        {
           "name": "source-research",
           "status": "passed"
         }
       ],
-      "current_phase": "draft-review-publication",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -193,10 +205,17 @@
             "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77ARCEW4Z6SD85VJ5MW7535": {
@@ -273,6 +292,26 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/adapter/sqlite/recovery.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actual GH Rust job131061669229 at423f failed manual_repeat_n in recovery.rs700 under the new MSRV. Changed repeated placeholder construction to std::iter::repeat_n, available sinceRust1.82 and supported by declared1.85, without suppressing the lint.",
+                  "Read-only peer review found no additional concrete source/proof defect at423f. Actual Apple container proc inspection found no owned proof process; escalated operation approval had been interrupted before launch.",
+                  "cargo fmt --all and diff hygiene passed. No SDK build/test executed outside validate. Full exact-candidate proof remains required."
+                ],
+                "proof_refs": [
+                  "hosted-clippy",
+                  "full-native-proof"
+                ],
+                "scope": [
+                  "repo"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -281,11 +320,14 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Actual GH Rust job131061669229 at423f failed manual_repeat_n in recovery.rs700 under the new MSRV. Changed repeated placeholder construction to std::iter::repeat_n, available sinceRust1.82 and supported by declared1.85, without suppressing the lint.",
         "Cargo metadata update resolved quinn-proto 0.11.19; all original 14 checks retained and two parsed-lock floor inspections added. Full native proof has not run.",
         "Inspected ARM image build failed while installing independent registry Decapod 0.138.3: rustc received SIGKILL in a 4GiB VM. No candidate tests executed. Preparing existing independent official-controller image with actual Rust 1.85.",
         "Inspected all four workflow sources, release metadata, manifest/lock and complete proof helpers before reconciling agent.init source/command digests; runtime source unchanged.",
         "Issue107 records the vulnerable inactive bound and explicit MSRV proposal. Latest user explicitly requires publishing a PR now; draft review is authorized before full proof, with no readiness or check waiver.",
         "Primary RustSec0338 patched>=0.11.18; official crates.io metadata and checksum-verified0.11.18 manifest bothpatchedversions requireRust1.85 andrand0.10.1",
+        "Read-only peer review found no additional concrete source/proof defect at423f. Actual Apple container proc inspection found no owned proof process; escalated operation approval had been interrupted before launch.",
+        "cargo fmt --all and diff hygiene passed. No SDK build/test executed outside validate. Full exact-candidate proof remains required.",
         "git diff --check passed; semantic specs reviewed through native plan review-spec. Initial INTENT review was rejected because only ARCHITECTURE/INTERFACES/SECURITY paths are eligible; all three eligible current-content reviews succeeded."
       ],
       "inspected_files": [
@@ -305,12 +347,14 @@
         "Cargo.lock",
         "Cargo.toml",
         "README.md",
+        "src/adapter/sqlite/recovery.rs",
         "tools/proof/Containerfile",
         "tools/proof/check.py",
         "tools/proof/prepare.py"
       ],
       "next_transitions": [
         "Checkpoint candidate and run full native proof in an inspected headless ARM Linux environment",
+        "Checkpoint lint repair, push, and run the complete configured 16-check contract",
         "Native checkpoint, commit, push and draft publication; then full configured validation",
         "Refine plan and declare falsifiable checks"
       ],

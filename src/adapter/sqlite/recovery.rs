@@ -697,8 +697,7 @@ fn copy_table_rows(
         quoted_columns.join(", "),
         quote_identifier(table_name)
     );
-    let placeholders = std::iter::repeat("?")
-        .take(columns.len())
+    let placeholders = std::iter::repeat_n("?", columns.len())
         .collect::<Vec<_>>()
         .join(", ");
     let insert_sql = format!(

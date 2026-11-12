@@ -29,6 +29,10 @@ full advisory audit. Dependency preparation fetches archives only, and required
 builds/tests remain inside full native validation. No current-candidate success
 is inferred from the earlier Rust 1.75 release proof.
 
+The Rust 1.85 floor permits `std::iter::repeat_n` when SQLite recovery builds
+bound-value placeholders. The implementation uses it to satisfy the existing
+warnings-as-errors Clippy check while preserving the same SQL placeholders.
+
 ## Secure shared-directory SQLite recovery
 
 The SQLite recovery unit suite inspects 0700/0600 creation checkpoints and populated PERSIST journals under subprocess umask 000, tests accepted 0660/2770 sharing and original inode/group custody, rejects metadata and symlink/collision/replacement hazards, injects seven recovery failure boundaries plus diagnostic-sync failure, and kills subprocesses at seven stages to verify private artifacts and recoverable originals. Existing sqlite_maintenance regressions remain required. Platform capability limits are explicit; Linux test evidence is not proof on other hosts.
@@ -255,7 +259,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2`
+- Repository signal fingerprint: `3ff214ba931ba2319f9f53fff692fac7144f4b28ac6223c9777a5bda7f28ff20`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
