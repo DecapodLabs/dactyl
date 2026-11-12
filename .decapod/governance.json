@@ -76,6 +76,14 @@
         "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
         "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
       ]
+    },
+    {
+      "id": "patched-quinn-release-prep-02",
+      "summary": "Record completed independent native proof environment and clear resolved setup-pending blocker; include genuine validator manifest refresh",
+      "input_digest": "sha256:d55769daae13e0ac31d7e1152e674db66a68d005ca7611cda7c674cd74b7b683",
+      "proof_refs": [
+        "Owned container dactyl-release-prep-proof-01383 actual Decapod0.138.3 and Rust1.85, locked/fresh-consumer fetch-only preparation and can_work=true native binding"
+      ]
     }
   ],
   "intents": {
@@ -159,10 +167,7 @@
         "Current claimed task and isolated work branch",
         "No runtime API, workflow, proof matrix or package version edits; no merge, release or package publication"
       ],
-      "artifact_hash": "sha256:80555b60c082fea23a7010160e649a7a59fd47b71165a5cb503317c01fd20d3e",
-      "blockers": [
-        "Full native validation pending. Initial container verification approval waits were aborted with no returned process session; new proof container started successfully but actual controller/toolchain verification remains unexecuted."
-      ],
+      "artifact_hash": "sha256:4cc73fe09c190de719fa6b76981cd96a30e934e430ba26aced33177398647b27",
       "checks": [
         {
           "name": "authored-diff-whitespace",
@@ -173,11 +178,15 @@
           "status": "unavailable"
         },
         {
+          "name": "independent-controller-toolchain-custody",
+          "status": "passed"
+        },
+        {
           "name": "native-exact-source",
           "status": "unavailable"
         }
       ],
-      "current_phase": "review",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -205,10 +214,17 @@
             "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77WK8XBNPT4WJ1V9A6JG1E5": {
@@ -256,6 +272,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
+                  "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker"
+                ],
+                "proof_refs": [
+                  "native-exact-source",
+                  "independent-controller-toolchain-custody"
+                ],
+                "scope": [
+                  "file:.decapod/managed/specs/OPERATIONS.md",
+                  "file:CHANGELOG.md"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -266,6 +300,8 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker",
+        "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
         "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
         "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
       ],
@@ -282,6 +318,7 @@
       ],
       "next_transitions": [
         "Checkpoint and publish explicitly authorized draft; continue exact-source native validate and CI",
+        "Commit resolved setup status and refreshed manifest, then rerun full native validation on exact candidate",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
