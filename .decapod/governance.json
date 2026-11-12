@@ -74,6 +74,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "snapshot-ci-controller",
+      "summary": "Align hosted proof image with independently released v0.138.3 already used by exact-candidate validation; preserve all Rust checks and generated drift enforcement",
+      "input_digest": "sha256:5cf6701aef9570347933c2b82ece8a54cc123c307ccf2b45b971aa9f565d6e2a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
+      ]
     }
   ],
   "intents": {
@@ -147,9 +155,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2dcf2278c27e8bb3adbae6ce1fbabc89fcfb0f40aad022fd064690ec42ff1ca1",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:cc486beb78d4b35798ccef90b78e813f9948fb09a63a73f99b0c34d1658adab7",
+      "checks": [
+        {
+          "name": "hosted-generated-drift",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -170,10 +183,17 @@
             "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M76SWVXMPEW5EYHJXF3KTB4F",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76SWVXMPEW5EYHJXF3KTB4F": {
@@ -198,6 +218,24 @@
                 "validation_findings": [
                   "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized."
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tools/proof/Containerfile",
+                  "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
+                ],
+                "proof_refs": [
+                  "hosted-generated-drift"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate"
+                ]
               }
             ]
           }
@@ -206,14 +244,16 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Reviewed reauthoring of snapshot-only source from preserved a21c54d onto5984159; prior focused tests3/3 are historical, exact current candidate full proof remains pending."
+        "Reviewed reauthoring of snapshot-only source from preserved a21c54d onto5984159; prior focused tests3/3 are historical, exact current candidate full proof remains pending.",
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43162794240"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M76SWVTJ4SNGG504CNBFGDV8",
       "modified_files": [
         "src/adapter/sqlite/inspection.rs",
         "src/inspection.rs",
-        "tests/sqlite_inspection.rs"
+        "tests/sqlite_inspection.rs",
+        "tools/proof/Containerfile"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -227,6 +267,7 @@
       "task_id": "bugs_01m76me4ng9z3d8w",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate",
         "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized."
       ]
     }

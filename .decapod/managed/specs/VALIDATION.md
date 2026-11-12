@@ -1,5 +1,11 @@
 # Validation
 
+The snapshot-inspection candidate uses independently released Decapod v0.138.3
+for both workbranch validation and `tools/proof/Containerfile`. Hosted validation
+must evaluate entrypoints with that same version. PR #104's first hosted run
+exposed the previous v0.136.2 image pin reverting those headers after all local
+checks passed; aligning the pin preserves the full Rust contract and drift gate.
+
 ## Offline connector and Rust compatibility proof
 
 `tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
