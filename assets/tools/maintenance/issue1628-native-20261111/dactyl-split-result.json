@@ -1,0 +1,232 @@
+{
+  "schema": "decapod.issue1628-dactyl-continuation.v1",
+  "repository": "DecapodLabs/dactyl",
+  "base": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+  "source": "bef1a565819c67f5403dd24ed6a35163a3a788eb",
+  "task": "feat_01m76c2002nnt3za",
+  "branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+  "operations_sha": "048f9cb8a2bf2895bdcacad4423d5095d90ace59",
+  "status": "blocked",
+  "imported": true,
+  "admitted": true,
+  "container_observed": true,
+  "checkpoints": true,
+  "publication_ready": false,
+  "full_boundary_passed": false,
+  "custody_exported": true,
+  "head_sha": "26e671d809a83c3dcc7eaf09d0b87322c50ff922",
+  "pr_url": null,
+  "pushed": false,
+  "source_recovery": {
+    "preserved_commits": [
+      "ca8454b5fc818845abb80f1043f155b19224442f",
+      "e5fb1dfdaae3bbf06084be751b4a774480ac1b0b"
+    ],
+    "previous_run": 43123956927,
+    "previous_report_sha256": "sha256:441e9eac9809d1386118ea0a80d493dd3946448fa018db2e95732fa14fb71470",
+    "observed_blocker": "Native publisher rejected stale0.105.0 entrypoint bodies and publication bundle currency before product proof.",
+    "scope": "native generated migration only; all20 reviewed product and helper files remain byte-identical"
+  },
+  "preparation_validation": "not_run",
+  "controller": {
+    "release": "v0.138.2",
+    "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+  },
+  "evaluation": {
+    "schema_version": "1.0.0",
+    "status": "allow",
+    "prompt_sha256": "1f32c401cdcff8c930b1a63464ab428202a104d3c66f05dd4c3c3d81a65f3e97",
+    "prompt_bytes": 707,
+    "findings": [],
+    "action": "Proceed with the prompt under the normal Decapod contract."
+  },
+  "baseline_reconciliation": {
+    "discovered_sources": {
+      ".github/release.toml": "sha256:6c9f1767e59215c39cea760db0b9cdf496e374d5f256ce3b8ee89c0bb656432c",
+      ".github/workflows/decapod-validate.yml": "sha256:c1f947ff1655e0a03d48bfe06c6234b291f1df880960b8e2ebe6153e39ce0c75",
+      ".github/workflows/pages.yml": "sha256:8c6077414e2db127aaadcb28b0898abc151b36ab568064f4e29aad468a94e9ab",
+      ".github/workflows/release.yml": "sha256:e3519b073c8f1a965a0b9dc01d6e11bda2ec1861937ac4bc839542a10383c7a1",
+      ".github/workflows/rust-contract.yml": "sha256:ca1a3638d859e93b641a15866bcf41768f09c07c1d0e314541ec9a348f36e475",
+      "Cargo.lock": "sha256:eabb49f4e68e0abb19e10b02d87dcefc6e795db36372f151b946f5d9d5eaa4f4",
+      "Cargo.toml": "sha256:f352f5917dab13330a1aba27f23631987c557c295932662c21af1c7bc1087e52"
+    },
+    "inventory_digest": "sha256:ee1c3a208b9173a072b8533c95576ced24d59d3d77e2c81705bb87b8cf7f2cc0",
+    "merge_ready": false,
+    "proof_status": "not_run",
+    "provider": "native",
+    "repair_tasks": [
+      {
+        "action": "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof.",
+        "code": "MISSING_REQUIRED_PROFILE",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml"
+        ],
+        "title": "Select and review a complete required profile"
+      },
+      {
+        "action": "Preserve these authored workflows. Review their jobs, conditions, matrices and helpers, then add a faithful supported profile adapter or an explicit proven exclusion. Discovery does not execute YAML or assume these checks passed.",
+        "code": "UNKNOWN_CI_CONTRACT",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".github/workflows/pages.yml",
+          ".github/workflows/rust-contract.yml"
+        ],
+        "title": "Adopt unsupported CI contracts into required proof"
+      },
+      {
+        "action": "The authored product name \"dactyl\" differs from Cargo package \"dactyl-db\". Confirm the intended relationship and update only the contract that is wrong; init preserves the authored name.",
+        "code": "INTENT_BUILD_MISMATCH",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [
+          ".decapod/config.toml",
+          "Cargo.toml"
+        ],
+        "title": "Reconcile product intent with the build manifest"
+      },
+      {
+        "action": "Agent: once source and the required checkpoint are ready, run decapod validate. Validation owns configured build prerequisites, verification, tests and artifact-bound evidence through the selected provider; do not build separately first. Repair reported source or build/test/CI configuration failures and revalidate. Native and Buildkite still require the complete applicable source-PR checks and candidate-build obligations; missing adapters fail closed. Stop for unresolved human intent, decision gates, missing authorization or unavailable access. Release-only packaging remains separately scoped; validation success is not authority to distribute or deploy.",
+        "code": "REQUIRED_PROOF_NOT_RUN",
+        "owner": "agent",
+        "resume_command": "decapod validate",
+        "sources": [],
+        "title": "Run the complete required proof suite"
+      }
+    ],
+    "schema_version": "1.0.0",
+    "status": "needs_reconciliation"
+  },
+  "admission_seed": {
+    "oid": "5e89c889eb74040ad5d847c58a938f63281b788a",
+    "paths": [
+      ".decapod/governance.json",
+      ".decapod/governance/claims.json",
+      ".decapod/governance/plan.json",
+      ".decapod/governance/trajectory.json",
+      ".decapod/governance/validation.json",
+      ".decapod/managed/Dockerfile.decapod",
+      ".decapod/managed/specs/.manifest.json",
+      ".decapod/managed/specs/ARCHITECTURE.md",
+      ".decapod/managed/specs/INTENT.md",
+      ".decapod/managed/specs/INTERFACES.md",
+      ".decapod/managed/specs/OPERATIONS.md",
+      ".decapod/managed/specs/README.md",
+      ".decapod/managed/specs/SECURITY.md",
+      ".decapod/managed/specs/SEMANTICS.md",
+      ".decapod/managed/specs/VALIDATION.md"
+    ],
+    "artifact": "admission-seed.der",
+    "plaintext_sha256": "sha256:d1beb559dd654bbc5716b5dd2df187ad43c665716e0511692dc76a4132991dd3",
+    "ciphertext_sha256": "sha256:8c8b6ae6193f11d45e949aa19db4e509168fbd44b00fd33894e34fff2e147ecd"
+  },
+  "preserved_checkpoint_verification": {
+    "schema": "decapod.checkpoint-history.v1",
+    "scope": "checkpoint_history",
+    "disposition": "proven",
+    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "head_commit": "e5fb1dfdaae3bbf06084be751b4a774480ac1b0b",
+    "history_proven": true,
+    "inspection_complete": true,
+    "publication_ready": false,
+    "verified_commits": [
+      "ca8454b5fc818845abb80f1043f155b19224442f",
+      "e5fb1dfdaae3bbf06084be751b4a774480ac1b0b"
+    ],
+    "findings": []
+  },
+  "checkpoint_verification": {
+    "schema": "decapod.checkpoint-history.v1",
+    "scope": "checkpoint_history",
+    "disposition": "proven",
+    "base_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "head_commit": "26e671d809a83c3dcc7eaf09d0b87322c50ff922",
+    "history_proven": true,
+    "inspection_complete": true,
+    "publication_ready": false,
+    "verified_commits": [
+      "ca8454b5fc818845abb80f1043f155b19224442f",
+      "e5fb1dfdaae3bbf06084be751b4a774480ac1b0b",
+      "26e671d809a83c3dcc7eaf09d0b87322c50ff922"
+    ],
+    "findings": []
+  },
+  "resumed_original_checkpoint": true,
+  "source_history": "same_task_two_preserved_checkpoints_native_entrypoint_migration",
+  "entrypoint_migration": {
+    "command": "decapod init with --all",
+    "source_journal_preserved": true,
+    "before": {
+      "AGENTS.md": "sha256:a1391c9292f7dd8921e20f7a06c5ffbc6948a677680d236869d76a2ce0b40cb0",
+      "CLAUDE.md": "sha256:177e4ce5353b500544dae320c135426ed6c57e41e898d7cac718232e81a04c24",
+      "CODEX.md": "sha256:b5d7bb9d7ac712a5132b9a4afedb5a5c9b538857110f1cc62bb30ec4c1e6d626",
+      "GEMINI.md": "sha256:b6f684f4d98c4d348002531535077a04cb040b9bfbcb17c58186cacc76a2b87e",
+      ".gitignore": "sha256:5c7ab2e4bf4d196c8d49b0d4ec0d43bc2c9a1adcc948d6ac853e63d5707c5dd2",
+      ".decapod/config.toml": "sha256:9969b2b1355626c3b2e2154e3f54d2bb6efdbfa48e0d366dd4b3263e291144a6",
+      ".decapod/OVERRIDE.md": "sha256:0f2c84799685800a580d5294a9a412deec3eac3b6d16dd732a4f83c8e45f37c8",
+      ".decapod/README.md": "sha256:172388a193f5cd4168e127b0d4176867cec31b8dd02b0adcd64064ba8f51dd38"
+    },
+    "after": {
+      "AGENTS.md": "sha256:465f81b79748e422dc604a5d3c98d1a3d6e0d64a20207187d7cc62e2e9278a72",
+      "CLAUDE.md": "sha256:23e6c0ad0bfb5088cd6c086aa59d099e63abd1da588ae33f64bff88c20b87641",
+      "CODEX.md": "sha256:df9b66f1e5a9c6eb0973c8139b7a793b954a4970b8ff441a84d595952af27c36",
+      "GEMINI.md": "sha256:b459b7b7a8fcb35c4006bf6e72bcc24762a168814811a58937865a55f93f127b"
+    },
+    "effective_config_changes": [
+      "remove retired decision.provider=none selector",
+      "serialize commands=[] for the three existing ci_only coverage declarations"
+    ],
+    "ignored_rule_removed": ".decapod/governance/workunits/",
+    "authored_specs_preserved": true,
+    "product_and_proof_source_preserved": true,
+    "proof_execution": "not_run"
+  },
+  "profile_review": {
+    "inventory_digest": "sha256:660f4bf5365e99e7d5c56d3fedfa1b7d87a48329094766d957ae03ef455f55a4",
+    "command_contract_digest": "sha256:93722d8030d15d64e93c05bbbb0601e3b7c53d9a8adcc42a2593d3e0ecc21d37",
+    "source_inventory_verified": true,
+    "execution_proof": false,
+    "policy_change": "native retired selector/default serialization only; effective required proof unchanged"
+  },
+  "publisher": {
+    "exit_code": 1,
+    "timeout": false,
+    "ci_identity_preserved": true,
+    "codes": [
+      "PUBLICATION_NOT_READY"
+    ]
+  },
+  "blocker": {
+    "stage": "native full workspace publisher",
+    "diagnostic": "session: machine-local storage unavailable; using workspace-local session state\nsession: auto-acquired for agent 'chatgpt-issue1628-dactyl-next'.\nValidation error: PUBLICATION_NOT_READY: {\"ready\":false,\"proof_ready\":false,\"laya_readiness\":null,\"scope\":\"repository_local_readiness\",\"agent_guidance\":{\"phase\":\"validation\",\"owner\":\"agent\",\"entry_command\":\"decapod validate\",\"execution\":\"Validation owns the configured build prerequisites, verification and tests through the selected provider and binds proof to the produced artifacts. Start once the source and required checkpoint are ready; no separate manual build is a prerequisite. Do not ask again before an already-authorized configured validation push or a supported, safely replayable retry to the same repository and workspace branch. Recheck the exact source and accepted target; stop on explicit cancellation, access or authorization denial, or a change that requires new authority.\",\"next_action\":\"repair_and_revalidate\",\"instruction\":\"Agent: inspect the blockers and evidence, configure or repair the project's actual build, test and CI contract within the governed scope, checkpoint the repaired source, then rerun decapod validate. Preserve required checks and artifact custody; unsupported adapters remain blockers.\",\"human_input_when\":\"Stop for unresolved intent, a decision gate, missing authorization or unavailable access; request the specific human input without delegating ordinary configuration, build orchestration or repair to the human.\"},\"stage_dispositions\":[{\"stage\":\"rust-contract\",\"key\":{\"provider\":\"native\",\"workflow\":\".decapod/config.toml\",\"job\":\"rust-contract\",\"matrix\":{},\"profile\":\"repo.pr-readiness.v1\"},\"disposition\":\"real\",\"policy\":\"repo.pr-readiness.v1\",\"reason\":\"Required repository-declared local command; actual bounded execution is mandatory\",\"evidence_scope\":\"repository_local_readiness\"},{\"stage\":\".github/workflows/decapod-validate.yml\",\"key\":null,\"disposition\":\"non_applicable\",\"policy\":\"repo.pr-readiness.v1\",\"reason\":\"Reviewed CI-only limitation: no local proof mapping for this workflow; never counted as a passed check. Reason: Hosted controller validation and its generated-file drift gate are independent CI checks; the Rust helper does not attest them. Native prerequisites and full native publication validation remain independently required.\",\"evidence_scope\":\"repository_local_readiness\"},{\"stage\":\".github/workflows/pages.yml\",\"key\":null,\"disposition\":\"non_applicable\",\"policy\":\"repo.pr-readiness.v1\",\"reason\":\"Reviewed CI-only limitation: no local proof mapping for this workflow; never counted as a passed check. Reason: GitHub Pages publication requires the hosted CI environment; repository-local readiness does not attest deployment.\",\"evidence_scope\":\"repository_local_readiness\"},{\"stage\":\".github/workflows/release.yml\",\"key\":null,\"disposition\":\"non_applicable\",\"policy\":\"repo.pr-readiness.v1\",\"reason\":\"Reviewed CI-only limitation: no local proof mapping for this workflow; never counted as a passed check. Reason: Release creation and crate publication require protected CI credentials; local package verification does not attest publication.\",\"evidence_scope\":\"repository_local_readiness\"},{\"stage\":\"hosted-ci-and-release\",\"key\":null,\"disposition\":\"non_applicable\",\"policy\":\"repo.pr-readiness.v1\",\"reason\":\"Local contract mappings do not attest hosted workflow, platform matrix, release packaging or deployment execution\",\"evidence_scope\":\"no_hosted_ci_or_release_assurance\"}],\"blockers\":[{\"code\":\"MISSING_REQUIRED_PROOF_ADAPTER\",\"detail\":\"suite hashing byte budget exceeded\",\"check\":{\"provider\":\"native\",\"workflow\":\".decapod/config.toml\",\"job\":\"rust-contract\",\"matrix\":{},\"profile\":\"repo.pr-readiness.v1\"}}],\"evidence_path\":null}\n",
+    "reason": "full native publisher did not confirm exact readiness and PR"
+  },
+  "observed_remote_head_sha": null,
+  "transfer": {
+    "task_id": "feat_01m76c2002nnt3za",
+    "transfer_id": "01M76J0M03JW18JSFRDXRAR6K8",
+    "receiver": "chatgpt-issue1628-dactyl",
+    "source_sealed": true,
+    "native_source_commit": "1fa52a232e1d34a27be28d158298805ffc175ffc",
+    "native_source_branch": "issue1628-dactyl-entrypoints-d18171e122a7",
+    "candidate_branch": "agent/chatgpt-issue1628-dactyl/feat_01m76c2002nnt3za-cloud-connector",
+    "candidate_sha": "26e671d809a83c3dcc7eaf09d0b87322c50ff922",
+    "artifact": "native-custody.der",
+    "plaintext_sha256": "sha256:cae5cb1d6495cdfd7d19b3a836f5b49a99635ee3b8c9c1221c165f633ef9bd99",
+    "ciphertext_sha256": "sha256:bcfe0ede1031dd418a0ab87237474b5462fdfd6f21eb79415c487cd92dddfa18"
+  },
+  "final_head_sha": "26e671d809a83c3dcc7eaf09d0b87322c50ff922",
+  "source_dirty": false,
+  "candidate_bundle": {
+    "artifact": "candidate.der",
+    "plaintext_sha256": "sha256:014282d9222b348b25ba1fdd06f0d98fb7e4a2ce97698bd54f7bad1a6dc9621d",
+    "ciphertext_sha256": "sha256:d8ebb931b2df10147451fdc42451de09ea5f4bcbb472b70a6818fb6b904bc902"
+  },
+  "diagnostics": {
+    "artifact": "native-diagnostics.der",
+    "plaintext_sha256": "sha256:ad1e2a40fd61f7c8ebb7d602d31cf7a3706f3bd0c1367b2f32d8b6844a5d0dd3",
+    "ciphertext_sha256": "sha256:3f8bae5130d749ab38f54f00ee7bb6c5c4539bab3f5c1daaaab1b1fdbddba194"
+  }
+}

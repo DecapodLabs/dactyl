@@ -1,0 +1,381 @@
+{
+  "baseline_sha256": "624266d605a583ab3850bdc7b341087bd0d6bd0d27fd81b0de0f5d083449814f",
+  "proposed_sha256": "6b07d9dc9465a6f653afcf965483f3b78d3f4907c375a5d3449e6a5ca113d50d",
+  "comparison": "Static AST comparison only; no proof command executed",
+  "unchanged_function_ast_sha256": {
+    "environment": "1cd7f728ab0eb33f905d5288d61087a8796e59d7b9fba7e9e44939353c4430f4",
+    "run": "855458b12640d6678cd4736c152046c8be38c9e33f451eb11ff9a9e821be6893"
+  },
+  "unchanged_clean_consumer_ast_sha256": "07888475df4b1dd87eefc36bed144c1366cc1a4d0fb593d08721b2722c3affa0",
+  "unchanged_final_failure_expression_ast_sha256": "04c99fc424ad9863056bb086e3c6861cef28b7df04ec2e42eaf35f1fa09c1b39",
+  "before": [
+    {
+      "name": "format",
+      "cargo_args": [
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "all-features",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--all-features"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-none",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-sqlite",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "sqlite"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-neon",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "neon"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-supabase",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "supabase"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-sqlite,neon",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "sqlite,neon"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-sqlite,supabase",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "sqlite,supabase"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "features-neon,supabase",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "neon,supabase"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "clippy",
+      "cargo_args": [
+        "clippy",
+        "--locked",
+        "--all-targets",
+        "--all-features",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "missing-real-fixture",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--features",
+        "supabase",
+        "--test",
+        "supabase_service",
+        "local_postgres_service_contract",
+        "--",
+        "--ignored",
+        "--exact"
+      ],
+      "tools": "STABLE",
+      "expected_missing": true,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "msrv",
+      "cargo_args": [
+        "test",
+        "--locked",
+        "--all-features"
+      ],
+      "tools": "MSRV",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "msrv-clean-consumer",
+      "cargo_args": [
+        "check",
+        "--manifest-path",
+        "<temporary-consumer>/Cargo.toml"
+      ],
+      "tools": "MSRV",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    },
+    {
+      "name": "package",
+      "cargo_args": [
+        "package",
+        "--locked",
+        "--allow-dirty"
+      ],
+      "tools": "STABLE",
+      "expected_missing": false,
+      "per_check_timeout_seconds": 900
+    }
+  ],
+  "after": {
+    "stable": [
+      {
+        "name": "format",
+        "cargo_args": [
+          "fmt",
+          "--all",
+          "--",
+          "--check"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "all-features",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--all-features"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-none",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-sqlite",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--features",
+          "sqlite"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-neon",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--features",
+          "neon"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-supabase",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--features",
+          "supabase"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-sqlite,neon",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--features",
+          "sqlite,neon"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-sqlite,supabase",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--features",
+          "sqlite,supabase"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "features-neon,supabase",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--features",
+          "neon,supabase"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "clippy",
+        "cargo_args": [
+          "clippy",
+          "--locked",
+          "--all-targets",
+          "--all-features",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "missing-real-fixture",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--features",
+          "supabase",
+          "--test",
+          "supabase_service",
+          "local_postgres_service_contract",
+          "--",
+          "--ignored",
+          "--exact"
+        ],
+        "tools": "STABLE",
+        "expected_missing": true,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "package",
+        "cargo_args": [
+          "package",
+          "--locked",
+          "--allow-dirty"
+        ],
+        "tools": "STABLE",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      }
+    ],
+    "msrv": [
+      {
+        "name": "msrv",
+        "cargo_args": [
+          "test",
+          "--locked",
+          "--all-features"
+        ],
+        "tools": "MSRV",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      },
+      {
+        "name": "msrv-clean-consumer",
+        "cargo_args": [
+          "check",
+          "--manifest-path",
+          "<temporary-consumer>/Cargo.toml"
+        ],
+        "tools": "MSRV",
+        "expected_missing": false,
+        "per_check_timeout_seconds": 900
+      }
+    ]
+  },
+  "exact_check_union_preserved": true,
+  "old_declared_timeout_seconds": 3600,
+  "new_declared_timeout_seconds": {
+    "stable": 2400,
+    "msrv": 1200
+  }
+}

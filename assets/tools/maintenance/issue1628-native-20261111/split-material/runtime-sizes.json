@@ -1,0 +1,2400 @@
+{
+  "summary": {
+    "inventory_sha256": "sha256:b75516456f1aef558d2615aa32448027f40121f7491e70f446a32b8bd0dcc142",
+    "labels": 280,
+    "unique_paths": 272,
+    "labelled_bytes": 1739512019,
+    "unique_canonical_bytes": 1099707637,
+    "unique_device_inode_bytes": 1099707637,
+    "program_bytes": 8020928,
+    "labelled_plus_program_bytes": 1747532947,
+    "groups": {
+      "stable": {
+        "labels": 50,
+        "labelled_bytes": 851822832,
+        "unique_paths": 48,
+        "unique_bytes": 500739488
+      },
+      "msrv": {
+        "labels": 53,
+        "labelled_bytes": 781321600,
+        "unique_paths": 48,
+        "unique_bytes": 493546816
+      },
+      "common": {
+        "labels": 177,
+        "labelled_bytes": 106367587,
+        "unique_paths": 176,
+        "unique_bytes": 105421333
+      }
+    },
+    "largest_paths": [
+      {
+        "label": "stable_runtime_8784d60b6b35bb74",
+        "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/libLLVM.so.22.1-rust-1.96.1-stable",
+        "bytes": 199511024,
+        "device": 57,
+        "inode": 5050083,
+        "links": 1
+      },
+      {
+        "label": "stable_runtime_2319ac1c031b63f5",
+        "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/librustc_driver-07ef66cfcebfb535.so",
+        "bytes": 151572320,
+        "device": 57,
+        "inode": 5050095,
+        "links": 1
+      },
+      {
+        "label": "shared_runtime_41044824a9ec9ed5",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libLLVM-17-rust-1.75.0-stable.so",
+        "bytes": 145072400,
+        "device": 57,
+        "inode": 5770417,
+        "links": 1
+      },
+      {
+        "label": "shared_runtime_e48418c07d12d6ca",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/librustc_driver-5aef5f09b8575cae.so",
+        "bytes": 111888656,
+        "device": 57,
+        "inode": 5770415,
+        "links": 1
+      },
+      {
+        "label": "msrv_runtime_87f4577d481ce370",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-193cf992125ccd4c.rlib",
+        "bytes": 48973144,
+        "device": 57,
+        "inode": 5770363,
+        "links": 1
+      },
+      {
+        "label": "stable_cargo",
+        "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "bytes": 42878680,
+        "device": 57,
+        "inode": 5049986,
+        "links": 1
+      },
+      {
+        "label": "msrv_cargo",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/cargo",
+        "bytes": 32802792,
+        "device": 57,
+        "inode": 5770343,
+        "links": 1
+      },
+      {
+        "label": "cc1",
+        "path": "/usr/libexec/gcc/x86_64-linux-gnu/13/cc1",
+        "bytes": 30487984,
+        "device": 57,
+        "inode": 5047197,
+        "links": 1
+      },
+      {
+        "label": "rustup",
+        "path": "/usr/local/cargo/bin/rustup",
+        "bytes": 21347088,
+        "device": 57,
+        "inode": 5049880,
+        "links": 1
+      },
+      {
+        "label": "stable_clippy_driver",
+        "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/clippy-driver",
+        "bytes": 20959320,
+        "device": 57,
+        "inode": 5049917,
+        "links": 1
+      },
+      {
+        "label": "msrv_runtime_100a15167fb4a082",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.rlib",
+        "bytes": 18468774,
+        "device": 57,
+        "inode": 5770364,
+        "links": 1
+      },
+      {
+        "label": "shared_runtime_14461beb5a791872",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.so",
+        "bytes": 13652768,
+        "device": 57,
+        "inode": 5770414,
+        "links": 1
+      },
+      {
+        "label": "shared_runtime_c770668a50716a52",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.so",
+        "bytes": 13652768,
+        "device": 57,
+        "inode": 5770380,
+        "links": 1
+      },
+      {
+        "label": "stable_rustdoc",
+        "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rustdoc",
+        "bytes": 13357552,
+        "device": 57,
+        "inode": 5050073,
+        "links": 1
+      },
+      {
+        "label": "msrv_rustdoc",
+        "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rustdoc",
+        "bytes": 11738016,
+        "device": 57,
+        "inode": 5770397,
+        "links": 1
+      }
+    ],
+    "native_per_invocation_byte_cap": 1073741824,
+    "observation": "read_only_installed_runtime_stat",
+    "task_import": false,
+    "product_execution": false
+  },
+  "files": [
+    {
+      "label": "ar",
+      "path": "/usr/bin/x86_64-linux-gnu-ar",
+      "bytes": 55792,
+      "device": 57,
+      "inode": 5045310,
+      "links": 1
+    },
+    {
+      "label": "as",
+      "path": "/usr/bin/x86_64-linux-gnu-as",
+      "bytes": 745768,
+      "device": 57,
+      "inode": 5045311,
+      "links": 1
+    },
+    {
+      "label": "cc",
+      "path": "/usr/bin/x86_64-linux-gnu-gcc-13",
+      "bytes": 1023032,
+      "device": 57,
+      "inode": 5047530,
+      "links": 1
+    },
+    {
+      "label": "cc1",
+      "path": "/usr/libexec/gcc/x86_64-linux-gnu/13/cc1",
+      "bytes": 30487984,
+      "device": 57,
+      "inode": 5047197,
+      "links": 1
+    },
+    {
+      "label": "collect2",
+      "path": "/usr/libexec/gcc/x86_64-linux-gnu/13/collect2",
+      "bytes": 336056,
+      "device": 57,
+      "inode": 5047545,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtbeginS_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o",
+      "bytes": 2752,
+      "device": 57,
+      "inode": 5047352,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtbeginT_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtbeginT.o",
+      "bytes": 2968,
+      "device": 57,
+      "inode": 5047353,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtbegin_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtbegin.o",
+      "bytes": 2448,
+      "device": 57,
+      "inode": 5047351,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtendS_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o",
+      "bytes": 1168,
+      "device": 57,
+      "inode": 5047355,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtend_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtend.o",
+      "bytes": 1168,
+      "device": 57,
+      "inode": 5047354,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtfastmath_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtfastmath.o",
+      "bytes": 4088,
+      "device": 57,
+      "inode": 5047356,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtoffloadbegin_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadbegin.o",
+      "bytes": 1192,
+      "device": 57,
+      "inode": 5047357,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtoffloadend_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o",
+      "bytes": 1192,
+      "device": 57,
+      "inode": 5047358,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtoffloadtable_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadtable.o",
+      "bytes": 1432,
+      "device": 57,
+      "inode": 5047359,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtprec32_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtprec32.o",
+      "bytes": 3736,
+      "device": 57,
+      "inode": 5047360,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtprec64_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtprec64.o",
+      "bytes": 3744,
+      "device": 57,
+      "inode": 5047361,
+      "links": 1
+    },
+    {
+      "label": "gcc_crtprec80_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/crtprec80.o",
+      "bytes": 3736,
+      "device": 57,
+      "inode": 5047362,
+      "links": 1
+    },
+    {
+      "label": "gcc_libasan_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libasan.a",
+      "bytes": 3081616,
+      "device": 57,
+      "inode": 5047497,
+      "links": 1
+    },
+    {
+      "label": "gcc_libasan_preinit_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libasan_preinit.o",
+      "bytes": 14608,
+      "device": 57,
+      "inode": 5047498,
+      "links": 1
+    },
+    {
+      "label": "gcc_libatomic_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libatomic.a",
+      "bytes": 139488,
+      "device": 57,
+      "inode": 5047499,
+      "links": 1
+    },
+    {
+      "label": "gcc_libbacktrace_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libbacktrace.a",
+      "bytes": 114130,
+      "device": 57,
+      "inode": 5047500,
+      "links": 1
+    },
+    {
+      "label": "gcc_libgcc_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libgcc.a",
+      "bytes": 3093656,
+      "device": 57,
+      "inode": 5047501,
+      "links": 1
+    },
+    {
+      "label": "gcc_libgcc_eh_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libgcc_eh.a",
+      "bytes": 66708,
+      "device": 57,
+      "inode": 5047502,
+      "links": 1
+    },
+    {
+      "label": "gcc_libgcov_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libgcov.a",
+      "bytes": 68002,
+      "device": 57,
+      "inode": 5047504,
+      "links": 1
+    },
+    {
+      "label": "gcc_libgomp_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libgomp.a",
+      "bytes": 594686,
+      "device": 57,
+      "inode": 5047505,
+      "links": 1
+    },
+    {
+      "label": "gcc_libhwasan_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libhwasan.a",
+      "bytes": 1146496,
+      "device": 57,
+      "inode": 5047506,
+      "links": 1
+    },
+    {
+      "label": "gcc_libhwasan_preinit_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libhwasan_preinit.o",
+      "bytes": 6256,
+      "device": 57,
+      "inode": 5047539,
+      "links": 1
+    },
+    {
+      "label": "gcc_libitm_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libitm.a",
+      "bytes": 203094,
+      "device": 57,
+      "inode": 5047507,
+      "links": 1
+    },
+    {
+      "label": "gcc_liblsan_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/liblsan.a",
+      "bytes": 1117414,
+      "device": 57,
+      "inode": 5047508,
+      "links": 1
+    },
+    {
+      "label": "gcc_liblsan_preinit_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/liblsan_preinit.o",
+      "bytes": 6024,
+      "device": 57,
+      "inode": 5047509,
+      "links": 1
+    },
+    {
+      "label": "gcc_libquadmath_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libquadmath.a",
+      "bytes": 624204,
+      "device": 57,
+      "inode": 5047510,
+      "links": 1
+    },
+    {
+      "label": "gcc_libssp_nonshared_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libssp_nonshared.a",
+      "bytes": 1478,
+      "device": 57,
+      "inode": 5047511,
+      "links": 1
+    },
+    {
+      "label": "gcc_libstdc++_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libstdc++.a",
+      "bytes": 6583910,
+      "device": 57,
+      "inode": 5048478,
+      "links": 1
+    },
+    {
+      "label": "gcc_libstdc++_libbacktrace_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libstdc++exp.a",
+      "bytes": 946254,
+      "device": 57,
+      "inode": 5048479,
+      "links": 1
+    },
+    {
+      "label": "gcc_libstdc++exp_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libstdc++exp.a",
+      "bytes": 946254,
+      "device": 57,
+      "inode": 5048479,
+      "links": 1
+    },
+    {
+      "label": "gcc_libstdc++fs_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libstdc++fs.a",
+      "bytes": 739344,
+      "device": 57,
+      "inode": 5048480,
+      "links": 1
+    },
+    {
+      "label": "gcc_libsupc++_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libsupc++.a",
+      "bytes": 379464,
+      "device": 57,
+      "inode": 5048481,
+      "links": 1
+    },
+    {
+      "label": "gcc_libtsan_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libtsan.a",
+      "bytes": 2468022,
+      "device": 57,
+      "inode": 5047512,
+      "links": 1
+    },
+    {
+      "label": "gcc_libtsan_preinit_o",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libtsan_preinit.o",
+      "bytes": 4672,
+      "device": 57,
+      "inode": 5047513,
+      "links": 1
+    },
+    {
+      "label": "gcc_libubsan_a",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/13/libubsan.a",
+      "bytes": 1026404,
+      "device": 57,
+      "inode": 5047514,
+      "links": 1
+    },
+    {
+      "label": "ld",
+      "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+      "bytes": 1359128,
+      "device": 57,
+      "inode": 5045322,
+      "links": 1
+    },
+    {
+      "label": "libc_Scrt1_o",
+      "path": "/usr/lib/x86_64-linux-gnu/Scrt1.o",
+      "bytes": 1656,
+      "device": 57,
+      "inode": 5047093,
+      "links": 1
+    },
+    {
+      "label": "libc_crt1_o",
+      "path": "/usr/lib/x86_64-linux-gnu/crt1.o",
+      "bytes": 1792,
+      "device": 57,
+      "inode": 5047096,
+      "links": 1
+    },
+    {
+      "label": "libc_crti_o",
+      "path": "/usr/lib/x86_64-linux-gnu/crti.o",
+      "bytes": 1192,
+      "device": 57,
+      "inode": 5047097,
+      "links": 1
+    },
+    {
+      "label": "libc_crtn_o",
+      "path": "/usr/lib/x86_64-linux-gnu/crtn.o",
+      "bytes": 760,
+      "device": 57,
+      "inode": 5047098,
+      "links": 1
+    },
+    {
+      "label": "libc_libc_nonshared_a",
+      "path": "/usr/lib/x86_64-linux-gnu/libc_nonshared.a",
+      "bytes": 5594,
+      "device": 57,
+      "inode": 5047105,
+      "links": 1
+    },
+    {
+      "label": "libc_libc_so",
+      "path": "/usr/lib/x86_64-linux-gnu/libc.so",
+      "bytes": 283,
+      "device": 57,
+      "inode": 5047104,
+      "links": 1
+    },
+    {
+      "label": "msrv_cargo",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/cargo",
+      "bytes": 32802792,
+      "device": 57,
+      "inode": 5770343,
+      "links": 1
+    },
+    {
+      "label": "msrv_cargo_clippy",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/cargo-clippy",
+      "bytes": 1204544,
+      "device": 57,
+      "inode": 5770280,
+      "links": 1
+    },
+    {
+      "label": "msrv_cargo_fmt",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/cargo-fmt",
+      "bytes": 5419344,
+      "device": 57,
+      "inode": 5770378,
+      "links": 1
+    },
+    {
+      "label": "msrv_clippy_driver",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/clippy-driver",
+      "bytes": 9510576,
+      "device": 57,
+      "inode": 5770278,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_00f228209b23ab2b",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-86bae3bc3079f89b.rlib",
+      "bytes": 327902,
+      "device": 57,
+      "inode": 5770360,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_05a0c072db3cf59a",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler-321b82c30dffdf5f.rlib",
+      "bytes": 34628,
+      "device": 57,
+      "inode": 5770371,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_09279f0e5fdefb31",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-b29e17139dde1aa8.rlib",
+      "bytes": 1626218,
+      "device": 57,
+      "inode": 5770357,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_094b36c2207cf889",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-1f975299829cc7bd.rlib",
+      "bytes": 6260,
+      "device": 57,
+      "inode": 5770367,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_0c7ecadc076ef918",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.asan.a",
+      "bytes": 5696734,
+      "device": 57,
+      "inode": 5770276,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_100a15167fb4a082",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.rlib",
+      "bytes": 18468774,
+      "device": 57,
+      "inode": 5770364,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_14461beb5a791872",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.so",
+      "bytes": 13652768,
+      "device": 57,
+      "inode": 5770414,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_20e665dc311fbf71",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_std-04e6425e07f02a3c.rlib",
+      "bytes": 10792,
+      "device": 57,
+      "inode": 5770361,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_24ac697b8c3bc184",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.msan.a",
+      "bytes": 4551466,
+      "device": 57,
+      "inode": 5770330,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_30115c37ed586f95",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libtest-3df1bed8075ce1de.rlib",
+      "bytes": 7721038,
+      "device": 57,
+      "inode": 5770369,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_31e5f1048d1b6c7a",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgetopts-2076fd86b325cb5d.rlib",
+      "bytes": 1014878,
+      "device": 57,
+      "inode": 5770366,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_33a6035fbab64542",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libprofiler_builtins-5b1afd2834a916c5.rlib",
+      "bytes": 436826,
+      "device": 57,
+      "inode": 5770339,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_35fe4eb8fece0dea",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-5069a31f57314e46.rlib",
+      "bytes": 13924,
+      "device": 57,
+      "inode": 5770340,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_37213328dbc79402",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-0577018320f99037.rlib",
+      "bytes": 9010,
+      "device": 57,
+      "inode": 5770341,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_41044824a9ec9ed5",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libLLVM-17-rust-1.75.0-stable.so",
+      "bytes": 145072400,
+      "device": 57,
+      "inode": 5770417,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_410f6d21d884c248",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.tsan.a",
+      "bytes": 5451466,
+      "device": 57,
+      "inode": 5770333,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_42b22edb50fdd004",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-aa769569f91c3548.rlib",
+      "bytes": 3409610,
+      "device": 57,
+      "inode": 5770354,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_434a178fc8b26573",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-d5f4520a9ebc0d58.rlib",
+      "bytes": 456988,
+      "device": 57,
+      "inode": 5770355,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_45b0b875755c985b",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunicode_width-caa7152ee70c190f.rlib",
+      "bytes": 150688,
+      "device": 57,
+      "inode": 5770370,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_4891667fb5b9f826",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-480c41e9d4e1f677.rlib",
+      "bytes": 39334,
+      "device": 57,
+      "inode": 5770345,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_4ba69cf58bfc1c85",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-8ba652dc7d4b285a.rlib",
+      "bytes": 1132792,
+      "device": 57,
+      "inode": 5770358,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_566014f2ece30f9d",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-3dd8a6810a0bdfef.rlib",
+      "bytes": 42038,
+      "device": 57,
+      "inode": 5770372,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_698526231ebfb468",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-67a55db9939ddb4c.rlib",
+      "bytes": 6434778,
+      "device": 57,
+      "inode": 5770362,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_741ba021bfbdd033",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-4ad84de58f0cb463.rlib",
+      "bytes": 6083940,
+      "device": 57,
+      "inode": 5770336,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_82c24308d2674b02",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-eb39a61c0c879984.rlib",
+      "bytes": 10790,
+      "device": 57,
+      "inode": 5770337,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_87f4577d481ce370",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-193cf992125ccd4c.rlib",
+      "bytes": 48973144,
+      "device": 57,
+      "inode": 5770363,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_8a7d42df7c5fdac8",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.safestack.a",
+      "bytes": 28778,
+      "device": 57,
+      "inode": 5770274,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_9952156082d7dbd2",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.lsan.a",
+      "bytes": 1925120,
+      "device": 57,
+      "inode": 5770328,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_adfe1574628f4c07",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libsysroot-86cc6804db4abd02.rlib",
+      "bytes": 6136,
+      "device": 57,
+      "inode": 5770335,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_c770668a50716a52",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.so",
+      "bytes": 13652768,
+      "device": 57,
+      "inode": 5770380,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_c81e76c28313fec9",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libtest-3df1bed8075ce1de.so",
+      "bytes": 3508192,
+      "device": 57,
+      "inode": 5770416,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_caaeb31561d5d016",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-0c17cff739e6745b.rlib",
+      "bytes": 455120,
+      "device": 57,
+      "inode": 5770359,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_d49392dbfb6778e3",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-db744c0ca03eed1d.rlib",
+      "bytes": 7948498,
+      "device": 57,
+      "inode": 5770365,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_dd26e4fec9af7558",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-510a192a50a983ed.rlib",
+      "bytes": 6641156,
+      "device": 57,
+      "inode": 5770368,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_e26ec56f1dc296bf",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-0d10aae2e0f38735.rlib",
+      "bytes": 771280,
+      "device": 57,
+      "inode": 5770338,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_e48418c07d12d6ca",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/librustc_driver-5aef5f09b8575cae.so",
+      "bytes": 111888656,
+      "device": 57,
+      "inode": 5770415,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_e70cc27df512cc9d",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-8e138eaf26ebb4a8.rlib",
+      "bytes": 2832258,
+      "device": 57,
+      "inode": 5770356,
+      "links": 1
+    },
+    {
+      "label": "msrv_runtime_fc665bf7ccfe5690",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libtest-3df1bed8075ce1de.so",
+      "bytes": 3508192,
+      "device": 57,
+      "inode": 5770382,
+      "links": 1
+    },
+    {
+      "label": "msrv_rust_gdb",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rust-gdb",
+      "bytes": 980,
+      "device": 57,
+      "inode": 5770395,
+      "links": 1
+    },
+    {
+      "label": "msrv_rust_gdbgui",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rust-gdbgui",
+      "bytes": 2160,
+      "device": 57,
+      "inode": 5770408,
+      "links": 1
+    },
+    {
+      "label": "msrv_rust_lldb",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rust-lldb",
+      "bytes": 1072,
+      "device": 57,
+      "inode": 5770396,
+      "links": 1
+    },
+    {
+      "label": "msrv_rustc",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rustc",
+      "bytes": 2880144,
+      "device": 57,
+      "inode": 5770399,
+      "links": 1
+    },
+    {
+      "label": "msrv_rustdoc",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rustdoc",
+      "bytes": 11738016,
+      "device": 57,
+      "inode": 5770397,
+      "links": 1
+    },
+    {
+      "label": "msrv_rustfmt",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/bin/rustfmt",
+      "bytes": 5991848,
+      "device": 57,
+      "inode": 5770387,
+      "links": 1
+    },
+    {
+      "label": "python",
+      "path": "/usr/bin/python3.12",
+      "bytes": 8020928,
+      "device": 57,
+      "inode": 5041133,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_02ec124b342309e7",
+      "path": "/usr/lib/python3.12/bisect.py",
+      "bytes": 3423,
+      "device": 57,
+      "inode": 5040444,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_081c4416df6b6de7",
+      "path": "/usr/lib/python3.12/functools.py",
+      "bytes": 38126,
+      "device": 57,
+      "inode": 5040838,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_0dbb8fe6b1fa9ce2",
+      "path": "/usr/lib/python3.12/fnmatch.py",
+      "bytes": 5999,
+      "device": 57,
+      "inode": 5040835,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_0ef9b6ae134c5344",
+      "path": "/usr/lib/python3.12/__pycache__/contextlib.cpython-312.pyc",
+      "bytes": 30376,
+      "device": 57,
+      "inode": 5041269,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_0f273f6d29345793",
+      "path": "/usr/lib/python3.12/weakref.py",
+      "bytes": 21513,
+      "device": 57,
+      "inode": 5041051,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_11283dfb7accfbb0",
+      "path": "/usr/lib/python3.12/genericpath.py",
+      "bytes": 5572,
+      "device": 57,
+      "inode": 5040840,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_11d4cc4498dcd08c",
+      "path": "/usr/lib/python3.12/__pycache__/operator.cpython-312.pyc",
+      "bytes": 17364,
+      "device": 57,
+      "inode": 5041666,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_173df9a991797a7c",
+      "path": "/usr/lib/python3.12/_collections_abc.py",
+      "bytes": 32082,
+      "device": 57,
+      "inode": 5040161,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_1863dcdda11cb610",
+      "path": "/usr/lib/python3.12/json/__pycache__/__init__.cpython-312.pyc",
+      "bytes": 13620,
+      "device": 57,
+      "inode": 5049531,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_1b0a0900d19208c0",
+      "path": "/usr/lib/python3.12/__pycache__/pathlib.cpython-312.pyc",
+      "bytes": 62098,
+      "device": 57,
+      "inode": 5041672,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_1ef050157e67841e",
+      "path": "/usr/lib/python3.12/json/decoder.py",
+      "bytes": 12473,
+      "device": 57,
+      "inode": 5042510,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_21a84d71180bb17d",
+      "path": "/usr/lib/python3.12/__pycache__/reprlib.cpython-312.pyc",
+      "bytes": 9909,
+      "device": 57,
+      "inode": 5041215,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_2263979efff05525",
+      "path": "/usr/lib/python3.12/encodings/__init__.py",
+      "bytes": 5884,
+      "device": 57,
+      "inode": 5040558,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_2527a3ab9215d01d",
+      "path": "/usr/lib/python3.12/signal.py",
+      "bytes": 2495,
+      "device": 57,
+      "inode": 5040987,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_259ef32c49a83bd5",
+      "path": "/usr/lib/python3.12/os.py",
+      "bytes": 39786,
+      "device": 57,
+      "inode": 5040944,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_28f24354f8999b3b",
+      "path": "/usr/lib/python3.12/re/_constants.py",
+      "bytes": 5930,
+      "device": 57,
+      "inode": 5040976,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_2c7eb59078fe99b7",
+      "path": "/usr/lib/python3.12/encodings/__pycache__/__init__.cpython-312.pyc",
+      "bytes": 5790,
+      "device": 57,
+      "inode": 5041339,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_2dd9d76995fc573d",
+      "path": "/usr/lib/python3.12/__pycache__/random.cpython-312.pyc",
+      "bytes": 33153,
+      "device": 57,
+      "inode": 5041690,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_2f32150cb0c316ad",
+      "path": "/usr/lib/python3.12/__pycache__/copyreg.cpython-312.pyc",
+      "bytes": 7414,
+      "device": 57,
+      "inode": 5041271,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_2ffc7b52bd0649bc",
+      "path": "/usr/lib/python3.12/__pycache__/selectors.cpython-312.pyc",
+      "bytes": 26128,
+      "device": 57,
+      "inode": 5041694,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_305170e393561a3b",
+      "path": "/usr/lib/python3.12/_weakrefset.py",
+      "bytes": 5893,
+      "device": 57,
+      "inode": 5040431,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_30879ff91c45b07e",
+      "path": "/usr/lib/python3.12/lzma.py",
+      "bytes": 13277,
+      "device": 57,
+      "inode": 5042558,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_316a4e46fcc15d77",
+      "path": "/usr/lib/python3.12/re/__pycache__/__init__.cpython-312.pyc",
+      "bytes": 17938,
+      "device": 57,
+      "inode": 5041692,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_3176db42624176d2",
+      "path": "/usr/lib/python3.12/__pycache__/_weakrefset.cpython-312.pyc",
+      "bytes": 11751,
+      "device": 57,
+      "inode": 5041253,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_3c2ac216f346dd3e",
+      "path": "/usr/lib/python3.12/urllib/__pycache__/__init__.cpython-312.pyc",
+      "bytes": 135,
+      "device": 57,
+      "inode": 5041738,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_3c50fa6ce0dd7467",
+      "path": "/usr/lib/python3.12/__pycache__/_compression.cpython-312.pyc",
+      "bytes": 7497,
+      "device": 57,
+      "inode": 5049429,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_4291670d0f627929",
+      "path": "/usr/lib/python3.12/re/__pycache__/_parser.cpython-312.pyc",
+      "bytes": 42007,
+      "device": 57,
+      "inode": 5041218,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_44028c99fdf4b6fe",
+      "path": "/usr/lib/python3.12/ntpath.py",
+      "bytes": 30027,
+      "device": 57,
+      "inode": 5042590,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_454571214f2f9b6f",
+      "path": "/usr/lib/python3.12/stat.py",
+      "bytes": 5485,
+      "device": 57,
+      "inode": 5041002,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_47f84e7dd20700de",
+      "path": "/usr/lib/python3.12/operator.py",
+      "bytes": 10965,
+      "device": 57,
+      "inode": 5040938,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_4894d63325286600",
+      "path": "/usr/lib/python3.12/_compression.py",
+      "bytes": 5681,
+      "device": 57,
+      "inode": 5042404,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_4e992e734cc12adc",
+      "path": "/usr/lib/python3.12/re/__pycache__/_constants.cpython-312.pyc",
+      "bytes": 5296,
+      "device": 57,
+      "inode": 5041212,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_50ce0500bf2d1754",
+      "path": "/usr/lib/python3.12/__pycache__/hashlib.cpython-312.pyc",
+      "bytes": 8087,
+      "device": 57,
+      "inode": 5041596,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_51f7099867af7171",
+      "path": "/usr/lib/python3.12/hashlib.py",
+      "bytes": 9349,
+      "device": 57,
+      "inode": 5040846,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_537d6a4ef33db793",
+      "path": "/usr/lib/python3.12/json/__pycache__/decoder.cpython-312.pyc",
+      "bytes": 13825,
+      "device": 57,
+      "inode": 5049532,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_54c675f40a4356df",
+      "path": "/usr/lib/python3.12/zipimport.py",
+      "bytes": 28132,
+      "device": 57,
+      "inode": 5041066,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_56247973136ea4d0",
+      "path": "/usr/lib/python3.12/collections/__pycache__/abc.cpython-312.pyc",
+      "bytes": 249,
+      "device": 57,
+      "inode": 5041181,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_5899744b8d137fa3",
+      "path": "/usr/lib/python3.12/collections/__init__.py",
+      "bytes": 52378,
+      "device": 57,
+      "inode": 5040452,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_5b6319ae1b44be74",
+      "path": "/usr/lib/python3.12/__pycache__/keyword.cpython-312.pyc",
+      "bytes": 1041,
+      "device": 57,
+      "inode": 5041654,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_5dcd980e42cef2b3",
+      "path": "/usr/lib/python3.12/locale.py",
+      "bytes": 78562,
+      "device": 57,
+      "inode": 5040925,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_5e3835739da7bfeb",
+      "path": "/usr/lib/python3.12/re/__pycache__/_compiler.cpython-312.pyc",
+      "bytes": 26516,
+      "device": 57,
+      "inode": 5041220,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_631d46924a31787d",
+      "path": "/usr/lib/python3.12/re/_compiler.py",
+      "bytes": 26089,
+      "device": 57,
+      "inode": 5040974,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_6323f3d9dcc61f21",
+      "path": "/usr/lib/python3.12/json/__pycache__/encoder.cpython-312.pyc",
+      "bytes": 15098,
+      "device": 57,
+      "inode": 5049533,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_6a8b371d37a996a6",
+      "path": "/usr/lib/python3.12/keyword.py",
+      "bytes": 1073,
+      "device": 57,
+      "inode": 5040915,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_6b3993913d3fecb5",
+      "path": "/usr/lib/python3.12/__pycache__/tempfile.cpython-312.pyc",
+      "bytes": 47339,
+      "device": 57,
+      "inode": 5041725,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_6b4c23340ff95cdf",
+      "path": "/usr/lib/python3.12/encodings/aliases.py",
+      "bytes": 15677,
+      "device": 57,
+      "inode": 5040560,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_709840981e291ca7",
+      "path": "/etc/python3.12/sitecustomize.py",
+      "bytes": 155,
+      "device": 57,
+      "inode": 5040154,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_7633ef1043a74abe",
+      "path": "/usr/lib/python3.12/tempfile.py",
+      "bytes": 37334,
+      "device": 57,
+      "inode": 5041014,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_76f79ef05eae78a4",
+      "path": "/usr/lib/python3.12/__pycache__/enum.cpython-312.pyc",
+      "bytes": 80708,
+      "device": 57,
+      "inode": 5041586,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_7e7a15b26a8edd15",
+      "path": "/usr/lib/python3.12/encodings/__pycache__/utf_8.cpython-312.pyc",
+      "bytes": 2147,
+      "device": 57,
+      "inode": 5041580,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_81487549b2eca3de",
+      "path": "/usr/lib/python3.12/re/__pycache__/_casefix.cpython-312.pyc",
+      "bytes": 1816,
+      "device": 57,
+      "inode": 5041209,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_83f94dfd07d6319d",
+      "path": "/usr/lib/python3.12/urllib/__init__.py",
+      "bytes": 0,
+      "device": 57,
+      "inode": 5041034,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_8958b4095878e48a",
+      "path": "/usr/lib/python3.12/reprlib.py",
+      "bytes": 6569,
+      "device": 57,
+      "inode": 5040980,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_91c767efab083fcf",
+      "path": "/usr/lib/python3.12/__pycache__/sitecustomize.cpython-312.pyc",
+      "bytes": 300,
+      "device": 57,
+      "inode": 5041755,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_979f171afe31ca3d",
+      "path": "/usr/lib/python3.12/__pycache__/functools.cpython-312.pyc",
+      "bytes": 40506,
+      "device": 57,
+      "inode": 5041590,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_9b7db09e84216d9d",
+      "path": "/usr/lib/python3.12/__pycache__/shutil.cpython-312.pyc",
+      "bytes": 68113,
+      "device": 57,
+      "inode": 5049590,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_9ba57263981c0c5f",
+      "path": "/usr/lib/python3.12/__pycache__/warnings.cpython-312.pyc",
+      "bytes": 23792,
+      "device": 57,
+      "inode": 5041747,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_9c2e3a13baa1fe95",
+      "path": "/usr/lib/python3.12/shutil.py",
+      "bytes": 58120,
+      "device": 57,
+      "inode": 5042614,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_9d48e92f92ed32c4",
+      "path": "/usr/lib/python3.12/copyreg.py",
+      "bytes": 7614,
+      "device": 57,
+      "inode": 5040466,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_9d868c80f20f29ef",
+      "path": "/usr/lib/python3.12/__pycache__/weakref.cpython-312.pyc",
+      "bytes": 31348,
+      "device": 57,
+      "inode": 5041191,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_9e84c102ce6bfb56",
+      "path": "/usr/lib/python3.12/contextlib.py",
+      "bytes": 27637,
+      "device": 57,
+      "inode": 5040461,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_a42e90676bb997b2",
+      "path": "/usr/lib/python3.12/__pycache__/ipaddress.cpython-312.pyc",
+      "bytes": 90762,
+      "device": 57,
+      "inode": 5041652,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_a5c406971acbe935",
+      "path": "/usr/lib/python3.12/posixpath.py",
+      "bytes": 17623,
+      "device": 57,
+      "inode": 5040959,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ac79bef58e2f857d",
+      "path": "/usr/lib/python3.12/__pycache__/subprocess.cpython-312.pyc",
+      "bytes": 79187,
+      "device": 57,
+      "inode": 5041720,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_acab1daccb426a65",
+      "path": "/usr/lib/python3.12/encodings/utf_8.py",
+      "bytes": 1005,
+      "device": 57,
+      "inode": 5040820,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ae473b15eef39798",
+      "path": "/usr/lib/python3.12/__pycache__/signal.cpython-312.pyc",
+      "bytes": 4448,
+      "device": 57,
+      "inode": 5041696,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ae813d3bcf588951",
+      "path": "/usr/lib/python3.12/warnings.py",
+      "bytes": 21760,
+      "device": 57,
+      "inode": 5041049,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ae83223d9e9903c4",
+      "path": "/usr/lib/python3.12/json/scanner.py",
+      "bytes": 2425,
+      "device": 57,
+      "inode": 5042512,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_aed14978b849da2b",
+      "path": "/usr/lib/python3.12/__pycache__/lzma.cpython-312.pyc",
+      "bytes": 15855,
+      "device": 57,
+      "inode": 5049536,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_b5494d02398106c8",
+      "path": "/usr/lib/python3.12/encodings/__pycache__/aliases.cpython-312.pyc",
+      "bytes": 12408,
+      "device": 57,
+      "inode": 5041162,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_b5b90621835697b1",
+      "path": "/usr/lib/python3.12/lib-dynload/_bz2.cpython-312-x86_64-linux-gnu.so",
+      "bytes": 32112,
+      "device": 57,
+      "inode": 5042515,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_b76d1825ff40df29",
+      "path": "/usr/lib/python3.12/subprocess.py",
+      "bytes": 88725,
+      "device": 57,
+      "inode": 5041010,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_bd849b96115a3ea2",
+      "path": "/usr/lib/python3.12/__pycache__/types.cpython-312.pyc",
+      "bytes": 14939,
+      "device": 57,
+      "inode": 5041732,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_be564b755ecdc596",
+      "path": "/usr/lib/python3.12/__pycache__/locale.cpython-312.pyc",
+      "bytes": 59536,
+      "device": 57,
+      "inode": 5041203,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_bea4f6067b260709",
+      "path": "/usr/lib/python3.12/collections/__pycache__/__init__.cpython-312.pyc",
+      "bytes": 73089,
+      "device": 57,
+      "inode": 5041265,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_bf3337af276117fe",
+      "path": "/usr/lib/python3.12/threading.py",
+      "bytes": 60123,
+      "device": 57,
+      "inode": 5041018,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_c04368b9ddcd4a5e",
+      "path": "/usr/lib/python3.12/_sitebuiltins.py",
+      "bytes": 3128,
+      "device": 57,
+      "inode": 5040422,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_c10852387c97fb3b",
+      "path": "/usr/lib/python3.12/lib-dynload/_json.cpython-312-x86_64-linux-gnu.so",
+      "bytes": 48952,
+      "device": 57,
+      "inode": 5042530,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_c75ceaec0494f653",
+      "path": "/usr/lib/python3.12/collections/abc.py",
+      "bytes": 119,
+      "device": 57,
+      "inode": 5040455,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_c90c70439e5d18d2",
+      "path": "/usr/lib/python3.12/lib-dynload/_hashlib.cpython-312-x86_64-linux-gnu.so",
+      "bytes": 64368,
+      "device": 57,
+      "inode": 5040919,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ca52b321b166de4d",
+      "path": "/usr/lib/python3.12/__pycache__/threading.cpython-312.pyc",
+      "bytes": 65346,
+      "device": 57,
+      "inode": 5041228,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_cad192ffc68a88d4",
+      "path": "/usr/lib/python3.12/json/encoder.py",
+      "bytes": 16070,
+      "device": 57,
+      "inode": 5042511,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d137976a603e739e",
+      "path": "/usr/lib/python3.12/abc.py",
+      "bytes": 6538,
+      "device": 57,
+      "inode": 5040433,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d1a4895d4641f116",
+      "path": "/usr/lib/python3.12/types.py",
+      "bytes": 10993,
+      "device": 57,
+      "inode": 5041028,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d225e9f1ae15131b",
+      "path": "/usr/lib/python3.12/re/__init__.py",
+      "bytes": 16315,
+      "device": 57,
+      "inode": 5040970,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d23a5b594d8f414c",
+      "path": "/usr/lib/python3.12/bz2.py",
+      "bytes": 11847,
+      "device": 57,
+      "inode": 5042449,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d322d4650884b605",
+      "path": "/usr/lib/python3.12/codecs.py",
+      "bytes": 36870,
+      "device": 57,
+      "inode": 5040448,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d3f697cba4a5ed64",
+      "path": "/usr/lib/python3.12/urllib/__pycache__/parse.cpython-312.pyc",
+      "bytes": 50619,
+      "device": 57,
+      "inode": 5041742,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d5777fd0a5fbdf80",
+      "path": "/usr/lib/python3.12/re/_parser.py",
+      "bytes": 41201,
+      "device": 57,
+      "inode": 5040978,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_d790aafe85c5b6d0",
+      "path": "/usr/lib/python3.12/lib-dynload/_lzma.cpython-312-x86_64-linux-gnu.so",
+      "bytes": 49256,
+      "device": 57,
+      "inode": 5042532,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_dd80c8818e41ffe4",
+      "path": "/usr/lib/python3.12/io.py",
+      "bytes": 3582,
+      "device": 57,
+      "inode": 5040911,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_dd871906df9d1063",
+      "path": "/usr/lib/python3.12/__pycache__/fnmatch.cpython-312.pyc",
+      "bytes": 6495,
+      "device": 57,
+      "inode": 5041588,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_df09ae74e7f1780b",
+      "path": "/usr/lib/python3.12/__pycache__/bz2.cpython-312.pyc",
+      "bytes": 15133,
+      "device": 57,
+      "inode": 5049473,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_e16832ace8a37757",
+      "path": "/usr/lib/python3.12/json/__init__.py",
+      "bytes": 14020,
+      "device": 57,
+      "inode": 5042509,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_e1a4fa33caecfce8",
+      "path": "/usr/lib/python3.12/ipaddress.py",
+      "bytes": 78294,
+      "device": 57,
+      "inode": 5040913,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_e1c15b97f4f7cf41",
+      "path": "/usr/lib/python3.12/json/__pycache__/scanner.cpython-312.pyc",
+      "bytes": 3321,
+      "device": 57,
+      "inode": 5049534,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ead429b5510fb065",
+      "path": "/usr/lib/python3.12/enum.py",
+      "bytes": 81636,
+      "device": 57,
+      "inode": 5040829,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ebbff07371676895",
+      "path": "/usr/lib/python3.12/importlib/_bootstrap_external.py",
+      "bytes": 69197,
+      "device": 57,
+      "inode": 5040862,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_eef14227d847b3a2",
+      "path": "/usr/lib/python3.12/site.py",
+      "bytes": 23903,
+      "device": 57,
+      "inode": 5040990,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_ef85368f7572c1bf",
+      "path": "/usr/lib/python3.12/selectors.py",
+      "bytes": 19671,
+      "device": 57,
+      "inode": 5040984,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_f2b6bf5eaab57fca",
+      "path": "/usr/lib/python3.12/re/_casefix.py",
+      "bytes": 5446,
+      "device": 57,
+      "inode": 5040972,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_f2cd721f0d991e35",
+      "path": "/usr/lib/python3.12/random.py",
+      "bytes": 34683,
+      "device": 57,
+      "inode": 5040966,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_fb3bc1d5a8ba715a",
+      "path": "/usr/lib/python3.12/urllib/parse.py",
+      "bytes": 45591,
+      "device": 57,
+      "inode": 5041039,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_fb40f08173763648",
+      "path": "/usr/lib/python3.12/pathlib.py",
+      "bytes": 51153,
+      "device": 57,
+      "inode": 5040947,
+      "links": 1
+    },
+    {
+      "label": "python_runtime_fdf7f669b18a7a62",
+      "path": "/usr/lib/python3.12/__pycache__/bisect.cpython-312.pyc",
+      "bytes": 3641,
+      "device": 57,
+      "inode": 5041259,
+      "links": 1
+    },
+    {
+      "label": "rustup",
+      "path": "/usr/local/cargo/bin/rustup",
+      "bytes": 21347088,
+      "device": 57,
+      "inode": 5049880,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_0c5b62054dcb9fcb",
+      "path": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+      "bytes": 14408,
+      "device": 57,
+      "inode": 3086451,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_14461beb5a791872",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.so",
+      "bytes": 13652768,
+      "device": 57,
+      "inode": 5770414,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_1823e8bf68bda708",
+      "path": "/usr/lib/x86_64-linux-gnu/libz.so.1.3",
+      "bytes": 113000,
+      "device": 57,
+      "inode": 3086480,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_2319ac1c031b63f5",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/librustc_driver-07ef66cfcebfb535.so",
+      "bytes": 151572320,
+      "device": 57,
+      "inode": 5050095,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_2320136fa750acda",
+      "path": "/usr/lib/x86_64-linux-gnu/libbz2.so.1.0.4",
+      "bytes": 78944,
+      "device": 57,
+      "inode": 3086371,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_26e6247d0397f81f",
+      "path": "/usr/lib/x86_64-linux-gnu/libsframe.so.1.0.0",
+      "bytes": 35168,
+      "device": 57,
+      "inode": 5045247,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_2b49653edef3453e",
+      "path": "/usr/lib/x86_64-linux-gnu/libctf.so.0.0.0",
+      "bytes": 220384,
+      "device": 57,
+      "inode": 5045284,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_35d8db9873fd8765",
+      "path": "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5",
+      "bytes": 755864,
+      "device": 57,
+      "inode": 3086482,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_388c9a9e8fffab5b",
+      "path": "/usr/lib/x86_64-linux-gnu/libjansson.so.4.14.0",
+      "bytes": 64008,
+      "device": 57,
+      "inode": 5045166,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_3c7f7f8fe9127ca1",
+      "path": "/usr/lib/x86_64-linux-gnu/libdl.so.2",
+      "bytes": 14408,
+      "device": 57,
+      "inode": 3086386,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_41044824a9ec9ed5",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libLLVM-17-rust-1.75.0-stable.so",
+      "bytes": 145072400,
+      "device": 57,
+      "inode": 5770417,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_482931a757fbed24",
+      "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "bytes": 2129424,
+      "device": 57,
+      "inode": 3086372,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_5ce3e5906695d1b6",
+      "path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "bytes": 236616,
+      "device": 57,
+      "inode": 3086352,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_6946d481dad003a6",
+      "path": "/usr/lib/x86_64-linux-gnu/librt.so.1",
+      "bytes": 14624,
+      "device": 57,
+      "inode": 3086453,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_7619a887d4b43521",
+      "path": "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5",
+      "bytes": 202904,
+      "device": 57,
+      "inode": 3086413,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_8784d60b6b35bb74",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/libLLVM.so.22.1-rust-1.96.1-stable",
+      "bytes": 199511024,
+      "device": 57,
+      "inode": 5050083,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_8f35838e2795fad1",
+      "path": "/usr/lib/x86_64-linux-gnu/libmpfr.so.6.2.1",
+      "bytes": 760464,
+      "device": 57,
+      "inode": 5047169,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_96507bb2d541544d",
+      "path": "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1",
+      "bytes": 186624,
+      "device": 57,
+      "inode": 5041096,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_b01487ac4d0cb7c0",
+      "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+      "bytes": 183024,
+      "device": 57,
+      "inode": 3086397,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_b4dfe161402bfc9b",
+      "path": "/usr/lib/x86_64-linux-gnu/libbfd-2.42-system.so",
+      "bytes": 1479888,
+      "device": 57,
+      "inode": 5045259,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_b9b1bde9411f4cfb",
+      "path": "/usr/lib/x86_64-linux-gnu/libisl.so.23.3.0",
+      "bytes": 1863352,
+      "device": 57,
+      "inode": 5047152,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_c770668a50716a52",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-90f6ddbf82de36ec.so",
+      "bytes": 13652768,
+      "device": 57,
+      "inode": 5770380,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_c81e76c28313fec9",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/libtest-3df1bed8075ce1de.so",
+      "bytes": 3508192,
+      "device": 57,
+      "inode": 5770416,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_d8bf7d48cfb1219b",
+      "path": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+      "bytes": 952616,
+      "device": 57,
+      "inode": 3086414,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_e168f00febb5872a",
+      "path": "/usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0",
+      "bytes": 534896,
+      "device": 57,
+      "inode": 3086401,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_e48418c07d12d6ca",
+      "path": "/usr/local/rustup/toolchains/1.75.0-x86_64-unknown-linux-gnu/lib/librustc_driver-5aef5f09b8575cae.so",
+      "bytes": 111888656,
+      "device": 57,
+      "inode": 5770415,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_ed6472c8e82c530f",
+      "path": "/usr/lib/x86_64-linux-gnu/libmpc.so.3.3.1",
+      "bytes": 134440,
+      "device": 57,
+      "inode": 5047182,
+      "links": 1
+    },
+    {
+      "label": "shared_runtime_fa5fc23c0c705c57",
+      "path": "/usr/lib/x86_64-linux-gnu/libcrypto.so.3",
+      "bytes": 5309400,
+      "device": 57,
+      "inode": 3086382,
+      "links": 1
+    },
+    {
+      "label": "shell",
+      "path": "/usr/bin/dash",
+      "bytes": 129784,
+      "device": 57,
+      "inode": 3085738,
+      "links": 1
+    },
+    {
+      "label": "sqlite",
+      "path": "/usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6",
+      "bytes": 1468440,
+      "device": 57,
+      "inode": 5042386,
+      "links": 1
+    },
+    {
+      "label": "stable_cargo",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "bytes": 42878680,
+      "device": 57,
+      "inode": 5049986,
+      "links": 1
+    },
+    {
+      "label": "stable_cargo_clippy",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/cargo-clippy",
+      "bytes": 1267936,
+      "device": 57,
+      "inode": 5049926,
+      "links": 1
+    },
+    {
+      "label": "stable_cargo_fmt",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/cargo-fmt",
+      "bytes": 3716160,
+      "device": 57,
+      "inode": 5050062,
+      "links": 1
+    },
+    {
+      "label": "stable_clippy_driver",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/clippy-driver",
+      "bytes": 20959320,
+      "device": 57,
+      "inode": 5049917,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_037533e096375fbc",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.dfsan.a",
+      "bytes": 1985248,
+      "device": 57,
+      "inode": 5049919,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_05583072bee5f80e",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-837efa14e13728b1.rlib",
+      "bytes": 9296,
+      "device": 57,
+      "inode": 5050024,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_07542aa97eac7852",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-17bce873ebfac7f5.rlib",
+      "bytes": 4446012,
+      "device": 57,
+      "inode": 5050030,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_090cb0a572371b26",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.safestack.a",
+      "bytes": 29744,
+      "device": 57,
+      "inode": 5049913,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_168f0f20ea26a7d3",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.asan.a",
+      "bytes": 6099644,
+      "device": 57,
+      "inode": 5049914,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_1ada174cb7332fe4",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-f23cf51374fc54ab.rlib",
+      "bytes": 35202,
+      "device": 57,
+      "inode": 5050039,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_1d5f9bbb6a9058f5",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-daab000861c2df00.rlib",
+      "bytes": 4166,
+      "device": 57,
+      "inode": 5050020,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_213faf302efcd21f",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-db18ac9af410b6dc.rlib",
+      "bytes": 11676470,
+      "device": 57,
+      "inode": 5050041,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_2319ac1c031b63f5",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/librustc_driver-07ef66cfcebfb535.so",
+      "bytes": 151572320,
+      "device": 57,
+      "inode": 5050095,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_3743a31fce824b07",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-0e982fe764ed65af.rlib",
+      "bytes": 414694,
+      "device": 57,
+      "inode": 5050045,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_46adf820844b2cfa",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-b303998341bc1304.rlib",
+      "bytes": 166580,
+      "device": 57,
+      "inode": 5050028,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_477b1db9d5c672ea",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-8ebd22f4b5d4540a.rlib",
+      "bytes": 228360,
+      "device": 57,
+      "inode": 5050034,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_4acd72b4a1a4c449",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-b0ed51a3bad0ee91.rlib",
+      "bytes": 914786,
+      "device": 57,
+      "inode": 5050023,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_52fd8cbeea46ef3d",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-56b12cec4762464b.rlib",
+      "bytes": 4230,
+      "device": 57,
+      "inode": 5050038,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_5777a3f924b8e0b4",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.tsan.a",
+      "bytes": 5662488,
+      "device": 57,
+      "inode": 5049975,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_73b332e484985bfe",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-99c6fd12a66265d2.rlib",
+      "bytes": 2909326,
+      "device": 57,
+      "inode": 5050026,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_743de75f1251b8b9",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-a6b59492d2e5bebf.rlib",
+      "bytes": 10088,
+      "device": 57,
+      "inode": 5050046,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_7de402632364f57a",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.lsan.a",
+      "bytes": 2079802,
+      "device": 57,
+      "inode": 5049971,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_806f14e2076a52ca",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libtest-4aa7b46c7f22e712.rlib",
+      "bytes": 6912504,
+      "device": 57,
+      "inode": 5050025,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_8784d60b6b35bb74",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/libLLVM.so.22.1-rust-1.96.1-stable",
+      "bytes": 199511024,
+      "device": 57,
+      "inode": 5050083,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_98a61e2e77fdb1fa",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-a11749d4baa953c8.rlib",
+      "bytes": 4308,
+      "device": 57,
+      "inode": 5050031,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_9c75dcf1a00d3a0a",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-cd9fe659cf4de38a.rlib",
+      "bytes": 854744,
+      "device": 57,
+      "inode": 5050036,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_9cc7140ca8d3d813",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libprofiler_builtins-5eded53d873128e3.rlib",
+      "bytes": 494604,
+      "device": 57,
+      "inode": 5050027,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_a29741b6bd4fc967",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-c102c03938982719.rlib",
+      "bytes": 3642002,
+      "device": 57,
+      "inode": 5050032,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_b72dc312554da7c2",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.rtsan.a",
+      "bytes": 1860052,
+      "device": 57,
+      "inode": 5049977,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_bd455e6eede99c86",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-db18ac9af410b6dc.so",
+      "bytes": 5399912,
+      "device": 57,
+      "inode": 5050055,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_c04ee89ea43b2f54",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libsysroot-251ba06a73de7995.rlib",
+      "bytes": 4248,
+      "device": 57,
+      "inode": 5050029,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_c4bbe71e3d9c786d",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-3d4504a0d78e9ce9.rlib",
+      "bytes": 4388,
+      "device": 57,
+      "inode": 5050033,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_c50e0400a6800e4c",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-0f9134f360e6245a.rlib",
+      "bytes": 62550,
+      "device": 57,
+      "inode": 5050035,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_c9e41e9d30a56f72",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-42fa20878cf4d3cc.rlib",
+      "bytes": 36084,
+      "device": 57,
+      "inode": 5050040,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_cb38867d89513b7b",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/libLLVM-22-rust-1.96.1-stable.so",
+      "bytes": 42,
+      "device": 57,
+      "inode": 5050098,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_ce478a0f4f8671db",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-ca260835748aac8f.rlib",
+      "bytes": 30182,
+      "device": 57,
+      "inode": 5050044,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_d80bac093fa7b74c",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgetopts-42841497824f4b6d.rlib",
+      "bytes": 740728,
+      "device": 57,
+      "inode": 5050042,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_df425c916745894b",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-94ed260f2f7faf7e.rlib",
+      "bytes": 27610,
+      "device": 57,
+      "inode": 5050043,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_ed7d571a987c317b",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-e8383d98bd3ce69a.rlib",
+      "bytes": 101236,
+      "device": 57,
+      "inode": 5050037,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_edd7fb8491773f6c",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-4c07b95da83eaeb0.rlib",
+      "bytes": 4386,
+      "device": 57,
+      "inode": 5050021,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_f747ca3a38a8cfba",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_std-fb9500f6a9c5ea41.rlib",
+      "bytes": 4368,
+      "device": 57,
+      "inode": 5050022,
+      "links": 1
+    },
+    {
+      "label": "stable_runtime_febd1f2c07b4536b",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.msan.a",
+      "bytes": 4678316,
+      "device": 57,
+      "inode": 5049973,
+      "links": 1
+    },
+    {
+      "label": "stable_rust_gdb",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rust-gdb",
+      "bytes": 980,
+      "device": 57,
+      "inode": 5050072,
+      "links": 1
+    },
+    {
+      "label": "stable_rust_gdbgui",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rust-gdbgui",
+      "bytes": 2160,
+      "device": 57,
+      "inode": 5050087,
+      "links": 1
+    },
+    {
+      "label": "stable_rust_lldb",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rust-lldb",
+      "bytes": 1060,
+      "device": 57,
+      "inode": 5050070,
+      "links": 1
+    },
+    {
+      "label": "stable_rustc",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "bytes": 646024,
+      "device": 57,
+      "inode": 5050075,
+      "links": 1
+    },
+    {
+      "label": "stable_rustdoc",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rustdoc",
+      "bytes": 13357552,
+      "device": 57,
+      "inode": 5050073,
+      "links": 1
+    },
+    {
+      "label": "stable_rustfmt",
+      "path": "/usr/local/rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu/bin/rustfmt",
+      "bytes": 5287872,
+      "device": 57,
+      "inode": 5050063,
+      "links": 1
+    }
+  ]
+}

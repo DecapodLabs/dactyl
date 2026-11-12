@@ -1,0 +1,54 @@
+{
+  "base_commit": "26e671d809a83c3dcc7eaf09d0b87322c50ff922",
+  "native_task": "feat_01m76c2002nnt3za",
+  "status": "proposal_only_not_executed",
+  "apply_product_files": [
+    "files/scripts/proof/check.py"
+  ],
+  "configuration_operations": "config-patch.json",
+  "authored_spec_insertions": "spec-additions.json",
+  "files": {
+    "files/scripts/proof/check.py": {
+      "sha256": "6b07d9dc9465a6f653afcf965483f3b78d3f4907c375a5d3449e6a5ca113d50d",
+      "bytes": 4872
+    },
+    "config-patch.json": {
+      "sha256": "7e8184895b0c467271cb9aa100ac84066eaa0529f81cb8bab0248fe9cdb2885a",
+      "bytes": 50584
+    },
+    "runtime-groups.json": {
+      "sha256": "eed14ccfdb25891b5129cb8bcef395eba5a0058fb8bdfbce5bba772b475ae262",
+      "bytes": 46373
+    },
+    "check-map.json": {
+      "sha256": "323b2480e267945b8f263f88aed08d0ff20489bb1aba41d3e4c0384dca94bc80",
+      "bytes": 8973
+    },
+    "spec-additions.json": {
+      "sha256": "41520b74fd4bfb859855ccd8204edf3e5e59947712a05c6a78f137c6d03d0df7",
+      "bytes": 1490
+    },
+    "project_runtime.py": {
+      "sha256": "e920476ff99a4d34cb80135ddc41a51763b74e710264a5cb4af549190fbff93f",
+      "bytes": 5419
+    },
+    "helper.diff": {
+      "sha256": "db9965b35c1174cef38846da773d2b03fc5e437dc2b5d18cd78695b74f52af93",
+      "bytes": 4890
+    },
+    "README.md": {
+      "sha256": "44489babf029253819f8eed012040e4d3dd1509b0c25029dc5f7a76039e35057",
+      "bytes": 3324
+    }
+  },
+  "preserve_unchanged": [
+    "scripts/proof/prepare.py",
+    "scripts/proof/runtime_inventory.py",
+    "all product source and tests",
+    "Cargo.toml",
+    "Cargo.lock",
+    "all .github/workflows files"
+  ],
+  "runtime_inventory_sha256": "b75516456f1aef558d2615aa32448027f40121f7491e70f446a32b8bd0dcc142",
+  "runtime_sizes_sha256": "fd3fe21e7cd21fdcefdc7daaa5de8babb4e5e3fb532462a690d56abbbecfbf35"
+}
