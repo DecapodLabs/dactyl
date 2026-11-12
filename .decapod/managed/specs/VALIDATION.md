@@ -8,7 +8,7 @@ checks passed; aligning the pin preserves the full Rust contract and drift gate.
 
 ## Offline connector and Rust compatibility proof
 
-`tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
+`tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.85
 checks only through `decapod validate`. The native adapter owns temporary paths.
 The local headless Linux proof runtime must support unlabelled temporary files,
 setgid directory modes and POSIX ACL fixtures; the Podman overlay and macOS
@@ -19,6 +19,15 @@ Cargo cache/build directories prepared for that UID/GID. Storage ancestry
 ownership checks remain enabled.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
+
+The MSRV proposal preserves all fourteen existing Rust checks, including both
+locked all-feature execution and fresh-consumer resolution, with the actual
+Rust 1.85 toolchain. Two additional lock inspections require patched or absent
+quinn-proto entries in the repository and clean-consumer graphs. They record
+the observed versions and lock hashes; they do not enable HTTP/3 or replace a
+full advisory audit. Dependency preparation fetches archives only, and required
+builds/tests remain inside full native validation. No current-candidate success
+is inferred from the earlier Rust 1.75 release proof.
 
 ## Secure shared-directory SQLite recovery
 
@@ -246,7 +255,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216`
+- Repository signal fingerprint: `a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

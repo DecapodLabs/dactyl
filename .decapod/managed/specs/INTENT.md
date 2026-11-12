@@ -1,5 +1,16 @@
 # Intent
 
+## Supported consumers and dependency resolution
+
+Dactyl keeps the same datastore and managed-session APIs while requiring Rust
+and Cargo 1.85 in this next-0.x-minor proposal. The prior inactive Quinn upper
+bound kept Cargo 1.75 resolution possible but prevented a consumer from selecting
+the patched protocol package. `Cargo.toml` now requires quinn-proto >=0.11.19
+without enabling HTTP/3. Both the repository and a fresh consumer lock must meet
+that floor; the full existing feature, lint, package and MSRV proof remains
+required through `tools/proof/check.py`. No package publication or hosted rollout
+is established by this change.
+
 ## Bounded diagnostic snapshots
 
 The `dactyl-db` crate provides consistent, bounded physical reads for Decapod's
@@ -161,7 +172,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216`
+- Repository signal fingerprint: `a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

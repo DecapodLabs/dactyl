@@ -1,5 +1,15 @@
 # Architecture
 
+## HTTP dependency compatibility boundary
+
+The Neon, Supabase and managed-auth implementations retain their existing
+reqwest blocking transport and bounded execution. An optional constraint under
+`target.'cfg(any())'` requires patched quinn-proto during Cargo resolution but
+never compiles or activates HTTP/3. The obsolete quinn-udp compatibility cap is
+removed. Other active HTTP/IDNA/TLS bounds remain unchanged. Patched Quinn's
+Rand manifests use Edition 2024, so the complete dependency-resolution contract
+now requires Cargo/Rust 1.85 even for consumers that do not use HTTP/3.
+
 ## Snapshot inspection boundary
 
 `src/inspection.rs` exposes limits and a callback-scoped reader without changing
@@ -200,7 +210,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216`
+- Repository signal fingerprint: `a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

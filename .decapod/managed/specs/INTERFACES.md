@@ -1,5 +1,15 @@
 # Interfaces
 
+## Compiler and consumer contract
+
+`Cargo.toml` declares Rust 1.85. This raises the consumer toolchain requirement
+and therefore needs a breaking next-0.x-minor release, while preserving every
+existing public Rust method, type, feature key and wire contract. Rust 1.75 is
+not supported by this proposal. Locked all-feature checks and a separately
+resolved consumer are both exercised with Rust 1.85; the consumer does not
+inherit Dactyl's Cargo.lock. The inactive quinn-proto dependency must resolve at
+0.11.19 or later, with no HTTP/3 feature enabled.
+
 ## Bounded diagnostic snapshots
 
 `Connection::inspect_snapshot(SnapshotLimits, callback)` requires a dedicated
@@ -236,7 +246,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1f0fa0d89e343aa84446142f2cf99b2351816fbf48ab7b7912942e538686216`
+- Repository signal fingerprint: `a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
