@@ -10,6 +10,18 @@ use crate::schema::StoreSchema;
 
 /// The small operation seam Dactyl needs from each backend.
 pub trait Adapter {
+    fn inspect_snapshot(
+        &self,
+        _limits: crate::SnapshotLimits,
+        _inspect: &mut dyn FnMut(&mut dyn crate::SnapshotReader) -> Result<(), DactylError>,
+    ) -> Result<(), DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_snapshot_inspection",
+            "bounded snapshot inspection is unavailable for this datastore",
+        ))
+    }
+
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError>;
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError>;
     fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DactylError>;

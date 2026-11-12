@@ -7,6 +7,7 @@
 //! amalgamation, or `libsqlite3-sys` dependency is used.
 
 mod ffi;
+mod inspection;
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod recovery;
 
@@ -308,6 +309,22 @@ fn validate_existing_sqlite_header(path: &Path) -> Result<(), DactylError> {
 }
 
 impl Adapter for SqliteAdapter {
+    fn inspect_snapshot(
+        &self,
+        limits: crate::SnapshotLimits,
+        inspect: &mut dyn FnMut(&mut dyn crate::SnapshotReader) -> Result<(), DactylError>,
+    ) -> Result<(), DactylError> {
+        if self.options.access_mode != AccessMode::ReadOnly {
+            return Err(DactylError::adapter_with_code(
+                AdapterErrorKind::ReadOnly,
+                "inspection_requires_read_only",
+                "open a dedicated read-only route for snapshot inspection",
+            ));
+        }
+        let connection = self.connection()?;
+        inspection::inspect_snapshot(&connection, limits, inspect)
+    }
+
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
         let connection = self.connection()?;
         query_rows(&connection, sql, params)
@@ -984,6 +1001,9 @@ impl<'a> Statement<'a> {
                             "SQLite returned a null text pointer",
                         ));
                     }
+                    if length == 0 {
+                        return Ok(serde_json::Value::String(String::new()));
+                    }
                     String::from_utf8(
                         std::slice::from_raw_parts(pointer, length.max(0) as usize).to_vec(),
                     )
@@ -1003,6 +1023,9 @@ impl<'a> Statement<'a> {
                             AdapterErrorKind::Value,
                             "SQLite returned a null blob pointer",
                         ));
+                    }
+                    if length == 0 {
+                        return Ok(serde_json::Value::Array(Vec::new()));
                     }
                     Ok(serde_json::Value::Array(
                         std::slice::from_raw_parts(pointer.cast::<u8>(), length.max(0) as usize)
@@ -1081,6 +1104,7 @@ fn map_sqlite_failure(operation: &str, failure: ffi::SqliteFailure) -> DactylErr
         }
         ffi::SQLITE_NOTADB | ffi::SQLITE_CORRUPT => (AdapterErrorKind::Corrupt, "corrupt_database"),
         ffi::SQLITE_CANTOPEN => (AdapterErrorKind::Unavailable, "cannot_open"),
+        ffi::SQLITE_TOOBIG => (AdapterErrorKind::Value, "value_too_large"),
         ffi::SQLITE_IOERR => (AdapterErrorKind::Storage, "storage_failure"),
         ffi::SQLITE_RANGE => (AdapterErrorKind::InvalidOperation, "invalid_parameters"),
         _ => (AdapterErrorKind::Query, "sqlite_error"),
