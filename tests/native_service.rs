@@ -85,8 +85,7 @@ fn local_native_read_only_contract() {
             "INSERT INTO forbidden_fixture VALUES (1)",
             vec![],
         )])
-        .err()
-        .expect("read-only mutation accepted");
+        .expect_err("read-only mutation accepted");
     assert_eq!(denied.adapter_kind(), Some(AdapterErrorKind::ReadOnly));
     println!("native read-only atomic service contract passed; independent server observation and cleanup remain external");
 }
