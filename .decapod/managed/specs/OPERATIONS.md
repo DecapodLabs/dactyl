@@ -73,14 +73,29 @@ separate explicit operation and is outside replacement atomicity.
 - Feature flags:
 
 ## Release Synchronization
-Release synchronization is performed from the fetched `origin/main` tip in an
-isolated worktree. The v0.6.1 baseline includes the release metadata, source,
-tests, and the corresponding Decapod projections as one reconciled state;
-validation must pass before that state is promoted to a protected checkout.
+Release preparation starts from fetched `origin/main` in an isolated managed
+worktree. `CHANGELOG.md` distinguishes unpublished compatibility guidance from
+published versions. The accepted manifest requires Rust/Cargo 1.85 and patched
+inactive Quinn resolution; downstream applications must refresh their own
+lockfiles and run their own audits. This metadata requirement does not activate
+HTTP/3 or alter Dactyl's Rust API, wire contract or backend authorization.
+
+`.github/workflows/release.yml` runs release-please on main-branch pushes.
+Maintainers review and merge its version/changelog PR; only a run reporting
+`release_created` proceeds to `cargo publish`. A successful workflow with
+publication steps skipped is not evidence that a crate was published. Verify
+both the GitHub release and crates.io version before upgrading consumers.
+
+When a release-worthy compatibility change was merged without a recognized
+release unit, a meaningful conventional `fix!` preparation commit can carry the
+documented `Release-As: 0.14.0` footer to request the next release PR. It leaves
+`Cargo.toml` version changes to release-please and does not authorize a direct
+release, privileged workflow dispatch or downstream dependency adoption.
+This path follows the [release-please version override contract](https://github.com/googleapis/release-please#how-do-i-change-the-version-number).
+Merged-PR body commit overrides are unsupported for plain merges.
 
 **CI/CD Notes**:
-- The `decapod-validate` workflow pins the `decapod` CLI to version `0.98.3` and uses it as the cache key to prevent stale cache bugs.
-- The `release-please` action is used to automate the release process, creating a single PR for Cargo.toml versions and changelog, and publishing upon merge.
+- `tools/proof/Containerfile` and the accepted validation entrypoints pin the independent published Decapod controller to `0.138.3`. Full `decapod validate` runs the unchanged reviewed Rust proof through `tools/proof/check.py`, including locked and lock-free consumer checks on Rust 1.85; preparation only fetches dependencies.
 - The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md`.
 
 ## Local SQLite operations
