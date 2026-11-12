@@ -1,0 +1,33 @@
+{
+  "base_commit": "e09d80a4e31b0664a7699844522a11fde153a7e2",
+  "native_task": "feat_01m76c2002nnt3za",
+  "status": "proposal_only_not_executed",
+  "replace_config": "configured-proof.toml",
+  "authored_spec_insertions": "spec-additions.json",
+  "old_command_digest": "sha256:9a3855e8ac4bb9a872c2b9e03463c5b557904f84528392f558560f1cd7389c84",
+  "new_command_digest": "sha256:9ebac1607d607ca61ae8b642e392ef43bf90688426d02b0a3736f441c0a4ff70",
+  "source_inventory_digest_unchanged": "sha256:267a4f0b1c900be01d7fe7077289fb1a0d015f001b89e968a0bd3fd87fd81877",
+  "files": {
+    "configured-proof.toml": {
+      "sha256": "4a1729a6c34c9f2bcd34079c7bf04fe266a8ea9dd50e48ebfc56d3539852e291",
+      "bytes": 47361
+    },
+    "config.diff": {
+      "sha256": "79f79052b6a18da80cf8ecbdb114238b955b9992f021b2f811600900e38621e2",
+      "bytes": 1258
+    },
+    "before-config.toml": {
+      "sha256": "dfd985fda786013fafad57b9f02506c7d0197e91b1f7d87b28137fc694c202b7",
+      "bytes": 47361
+    },
+    "review.json": {
+      "sha256": "8df7408ca5a9a285aa22aca2696806777f6b8c0f8b6db7bd038eeadca98238cd",
+      "bytes": 1033
+    },
+    "spec-additions.json": {
+      "sha256": "1132f5f8801b1528c939f2df08797b0e9f2e8f0ad2ebb3bba951990c56bbc4fa",
+      "bytes": 494
+    }
+  },
+  "preserve": "all product/helper bytes, argument vectors, required flags, execution maps/environments/timeouts, source coverage value and order, required-profile id and source inventory digest; every other configuration value"
+}

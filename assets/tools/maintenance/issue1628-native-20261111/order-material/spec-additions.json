@@ -1,0 +1,3 @@
+{
+  ".decapod/managed/specs/VALIDATION.md": "## Deterministic required-command declaration\n\nRequired proof command declarations must have nonempty unique names in ascending lexical order. Placing the MSRV declaration before the stable declaration preserves both mandatory groups, all fourteen check arguments, complete runtime coverage and the existing timeout budgets. Declaration order and its reviewed digest are configuration prerequisites, not evidence that a product check passed.\n"
+}
