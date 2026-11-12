@@ -1,5 +1,13 @@
 # dactyl
 
+Bounded local diagnostics use `Connection::inspect_snapshot(SnapshotLimits,
+callback)`. Open a dedicated read-only SQLite connection, then use
+`SnapshotReader::read` or its incremental `visit` method within the callback.
+All queries share one snapshot and resource budget. Early stop is explicit;
+budget exhaustion returns an error. Remote adapters currently reject this
+capability without issuing a request. See [snapshot inspection](docs/snapshot-inspection.md)
+for guarantees and limits.
+
 [![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.98.3-dc2626)](https://github.com/DecapodLabs/decapod)
 
 `dactyl-db` is a lightweight application-layer datastore for read/write-heavy

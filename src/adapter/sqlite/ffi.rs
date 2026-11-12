@@ -68,6 +68,14 @@ type BindBlob = unsafe extern "C" fn(
     sqlite3_destructor_type,
 ) -> c_int;
 type Step = unsafe extern "C" fn(*mut sqlite3_stmt) -> c_int;
+type StmtReadonly = unsafe extern "C" fn(*mut sqlite3_stmt) -> c_int;
+type Limit = unsafe extern "C" fn(*mut sqlite3, c_int, c_int) -> c_int;
+type ProgressHandler = unsafe extern "C" fn(
+    *mut sqlite3,
+    c_int,
+    Option<unsafe extern "C" fn(*mut c_void) -> c_int>,
+    *mut c_void,
+);
 type ColumnCount = unsafe extern "C" fn(*mut sqlite3_stmt) -> c_int;
 type ColumnName = unsafe extern "C" fn(*mut sqlite3_stmt, c_int) -> *const c_char;
 type ColumnType = unsafe extern "C" fn(*mut sqlite3_stmt, c_int) -> c_int;
@@ -114,6 +122,9 @@ pub struct Api {
     bind_text: BindText,
     bind_blob: BindBlob,
     step: Step,
+    stmt_readonly: StmtReadonly,
+    limit: Limit,
+    progress_handler: ProgressHandler,
     column_count: ColumnCount,
     column_name: ColumnName,
     column_type: ColumnType,
@@ -177,6 +188,9 @@ impl Api {
             bind_text: symbol!("sqlite3_bind_text", BindText),
             bind_blob: symbol!("sqlite3_bind_blob", BindBlob),
             step: symbol!("sqlite3_step", Step),
+            stmt_readonly: symbol!("sqlite3_stmt_readonly", StmtReadonly),
+            limit: symbol!("sqlite3_limit", Limit),
+            progress_handler: symbol!("sqlite3_progress_handler", ProgressHandler),
             column_count: symbol!("sqlite3_column_count", ColumnCount),
             column_name: symbol!("sqlite3_column_name", ColumnName),
             column_type: symbol!("sqlite3_column_type", ColumnType),
@@ -296,6 +310,24 @@ impl Api {
 
     pub unsafe fn step(&self, statement: *mut sqlite3_stmt) -> c_int {
         (self.step)(statement)
+    }
+
+    pub unsafe fn stmt_readonly(&self, statement: *mut sqlite3_stmt) -> bool {
+        (self.stmt_readonly)(statement) != 0
+    }
+
+    pub unsafe fn limit(&self, database: *mut sqlite3, kind: c_int, value: c_int) -> c_int {
+        (self.limit)(database, kind, value)
+    }
+
+    pub unsafe fn progress_handler(
+        &self,
+        database: *mut sqlite3,
+        n: c_int,
+        callback: Option<unsafe extern "C" fn(*mut c_void) -> c_int>,
+        context: *mut c_void,
+    ) {
+        (self.progress_handler)(database, n, callback, context)
     }
 
     pub unsafe fn column_count(&self, statement: *mut sqlite3_stmt) -> c_int {
@@ -426,6 +458,7 @@ pub const SQLITE_READONLY: c_int = 8;
 pub const SQLITE_IOERR: c_int = 10;
 pub const SQLITE_CORRUPT: c_int = 11;
 pub const SQLITE_CANTOPEN: c_int = 14;
+pub const SQLITE_TOOBIG: c_int = 18;
 pub const SQLITE_CONSTRAINT: c_int = 19;
 pub const SQLITE_RANGE: c_int = 25;
 pub const SQLITE_NOTADB: c_int = 26;

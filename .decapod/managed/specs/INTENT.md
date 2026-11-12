@@ -1,5 +1,12 @@
 # Intent
 
+## Bounded diagnostic snapshots
+
+The `dactyl-db` crate provides consistent, bounded physical reads for Decapod's
+native storage inventory. Callers retain semantic schema and history ownership.
+Snapshot inspection requires a dedicated read-only handle; unsupported remote
+adapters fail explicitly without introducing a second schema or maintenance path.
+
 ## Logical backend access and user sessions
 
 Applications expose local/cloud selection; Dactyl resolves SQLite or the native
@@ -154,8 +161,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,5 +1,11 @@
 # Validation
 
+The snapshot-inspection candidate uses independently released Decapod v0.138.3
+for both workbranch validation and `tools/proof/Containerfile`. Hosted validation
+must evaluate entrypoints with that same version. PR #104's first hosted run
+exposed the previous v0.136.2 image pin reverting those headers after all local
+checks passed; aligning the pin preserves the full Rust contract and drift gate.
+
 ## Offline connector and Rust compatibility proof
 
 `tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
@@ -240,7 +246,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

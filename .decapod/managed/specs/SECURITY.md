@@ -1,5 +1,13 @@
 # Security
 
+## Diagnostic read boundary
+
+Snapshot inspection accepts only SELECT/WITH and rechecks native statement
+read-only status. It rejects preparation-time PRAGMA and enforces scoped native
+and result budgets. Callers own authorization, redaction and bounded callback
+work. No raw handle, credential, automatic maintenance or remote fallback is
+exposed.
+
 ## Cloud connector and managed-auth credentials
 
 `src/cloud.rs` discovers only public profile metadata before sending credentials.
@@ -135,8 +143,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

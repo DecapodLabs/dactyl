@@ -1,5 +1,13 @@
 # Architecture
 
+## Snapshot inspection boundary
+
+`src/inspection.rs` exposes limits and a callback-scoped reader without changing
+the owned row API. `src/adapter/sqlite/inspection.rs` owns one read transaction,
+scoped native progress/length limits, incremental row decoding and cleanup on
+all exits. Decapod interprets records and computes domain inventory; Dactyl
+does not adopt its schema, migrate data or collect semantic evidence.
+
 ## Logical connector and authentication boundary
 
 `src/cloud.rs` resolves a public versioned deployment profile from a trusted
@@ -192,8 +200,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

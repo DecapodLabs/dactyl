@@ -60,6 +60,11 @@
       "id": "readonly-target-refresh-20261112",
       "summary": "Record accepted 0.13.0 target and renewed task custody before integration.",
       "input_digest": "sha256:6331f793a802641ae36b6416bada95fb60a50d0fc60d5073ac6090be47940bdd"
+    },
+    {
+      "id": "readonly-integrate-01328ac-20261112",
+      "summary": "Integrate accepted 0.13.0 snapshot inspection, preserving native read-only RPC transport and cumulative authored custody.",
+      "input_digest": "sha256:cc16464d6bb2516252cedae37e53eeeecfeac3ce689a219baca5d6a1024ff13b"
     }
   ],
   "intents": {
@@ -104,23 +109,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed explicit read-only native batch route and protected opt-in fixture after Clippy repair; full feature and MSRV proof retains all checks.",
-          "reviewed_code_fingerprint": "95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c",
-          "spec_material_hash": "94bfa200cd35238ce58392aa9bd581c393fa854a5a213297ce9436fe4e6d61e8"
+          "reason": "Reviewed independent 0.13.0 snapshot inspection and native read-only RPC boundary together against accepted source.",
+          "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
+          "spec_material_hash": "9e29da155ed2a72688f70e6d4fa074e3ecfa2b48f5098e656cabf58b1cfb1fb4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed unchanged native read/write and legacy route contracts; use expect_err in fixture without relaxing assertions.",
-          "reviewed_code_fingerprint": "95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c",
-          "spec_material_hash": "5ab1b984279efcdfb0f78f881aba6fa894aea6a1198752e62370f1fe735f5f04"
+          "reason": "Both accepted inspection API and explicit native read-only route retained; package is now 0.13.0.",
+          "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
+          "spec_material_hash": "e50beab672ad8c6d419c327ba594d5cf0149bb198b63601668ebd9e03830f90d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed protected fixture input and denied-write assertion. Linux recovery mode checks require native Linux filesystem, not macOS shared-mount semantics.",
-          "reviewed_code_fingerprint": "95202cd0e0854a7c80d4bcbd8c0a13e2a9ae08377a3493a12bcb9fb2d496b67c",
-          "spec_material_hash": "789b0d13f0bcde95fc35dad57e4e1c3407aa890587d783fe01aa2610a429d186"
+          "reason": "Keep physical read-only execution a trusted server obligation and fixture absence unavailable, preserving inspection read-only safety.",
+          "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
+          "spec_material_hash": "99ade8a60b541c493704a752394d548ca34372f45febf784be67da5b9b8cf72a"
         }
       ],
       "state": "APPROVED",
@@ -131,7 +136,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794461408Z"
+      "updated_at": "1794471660Z"
     },
     "trajectory": {
       "active_boundaries": [

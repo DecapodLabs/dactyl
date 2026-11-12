@@ -8,6 +8,7 @@ mod adapter;
 #[cfg(feature = "supabase")]
 mod cloud;
 mod contract;
+mod inspection;
 mod rows;
 mod schema;
 mod supabase_rpc;
@@ -20,6 +21,7 @@ pub use crate::contract::{
     StorageContext, WriteResult, STORAGE_CONTEXT_VERSION,
 };
 pub use crate::error::{AdapterErrorKind, DactylError};
+pub use crate::inspection::{ScanOutcome, SnapshotLimits, SnapshotReader};
 pub use crate::rows::{Parameter, Row, Rows};
 pub use crate::schema::{
     ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
@@ -350,6 +352,17 @@ impl Connection {
     /// Inspect the local SQLite catalog through the backend-neutral schema type.
     pub fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
         self.adapter.inspect_schema()
+    }
+
+    /// Run caller-owned diagnostics in one consistent read transaction.
+    /// Requires a read-only route. Does not initialize, repair, checkpoint,
+    /// migrate or update activity metadata. Remote support is explicit.
+    pub fn inspect_snapshot(
+        &self,
+        limits: SnapshotLimits,
+        inspect: &mut dyn FnMut(&mut dyn SnapshotReader) -> Result<(), DactylError>,
+    ) -> Result<(), DactylError> {
+        self.adapter.inspect_snapshot(limits, inspect)
     }
 
     /// Verify the selected datastore without mutating it.
