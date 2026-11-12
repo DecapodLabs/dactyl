@@ -25,21 +25,21 @@ specs = true
 validation_buildkite_preflights = false
 
 [[proof.commands]]
-name = "rust-contract-stable"
-command = "/usr/bin/python3.12"
-args = ["scripts/proof/check.py", "--group", "stable"]
-description = "Stable Rust feature matrix, auth/RPC contract, formatting, clippy, missing-fixture and package verification"
-required = true
-
-[[proof.commands]]
 name = "rust-contract-msrv"
 command = "/usr/bin/python3.12"
 args = ["scripts/proof/check.py", "--group", "msrv"]
 description = "Rust 1.75 all-feature contract and clean-consumer verification without the library lockfile"
 required = true
 
+[[proof.commands]]
+name = "rust-contract-stable"
+command = "/usr/bin/python3.12"
+args = ["scripts/proof/check.py", "--group", "stable"]
+description = "Stable Rust feature matrix, auth/RPC contract, formatting, clippy, missing-fixture and package verification"
+required = true
+
 [proof.repository_contract]
-reviewed_commands_digest = "sha256:9a3855e8ac4bb9a872c2b9e03463c5b557904f84528392f558560f1cd7389c84"
+reviewed_commands_digest = "sha256:9ebac1607d607ca61ae8b642e392ef43bf90688426d02b0a3736f441c0a4ff70"
 
 [proof.repository_contract.executions."rust-contract-msrv"]
 program = "/usr/bin/python3.12"

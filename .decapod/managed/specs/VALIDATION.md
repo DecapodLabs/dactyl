@@ -1,5 +1,9 @@
 # Validation
 
+## Deterministic required-command declaration
+
+Required proof command declarations must have nonempty unique names in ascending lexical order. Placing the MSRV declaration before the stable declaration preserves both mandatory groups, all fourteen check arguments, complete runtime coverage and the existing timeout budgets. Declaration order and its reviewed digest are configuration prerequisites, not evidence that a product check passed.
+
 ## Two required native Rust execution groups
 
 The repository-local profile requires both `rust-contract-stable` and `rust-contract-msrv`. The stable group runs the existing twelve formatting, feature-matrix, clippy, missing-real-fixture and package checks; the MSRV group runs the existing Rust 1.75 all-feature test and fresh-consumer check without the library lockfile. Every Cargo argument, offline setting, individual 900-second deadline, expected missing-fixture failure predicate and failure exit remains unchanged. Both groups are mapped to the Rust workflow and remain mandatory; success of one group cannot substitute for the other.
