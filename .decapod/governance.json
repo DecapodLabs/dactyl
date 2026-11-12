@@ -55,6 +55,11 @@
       "id": "native-readonly-clippy",
       "summary": "Fix fixture Clippy error while retaining full Linux feature, MSRV, ownership and package checks",
       "input_digest": "sha256:1cbeecdc029fda8deedb0a6cb29a8aad13c48b7cedd22e4e44a7cf0efe5c9fbb"
+    },
+    {
+      "id": "readonly-target-refresh-20261112",
+      "summary": "Record accepted 0.13.0 target and renewed task custody before integration.",
+      "input_digest": "sha256:6331f793a802641ae36b6416bada95fb60a50d0fc60d5073ac6090be47940bdd"
     }
   ],
   "intents": {
@@ -132,8 +137,13 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8dc2303fb6c8f02c8c36d01d40a0f24adfed08dd3f6198fa098d611bbb08730c",
-      "checks": [],
+      "artifact_hash": "sha256:f020c9883d5dda95ee6ecc5951547884f94d8364f8bc74f96c9e545fcd6461a6",
+      "checks": [
+        {
+          "name": "accepted-target-refresh",
+          "status": "partial"
+        }
+      ],
       "current_phase": "validation",
       "custody": {
         "events": [
@@ -155,10 +165,17 @@
             "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M77022R1GVPB5SWCJVBMRTZS",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M77022NBGX1MHS9CQZF1KFG5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77022R1GVPB5SWCJVBMRTZS": {
@@ -186,6 +203,25 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [],
+                "proof_refs": [
+                  "accepted-target-refresh"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/supabase-rpc-v1.md\"",
+                  "\"src/supabase_rpc.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/adapter/supabase.rs\""
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Accepted main advanced to 01328ac and PR106 conflicts; merge accepted source and renew exact candidate proof."
+                ]
               }
             ]
           }
@@ -220,7 +256,9 @@
       "shortcut_risk_signals": [],
       "task_id": "feat_01m76zy9fs677kpz",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Accepted main advanced to 01328ac and PR106 conflicts; merge accepted source and renew exact candidate proof."
+      ]
     }
   },
   "legacy_digests": {
