@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0](https://github.com/DecapodLabs/dactyl/compare/v0.11.1...v0.12.0) (2026-11-12)
+
+
+### Features
+
+* **cloud:** add scoped account transport and offline proof preparation ([c5f9e71](https://github.com/DecapodLabs/dactyl/commit/c5f9e719541ffa4959f758c2a2b952288a3a9be2))
+* **cloud:** resolve connectors and managed auth through Dactyl ([835e556](https://github.com/DecapodLabs/dactyl/commit/835e5567d9657d3f0d0c842394b7778f35d063e9))
+* **cloud:** resolve connectors and managed user sessions ([37a48fa](https://github.com/DecapodLabs/dactyl/commit/37a48fabb450b5ed416c42aa6cc53b1cf114115a))
+
+
+### Bug Fixes
+
+* **auth:** distinguish session handoff from backend readiness ([cc9550c](https://github.com/DecapodLabs/dactyl/commit/cc9550cda2f5060bd0bd6a886eedc079d856d5e3))
+* **ci:** run proof as the checkout owner ([7c4f372](https://github.com/DecapodLabs/dactyl/commit/7c4f3727cc72d24e5fd1d4aab808475da5e5fd8d))
+* **cloud:** preserve MSRV resolution and private proof filesystem ([605927c](https://github.com/DecapodLabs/dactyl/commit/605927c00f1dbfab6f028e818b2a42d7b5d58c5e))
+* **proof:** preserve native temporary-path custody ([a85607e](https://github.com/DecapodLabs/dactyl/commit/a85607e8a8cbfce10cee1daca249efd58f8d58f3))
+
 ## [0.11.1](https://github.com/DecapodLabs/dactyl/compare/v0.11.0...v0.11.1) (2026-10-10)
 
 
