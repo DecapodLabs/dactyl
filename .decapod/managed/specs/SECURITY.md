@@ -1,5 +1,27 @@
 # Security
 
+## Cloud connector and managed-auth credentials
+
+`src/cloud.rs` discovers only public profile metadata before sending credentials.
+The selected HTTPS origin is trusted configuration; profile-origin mismatches,
+redirects, secret/service-role keys and invalid schemas fail before native RPC
+construction. Literal loopback HTTP exists only for disposable tests. Access
+bearers accompany data calls and authenticated completion; refresh tokens and
+PKCE verifiers are sent only to fixed managed Auth paths on that same origin.
+Dactyl stores no durable sessions and does not open the browser. The caller owns
+private pending-flow checkpoints and must not replay unknown one-time exchange
+or rotation outcomes. Credential types redact Debug and auth errors omit remote
+messages. Propodus-managed Auth/RLS/grants enforce identity and permissions;
+caller context and local agent labels cannot elevate cloud authority.
+
+Normal account and data access depend on the Supabase user session, paid-seat
+assignment and backend tenant/project isolation. Optional explicit SCM linking
+adds X-SCM-Token, X-SCM-Provider and X-SCM-Host only to the account channel, with
+fixed GitHub/GitLab hosts; it never supplies ordinary data authority. Dactyl does
+not infer this channel from a sign-in provider token. Redirects and automatic
+retries are disabled for auth, discovery and account requests. Only allowlisted
+public denial codes appear in errors; remote messages and credentials do not.
+
 ## Secure shared-directory SQLite recovery
 
 Private staging and creation-time modes protect rebuilt data under permissive umasks. Activation restores existing permission bits only after validation. Source access ACLs, inherited default ACLs and MAC/system access labels fail closed rather than being silently replaced; unrelated user attributes and unchanged parent POSIX access ACLs are permitted. Original/archive metadata remains untouched. Callers must quiesce filesystem name/content/metadata writers from connection open; inode checks are detection boundaries, not protection against arbitrary malicious concurrent directory writers.
@@ -89,6 +111,8 @@ Describe the security primitives and security controls implemented in this repos
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Security Overlay
 
 ### Authentication Requirements
@@ -111,7 +135,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

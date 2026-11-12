@@ -129,11 +129,13 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Background Processing Operations Overlay
 
 ### Queue Visibility
 - Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
+- If a dead-letter queue exists, define visibility and alerting obligations for it
 - Worker health and processing rate metrics required
 
 ### Shutdown Behavior
@@ -149,6 +151,8 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Persistent State Operations Overlay
 
 ### Backup & Recovery
@@ -160,7 +164,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 ### Migration Operations
 - All schema changes via migration files
 - Migration rollback procedures documented
-- Zero-downtime migration strategy for production
+- Migration downtime and availability effects MUST be declared; zero downtime requires project-specific proof
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
@@ -168,7 +172,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

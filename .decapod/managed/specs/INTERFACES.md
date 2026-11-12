@@ -1,5 +1,32 @@
 # Interfaces
 
+## Logical cloud connector and managed Auth
+
+`Backend::{Local,Cloud}` and `DatastoreRoute::for_backend` define application
+selection. `CloudConnector` discovers profile v1 (`version`, `project_origin`,
+`publishable_key`, `schema`) and exposes typed start/status/code/session exchange,
+completion, refresh and revocation methods. `AuthenticationSecrets` and
+`UserSession` serialize only for caller-controlled private custody and redact
+Debug. Data access uses the additive native Supabase RPC v1 route; existing
+service constructors preserve `/query` and `/batch`. See
+`docs/cloud-connectors.md` and `docs/supabase-rpc-v1.md` for bounded execution,
+unknown-outcome handling and the boundary between offline and hosted proof.
+
+`CloudConnector::account_request(AccountOperation, &Value, bearer,
+Option<&ScmCredential>)` selects fixed account-register, account-status,
+billing-quote or billing-checkout POST paths. Ordinary account access passes no
+SCM credential. Explicit linking accepts only validated `ScmCredential::github`
+or `::gitlab`, paired with github.com or gitlab.com respectively. These opaque
+credentials and optional `UserSession::provider_token` redact Debug; a provider
+token is never automatically forwarded. Public error-code allowlisting preserves
+actionable account denials while omitting remote messages and unknown codes.
+
+Auth completion confirms only session handoff, including an unpaid/unlinked
+session. The caller persists it before setup and uses the account result's
+explicit `backend_authorized` field for readiness. Dactyl forwards server-issued
+project references and workspace capacity fields opaquely; billing catalog
+decisions stay backend-owned. `billing_not_configured` is an allowed public code.
+
 ## Secure shared-directory SQLite recovery
 
 RecoveryOptions remains unchanged. Linux/Android secure recovery supports plain mode/owner/group access and trusted-group/setgid directories; unsupported platforms, ACL/MAC metadata, ownership reproduction, symlinks/hardlinks, path replacement and cross-filesystem staging return typed errors before destructive mutation where applicable. Recovery archive names cannot alias active sidecars. See docs/sqlite-recovery.md for exact failure/rollback outcomes.
@@ -170,6 +197,8 @@ live cloud deployment proof remain service-side concerns.
 
 <!-- decapod:capability-overlay:public-api:start -->
 
+Generated capability obligations: `public-api` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Public API Capability Overlay
 
 ### API Contract Requirements
@@ -193,9 +222,9 @@ live cloud deployment proof remain service-side concerns.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase HTTP contract (issue 91)

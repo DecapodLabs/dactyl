@@ -5,9 +5,12 @@
 //! schema policy, migration ids/order, retries, analytics, or business logic.
 
 mod adapter;
+#[cfg(feature = "supabase")]
+mod cloud;
 mod contract;
 mod rows;
 mod schema;
+mod supabase_rpc;
 
 pub mod error;
 
@@ -21,6 +24,20 @@ pub use crate::rows::{Parameter, Row, Rows};
 pub use crate::schema::{
     ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
 };
+
+#[cfg(feature = "supabase")]
+pub use crate::cloud::{
+    AccountOperation, AuthenticationSecrets, AuthenticationStart, CloudConnector, ScmCredential,
+    ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
+};
+pub use crate::supabase_rpc::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
+
+/// The application-facing choice; Dactyl owns its physical connector mapping.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Backend {
+    Local,
+    Cloud,
+}
 
 use crate::adapter::Adapter;
 
@@ -45,6 +62,7 @@ pub struct DatastoreRoute {
     datastore: Datastore,
     route: String,
     token: Option<String>,
+    rpc: Option<SupabaseRpcConfig>,
 }
 
 impl std::fmt::Debug for DatastoreRoute {
@@ -63,11 +81,43 @@ const DATASTORE_ROUTE_ENV: &str = "DATASTORE_ROUTE";
 const DATASTORE_TOKEN_ENV: &str = "DATASTORE_TOKEN";
 
 impl DatastoreRoute {
+    /// Resolve the logical backend. Cloud discovers the public deployment profile;
+    /// user credentials remain separate from that profile.
+    pub fn for_backend(
+        backend: Backend,
+        target: &str,
+        token: Option<String>,
+    ) -> Result<Self, DactylError> {
+        match backend {
+            Backend::Local => {
+                if token.is_some() {
+                    return Err(DactylError::Config(
+                        "local storage does not accept a cloud credential".into(),
+                    ));
+                }
+                Ok(Self::sqlite(target))
+            }
+            Backend::Cloud => {
+                #[cfg(feature = "supabase")]
+                {
+                    Ok(CloudConnector::from_runtime(target)?.route(token))
+                }
+                #[cfg(not(feature = "supabase"))]
+                {
+                    let _ = (target, token);
+                    Err(DactylError::Config(
+                        "cloud support is disabled; enable the `supabase` feature".into(),
+                    ))
+                }
+            }
+        }
+    }
     pub fn sqlite(path: impl Into<String>) -> Self {
         Self {
             datastore: Datastore::Sqlite,
             route: path.into(),
             token: None,
+            rpc: None,
         }
     }
 
@@ -76,6 +126,7 @@ impl DatastoreRoute {
             datastore: Datastore::Neon,
             route: endpoint.into(),
             token,
+            rpc: None,
         }
     }
 
@@ -90,7 +141,21 @@ impl DatastoreRoute {
             datastore: Datastore::Supabase,
             route: endpoint.into(),
             token,
+            rpc: None,
         }
+    }
+
+    /// Explicit native RPC; existing Supabase service routes retain their meaning.
+    pub fn supabase_rpc(config: SupabaseRpcConfig, token: Option<String>) -> Self {
+        Self {
+            datastore: Datastore::Supabase,
+            route: config.project_origin().to_owned(),
+            token,
+            rpc: Some(config),
+        }
+    }
+    pub fn supabase_rpc_config(&self) -> Option<&SupabaseRpcConfig> {
+        self.rpc.as_ref()
     }
 
     /// Validate the provider's endpoint policy without network I/O or credentials.
@@ -103,7 +168,10 @@ impl DatastoreRoute {
         if self.datastore == Datastore::Supabase {
             #[cfg(feature = "supabase")]
             {
-                return crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ());
+                return match &self.rpc {
+                    Some(config) => crate::adapter::supabase::validate_rpc(config).map(|_| ()),
+                    None => crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ()),
+                };
             }
             #[cfg(not(feature = "supabase"))]
             {
@@ -368,6 +436,7 @@ fn build_adapter(
                     route.token.clone(),
                     _options,
                     _context,
+                    route.rpc.as_ref(),
                 )?))
             }
             #[cfg(not(feature = "supabase"))]

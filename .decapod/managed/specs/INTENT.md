@@ -1,20 +1,20 @@
 # Intent
 
-<!-- decapod:declared-capabilities:start -->
+## Logical backend access and user sessions
 
-## Declared Capability Surfaces
-
-- `authentication`
-- `background-processing`
-- `event-driven`
-- `external-integrations`
-- `infrastructure-management`
-- `persistent-state`
-- `public-api`
-- `scheduled-jobs`
-- `secrets-handling`
-
-<!-- decapod:declared-capabilities:end -->
+Applications expose local/cloud selection; Dactyl resolves SQLite or the native
+Supabase connector through `Backend`, `DatastoreRoute::for_backend` and
+`CloudConnector` in `src/lib.rs` and `src/cloud.rs`. Propodus names the IaC for
+the hosted backend. Dactyl discovers its public deployment profile and transports
+managed Auth requests and current-user RPC credentials. The application retains
+browser interaction, durable pending-flow state and private session custody.
+Ordinary cloud authority is the authenticated Supabase user and active assigned
+seat within the tenant/project. Linked code-host identities and separately scoped
+governance grants remain backend policy; repository permissions are not mirrored
+as ordinary data authority. Dactyl transports opaque account registration, status,
+quote and checkout requests without interpreting entitlement or purchase consent.
+Offline connector/auth fixtures establish transport behavior only; hosted OAuth
+and deployed profile availability require separate rollout evidence.
 
 ## Secure shared-directory SQLite recovery
 
@@ -132,13 +132,31 @@ flowchart LR
 | Which interfaces are versioned at launch? | TBD | YYYY-MM-DD | |
 | Which non-functional target is hardest to hit? | TBD | YYYY-MM-DD | |
 
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
+
+- `authentication`
+- `background-processing`
+- `event-driven`
+- `external-integrations`
+- `infrastructure-management`
+- `persistent-state`
+- `public-api`
+- `scheduled-jobs`
+- `secrets-handling`
+
+<!-- decapod:declared-capabilities:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Supabase provider boundary (issue 91)

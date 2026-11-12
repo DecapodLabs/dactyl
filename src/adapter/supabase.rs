@@ -14,6 +14,7 @@ use crate::contract::{
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::rows::{Parameter, Row, Rows};
+use crate::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
@@ -24,6 +25,7 @@ pub(crate) struct SupabaseAdapter {
     bearer: reqwest::header::HeaderValue,
     access_mode: AccessMode,
     context: StorageContext,
+    rpc_headers: Option<reqwest::header::HeaderMap>,
 }
 
 #[derive(Serialize)]
@@ -80,14 +82,67 @@ pub(crate) fn validate_endpoint(endpoint: &str) -> Result<reqwest::Url, DactylEr
     Ok(url)
 }
 
+pub(crate) fn validate_rpc(config: &SupabaseRpcConfig) -> Result<reqwest::Url, DactylError> {
+    let url = validate_endpoint(config.project_origin())?;
+    if url.path() != "/" {
+        return Err(DactylError::Config(
+            "Supabase RPC requires a project origin without a path".into(),
+        ));
+    }
+    if !config
+        .publishable_key()
+        .strip_prefix("sb_publishable_")
+        .is_some_and(|key| {
+            !key.is_empty()
+                && key.len() <= 4096
+                && key
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+        })
+    {
+        return Err(DactylError::Config(
+            "Supabase RPC requires a publishable project key, never a secret or service-role key"
+                .into(),
+        ));
+    }
+    let schema = config.schema().as_bytes();
+    if schema.is_empty()
+        || schema.len() > 63
+        || !(schema[0].is_ascii_alphabetic() || schema[0] == b'_')
+        || !schema
+            .iter()
+            .all(|b| b.is_ascii_alphanumeric() || *b == b'_')
+    {
+        return Err(DactylError::Config(
+            "Supabase RPC requires a valid API schema identifier".into(),
+        ));
+    }
+    Ok(url)
+}
+
+#[derive(Serialize)]
+struct RpcRequest<'a, T> {
+    request: VersionedRequest<'a, T>,
+}
+#[derive(Serialize)]
+struct VersionedRequest<'a, T> {
+    version: u16,
+    #[serde(flatten)]
+    body: &'a T,
+}
+
 impl SupabaseAdapter {
     pub(crate) fn new(
         endpoint: &str,
         bearer: Option<String>,
         options: OpenOptions,
         context: Option<StorageContext>,
+        rpc: Option<&SupabaseRpcConfig>,
     ) -> Result<Self, DactylError> {
-        let url = validate_endpoint(endpoint)?;
+        let url = match rpc {
+            Some(config) => validate_rpc(config)?,
+            None => validate_endpoint(endpoint)?,
+        };
         let bearer = bearer
             .filter(|value| !value.trim().is_empty())
             .ok_or_else(|| {
@@ -108,7 +163,30 @@ impl SupabaseAdapter {
             )
         })?;
         context.validate()?;
+        let rpc_headers = rpc
+            .map(|config| {
+                let mut headers = reqwest::header::HeaderMap::new();
+                let mut key = reqwest::header::HeaderValue::from_str(config.publishable_key())
+                    .map_err(|_| DactylError::Config("invalid publishable key".into()))?;
+                key.set_sensitive(true);
+                let schema = reqwest::header::HeaderValue::from_str(config.schema())
+                    .map_err(|_| DactylError::Config("invalid API schema".into()))?;
+                headers.insert("apikey", key);
+                headers.insert("content-profile", schema.clone());
+                headers.insert("accept-profile", schema);
+                headers.insert(
+                    "accept",
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                );
+                headers.insert(
+                    "dactyl-contract-version",
+                    reqwest::header::HeaderValue::from_static("1"),
+                );
+                Ok::<_, DactylError>(headers)
+            })
+            .transpose()?;
         Ok(Self {
+            rpc_headers,
             endpoint: url.as_str().trim_end_matches('/').to_owned(),
             bearer,
             access_mode: options.access_mode,
@@ -121,8 +199,17 @@ impl SupabaseAdapter {
         path: &str,
         request: &impl Serialize,
     ) -> Result<T, DactylError> {
-        let body = serde_json::to_vec(request)
-            .map_err(|_| DactylError::adapter(AdapterErrorKind::Value, "invalid request value"))?;
+        let body = if self.rpc_headers.is_some() {
+            serde_json::to_vec(&RpcRequest {
+                request: VersionedRequest {
+                    version: SUPABASE_RPC_CONTRACT_VERSION,
+                    body: request,
+                },
+            })
+        } else {
+            serde_json::to_vec(request)
+        }
+        .map_err(|_| DactylError::adapter(AdapterErrorKind::Value, "invalid request value"))?;
         if body.len() as u64 > MAX_BODY_BYTES {
             return Err(DactylError::adapter_with_code(
                 AdapterErrorKind::Quota,
@@ -130,14 +217,24 @@ impl SupabaseAdapter {
                 "Supabase request exceeds the 4 MiB limit",
             ));
         }
+        let path = if self.rpc_headers.is_some() {
+            match path {
+                "/query" => "/rest/v1/rpc/dactyl_query_v1",
+                "/batch" => "/rest/v1/rpc/dactyl_batch_v1",
+                _ => return Err(protocol_error("unsupported RPC operation")),
+            }
+        } else {
+            path
+        };
         let endpoint = format!("{}{path}", self.endpoint);
+        let rpc_headers = self.rpc_headers.clone();
         let bearer = self.bearer.clone();
         // The facade is synchronous, but callers may enter from an async
         // runtime. reqwest::blocking must be constructed, used AND dropped
         // outside that runtime. Keep the entire bounded request on this worker.
         std::thread::Builder::new()
             .name("dactyl-supabase-http".into())
-            .spawn(move || send_request(endpoint, bearer, body))
+            .spawn(move || send_request(endpoint, bearer, body, rpc_headers))
             .map_err(|_| transport_error(false))?
             .join()
             .map_err(|_| transport_error(false))?
@@ -173,15 +270,19 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     endpoint: String,
     bearer: reqwest::header::HeaderValue,
     body: Vec<u8>,
+    rpc_headers: Option<reqwest::header::HeaderMap>,
 ) -> Result<T, DactylError> {
     let client = reqwest::blocking::Client::builder()
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(REQUEST_TIMEOUT)
         .redirect(reqwest::redirect::Policy::none())
+        .retry(reqwest::retry::never())
         .build()
         .map_err(|_| transport_error(false))?;
+    let rpc = rpc_headers.is_some();
     let response = client
         .post(endpoint)
+        .headers(rpc_headers.unwrap_or_default())
         .header(reqwest::header::AUTHORIZATION, bearer)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(body)
@@ -197,12 +298,38 @@ fn send_request<T: for<'de> Deserialize<'de>>(
         return Err(protocol_error("Supabase response exceeds the 4 MiB limit"));
     }
     if !(200..300).contains(&status) {
-        return Err(remote_error(status, &bytes));
+        return Err(remote_error(status, &bytes, rpc));
+    }
+    if rpc {
+        let value: serde_json::Value =
+            serde_json::from_slice(&bytes).map_err(|_| protocol_error("invalid RPC response"))?;
+        if let Some(results) = value.get("results") {
+            for result in results
+                .as_array()
+                .ok_or_else(|| protocol_error("invalid RPC batch response"))?
+            {
+                validate_rpc_result(result)?;
+            }
+        } else {
+            validate_rpc_result(&value)?;
+        }
+        return serde_json::from_value(value).map_err(|_| protocol_error("invalid RPC response"));
     }
     serde_json::from_slice(&bytes).map_err(|_| protocol_error("invalid Supabase service response"))
 }
 
-fn body_read_timed_out(error: &std::io::Error) -> bool {
+// Strict native results include keys and validate auxiliary write rows too.
+// A client decoding failure does not establish rollback of a committed write.
+fn validate_rpc_result(value: &serde_json::Value) -> Result<(), DactylError> {
+    if value.get("generated_keys").is_none() {
+        return Err(protocol_error("RPC result requires generated_keys"));
+    }
+    let result: Response =
+        serde_json::from_value(value.clone()).map_err(|_| protocol_error("invalid RPC result"))?;
+    rows_from_response(result).map(|_| ())
+}
+
+pub(crate) fn body_read_timed_out(error: &std::io::Error) -> bool {
     // reqwest's Read implementation wraps its typed timeout in an Other I/O
     // error. Preserve that identity without inspecting potentially secret text.
     error.kind() == std::io::ErrorKind::TimedOut
@@ -375,11 +502,43 @@ fn transport_error(timeout: bool) -> DactylError {
     )
 }
 
-fn remote_error(status: u16, body: &[u8]) -> DactylError {
+fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
     let envelope = serde_json::from_slice::<serde_json::Value>(body).ok();
-    let code = envelope
-        .as_ref()
-        .and_then(|value| value.get("error")?.get("code")?.as_str());
+    let code = envelope.as_ref().and_then(|value| {
+        if rpc {
+            value.get("code")?.as_str()
+        } else {
+            value.get("error")?.get("code")?.as_str()
+        }
+    });
+    if rpc {
+        let mapped = match code {
+            Some("23505") => Some((AdapterErrorKind::Constraint, "unique_violation")),
+            Some("23503") => Some((AdapterErrorKind::Constraint, "foreign_key_violation")),
+            Some("23502") => Some((AdapterErrorKind::Constraint, "not_null_violation")),
+            Some("23514") => Some((AdapterErrorKind::Constraint, "constraint_failed")),
+            Some("40001" | "40P01") => Some((AdapterErrorKind::Conflict, "row_conflict")),
+            Some("57014") => Some((AdapterErrorKind::Timeout, "timeout")),
+            Some("25006") => Some((AdapterErrorKind::ReadOnly, "read_only")),
+            Some("42501") if status == 401 => {
+                Some((AdapterErrorKind::Authentication, "authentication_required"))
+            }
+            Some("42501") => Some((AdapterErrorKind::Authorization, "authorization_denied")),
+            Some("PGRST106") => Some((AdapterErrorKind::Capability, "unsupported_schema")),
+            Some("PGRST202") => Some((AdapterErrorKind::Capability, "unsupported_rpc")),
+            Some("PGRST301" | "PGRST302" | "PGRST303") => {
+                Some((AdapterErrorKind::Authentication, "invalid_token"))
+            }
+            _ => None,
+        };
+        if let Some((kind, code)) = mapped {
+            return DactylError::adapter_with_code(
+                kind,
+                code,
+                format!("Supabase RPC rejected request ({code})"),
+            );
+        }
+    }
     // Only fixed public codes leave the boundary. Remote messages and unknown
     // codes may echo tokens, SQL parameters or database connection strings.
     let known = match code {

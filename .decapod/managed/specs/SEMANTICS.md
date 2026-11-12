@@ -56,6 +56,8 @@ stateDiagram-v2
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Background Processing Semantics Overlay
 
 ### Retry Semantics
@@ -69,27 +71,29 @@ stateDiagram-v2
 - Duplicate execution MUST follow the job's declared duplicate-handling semantics
 
 ### Poison Message Handling
-- Messages failing after max retries go to dead letter queue
-- DLQ MUST be monitored and alerted
-- Manual replay capability for DLQ messages
+- Document the actual terminal-failure behavior for exhausted or non-retryable work; a dead-letter queue is not implied
+- If a dead-letter queue exists, document its monitoring, alerting, and ownership
+- If manual replay is supported, document authorization and duplicate-side-effect proof; otherwise record the limitation
 <!-- decapod:capability-overlay:background-processing:end -->
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Persistent State Semantics Overlay
 
 ### Transaction Semantics
-- All multi-entity operations MUST be atomic
-- Read-after-write consistency within transaction boundaries
+- Atomicity boundaries and any non-atomic operations MUST be declared with source and test evidence
+- Document observed read-after-write behavior; do not infer consistency from a capability declaration
 - Eventual consistency windows MUST be documented
 
 ### Migration Semantics
-- Schema migrations MUST be backward-compatible
+- Migration compatibility, any breaking changes, and their recovery path MUST be explicit and tested
 - Migration rollback procedures MUST be documented
 - Data integrity checks post-migration
 
 ### Recovery Semantics
-- Point-in-time recovery capability
+- Document supported recovery mechanisms and evidence; point-in-time recovery is not implied by persistent-state
 - Recovery objectives MUST be selected for the project and recorded as proof obligations
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
@@ -98,7 +102,7 @@ stateDiagram-v2
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `145a65f8c1991147ce3308750d00aa3838e6d5add708b7ee9d9098adf1b4fc68`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `src/` (12 files), `tests/` (2 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `8251ec3997735ea41e1006a4e3a39941fba19fff88e39a5718ebb1a777266d2f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
