@@ -65,6 +65,11 @@
       "id": "readonly-integrate-01328ac-20261112",
       "summary": "Integrate accepted 0.13.0 snapshot inspection, preserving native read-only RPC transport and cumulative authored custody.",
       "input_digest": "sha256:cc16464d6bb2516252cedae37e53eeeecfeac3ce689a219baca5d6a1024ff13b"
+    },
+    {
+      "id": "readonly-013-profile-20261112",
+      "summary": "Review accepted version source inventory and renew complete unchanged Linux feature matrix.",
+      "input_digest": "sha256:14e25e313e687ffd08e9fe462edfe1039b65b9a8cac7c9f1dbeee7c485d7d7a4"
     }
   ],
   "intents": {
@@ -109,21 +114,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed independent 0.13.0 snapshot inspection and native read-only RPC boundary together against accepted source.",
+          "reason": "Reviewed accepted 0.13.0 inspection architecture with read-only native transport; all required proof commands retained.",
           "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
           "spec_material_hash": "9e29da155ed2a72688f70e6d4fa074e3ecfa2b48f5098e656cabf58b1cfb1fb4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Both accepted inspection API and explicit native read-only route retained; package is now 0.13.0.",
+          "reason": "Integrated accepted inspection API and explicit native read-only batch contract with no feature or authority removal.",
           "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
           "spec_material_hash": "e50beab672ad8c6d419c327ba594d5cf0149bb198b63601668ebd9e03830f90d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Keep physical read-only execution a trusted server obligation and fixture absence unavailable, preserving inspection read-only safety.",
+          "reason": "Source inventory changed only accepted Cargo version/lock; native fixture guard and physical read-only server obligation retained.",
           "reviewed_code_fingerprint": "75646fbd24d112f70bd25604364b0c0c8e0ff5959e60edcb6b32ac185ee8ef7e",
           "spec_material_hash": "99ade8a60b541c493704a752394d548ca34372f45febf784be67da5b9b8cf72a"
         }
@@ -136,7 +141,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794471660Z"
+      "updated_at": "1794472051Z"
     },
     "trajectory": {
       "active_boundaries": [
