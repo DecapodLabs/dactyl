@@ -654,6 +654,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
                     | "identity_link_required"
                     | "quote_confirmation_required"
                     | "billing_binding_required"
+                    | "billing_not_configured"
                     | "billing_unavailable"
                     | "provider_unavailable"
                     | "invalid_request"

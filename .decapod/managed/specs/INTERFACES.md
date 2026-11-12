@@ -21,6 +21,12 @@ credentials and optional `UserSession::provider_token` redact Debug; a provider
 token is never automatically forwarded. Public error-code allowlisting preserves
 actionable account denials while omitting remote messages and unknown codes.
 
+Auth completion confirms only session handoff, including an unpaid/unlinked
+session. The caller persists it before setup and uses the account result's
+explicit `backend_authorized` field for readiness. Dactyl forwards server-issued
+project references and workspace capacity fields opaquely; billing catalog
+decisions stay backend-owned. `billing_not_configured` is an allowed public code.
+
 ## Secure shared-directory SQLite recovery
 
 RecoveryOptions remains unchanged. Linux/Android secure recovery supports plain mode/owner/group access and trusted-group/setgid directories; unsupported platforms, ACL/MAC metadata, ownership reproduction, symlinks/hardlinks, path replacement and cross-filesystem staging return typed errors before destructive mutation where applicable. Recovery archive names cannot alias active sidecars. See docs/sqlite-recovery.md for exact failure/rollback outcomes.
@@ -216,7 +222,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71`
+- Repository signal fingerprint: `b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

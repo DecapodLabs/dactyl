@@ -91,23 +91,28 @@ fn profile() -> Value {
 
 #[test]
 fn account_denial_preserves_only_the_public_code() {
-    let (origin, received, handle) = server(vec![(
-        403,
-        json!({"error":{"code":"seat_required","message":"private-provider-secret"}}),
-    )]);
-    let error = connector(&origin)
-        .account_request(
-            dactyl_db::AccountOperation::Status,
-            &json!({"version":1}),
-            "user-bearer",
-            None,
-        )
-        .unwrap_err();
-    assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authorization));
-    assert_eq!(error.adapter_code(), Some("seat_required"));
-    assert!(!format!("{error:?}{error}").contains("private-provider-secret"));
-    received.recv().unwrap();
-    handle.join().unwrap();
+    for (status, code, kind) in [
+        (403, "seat_required", AdapterErrorKind::Authorization),
+        (503, "billing_not_configured", AdapterErrorKind::Unavailable),
+    ] {
+        let (origin, received, handle) = server(vec![(
+            status,
+            json!({"error":{"code":code,"message":"private-provider-secret"}}),
+        )]);
+        let error = connector(&origin)
+            .account_request(
+                dactyl_db::AccountOperation::Status,
+                &json!({"version":1}),
+                "user-bearer",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(error.adapter_kind(), Some(kind));
+        assert_eq!(error.adapter_code(), Some(code));
+        assert!(!format!("{error:?}{error}").contains("private-provider-secret"));
+        received.recv().unwrap();
+        handle.join().unwrap();
+    }
 }
 fn connector(origin: &str) -> CloudConnector {
     CloudConnector::with_config(SupabaseRpcConfig::v1(origin, KEY)).unwrap()
@@ -131,7 +136,8 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         (AccountOperation::Quote, "billing-quote"),
         (AccountOperation::Checkout, "billing-checkout"),
     ];
-    let result = json!({"future":{"opaque":[1,false,"provider-policy"]}});
+    let result =
+        json!({"backend_authorized":false,"future":{"opaque":[1,false,"provider-policy"]}});
     let mut responses = vec![(200, result.clone()); operations.len() + 1];
     responses.push((200, session()));
     responses.push((
@@ -398,7 +404,10 @@ fn managed_auth_uses_one_origin_and_keeps_refresh_out_of_data_requests() {
         (200, json!({"status":"ready"})),
         (200, json!({"auth_code":"one-time-code"})),
         (200, session()),
-        (200, json!({"status":"complete"})),
+        (
+            200,
+            json!({"status":"complete","backend_authorized":false,"account_status":"seat_required"}),
+        ),
         (200, session()),
     ]);
     let connector = connector(&origin);

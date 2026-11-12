@@ -44,6 +44,12 @@ from that token. The account backend independently verifies a fresh linking
 credential before granting SCM authority.
 
 `CloudConnector::account_request` provides a separate stateless account channel.
+Authentication completion confirms session handoff only. The caller persists
+that session before account setup and requires the backend's explicit
+`backend_authorized: true` before declaring cloud access ready. Registration and
+status use server-issued project references; pricing and workspace capacities
+remain backend-owned. A missing billing adapter returns `billing_not_configured`.
+
 Its `AccountOperation` selects one fixed POST endpoint beneath
 `/functions/v1/propodus-onboarding`: `Register` uses `account-register`, `Status`
 uses `account-status`, `Quote` uses `billing-quote`, and `Checkout` uses

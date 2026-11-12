@@ -4,8 +4,9 @@
 
 `tools/proof/check.py` runs the full feature matrix, lint, package and Cargo 1.75
 checks only through `decapod validate`. The native adapter owns temporary paths.
-Local Podman proof binds a private supported filesystem at the container's `/tmp`
-because its default overlay carries unsupported MAC labels. CI uses its normal
+The local headless Linux proof runtime must support unlabelled temporary files,
+setgid directory modes and POSIX ACL fixtures; the Podman overlay and macOS
+shared temporary mounts do not meet all those requirements. CI uses its normal
 Linux temporary filesystem. Recovery's metadata and ACL checks remain intact.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
@@ -236,7 +237,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71`
+- Repository signal fingerprint: `b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (14 files), `tests/` (14 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

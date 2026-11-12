@@ -73,6 +73,11 @@
       "id": "connector-native-owned-temp-v1",
       "summary": "Preserve native-owned temporary paths and configured command contract; run proof on a private physical filesystem with required recovery metadata semantics.",
       "input_digest": "sha256:bf9b0ef37a274dfdbc5463ffc2fd2b3afbe2f988ffde19e5ad783cd76ed7f64d"
+    },
+    {
+      "id": "connector-auth-handoff-readiness-v1",
+      "summary": "Align stateless auth/account transport with merged account contract and verify full native filesystem semantics without changing recovery security or native temporary-path custody.",
+      "input_digest": "sha256:81bd17c7e52052b7fa61f9729a8abbfbbb04ad96ccd2df84c167b6c8c395c28e"
     }
   ],
   "intents": {
@@ -115,22 +120,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The proof container now supplies a private supported physical temporary filesystem; architecture and inactive HTTP3 bounds are unchanged, with no extra active provider.",
-          "reviewed_code_fingerprint": "21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71",
+          "reason": "Managed Auth and account channels remain stateless origin-bound transport. New account readiness facts remain caller/backend policy; Linux-native proof filesystem adds no runtime provider or API.",
+          "reviewed_code_fingerprint": "b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7",
           "spec_material_hash": "4efec3fe8da76aeabca4e3a2ad2cacca3a2674eaca28d89384996ee24b6c59ef"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current source retains the reviewed connector/account/native RPC API. The proof repair removes the unsupported reserved TMPDIR override and preserves native temporary-path ownership.",
-          "reviewed_code_fingerprint": "21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71",
-          "spec_material_hash": "f7ce9d436db9b386261623fdb7f092ce7fbd36e516f57a474de3c7e5aef894ad"
+          "reason": "Aligned with merged Propodus99 account contract: auth completion preserves unpaid session, readiness is explicit account backend_authorized, project references/capacities stay opaque and billing_not_configured is a safe public code.",
+          "reviewed_code_fingerprint": "b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7",
+          "spec_material_hash": "fbd78a432ca5d8bef0f717d2c52e29900a90ad4dc372e989939bfeb25595bb85"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Full metadata/ACL recovery checks and native adapter temporary-path isolation remain enforced; only the actual proof filesystem differs from the MAC-labelled overlay.",
-          "reviewed_code_fingerprint": "21cc128fddcc4c036fd4415a5965cf929d2e2362d0d56e41bb1bdc6b7df93b71",
+          "reason": "Managed bearer and explicit optional SCM channels remain separate; one new public billing code is allowlisted without propagating bodies. Existing setgid and MAC/ACL recovery tests are preserved on a capable native Linux filesystem.",
+          "reviewed_code_fingerprint": "b168fcafc25fc9a72bf177e59e77f4298d0a95bc85549aace82d019fc6f256b7",
           "spec_material_hash": "b56e78f8a70f5faec19dcadf960b43647571038962ba4fe4b4c7a992d994e21e"
         }
       ],
@@ -144,17 +149,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794441172Z"
+      "updated_at": "1794445860Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Auth completion is session handoff only; caller persists session and requires explicit backend_authorized=true from account status. Native filesystem proof preserves setgid and ACL checks.",
         "Auth provider tokens are never inferred to be SCM credentials; ordinary account access uses only the Supabase bearer.",
         "Current claimed task and isolated work branch",
         "No deployment or credential commits; server grants remain authoritative",
         "Preserve adapter-owned temporary-path custody. Recreate only the owned proof container with a private physical /tmp bind; no reserved environment override and no MAC/ACL policy removal.",
         "Retain Cargo 1.75 and complete feature matrix; preserve recovery metadata/ACL policy and all existing tests."
       ],
-      "artifact_hash": "sha256:98ade1a8fbdf20a2c9124154ebb1e1732b591e729993c77da8f6a1afd522b29f",
+      "artifact_hash": "sha256:380277dcb8141d78802730dd5d090fb2a948969fc57db07451f40a6bbc3dc21f",
       "checks": [
         {
           "name": "connector-review",
@@ -226,10 +232,17 @@
             "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M753PEC49T92VW92KVGX0Y8M",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M753PE6YWGJBDRZMXQMMNHMY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M753PEC49T92VW92KVGX0Y8M": {
@@ -353,6 +366,31 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/cloud.rs",
+                  "tests/cloud_connector.rs",
+                  "docs/cloud-connectors.md",
+                  "/private/tmp/dactyl-connector-validation9.json",
+                  "/private/tmp/propodus-person-seat-contract-pr99-final.json",
+                  "/private/tmp/propodus-schema-009-hosted-proof.json"
+                ],
+                "proof_refs": [
+                  "rust-contract"
+                ],
+                "scope": [
+                  "docs/",
+                  "src/",
+                  "src/, tests/, docs/, Cargo manifests, proof contract and authored specs",
+                  "tests/"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
+                ]
               }
             ]
           }
@@ -366,10 +404,13 @@
       "evidence": [
         "/private/tmp/connector-profile-verification.json",
         "/private/tmp/dactyl-connector-validation8.json",
+        "/private/tmp/dactyl-connector-validation9.json",
         "/private/tmp/dactyl-proof-preparation.patch",
         "/private/tmp/dactyl-proof-temp-investigation.json",
         "/private/tmp/dactyl-typed-scm-credential.patch",
         "/private/tmp/dactyl-validation7-evidence/native-0.stdout",
+        "/private/tmp/propodus-person-seat-contract-pr99-final.json",
+        "/private/tmp/propodus-schema-009-hosted-proof.json",
         "Native RPC foundation reconciled from source commit 24c549c; prior worktree left untouched"
       ],
       "inspected_files": [
@@ -383,6 +424,7 @@
         ".decapod/managed/specs/VALIDATION.md",
         "Cargo.lock",
         "Cargo.toml",
+        "docs/cloud-connectors.md",
         "src/adapter/supabase.rs",
         "src/cloud.rs",
         "tests/cloud_connector.rs",
@@ -407,7 +449,8 @@
       "unresolved_assumptions": [
         "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof.",
         "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested.",
-        "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed"
+        "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed",
+        "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
       ]
     }
   },
