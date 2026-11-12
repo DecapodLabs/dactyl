@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "01328ac3740541b0b292b844463cc9f6785e8b3d",
+    "accepted_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -12,6 +12,15 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and schema compatibility is preserved."
     },
     "unresolved": {
+      "claim:accepted-native-readonly-guard": {
+        "falsifier": "The incoming read-only endpoint selection or fixture absence guard is omitted, the guard passes without a fixture, or synthetic proof is represented as real hosted physical enforcement.",
+        "proof_refs": [
+          "tests/native_service.rs",
+          "tools/proof/check.py"
+        ],
+        "statement": "Integrated accepted0.13.1 source retains native physical-read-only route selection and explicit missing-fixture rejection; synthetic SDK checks do not attest live server enforcement.",
+        "status": "open"
+      },
       "claim:bounded-snapshot": {
         "falsifier": "A concurrent write changes the observed snapshot, a mutation succeeds, exhausted results appear complete, cleanup leaves a transaction/callback active, or remote capability invokes an unimplemented operation.",
         "proof_refs": [
@@ -28,6 +37,14 @@
         "statement": "Local/cloud selection resolves SQLite or native Supabase RPC, and managed-auth requests and user bearers pass through Dactyl with no redirect or automatic replay.",
         "status": "open"
       },
+      "claim:patched-quinn-resolution": {
+        "falsifier": "Resolved SDK graph contains Quinn below0.11.19, HTTP3 activates, required feature or offlineMSRV/package proof fails, or publication is represented as Rust1.75 compatible.",
+        "proof_refs": [
+          "tools/proof/check.py"
+        ],
+        "statement": "The SDK manifest permits only patched quinn-proto in its inactive HTTP graph, without enabling HTTP3; declared and clean-consumer MSRV is Rust1.85.",
+        "status": "open"
+      },
       "claim:replace-template-claim:question:project-specific-claim": {
         "decision_impact": "Determines the first repository-specific research claim and its required proof.",
         "id": "project-specific-claim",
@@ -41,91 +58,51 @@
       "trajectory:470ebd55a897e502": "Public config endpoint is a coordinated Propodus prerequisite and is not yet deployed",
       "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof",
       "trajectory:7ae8f2776cdb5fb2": "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested.",
-      "trajectory:84e472b97b0fa404": "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe."
+      "trajectory:84e472b97b0fa404": "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe.",
+      "trajectory:e9479a453e967d40": "This is a next0.xminor MSRV proposal; root approved it for review, not publication"
     }
   },
   "change": {
-    "id": "change_01M77ARCCBS3YYRHYTFHBBVM18",
-    "base_commit": "01328ac3740541b0b292b844463cc9f6785e8b3d",
+    "id": "change_01M77WK8TMW569S387VPY61NW6",
+    "base_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
     "target_base": "origin/main"
-  },
-  "claims": {
-    "accepted-native-readonly-guard": {
-      "statement": "Integrated accepted0.13.1 source retains native physical-read-only route selection and explicit missing-fixture rejection; synthetic SDK checks do not attest live server enforcement.",
-      "falsifier": "The incoming read-only endpoint selection or fixture absence guard is omitted, the guard passes without a fixture, or synthetic proof is represented as real hosted physical enforcement.",
-      "status": "open",
-      "proof_refs": [
-        "tests/native_service.rs",
-        "tools/proof/check.py"
-      ]
-    },
-    "patched-quinn-resolution": {
-      "statement": "The SDK manifest permits only patched quinn-proto in its inactive HTTP graph, without enabling HTTP3; declared and clean-consumer MSRV is Rust1.85.",
-      "falsifier": "Resolved SDK graph contains Quinn below0.11.19, HTTP3 activates, required feature or offlineMSRV/package proof fails, or publication is represented as Rust1.75 compatible.",
-      "status": "open",
-      "proof_refs": [
-        "tools/proof/check.py"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "patched-quinn-msrv-v1",
-      "summary": "Require patched inactive Quinn resolution with explicit Rust 1.85 floor; preserve all runtime APIs, transport, active bounds and original checks, add locked/fresh-consumer regression guards. Full native proof pending; latest user authorizes draft review publication.",
-      "input_digest": "sha256:406c29628d0f576b9cb963baa3db86c9a20603e275696b47be22a12c09648077",
+      "id": "patched-quinn-release-prep-01",
+      "summary": "Document unreleased Rust1.85 patched inactive Quinn migration and ordinary Release-As automation, preserving historical Supabase notes and runtime/proof contracts",
+      "input_digest": "sha256:45585ad63fdb5626635ed31ae61b76e949458f210d60336f4d081b68aa56f04d",
       "proof_refs": [
-        "tools/proof/check.py"
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
+        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
       ]
     },
     {
-      "id": "patched-quinn-msrv-v2",
-      "summary": "Repair concrete Clippy manual_repeat_n failure using the declared Rust 1.85 standard library; SQL placeholder behavior unchanged, no lint waiver. Full native proof remains required.",
-      "input_digest": "sha256:30c15b79b9382cdc5a46a53d9c8c9e3cb0b948ae7a06f3c93f9586a80bf718bf",
+      "id": "patched-quinn-release-prep-02",
+      "summary": "Record completed independent native proof environment and clear resolved setup-pending blocker; include genuine validator manifest refresh",
+      "input_digest": "sha256:d55769daae13e0ac31d7e1152e674db66a68d005ca7611cda7c674cd74b7b683",
       "proof_refs": [
-        "tools/proof/check.py"
-      ]
-    },
-    {
-      "id": "patched-quinn-msrv-v3",
-      "summary": "Renew current-source spec reviews and preserve actual initial native admission failure without claiming SDK execution; prepare diagnostic full-native retry with all16 checks unchanged.",
-      "input_digest": "sha256:92c08f7e5c3baa2ab6b845665caa171e4d1adb53e027206dd3e7791a71027785",
-      "proof_refs": [
-        "tools/proof/check.py"
-      ]
-    },
-    {
-      "id": "patched-quinn-msrv-v4",
-      "summary": "Real merge of accepted bbe11d9/0.13.1; preserve native readonly route, all15 acceptedchecks plus2 Quinn guards, actual mergeparent, current reviews and unchanged17check proof contract. Native proof remains pending for this integrated source.",
-      "input_digest": "sha256:70326db71b3b4ae0373a3fad1c84401746aa84c927fc429bb001d260097df712",
-      "proof_refs": [
-        "tools/proof/check.py"
-      ]
-    },
-    {
-      "id": "patched-quinn-msrv-v5",
-      "summary": "Refresh native generated projections after final reviewed config pin and authored spec material; preserves strict committed-bundle admission and all17checks. NativeSDKproof has not executed yet.",
-      "input_digest": "sha256:e2a0d127a9650f099b5c6f43ac5814341f9d07b52f5df28ece593869132aaf5b",
-      "proof_refs": [
-        "tools/proof/check.py"
+        "Owned container dactyl-release-prep-proof-01383 actual Decapod0.138.3 and Rust1.85, locked/fresh-consumer fetch-only preparation and can_work=true native binding"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M77ARCCBS3YYRHYTFHBBVM18": {
+    "intent:change_01M77WK8TMW569S387VPY61NW6": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "repo"
+        "file:CHANGELOG.md",
+        "file:.decapod/managed/specs/OPERATIONS.md"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+      "id": "intent:change_01M77WK8TMW569S387VPY61NW6",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "fix vulnerable inactive Quinn dependency constraints\n\nResolve the published inactive Quinn constraint conflicting with consumer advisory policy; preserve Rust1.75 if viable, otherwise present an explicit semver/MSRV proposal. No policy suppressions, release or deployment. Required feature, MSRV, package and full native proof remain authoritative.",
-      "refined_intent": "fix vulnerable inactive Quinn dependency constraints\n\nResolve the published inactive Quinn constraint conflicting with consumer advisory policy; preserve Rust1.75 if viable, otherwise present an explicit semver/MSRV proposal. No policy suppressions, release or deployment. Required feature, MSRV, package and full native proof remain authoritative.",
+      "raw_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
+      "refined_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -134,367 +111,228 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": []
+        "forbidden_paths": [
+          "src",
+          "tools/proof",
+          ".github/workflows",
+          "Cargo.toml",
+          "Cargo.lock"
+        ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Keep Dactyl runtime APIs and transport semantics unchanged while permitting the patched inactive quinn-proto graph required by consumer security policy. Raise declared and actually tested clean-consumer MSRV from Rust1.75 to Rust1.85; this is an explicit breaking next0.xminor proposal, not a patch-compatible promise. Retain other active dependency constraints, all feature/lint/MSRV/package proof obligations, and no advisory suppressions. No merge, package publication, release or deployment is authorized.",
+      "intent": "Prepare reviewable 0.14.0 compatibility/release notes for the already accepted Rust/Cargo 1.85 and patched inactive Quinn constraints from SDK108. Preserve runtime source/API/features, proof matrix, workflows and Cargo package version. A conventional breaking fix with Release-As: 0.14.0 requests the ordinary bot release PR only after maintainer merge; no package publication or privileged dispatch.",
       "phases": [],
       "proof_hooks": [
-        "Full decapod validate: unchanged feature matrix, clippy, real-fixture guard, Rust1.85 locked and lock-free consumers, package verification, and patched inactive graph metadata check"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current integrated accepted0.13.1 source: preserved read-only batch endpoint and all15 accepted Rust checks, plus two Quinn lock guards and Rust1.85 floor. Existing public/runtime boundaries are unchanged by this proposal. No native or hosted service proof is inferred from the merge.",
+          "reason": "Documentation-only release preparation preserves existing reqwest transport, inactive patched Quinn boundary and components; no implementation or proof topology changes.",
           "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
           "spec_material_hash": "13fa83c57551a71d6940fea3250d312ff038fa89b2c1401d8ba44d9716f5d2c7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current integrated accepted0.13.1 source: preserved read-only batch endpoint and all15 accepted Rust checks, plus two Quinn lock guards and Rust1.85 floor. Existing public/runtime boundaries are unchanged by this proposal. No native or hosted service proof is inferred from the merge.",
+          "reason": "No public Rust API, feature key or wire contract changes; new changelog migration guidance matches the accepted Rust/Cargo1.85 and downstream lock-free consumer contract.",
           "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
           "spec_material_hash": "2056a6ae6336bd92245abf6a4c81ba3d484917183ddddec01b7fe9b155bc42a8"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current integrated accepted0.13.1 source: preserved read-only batch endpoint and all15 accepted Rust checks, plus two Quinn lock guards and Rust1.85 floor. Existing public/runtime boundaries are unchanged by this proposal. No native or hosted service proof is inferred from the merge.",
+          "reason": "No token, storage, authorization or HTTP3 activation changes; compatibility notes retain explicit inactive-dependency exposure and audit limits rather than asserting hosted proof.",
           "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
           "spec_material_hash": "e800bd95c173f1e51451668bc4fefef54aeb499d8c2ab7ab1b3cd486cd4fe5f8"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Do not claim Rust1.75 support, runtime QUIC exposure, hosted acceptance or native readiness without observed evidence"
+        "Unavailable independently published controller support or explicit authorization denial"
       ],
-      "title": "Resolve vulnerable inactive QUIC constraints with an explicit Rust 1.85 floor",
+      "title": "Prepare patched Quinn and Rust 1.85 release notes",
       "todo_ids": [
-        "bugs_01m77aqesmpw3kah"
+        "bugs_01m77wjh57ym1md5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794476023Z"
+      "updated_at": "1794488592Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "No advisory suppression, release, deployment or runtime API change"
+        "No runtime API, workflow, proof matrix or package version edits; no merge, release or package publication"
       ],
-      "artifact_hash": "sha256:0ae8329f3c8e846e86f8dfeb658f9d82f0f59cddd1220dd72f6c81ce3b62ba3e",
+      "artifact_hash": "sha256:4cc73fe09c190de719fa6b76981cd96a30e934e430ba26aced33177398647b27",
       "checks": [
         {
-          "name": "diff-hygiene",
+          "name": "authored-diff-whitespace",
           "status": "passed"
         },
         {
-          "name": "full-native-proof",
-          "status": "failed"
+          "name": "current-ci",
+          "status": "unavailable"
         },
         {
-          "name": "hosted-clippy",
+          "name": "independent-controller-toolchain-custody",
           "status": "passed"
         },
         {
-          "name": "source-research",
-          "status": "passed"
+          "name": "native-exact-source",
+          "status": "unavailable"
         }
       ],
-      "current_phase": "projection-order-repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
+            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
+            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
+            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M77ARCEW4Z6SD85VJ5MW7535": {
+          "branch_01M77WK8XBNPT4WJ1V9A6JG1E5": {
             "evidence_only": true,
-            "id": "branch_01M77ARCEW4Z6SD85VJ5MW7535",
-            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
             "steps": [
               {
-                "action": "implementation",
+                "action": "review",
+                "command": "decapod validate",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "README.md",
                   "Cargo.toml",
+                  ".github/workflows/release.yml",
                   "tools/proof/check.py",
-                  "tools/proof/prepare.py",
-                  "tools/proof/Containerfile",
-                  "Primary RustSec0338 patched>=0.11.18; official crates.io metadata and checksum-verified0.11.18 manifest bothpatchedversions requireRust1.85 andrand0.10.1"
+                  "CHANGELOG.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "https://github.com/googleapis/release-please#how-do-i-change-the-version-number",
+                  "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464"
                 ],
                 "proof_refs": [
-                  "source-research"
+                  "authored-diff-whitespace"
                 ],
                 "scope": [
-                  "repo"
+                  "file:.decapod/managed/specs/OPERATIONS.md",
+                  "file:CHANGELOG.md"
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Own lease renewal invalidated authoring binding; workspace status inspected and same branch rebind completed before retrying rejected plan writes",
-                  "This is a next0.xminor MSRV proposal; root approved it for review, not publication"
+                  "No manual shadow builds; prior SDK108 proof is historical only"
                 ]
               },
               {
-                "action": "proof-preparation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "tools/proof/Containerfile",
-                  "tools/proof/prepare.py",
-                  "tools/proof/check.py",
-                  ".decapod/config.toml",
-                  "README.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Cargo metadata update resolved quinn-proto 0.11.19; all original 14 checks retained and two parsed-lock floor inspections added. Full native proof has not run.",
-                  "Inspected all four workflow sources, release metadata, manifest/lock and complete proof helpers before reconciling agent.init source/command digests; runtime source unchanged."
-                ],
+                "observations": [],
                 "proof_refs": [
-                  "diff-hygiene",
-                  "full-native-proof"
+                  "native-exact-source",
+                  "current-ci"
                 ],
                 "scope": [
-                  "repo"
+                  "file:.decapod/managed/specs/OPERATIONS.md",
+                  "file:CHANGELOG.md"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "First image attempt selected cached amd64 base and was cancelled/reaped before candidate execution; restarted explicitly for linux/arm64."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "draft-review-publication",
+                "action": "validation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Inspected ARM image build failed while installing independent registry Decapod 0.138.3: rustc received SIGKILL in a 4GiB VM. No candidate tests executed. Preparing existing independent official-controller image with actual Rust 1.85.",
-                  "Issue107 records the vulnerable inactive bound and explicit MSRV proposal. Latest user explicitly requires publishing a PR now; draft review is authorized before full proof, with no readiness or check waiver.",
-                  "git diff --check passed; semantic specs reviewed through native plan review-spec. Initial INTENT review was rejected because only ARCHITECTURE/INTERFACES/SECURITY paths are eligible; all three eligible current-content reviews succeeded."
+                  "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
+                  "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker"
                 ],
                 "proof_refs": [
-                  "full-native-proof"
+                  "native-exact-source",
+                  "independent-controller-toolchain-custody"
                 ],
                 "scope": [
-                  "repo"
+                  "file:.decapod/managed/specs/OPERATIONS.md",
+                  "file:CHANGELOG.md"
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "ci-repair",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "src/adapter/sqlite/recovery.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Actual GH Rust job131061669229 at423f failed manual_repeat_n in recovery.rs700 under the new MSRV. Changed repeated placeholder construction to std::iter::repeat_n, available sinceRust1.82 and supported by declared1.85, without suppressing the lint.",
-                  "Read-only peer review found no additional concrete source/proof defect at423f. Actual Apple container proc inspection found no owned proof process; escalated operation approval had been interrupted before launch.",
-                  "cargo fmt --all and diff hygiene passed. No SDK build/test executed outside validate. Full exact-candidate proof remains required."
-                ],
-                "proof_refs": [
-                  "hosted-clippy",
-                  "full-native-proof"
-                ],
-                "scope": [
-                  "repo"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "native-admission-recovery",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Nativev2 actual report at /private/tmp/dactyl-security-native-v2/report.json:187 project prerequisite passes, READINESS_BLOCKED required validation artifact not staged governance.json, no source execution and no evidence_path. Exact read-only Linux Git cached-file inventory succeeds for the tracked governance file; no missing artifact was fabricated.",
-                  "Current-content architecture/interface/security spec reviews renewed after repeat_n. Root observed current GH Rust job131078448249 success; it is CI diagnosis only and does not replace native proof.",
-                  "Private report-copy escalation returned successfully and active session21522 was reaped. Next native attempt adds private exec/wait process diagnostics to identify the inconsistent Git admission result without changing checks/controller."
-                ],
-                "proof_refs": [
-                  "full-native-proof",
-                  "hosted-clippy"
-                ],
-                "scope": [
-                  "repo"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "accepted-target-integration",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "tools/proof/check.py",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Actualv3 rejected ambient per-process Git overrides;v4 removed them and passed governance/history/profile admission, then rejected stale remote target before SDK execution. Private reports remain in the owned Apple container;v3 copied to/private/tmp/dactyl-security-native-v3.",
-                  "Real git merge --no-commit --no-ff bbe11d91123270841da44fee69e3556a0be96bc4 in progress: incoming accepted readonlyPR106 and released0.13.1 preserved; authentic own committed Gov journal chosen only for tracked merge conflict. Native specs.refresh resolved generated conflicts and retained incoming authored security/validation prose.",
-                  "All fifteen currently accepted Rust checks retained plus both Quinn lock guards: seventeen checks. New native fixture absence guard and DACTYL_NATIVE_FIXTURE scrubbing preserved. Source/package version0.13.1 retained; proposal remains breaking nextminor0.14, no release performed.",
-                  "Reviewed changed accepted transport/tests/proof helpers and actual0.13.1 manifest/lock before reconciling native source inventory6d7a6416; command contract digest unchangeda6671cf7. Incoming accepted obligations replayed via native claim; no semantic Gov JSON handedit or history rewrite."
-                ],
-                "proof_refs": [
-                  "full-native-proof"
-                ],
-                "scope": [
-                  "repo"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "projection-order-repair",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "Nativev5 at7d9638 failed UNCOMMITTED_PUBLICATION_CONTENT before SDK execution. Diff identifies only generated manifest config_input_hash and generated_at: final reviewed config pin was changed after specs.refresh during the merge. This is preparation order, not evidence of a controller defect.",
-                  "Repair uses authored validation-boundary prose and final native specs.refresh after configuration reconciliation; then staged checkpoint and commit. No manifest JSON handedit, no SDK manual build, no guard suppression.",
-                  "Read-only peer review of actual7d9638 vsbbe11d found no further defect, preserved all readonly source/test/doc bytes and15acceptedchecks plus2 Quinn guards."
-                ],
-                "proof_refs": [
-                  "full-native-proof"
-                ],
-                "scope": [
-                  "repo"
-                ],
-                "sequence": 10,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
       "destination": "pull request",
       "evidence": [
-        "Actual GH Rust job131061669229 at423f failed manual_repeat_n in recovery.rs700 under the new MSRV. Changed repeated placeholder construction to std::iter::repeat_n, available sinceRust1.82 and supported by declared1.85, without suppressing the lint.",
-        "Actualv3 rejected ambient per-process Git overrides;v4 removed them and passed governance/history/profile admission, then rejected stale remote target before SDK execution. Private reports remain in the owned Apple container;v3 copied to/private/tmp/dactyl-security-native-v3.",
-        "All fifteen currently accepted Rust checks retained plus both Quinn lock guards: seventeen checks. New native fixture absence guard and DACTYL_NATIVE_FIXTURE scrubbing preserved. Source/package version0.13.1 retained; proposal remains breaking nextminor0.14, no release performed.",
-        "Cargo metadata update resolved quinn-proto 0.11.19; all original 14 checks retained and two parsed-lock floor inspections added. Full native proof has not run.",
-        "Current-content architecture/interface/security spec reviews renewed after repeat_n. Root observed current GH Rust job131078448249 success; it is CI diagnosis only and does not replace native proof.",
-        "Inspected ARM image build failed while installing independent registry Decapod 0.138.3: rustc received SIGKILL in a 4GiB VM. No candidate tests executed. Preparing existing independent official-controller image with actual Rust 1.85.",
-        "Inspected all four workflow sources, release metadata, manifest/lock and complete proof helpers before reconciling agent.init source/command digests; runtime source unchanged.",
-        "Issue107 records the vulnerable inactive bound and explicit MSRV proposal. Latest user explicitly requires publishing a PR now; draft review is authorized before full proof, with no readiness or check waiver.",
-        "Nativev2 actual report at /private/tmp/dactyl-security-native-v2/report.json:187 project prerequisite passes, READINESS_BLOCKED required validation artifact not staged governance.json, no source execution and no evidence_path. Exact read-only Linux Git cached-file inventory succeeds for the tracked governance file; no missing artifact was fabricated.",
-        "Nativev5 at7d9638 failed UNCOMMITTED_PUBLICATION_CONTENT before SDK execution. Diff identifies only generated manifest config_input_hash and generated_at: final reviewed config pin was changed after specs.refresh during the merge. This is preparation order, not evidence of a controller defect.",
-        "Primary RustSec0338 patched>=0.11.18; official crates.io metadata and checksum-verified0.11.18 manifest bothpatchedversions requireRust1.85 andrand0.10.1",
-        "Private report-copy escalation returned successfully and active session21522 was reaped. Next native attempt adds private exec/wait process diagnostics to identify the inconsistent Git admission result without changing checks/controller.",
-        "Read-only peer review found no additional concrete source/proof defect at423f. Actual Apple container proc inspection found no owned proof process; escalated operation approval had been interrupted before launch.",
-        "Read-only peer review of actual7d9638 vsbbe11d found no further defect, preserved all readonly source/test/doc bytes and15acceptedchecks plus2 Quinn guards.",
-        "Real git merge --no-commit --no-ff bbe11d91123270841da44fee69e3556a0be96bc4 in progress: incoming accepted readonlyPR106 and released0.13.1 preserved; authentic own committed Gov journal chosen only for tracked merge conflict. Native specs.refresh resolved generated conflicts and retained incoming authored security/validation prose.",
-        "Repair uses authored validation-boundary prose and final native specs.refresh after configuration reconciliation; then staged checkpoint and commit. No manifest JSON handedit, no SDK manual build, no guard suppression.",
-        "Reviewed changed accepted transport/tests/proof helpers and actual0.13.1 manifest/lock before reconciling native source inventory6d7a6416; command contract digest unchangeda6671cf7. Incoming accepted obligations replayed via native claim; no semantic Gov JSON handedit or history rewrite.",
-        "cargo fmt --all and diff hygiene passed. No SDK build/test executed outside validate. Full exact-candidate proof remains required.",
-        "git diff --check passed; semantic specs reviewed through native plan review-spec. Initial INTENT review was rejected because only ARCHITECTURE/INTERFACES/SECURITY paths are eligible; all three eligible current-content reviews succeeded."
+        "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker",
+        "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
+        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
+        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
       ],
       "inspected_files": [
-        "Cargo.toml",
-        "tools/proof/Containerfile",
-        "tools/proof/check.py",
-        "tools/proof/prepare.py"
-      ],
-      "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
-      "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "Cargo.lock",
+        ".github/workflows/release.yml",
         "Cargo.toml",
         "README.md",
-        "src/adapter/sqlite/recovery.rs",
-        "tools/proof/Containerfile",
-        "tools/proof/check.py",
-        "tools/proof/prepare.py"
+        "tools/proof/check.py"
+      ],
+      "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+      "modified_files": [
+        ".decapod/managed/specs/OPERATIONS.md",
+        "CHANGELOG.md"
       ],
       "next_transitions": [
-        "Checkpoint authentic review and validation-boundary material; run configured native validation with private process diagnostics",
-        "Checkpoint candidate and run full native proof in an inspected headless ARM Linux environment",
-        "Checkpoint lint repair, push, and run the complete configured 16-check contract",
-        "Commit final-order projections and execute all17 required native checks on the exact candidate",
-        "Finish native current-content review/checkpoint of the real accepted-target merge, then exact full native proof without ambient Git overrides",
-        "Native checkpoint, commit, push and draft publication; then full configured validation",
+        "Checkpoint and publish explicitly authorized draft; continue exact-source native validate and CI",
+        "Commit resolved setup status and refreshed manifest, then rerun full native validation on exact candidate",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "repo"
+        "file:.decapod/managed/specs/OPERATIONS.md",
+        "file:CHANGELOG.md"
       ],
-      "run_id": "branch_01M77ARCEW4Z6SD85VJ5MW7535",
+      "run_id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [
-        "First image attempt selected cached amd64 base and was cancelled/reaped before candidate execution; restarted explicitly for linux/arm64.",
-        "Own lease renewal invalidated authoring binding; workspace status inspected and same branch rebind completed before retrying rejected plan writes"
+        "No manual shadow builds; prior SDK108 proof is historical only"
       ],
-      "task_id": "bugs_01m77aqesmpw3kah",
+      "task_id": "bugs_01m77wjh57ym1md5",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "This is a next0.xminor MSRV proposal; root approved it for review, not publication"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

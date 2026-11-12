@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Breaking compatibility
+
+- The next release requires Rust and Cargo 1.85 or newer. Upgrade the consumer
+  toolchain before adopting it; the public Rust API, feature names and transport
+  behavior are unchanged by this requirement.
+- The dependency graph requires `quinn-proto >=0.11.19,<0.12` and removes the
+  obsolete inactive `quinn-udp` upper bound. Cargo resolves these dependencies
+  through reqwest even though Dactyl does not enable HTTP/3. The patched graph
+  includes Edition 2024 metadata that Cargo 1.75 cannot parse.
+- Consumers must regenerate their own lockfiles against the new release and
+  verify the resolved dependency graph. The library lockfile does not constrain
+  a downstream application's resolution. The checked-in and fresh-consumer
+  Quinn-floor checks are regression guards, not a complete vulnerability audit.
+
+These compatibility changes were accepted in [#108](https://github.com/DecapodLabs/dactyl/pull/108).
+They remain unreleased until the normal release PR is reviewed, merged and
+published. This note does not enable HTTP/3 or change cloud authorization.
+
 ## [0.13.1](https://github.com/DecapodLabs/dactyl/compare/v0.13.0...v0.13.1) (2026-11-12)
 
 
@@ -55,7 +75,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * add opt-in Supabase service adapter preview ([62a616e](https://github.com/DecapodLabs/dactyl/commit/62a616e409cbc4c68ca63668c0132a8deffb555c))
 
-## [Unreleased]
+## Historical Supabase preview notes
+
+These notes were previously retained under `Unreleased`. They describe the
+already shipped preview and are preserved here as historical context, rather
+than additions in the upcoming compatibility release. Published version entries
+above record the subsequent releases.
 
 ### Added
 
