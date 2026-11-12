@@ -66,6 +66,14 @@
       "proof_refs": [
         "tools/proof/check.py"
       ]
+    },
+    {
+      "id": "snapshots-native-preparation",
+      "summary": "Preserve the actual native preparation manifest emitted by independent v0.138.3;186 prerequisite checks passed, full readiness stopped on uncommitted generated timestamp and remains pending. No generated timestamp or proof was fabricated.",
+      "input_digest": "sha256:f889f749925eebebae7b8503f0299b70c204977abae463cbe3395d3a1f7fd63d",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
