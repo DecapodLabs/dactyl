@@ -33,6 +33,12 @@ The Rust 1.85 floor permits `std::iter::repeat_n` when SQLite recovery builds
 bound-value placeholders. The implementation uses it to satisfy the existing
 warnings-as-errors Clippy check while preserving the same SQL placeholders.
 
+The initial full native attempt for this proposal stopped at governance admission
+before executing SDK checks, despite successful project prerequisites. Such an
+attempt supplies no feature-matrix or MSRV evidence. A hosted Rust check or a
+read-only Git inventory cannot replace the complete exact-candidate native run;
+current-content spec reviews and the committed governance bundle remain required.
+
 ## Secure shared-directory SQLite recovery
 
 The SQLite recovery unit suite inspects 0700/0600 creation checkpoints and populated PERSIST journals under subprocess umask 000, tests accepted 0660/2770 sharing and original inode/group custody, rejects metadata and symlink/collision/replacement hazards, injects seven recovery failure boundaries plus diagnostic-sync failure, and kills subprocesses at seven stages to verify private artifacts and recoverable originals. Existing sqlite_maintenance regressions remain required. Platform capability limits are explicit; Linux test evidence is not proof on other hosts.

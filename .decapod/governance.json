@@ -75,6 +75,14 @@
       "proof_refs": [
         "tools/proof/check.py"
       ]
+    },
+    {
+      "id": "patched-quinn-msrv-v3",
+      "summary": "Renew current-source spec reviews and preserve actual initial native admission failure without claiming SDK execution; prepare diagnostic full-native retry with all16 checks unchanged.",
+      "input_digest": "sha256:92c08f7e5c3baa2ab6b845665caa171e4d1adb53e027206dd3e7791a71027785",
+      "proof_refs": [
+        "tools/proof/check.py"
+      ]
     }
   ],
   "intents": {
@@ -115,22 +123,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed unchanged reqwest blocking transport, inactive patched Quinn constraint and removed obsolete UDP cap against Cargo and runtime source; explicit Cargo/Rust 1.85 resolution boundary.",
-          "reviewed_code_fingerprint": "a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2",
+          "reason": "Reviewed current Rust1.85 candidate after the behavior-preserving repeat_n lint repair: patched inactive resolution, existing HTTP runtime/public API and token boundaries remain as authored; this spec remains materially updated relative to accepted base. Native proof is pending and not inferred from hosted checks.",
+          "reviewed_code_fingerprint": "3ff214ba931ba2319f9f53fff692fac7144f4b28ac6223c9777a5bda7f28ff20",
           "spec_material_hash": "9d1594b505f72aa2fb932983ae518ba5f986b9a6f50a9fdee03882d5a8ef27e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Declares a breaking Rust 1.85 consumer toolchain floor for the next 0.x minor while preserving every public Rust API, feature key and wire contract; fresh consumer does not inherit SDK Cargo.lock.",
-          "reviewed_code_fingerprint": "a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2",
+          "reason": "Reviewed current Rust1.85 candidate after the behavior-preserving repeat_n lint repair: patched inactive resolution, existing HTTP runtime/public API and token boundaries remain as authored; this spec remains materially updated relative to accepted base. Native proof is pending and not inferred from hosted checks.",
+          "reviewed_code_fingerprint": "3ff214ba931ba2319f9f53fff692fac7144f4b28ac6223c9777a5bda7f28ff20",
           "spec_material_hash": "93815029787f9b3907dc8ce9d169f6ec709ffccc793df0ca4784fda6c9b539f0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Replaces vulnerable inactive Quinn bound with >=0.11.19 without an advisory ignore or inactive exemption; separates dependency audit correction from unproven runtime exposure and full advisory audit.",
-          "reviewed_code_fingerprint": "a5396bdd8a34e8b2453d44a6b81e25f9897d32935f8bf1e6d82b181cd44f29e2",
+          "reason": "Reviewed current Rust1.85 candidate after the behavior-preserving repeat_n lint repair: patched inactive resolution, existing HTTP runtime/public API and token boundaries remain as authored; this spec remains materially updated relative to accepted base. Native proof is pending and not inferred from hosted checks.",
+          "reviewed_code_fingerprint": "3ff214ba931ba2319f9f53fff692fac7144f4b28ac6223c9777a5bda7f28ff20",
           "spec_material_hash": "8bbd03f692467ca216f3d9db983f13d01f4bfc198d80e2d0f1e9716db3b19f1c"
         }
       ],
@@ -144,14 +152,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794471730Z"
+      "updated_at": "1794474678Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No advisory suppression, release, deployment or runtime API change"
       ],
-      "artifact_hash": "sha256:248e458f5ca8803585a32cf7134e4e2350723675d329b2f73f8fbaf8640761fb",
+      "artifact_hash": "sha256:64076b76a97d86842dd26633503344406943e2b8025bce3b31e8a67b6d23382e",
       "checks": [
         {
           "name": "diff-hygiene",
@@ -159,18 +167,18 @@
         },
         {
           "name": "full-native-proof",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "hosted-clippy",
-          "status": "failed"
+          "status": "passed"
         },
         {
           "name": "source-research",
           "status": "passed"
         }
       ],
-      "current_phase": "ci-repair",
+      "current_phase": "native-admission-recovery",
       "custody": {
         "events": [
           {
@@ -212,10 +220,17 @@
             "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M77ARCEW4Z6SD85VJ5MW7535",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M77ARCCBS3YYRHYTFHBBVM18",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77ARCEW4Z6SD85VJ5MW7535": {
@@ -312,6 +327,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "native-admission-recovery",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Nativev2 actual report at /private/tmp/dactyl-security-native-v2/report.json:187 project prerequisite passes, READINESS_BLOCKED required validation artifact not staged governance.json, no source execution and no evidence_path. Exact read-only Linux Git cached-file inventory succeeds for the tracked governance file; no missing artifact was fabricated.",
+                  "Current-content architecture/interface/security spec reviews renewed after repeat_n. Root observed current GH Rust job131078448249 success; it is CI diagnosis only and does not replace native proof.",
+                  "Private report-copy escalation returned successfully and active session21522 was reaped. Next native attempt adds private exec/wait process diagnostics to identify the inconsistent Git admission result without changing checks/controller."
+                ],
+                "proof_refs": [
+                  "full-native-proof",
+                  "hosted-clippy"
+                ],
+                "scope": [
+                  "repo"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -322,10 +355,13 @@
       "evidence": [
         "Actual GH Rust job131061669229 at423f failed manual_repeat_n in recovery.rs700 under the new MSRV. Changed repeated placeholder construction to std::iter::repeat_n, available sinceRust1.82 and supported by declared1.85, without suppressing the lint.",
         "Cargo metadata update resolved quinn-proto 0.11.19; all original 14 checks retained and two parsed-lock floor inspections added. Full native proof has not run.",
+        "Current-content architecture/interface/security spec reviews renewed after repeat_n. Root observed current GH Rust job131078448249 success; it is CI diagnosis only and does not replace native proof.",
         "Inspected ARM image build failed while installing independent registry Decapod 0.138.3: rustc received SIGKILL in a 4GiB VM. No candidate tests executed. Preparing existing independent official-controller image with actual Rust 1.85.",
         "Inspected all four workflow sources, release metadata, manifest/lock and complete proof helpers before reconciling agent.init source/command digests; runtime source unchanged.",
         "Issue107 records the vulnerable inactive bound and explicit MSRV proposal. Latest user explicitly requires publishing a PR now; draft review is authorized before full proof, with no readiness or check waiver.",
+        "Nativev2 actual report at /private/tmp/dactyl-security-native-v2/report.json:187 project prerequisite passes, READINESS_BLOCKED required validation artifact not staged governance.json, no source execution and no evidence_path. Exact read-only Linux Git cached-file inventory succeeds for the tracked governance file; no missing artifact was fabricated.",
         "Primary RustSec0338 patched>=0.11.18; official crates.io metadata and checksum-verified0.11.18 manifest bothpatchedversions requireRust1.85 andrand0.10.1",
+        "Private report-copy escalation returned successfully and active session21522 was reaped. Next native attempt adds private exec/wait process diagnostics to identify the inconsistent Git admission result without changing checks/controller.",
         "Read-only peer review found no additional concrete source/proof defect at423f. Actual Apple container proc inspection found no owned proof process; escalated operation approval had been interrupted before launch.",
         "cargo fmt --all and diff hygiene passed. No SDK build/test executed outside validate. Full exact-candidate proof remains required.",
         "git diff --check passed; semantic specs reviewed through native plan review-spec. Initial INTENT review was rejected because only ARCHITECTURE/INTERFACES/SECURITY paths are eligible; all three eligible current-content reviews succeeded."
@@ -353,6 +389,7 @@
         "tools/proof/prepare.py"
       ],
       "next_transitions": [
+        "Checkpoint authentic review and validation-boundary material; run configured native validation with private process diagnostics",
         "Checkpoint candidate and run full native proof in an inspected headless ARM Linux environment",
         "Checkpoint lint repair, push, and run the complete configured 16-check contract",
         "Native checkpoint, commit, push and draft publication; then full configured validation",
