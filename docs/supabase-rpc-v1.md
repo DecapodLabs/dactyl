@@ -128,3 +128,15 @@ Normative external mechanics:
 - [PostgREST function arguments](https://docs.postgrest.org/en/v12/references/api/functions.html)
 - [PostgREST errors](https://docs.postgrest.org/en/v12/references/errors.html)
 - [Supabase JWT trust](https://supabase.com/docs/guides/auth/jwts)
+
+## Physical read-only transactions
+
+Explicit native read-only atomic batches use
+`POST /rest/v1/rpc/dactyl_read_batch_v1`, with the existing version1 ordered
+operations envelope and `access_mode=read_only`. The service must classify this
+wrapper as STABLE so PostgREST opens a physical READ ONLY transaction. The
+standard query wrapper has the same physical classification. Native write
+batches keep `dactyl_batch_v1`; legacy HTTP routes remain unchanged. An older
+receiver missing the read-only endpoint fails explicitly; no writable or local
+fallback is attempted. This source extension needs a new registry release before
+a consumer can claim the added route is published.

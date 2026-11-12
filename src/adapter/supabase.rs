@@ -220,6 +220,9 @@ impl SupabaseAdapter {
         let path = if self.rpc_headers.is_some() {
             match path {
                 "/query" => "/rest/v1/rpc/dactyl_query_v1",
+                "/batch" if self.access_mode == AccessMode::ReadOnly => {
+                    "/rest/v1/rpc/dactyl_read_batch_v1"
+                }
                 "/batch" => "/rest/v1/rpc/dactyl_batch_v1",
                 _ => return Err(protocol_error("unsupported RPC operation")),
             }

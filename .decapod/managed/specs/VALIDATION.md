@@ -20,7 +20,7 @@ ownership checks remain enabled.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
 
-The MSRV proposal preserves all fourteen existing Rust checks, including both
+The MSRV proposal preserves all fifteen existing Rust checks, including both
 locked all-feature execution and fresh-consumer resolution, with the actual
 Rust 1.85 toolchain. Two additional lock inspections require patched or absent
 quinn-proto entries in the repository and clean-consumer graphs. They record
@@ -38,6 +38,12 @@ before executing SDK checks, despite successful project prerequisites. Such an
 attempt supplies no feature-matrix or MSRV evidence. A hosted Rust check or a
 read-only Git inventory cannot replace the complete exact-candidate native run;
 current-content spec reviews and the committed governance bundle remain required.
+
+The accepted 0.13.1 target adds the native read-only batch fixture absence guard.
+That guard and its fixture-environment removal remain required in the integrated
+proposal, making seventeen checks with the two Quinn lock inspections. The real
+accepted target is merged before renewed proof; old-target evidence does not
+establish readiness of this combined source.
 
 ## Secure shared-directory SQLite recovery
 
@@ -265,7 +271,11 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ff214ba931ba2319f9f53fff692fac7144f4b28ac6223c9777a5bda7f28ff20`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (15 files), `tools/` (2 files)
+- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Accepted 0.13.0 integration
+
+The read-only native batch extension retains the accepted snapshot inspection API from `src/inspection.rs` and `src/adapter/sqlite/inspection.rs`. Its renewed proof runs the complete feature matrix, native-fixture absence guard, MSRV consumer and package checks on the integrated 0.13.0 source. Earlier 0.12.0 evidence does not establish readiness after this target change.
