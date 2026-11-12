@@ -1,5 +1,11 @@
 # Validation
 
+## Two required native Rust execution groups
+
+The repository-local profile requires both `rust-contract-stable` and `rust-contract-msrv`. The stable group runs the existing twelve formatting, feature-matrix, clippy, missing-real-fixture and package checks; the MSRV group runs the existing Rust 1.75 all-feature test and fresh-consumer check without the library lockfile. Every Cargo argument, offline setting, individual 900-second deadline, expected missing-fixture failure predicate and failure exit remains unchanged. Both groups are mapped to the Rust workflow and remain mandatory; success of one group cannot substitute for the other.
+
+Each native invocation binds all unique canonical files of its selected Rust toolchain and the shared installed runtime. Their union preserves all 272 canonical paths from the reviewed 280-label inventory; repeated labels for the same canonical path are measured once per group. This partition fits the released controller's per-invocation hashing limit without omitting runtime dependencies. The declared execution budgets are 2,400 seconds for stable and 1,200 seconds for MSRV, preserving the original 3,600-second total. A timeout or failed group blocks readiness. Generated configuration, runtime-size measurements and dependency preparation do not establish passing product proof. Hosted CI, real service acceptance, deployment and publication retain their separate evidence boundaries.
+
 ## Release-bound controller projections
 
 The four root agent entrypoints, managed container release pin and specification manifest must match the installed native controller before publication. Migrate stale generated entrypoints through supported native initialization on the same claimed task, preserve prior checkpoint history and authored requirements, and checkpoint the resulting projections before rerunning the complete required proof. Regeneration and dependency-cache preparation do not establish build, MSRV, fixture or package success. Hosted CI, hosted service acceptance and registry publication retain their separately declared evidence boundaries.
@@ -236,7 +242,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7`
+- Repository signal fingerprint: `d5be350109fabf64345f003ffdd6ec9d98efe80e65168c405101005b2699167b`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `scripts/` (4 files), `src/` (15 files), `tests/` (14 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

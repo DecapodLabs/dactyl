@@ -1,5 +1,7 @@
 """Reviewed offline Rust contract, invoked only by native Decapod validation.
 
+Both required groups must pass. Each group binds its complete installed Rust
+toolchain and common runtime within the controller's per-invocation hash bound.
 This local proof does not run hosted CI, a real PostgreSQL service, deployment,
 or crate publication. Dependency acquisition is a separate preparation step.
 """
@@ -9,8 +11,13 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 
+
+if len(sys.argv) != 3 or sys.argv[1] != "--group" or sys.argv[2] not in ("stable", "msrv"):
+    raise SystemExit("Expected --group stable or --group msrv; both groups are required.")
+GROUP = sys.argv[2]
 
 ROOT = Path.cwd()
 STABLE = Path(os.environ["DACTYL_STABLE_TOOLS"])
@@ -70,59 +77,64 @@ def run(name, args, tools=STABLE, expected_missing=False):
         print(output[-18000:], flush=True)
 
 
-run("format", ["fmt", "--all", "--", "--check"])
-run("all-features", ["test", "--locked", "--all-features"])
-for feature in (
-    "",
-    "sqlite",
-    "neon",
-    "supabase",
-    "sqlite,neon",
-    "sqlite,supabase",
-    "neon,supabase",
-):
+if GROUP == "stable":
+    run("format", ["fmt", "--all", "--", "--check"])
+    run("all-features", ["test", "--locked", "--all-features"])
+    for feature in (
+        "",
+        "sqlite",
+        "neon",
+        "supabase",
+        "sqlite,neon",
+        "sqlite,supabase",
+        "neon,supabase",
+    ):
+        run(
+            "features-" + (feature or "none"),
+            ["test", "--locked", "--no-default-features"]
+            + (["--features", feature] if feature else []),
+        )
     run(
-        "features-" + (feature or "none"),
-        ["test", "--locked", "--no-default-features"]
-        + (["--features", feature] if feature else []),
+        "clippy",
+        ["clippy", "--locked", "--all-targets", "--all-features", "--", "-D", "warnings"],
     )
-run(
-    "clippy",
-    ["clippy", "--locked", "--all-targets", "--all-features", "--", "-D", "warnings"],
-)
-run(
-    "missing-real-fixture",
-    [
-        "test", "--locked", "--features", "supabase", "--test", "supabase_service",
-        "local_postgres_service_contract", "--", "--ignored", "--exact",
-    ],
-    expected_missing=True,
-)
-run("msrv", ["test", "--locked", "--all-features"], tools=MSRV)
-with tempfile.TemporaryDirectory(prefix="dactyl-consumer-") as directory:
-    consumer = Path(directory)
-    (consumer / "src").mkdir()
-    (consumer / "src/main.rs").write_text(
-        "fn main() { let _ = dactyl_db::Backend::Cloud; }\n", encoding="utf-8"
-    )
-    (consumer / "Cargo.toml").write_text(
-        '[package]\nname="clean-consumer"\nversion="0.0.0"\nedition="2021"\nrust-version="1.75"\n'
-        '[dependencies]\ndactyl-db={path=' + json.dumps(str(ROOT))
-        + ',features=["sqlite","neon","supabase"]}\n',
-        encoding="utf-8",
-    )
-    # A new consumer resolves against public manifest bounds, without copying
-    # this library's lockfile. Only the temporary consumer is writable.
     run(
-        "msrv-clean-consumer",
-        ["check", "--manifest-path", str(consumer / "Cargo.toml")],
-        tools=MSRV,
+        "missing-real-fixture",
+        [
+            "test", "--locked", "--features", "supabase", "--test", "supabase_service",
+            "local_postgres_service_contract", "--", "--ignored", "--exact",
+        ],
+        expected_missing=True,
     )
-run("package", ["package", "--locked", "--allow-dirty"])
+    run("package", ["package", "--locked", "--allow-dirty"])
+
+if GROUP == "msrv":
+    run("msrv", ["test", "--locked", "--all-features"], tools=MSRV)
+    with tempfile.TemporaryDirectory(prefix="dactyl-consumer-") as directory:
+        consumer = Path(directory)
+        (consumer / "src").mkdir()
+        (consumer / "src/main.rs").write_text(
+            "fn main() { let _ = dactyl_db::Backend::Cloud; }\n", encoding="utf-8"
+        )
+        (consumer / "Cargo.toml").write_text(
+            '[package]\nname="clean-consumer"\nversion="0.0.0"\nedition="2021"\nrust-version="1.75"\n'
+            '[dependencies]\ndactyl-db={path=' + json.dumps(str(ROOT))
+            + ',features=["sqlite","neon","supabase"]}\n',
+            encoding="utf-8",
+        )
+        # A new consumer resolves against public manifest bounds, without copying
+        # this library's lockfile. Only the temporary consumer is writable.
+        run(
+            "msrv-clean-consumer",
+            ["check", "--manifest-path", str(consumer / "Cargo.toml")],
+            tools=MSRV,
+        )
+
 print(
     json.dumps(
         dict(
             scope="local_rust_contract",
+            group=GROUP,
             checks=CHECKS,
             hosted_ci="unexecuted",
             real_postgres="unexecuted",

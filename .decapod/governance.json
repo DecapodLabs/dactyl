@@ -62,6 +62,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "dactyl-cloud-proof-groups-1628",
+      "summary": "Preserve all original connector/TLS/controller checkpoints and all existing checks while splitting their complete runtimes into two mandatory native proof groups within unchanged byte and aggregate execution bounds. Full proof remains pending.",
+      "input_digest": "sha256:01b22c3ffc76043d3268848cc3de7a70c6ceb9056994a5b6de51142bdd658234",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -102,22 +110,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Native entrypoint regeneration and VALIDATION clarification do not change the existing architecture product contract; preserve its authored connector and private TLS requirements.",
-          "reviewed_code_fingerprint": "3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7",
+          "reason": "Two required proof execution groups preserve every existing product check and installed runtime dependency; the architecture connector and private TLS contract is unchanged.",
+          "reviewed_code_fingerprint": "d5be350109fabf64345f003ffdd6ec9d98efe80e65168c405101005b2699167b",
           "spec_material_hash": "a9a8ae2c05580ac0c5d65e43cd4b64acfb64890f45cecfd531d8257998c78c22"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Native entrypoint regeneration and VALIDATION clarification do not change the existing interfaces product contract; preserve its authored connector and private TLS requirements.",
-          "reviewed_code_fingerprint": "3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7",
+          "reason": "Two required proof execution groups preserve every existing product check and installed runtime dependency; the interfaces connector and private TLS contract is unchanged.",
+          "reviewed_code_fingerprint": "d5be350109fabf64345f003ffdd6ec9d98efe80e65168c405101005b2699167b",
           "spec_material_hash": "7e4755c502c752621818e11914222e9937f3936a64f3110fcf9e9b3e80256512"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Native entrypoint regeneration and VALIDATION clarification do not change the existing security product contract; preserve its authored connector and private TLS requirements.",
-          "reviewed_code_fingerprint": "3334a42e2f74c3515a5c4f561c76e5fe05a408b439473e2840f14f3a8a3679e7",
+          "reason": "Two required proof execution groups preserve every existing product check and installed runtime dependency; the security connector and private TLS contract is unchanged.",
+          "reviewed_code_fingerprint": "d5be350109fabf64345f003ffdd6ec9d98efe80e65168c405101005b2699167b",
           "spec_material_hash": "0921c93dda210725078096f6aca44975684d3b902e3fc57c7570b8c4247327b8"
         }
       ],
@@ -129,15 +137,16 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794442774Z"
+      "updated_at": "1794444085Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Independently reviewed recovered source and initial repository proof adoption; hosted service and registry publication remain separate",
+        "Same task and all prior checkpoints; two required complete Rust execution groups with all canonical runtime dependencies; hosted service and registry publication remain separate",
         "Same task, preserved connector/TLS checkpoints, native release-bound regeneration; hosted service and registry publication remain separate"
       ],
-      "artifact_hash": "sha256:0ff0ac4221da017b2545b4bad1ae28b096ebedfb5d74649a7d93d7e99935e4df",
+      "artifact_hash": "sha256:20305a633d99339ae491b169b52b822c35b7ea2c62211141c0133c59a74b02f3",
       "checks": [
         {
           "name": "current-full-workbranch-proof-result",
@@ -191,10 +200,17 @@
             "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M76FZSYY65BBRT817017VAV5",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M76FZSY3A4RA7ARS5V5A3FW2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76FZSYY65BBRT817017VAV5": {
@@ -255,6 +271,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "decapod rpc --op agent.init",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Run 43126195742 preserved clean checkpoint 26e671d809a83c3dcc7eaf09d0b87322c50ff922 and failed native adapter selection before product execution because the combined declared runtime exceeded the released 1 GiB hashing cap. Read-only runtime measurement 43126937218 bound the unchanged inventory sha256:b75516456f1aef558d2615aa32448027f40121f7491e70f446a32b8bd0dcc142 and sizes sha256:fd3fe21e7cd21fdcefdc7daaa5de8babb4e5e3fb532462a690d56abbbecfbf35. Independent review preserves all 14 exact Cargo checks and all 272 canonical runtime paths in mandatory stable/MSRV groups, with 2400/1200-second declared budgets totaling 3600 seconds. Native reconciliation reproduced approved command sha256:9a3855e8ac4bb9a872c2b9e03463c5b557904f84528392f558560f1cd7389c84 and source sha256:267a4f0b1c900be01d7fe7077289fb1a0d015f001b89e968a0bd3fd87fd81877 pins. Configuration, size measurements and dependency preparation do not prove product checks; current full proof remains pending."
+                ],
+                "proof_refs": [
+                  "source-review",
+                  "prior-full-workbranch-readiness",
+                  "current-full-workbranch-proof-result"
+                ],
+                "scope": [
+                  "dactyl-cloud-connector",
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -263,11 +298,13 @@
       "declared_commands": [
         "cargo fmt --all",
         "decapod init with --all",
+        "decapod rpc --op agent.init",
         "decapod rpc --op specs.refresh"
       ],
       "destination": "pull request",
       "evidence": [
         "Preserved original checkpoint ca8454b5fc818845abb80f1043f155b19224442f; same task successor imported and original journal readmitted unchanged. Run43121813036 performed dependency-only update/metadata; independently reviewed lock sha256:dc1da3da0f19eb209b2079d6305c4cc3924603e7ce780011c2b85d8ab51e632c and metadata sha256:c76f124bcfea4b51fbcf760c523a86e9863329400496ad8cacd744c0ffeb1bf9 remove exactly 17 unused packages, with no added/version-replaced packages. Native build/MSRV/clean-consumer/feature/package proof has not run; unavailable describes the absent proof result. Hosted service acceptance, Decapod registry release dependency and publication remain separate.",
+        "Run 43126195742 preserved clean checkpoint 26e671d809a83c3dcc7eaf09d0b87322c50ff922 and failed native adapter selection before product execution because the combined declared runtime exceeded the released 1 GiB hashing cap. Read-only runtime measurement 43126937218 bound the unchanged inventory sha256:b75516456f1aef558d2615aa32448027f40121f7491e70f446a32b8bd0dcc142 and sizes sha256:fd3fe21e7cd21fdcefdc7daaa5de8babb4e5e3fb532462a690d56abbbecfbf35. Independent review preserves all 14 exact Cargo checks and all 272 canonical runtime paths in mandatory stable/MSRV groups, with 2400/1200-second declared budgets totaling 3600 seconds. Native reconciliation reproduced approved command sha256:9a3855e8ac4bb9a872c2b9e03463c5b557904f84528392f558560f1cd7389c84 and source sha256:267a4f0b1c900be01d7fe7077289fb1a0d015f001b89e968a0bd3fd87fd81877 pins. Configuration, size measurements and dependency preparation do not prove product checks; current full proof remains pending.",
         "Run43123956927 preserved clean checkpoint e5fb1dfdaae3bbf06084be751b4a774480ac1b0b and completed unchanged dependency-only MSRV/consumer cache preparation. Its native publisher failed before product proof on stale0.105.0 entrypoint bodies and PUBLICATION_BUNDLE_CURRENCY. This continuation preserves both checkpoints and the original journal; only native initialization regenerates0.138.2 entrypoints, retires the legacy none selector, emits existing empty coverage defaults, and removes one deprecated ignore rule. No successful build/MSRV/feature/package proof or hosted service/registry publication is claimed before the unchanged full publisher runs.",
         "Same original task restored from native sealed successor after run43120599440. Authored pending source recovered with independently reviewed terminal-blank cleanup from verified encrypted archive sha256:7100456521676cf28695c9a5024270f54528f9864c8a4f0274c7170e0b90c8db; native projections regenerated through CLI. Prior MSRV dependency fetch failed on rand_pcg0.10.2 edition2024 before build/test/checkpoint. This checkpoint preserves that source before repair; full proof has not run and unavailable describes the absent result."
       ],
