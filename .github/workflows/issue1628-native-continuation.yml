@@ -1,4 +1,4 @@
-name: Continue issue 1628 Dactyl native full proof
+name: Refresh Dactyl native entrypoints and full proof
 
 on:
   push:
@@ -76,9 +76,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/full-material/scripts/proof/runtime_inventory.py" > /root/issue1628-runtime.json
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_full.py" prepare \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_entrypoints.py" prepare \
             --slug dactyl \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-prepared-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-entrypoint-result.json" \
             --directory /root/issue1628-relay \
             --runtime-inventory /root/issue1628-runtime.json
       - name: Publish only the ephemeral receiver certificate
@@ -94,11 +94,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_full.py" receive \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_entrypoints.py" receive \
             --slug dactyl \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-prepared-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-entrypoint-result.json" \
             --directory /root/issue1628-relay
-      - name: Resume original checkpoint and run unchanged full native readiness
+      - name: Refresh native entrypoints on original task and run complete readiness
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -112,20 +112,20 @@ jobs:
           git config user.name 'ChatGPT'
           git config user.email 'chatgpt@users.noreply.github.com'
           gh auth setup-git
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/resume_dactyl_full.py" \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/resume_dactyl_entrypoints.py" \
             --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/full-material" \
-            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-full-continuation.json" \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/dactyl-entrypoint-continuation.json" \
             --native-transfer /root/issue1628-relay/native-transfer.json \
             --candidate-bundle /root/issue1628-relay/candidate.bundle \
             --runtime-inventory /root/issue1628-relay/public/runtime-inventory.json \
             --runtime-review /root/issue1628-relay/runtime-review.json \
             --certificate "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
-            --output "$RUNNER_TEMP/issue1628-dactyl-full"
+            --output "$RUNNER_TEMP/issue1628-dactyl-entrypoints"
       - name: Preserve actual readiness and encrypted native custody
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: issue1628-dactyl-full
-          path: ${{ runner.temp }}/issue1628-dactyl-full/
+          name: issue1628-dactyl-entrypoints
+          path: ${{ runner.temp }}/issue1628-dactyl-entrypoints/
           if-no-files-found: warn
           retention-days: 90
