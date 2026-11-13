@@ -178,6 +178,11 @@
       "id": "conn-100-18-spec-readme",
       "summary": "docs(specs): refresh specs README attestation for #100 inventory (#100)",
       "input_digest": "sha256:610f49a96bf38a70984507036406b852a0aa41dde3099d513e3049cfaeffa942"
+    },
+    {
+      "id": "conn-100-19-spec-manifest",
+      "summary": "docs(specs): refresh specs .manifest.json hashes for #100 (#100)",
+      "input_digest": "sha256:67e7eeddf36601a29002f7a68d6f2bc8f94c883859fecebe27c8acd16171b51b"
     }
   ],
   "intents": {
