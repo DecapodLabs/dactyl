@@ -416,7 +416,7 @@ mod tests {
                 {"token":"synthetic-two","context":{"version":1,"payload":{"opaque":2}}}],
             "scenarios":[{"principal":0,"access_mode":"read_only",
                 "operations":[{"kind":"read","sql":"SELECT service_owned_statement()","params":[]}],
-                "expected":{"outcome":"success","results":[{"Rows":{"rows":[]}}]}}],
+                "expected":{"outcome":"success","results":[{"Rows":[]}]}}],
             "receipt_path":"/private/native-client-receipt"})
     }
     fn valid(value: &Value) -> bool {
@@ -492,22 +492,22 @@ mod tests {
         assert!(matches(&rolled_back, Err(error())));
         assert!(!matches(&expected, Ok(AtomicResult::default())));
         let expected = Expected::Success {
-            results: vec![OperationResult::Rows(dactyl_db::Rows {
-                rows: vec![dactyl_db::Row {
+            results: vec![OperationResult::Rows(dactyl_db::Rows(vec![
+                dactyl_db::Row {
                     columns: vec!["value".into()],
                     values: vec![json!(true)],
-                }],
-            })],
+                },
+            ]))],
         };
         assert!(!matches(
             &expected,
             Ok(AtomicResult {
-                results: vec![OperationResult::Rows(dactyl_db::Rows {
-                    rows: vec![dactyl_db::Row {
+                results: vec![OperationResult::Rows(dactyl_db::Rows(vec![
+                    dactyl_db::Row {
                         columns: vec!["value".into()],
                         values: vec![json!(1)]
-                    }],
-                })]
+                    }
+                ],))]
             })
         ));
     }
