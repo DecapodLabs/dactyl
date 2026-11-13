@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
-    "release": "v0.14.0",
+    "accepted_commit": "7d539730f9f3218f58f244c284c529c5b19967fb",
+    "release": "v0.16.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -60,223 +60,143 @@
       "trajectory:7099daf12c898d5a": "Linux host SQLite Unix VFS and reliable filesystem no-replace rename/sync; no Android or non-Linux runtime proof",
       "trajectory:7ae8f2776cdb5fb2": "Only public metadata availability is verified; hosted OAuth, seat policy, real checkout and registry release are not attested.",
       "trajectory:84e472b97b0fa404": "SQL009 deployment and anonymous route presence do not prove hosted authenticated seat access, login or Stripe.",
+      "trajectory:a392402f83bccf5c": "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification",
       "trajectory:e9479a453e967d40": "This is a next0.xminor MSRV proposal; root approved it for review, not publication"
     }
   },
   "change": {
-    "id": "change_01M79E1V8NKC35G53WMHDGGVBY",
-    "base_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
+    "id": "change_01M79NYVYYETSSZC3CXQNSEJPF",
+    "base_commit": "7d539730f9f3218f58f244c284c529c5b19967fb",
     "target_base": "origin/main"
   },
   "claims": {
-    "logical-local-cloud-connector-boundary": {
-      "statement": "LogicalTarget and LogicalConnector resolve local SQLite and cloud public-profile deployments per instance without process-global routing, cross-workspace leakage, or SQLite fallback on failed cloud discovery, across all Cargo feature combinations.",
-      "falsifier": "Resolving cloud mutates or depends on ambient DATASTORE* env vars, leaks credentials across independent workspaces, falls back to SQLite when cloud discovery or capability fails, or sends user credentials to public discovery.",
+    "issue-70-contract": {
+      "statement": "Issue 70 documentation distinguishes current implemented surfaces from remaining external qualification",
+      "falsifier": "A documented API is absent from accepted source, or local/synthetic evidence is labeled as hosted execution",
       "status": "supported",
       "proof_refs": [
-        "src/connector.rs",
-        "tests/logical_connector.rs",
-        "tests/supabase_disabled.rs"
-      ]
-    },
-    "managed-session-and-account-readiness-transport": {
-      "statement": "CloudConnector and LogicalConnector transport public discovery, PKCE bootstrap/exchange/refresh/logout, and hosted account/billing readiness routes with redacted diagnostics, complete public error-code allowlist, and explicit outcome_unknown marking on post-send ambiguous mutations.",
-      "falsifier": "A credential or private body appears in Debug/Display, a redirect or automatic retry occurs, a Supabase GoTrue error_code or Propodus denial code is dropped, or a lost post-send one-time/mutating response omits outcome_unknown.",
-      "status": "supported",
-      "proof_refs": [
-        "src/cloud.rs",
-        "tests/cloud_connector.rs",
-        "tests/logical_connector.rs"
+        "source:src/adapter/supabase.rs",
+        "source:src/connector.rs",
+        "source:src/lib.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "conn-100-01-config-digest",
-      "summary": "Reconcile reviewed sources digest with accepted 0.14.0 release and initialize #100 plan/claims",
-      "input_digest": "sha256:ddeaa9c811f46afc5c2cc167b7806ca0cc5b52a2fdf6affa99efa2e40b38d8b3"
-    },
-    {
-      "id": "conn-100-02-src-connector",
-      "summary": "feat(connector): add LogicalTarget, LogicalConnector, and portable session types (#100)",
-      "input_digest": "sha256:de29ba9ce95776d13f6d3d1d4c3edde48798bee0686cfcecfb8bc446a4e68598"
-    },
-    {
-      "id": "conn-100-03-src-cloud",
-      "summary": "feat(cloud): add Manage/Portal routes, GoTrue/OAuth codes, and outcome_unknown (#100)",
-      "input_digest": "sha256:a14b134fe02810e44aa5900b456336878ff24e4ae337da9f482b2d8ad0c701cd"
-    },
-    {
-      "id": "conn-100-04-src-lib",
-      "summary": "feat(api): export LogicalTarget, LogicalConnector, and portable connector types (#100)",
-      "input_digest": "sha256:764f63086d6d88465583f1394c7672c8b910c086de2f650aab89ee4bc902ab43"
-    },
-    {
-      "id": "conn-100-05-test-logical",
-      "summary": "test(connector): add multi-workspace, session readiness, and outcome_unknown tests (#100)",
-      "input_digest": "sha256:6ac02fa866622af704877db7ea57692cc2e366da2b8f9f4681350c9577691b8c"
-    },
-    {
-      "id": "conn-100-06-test-cloud",
-      "summary": "test(cloud): cover Manage and Portal account onboarding routes (#100)",
-      "input_digest": "sha256:f58974d7e4a82b67811d35e3b70c8d8a7c886d76e09fc73ef186886ac8652344"
-    },
-    {
-      "id": "conn-100-07-test-disabled",
-      "summary": "test(connector): verify LogicalConnector fails closed without supabase feature (#100)",
-      "input_digest": "sha256:01cfb7264d5c272052f939b91018ab8f708c3dd192a7e199bc2be882219ca616"
-    },
-    {
-      "id": "conn-100-08-docs-cloud",
-      "summary": "docs(cloud): document LogicalConnector, Manage/Portal, and outcome_unknown (#100)",
-      "input_digest": "sha256:84b9338a229df545984c3dccd2261e9843414d457f28aaed77377a158853a389"
-    },
-    {
-      "id": "conn-100-09-readme",
-      "summary": "docs(readme): summarize per-workspace LogicalTarget and LogicalConnector (#100)",
-      "input_digest": "sha256:a07997b3f2a60564fb70850b6524f70c53026a7038768e3796878043cd82cbaa"
-    },
-    {
-      "id": "conn-100-10-changelog",
-      "summary": "docs(changelog): record unreleased logical connector and session readiness additions (#100)",
-      "input_digest": "sha256:d4d27a18d175a004f047b6af94cc40628786e6f89e31e4cfd0f165188d441297"
-    },
-    {
-      "id": "conn-100-11-spec-intent",
-      "summary": "docs(specs): update INTENT.md for per-workspace LogicalConnector and session readiness (#100)",
-      "input_digest": "sha256:b2e36c15eb3a2d1eecb27da1c27a50cca478da29155e313f00c4f527185d24b9"
-    },
-    {
-      "id": "conn-100-12-spec-architecture",
-      "summary": "docs(specs): update ARCHITECTURE.md for src/connector.rs and outcome_unknown boundary (#100)",
-      "input_digest": "sha256:d0c061c488a06c3b5116e28f6f22fe32a488098f3bdce3c9cd72a4d2b7902795"
-    },
-    {
-      "id": "conn-100-13-spec-interfaces",
-      "summary": "docs(specs): update INTERFACES.md for LogicalTarget, Manage/Portal, and GoTrue codes (#100)",
-      "input_digest": "sha256:a5542969d0275e6a153b76c2037d7cdbfe4528da1773437c89f491a273c315d1"
-    },
-    {
-      "id": "conn-100-14-spec-operations",
-      "summary": "docs(specs): update OPERATIONS.md for outcome_unknown reconciliation and evidence classes (#100)",
-      "input_digest": "sha256:b797b6519c3609293173e0417632ff0249114ba158fa3a29916e4779b8c819f1"
-    },
-    {
-      "id": "conn-100-15-spec-security",
-      "summary": "docs(specs): update SECURITY.md for portable credential redaction and MAX_JSON_DEPTH (#100)",
-      "input_digest": "sha256:78480d79202cf9e258b89305ee0ffff2449a1290fce6050ed9109ffef843efdb"
-    },
-    {
-      "id": "conn-100-16-spec-semantics",
-      "summary": "docs(specs): update SEMANTICS.md for LogicalConnector isolation and outcome_unknown (#100)",
-      "input_digest": "sha256:1cced80b623518811a4cdf692a4d44883abcf364ad343f36c9b4bd0decf0dd0c"
-    },
-    {
-      "id": "conn-100-17-spec-validation",
-      "summary": "docs(specs): update VALIDATION.md for logical_connector offline proofs and unavailable live targets (#100)",
-      "input_digest": "sha256:b42f864b9ef73a22b42cd03351d8c6d3e7751c33636ffdf77bfe6f7c0b989bae"
-    },
-    {
-      "id": "conn-100-18-spec-readme",
-      "summary": "docs(specs): refresh specs README attestation for #100 inventory (#100)",
-      "input_digest": "sha256:610f49a96bf38a70984507036406b852a0aa41dde3099d513e3049cfaeffa942"
-    },
-    {
-      "id": "conn-100-19-spec-manifest",
-      "summary": "docs(specs): refresh specs .manifest.json hashes for #100 (#100)",
-      "input_digest": "sha256:67e7eeddf36601a29002f7a68d6f2bc8f94c883859fecebe27c8acd16171b51b"
-    },
-    {
-      "id": "conn-100-20-governance",
-      "summary": "chore(governance): record #100 spec reviews, supported claims, and trajectory evidence",
-      "input_digest": "sha256:98af208d3cab87183fd8514b59cf538d63ea2a4de4428c92595ae35807ae42c4"
-    },
-    {
-      "id": "conn-100-21-reconcile-main-01430",
-      "summary": "Merge origin/main (0.15.0, #112+#114) into #100 and refresh Decapod v0.143.0 pins, reviewed_sources_digest, and spec reviews",
-      "input_digest": "sha256:ec8140b5fc76ac478c50ecca00d1b18685b3856b8847d9b8778e8c479af60d11",
+      "id": "file-1",
+      "summary": "docs(cloud): distinguish native hosted qualification from service fixtures",
+      "input_digest": "sha256:519665892a54091f76ca89ef516c16af5f6d92565cac070a4a1661b24b2cd0b9",
       "proof_refs": [
-        "cargo check --all-targets --all-features",
-        "cargo check --all-targets --no-default-features",
-        "cargo fmt --all -- --check",
-        "tests/cloud_connector.rs (12 passed)",
-        "tests/logical_connector.rs (6 passed)"
+        "source:docs/supabase-conformance.md"
       ]
     },
     {
-      "id": "conn-100-22-project-check-receipt",
-      "summary": "Record Decapod v0.143.0 project-check validation receipt (fail_count=0)",
-      "input_digest": "sha256:ba06c100b75f4a2841f7062292c75765d503d4758991839604d7013d1c328f0b",
+      "id": "file-10",
+      "summary": "docs(specs): reconcile issue 70 .manifest.json",
+      "input_digest": "sha256:c4533db757d25d2e44267c7573798ecb3ae59ed987448a4e8113970c34ede182",
       "proof_refs": [
-        "decapod govern project-check --format json (fail_count=0, pass_count=186)"
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
+    },
+    {
+      "id": "file-11",
+      "summary": "docs(specs): reconcile issue 70 ARCHITECTURE.md",
+      "input_digest": "sha256:58971a3f446edd56feb7f685b9ec85e53c41e4a0fc07c52ef65d7758e718adb1",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "file-12",
+      "summary": "docs(specs): reconcile issue 70 INTENT.md",
+      "input_digest": "sha256:095c349386b3ed2962fbb07a625c42b678fea886564d6a1bff3755232ee4319f",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "file-13",
+      "summary": "docs(specs): reconcile issue 70 INTERFACES.md",
+      "input_digest": "sha256:30daa6ed9be861ef74aa33f3a64d6235ccd9017f4b762efcdb2d293936a3cb05",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "file-14",
+      "summary": "docs(specs): reconcile issue 70 OPERATIONS.md",
+      "input_digest": "sha256:6b5e1e76203e92a07773177ac0fa47506a1486ff01a3e6861677cb8f86dee947",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "file-15",
+      "summary": "docs(specs): reconcile issue 70 README.md",
+      "input_digest": "sha256:3cdb1576836322b64a90c5332c22f0141bd53f85b325390906f3fc36f82f4c2d",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
+    },
+    {
+      "id": "file-16",
+      "summary": "docs(specs): reconcile issue 70 SECURITY.md",
+      "input_digest": "sha256:73967ee6278fc20dd59ef91e307f6535d6623c6ac53340086749be0eb76240c7",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "file-17",
+      "summary": "docs(specs): reconcile issue 70 SEMANTICS.md",
+      "input_digest": "sha256:9e9bd140fdfc696549fa753a2c23e583e0f17b565688da850b9087049b08c2cf",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "file-18",
+      "summary": "docs(specs): reconcile issue 70 VALIDATION.md",
+      "input_digest": "sha256:003efbf7a82736e6bba62034a30a193ec3db406e510438048019d7256adccc53",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
+    },
+    {
+      "id": "file-100-d6ff9e6278",
+      "summary": "chore(proof): reconcile reviewed 0.16 inventory config.toml",
+      "input_digest": "sha256:05e03130053a1ddfb0a0a7658f4cfb35486e78b2ddcdc450ba3e2a7217dc150c",
+      "proof_refs": [
+        "source:.decapod/config.toml"
+      ]
+    },
+    {
+      "id": "file-102-3d2165f869",
+      "summary": "chore(proof): reconcile reviewed 0.16 inventory .manifest.json",
+      "input_digest": "sha256:3ae10a93922e91ad30a986156a6632a4290fcf7e4f97528fe4d826889486a31c",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M79E1V8NKC35G53WMHDGGVBY": {
+    "intent:issue-70-refinement": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Documentation and specifications only; no package release, deployment, merge or hosted data access"
       ],
       "constraints": [
-        "root"
+        "Dactyl issue refinement"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+      "id": "intent:issue-70-refinement",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
-      "refined_intent": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
+      "raw_intent": "Refine the five open Dactyl issues against current Decapod and Propodus direction and create a PR for each",
+      "refined_intent": "Reconcile issue 70 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
       "status": "refined",
       "updated_sequence": 3
-    }
-  },
-  "epochs": {
-    "ve_38775415dd491f7e": {
-      "constitution_hash": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
-      "constitution_version": "embedded-docs@0.143.0",
-      "epoch_id": "ve_38775415dd491f7e",
-      "evaluator_identity": "decapod-validate@0.143.0",
-      "evaluator_set_hash": "sha256:1ea6e2d6660255a8fd687af35eec78d8de1d4d17c0a729001c2e3893033145f5",
-      "generated_specs_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
-      "generated_specs_manifest_hash": "sha256:917f5185c6d194a6b04147714c6e017faf2f85e775593f358a5f2e7799cbf2aa",
-      "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:530999b679a29fe1d3c9fb8001e08b387de46637d081359117dec1a9cd7f4b35",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:7372f02393526e2b512538188dac4f3e18349f850286ffa05d75bac5cf1751ea",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:5dda31e47939598f36a13d8cce7c5f1a4a426144998dbeee0b5568d3ca6668b2",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:da1b25fe71e7dad3c27202363148f5446dd49ef8caebf41b3558466d1e3f4b4d",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:f71413fa52ac4c06bfa8b6ed206ca282c160b9dee5a1878b6a75610b8815f69d",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:adc77781eafec5f85e9eba6d2572bb72e5ec06cc3dc484ff4bed998ff780ca6f",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:1e91aaa186ac14f1456a7dce2f511c4020308343309f190dab7de4cdccc94658",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:7e5bf18a7fd08796f3cfd336b4b4675e97c5ecab1444c12ddb50faf58dd6646a",
-        "generated_specs_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
-        "generated_specs_manifest": "sha256:917f5185c6d194a6b04147714c6e017faf2f85e775593f358a5f2e7799cbf2aa",
-        "governance_context": "sha256:d367871c2b8f6c03c0245bc1a4444ee2c395568ef0c7049d974bac592c48e24b",
-        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:a94e1fba74c8a46a348d93c7517103d1e4e4eb3d42b03365bedd85b78302fb62",
-        "governance_material:AGENTS.md": "sha256:1b78cd865de003ed47ee8141c7816e7498690364e1303c1167a0a4a8d2646a72",
-        "governance_material:CLAUDE.md": "sha256:83b883cdb923d571ecead247874255f3fabff93be1aa91396a7abe75473df188",
-        "governance_material:CODEX.md": "sha256:83fcf202268a4ca78561dd4b328edc69de321d39cce6f81d9320d9d89a9e5dc9",
-        "governance_material:GEMINI.md": "sha256:a74561d50a52931fafaa33b0955881a3240c56a54c8ec58bb0216e3bb63be2ad",
-        "governance_section:claims": "sha256:0b34f98f9a5bb775d728d0fd395d7a4a229216db00368b52fe9a1cf5984ce64f",
-        "governance_section:plan": "sha256:81e9318047512de937328ee051c149368526614639269c7e9e3e7b75a9d389a6",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a",
-        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:b5e0f411da77daec219cd9d6ea1015330edddc160f48104382fd52bbe063bad7",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:9259e54a875c6918161927f6945a0bcd65be19e3253ac8fc0f91157b78c16aeb",
-        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:98725bdd3cbe84178e8e4bf2c269665ce840bd3918fdde3c2a2d37b69b5dedcb",
-        "living_spec_material:.decapod/managed/specs/README.md": "sha256:b01998e8169a7b27dfde04bbc5af9715de78962375a0ea2c92ecedaa099f2bfb",
-        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0",
-        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:eb9384f049a8a00d56d40192859551c967b199f817883e456e5bda8d546aceb5",
-        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:da6eee83be16001fba122c1704a6bf664bbaafa4506e0797f87e21326175c02a",
-        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
-      },
-      "proof_rubric": "decapod-validate/current-proof-v1",
-      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-      "schema_version": "1.0.0",
-      "validation_profile": "default",
-      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
@@ -285,9 +205,11 @@
         "file_touch_budget": null,
         "forbidden_paths": []
       },
-      "deferred_questions": [],
+      "deferred_questions": [
+        "Actual hosted execution requires independently provisioned disposable principals and operator authorization"
+      ],
       "human_questions": [],
-      "intent": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
+      "intent": "Reconcile issue 70 with accepted native Supabase direction, document exact existing proof boundaries and remaining hosted evidence; prepare a focused documentation PR without claiming hosted execution or closing the issue",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -295,570 +217,141 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated #101 budget/recovery seams and #100 src/connector.rs boundaries against 0.15.0",
-          "reviewed_code_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
+          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
+          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
           "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrated #101 Connection budget/predicate APIs and #100 LogicalTarget/LogicalConnector/Manage/Portal APIs",
-          "reviewed_code_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
+          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
+          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
           "spec_material_hash": "9259e54a875c6918161927f6945a0bcd65be19e3253ac8fc0f91157b78c16aeb"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated #101 budget/JSON depth bounds and #100 credential redaction/outcome_unknown invariants",
-          "reviewed_code_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
+          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
+          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
+      "title": "Refine issue 70: native hosted evidence contract and remaining live proof",
       "todo_ids": [
-        "code_01m79e0tq1xk4js5"
+        "bugs_01m79ny5c898d1tv"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794542453Z"
+      "updated_at": "1794548662Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Documentation and specifications only; no package release, deployment, merge or hosted data access"
       ],
-      "artifact_hash": "sha256:2a6f9c4d5be2ebc7e86ed712d2b770d54999f3817e4ac7cda8009bc0aaddb8a9",
-      "checks": [
-        {
-          "name": "cargo_clippy_8way",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_connector_tests",
-          "status": "passed"
-        },
-        {
-          "name": "decapod validate",
-          "status": "passed"
-        },
-        {
-          "name": "hosted_supabase",
-          "status": "unavailable"
-        },
-        {
-          "name": "live_propodus",
-          "status": "unavailable"
-        },
-        {
-          "name": "local_postgres",
-          "status": "unavailable"
-        },
-        {
-          "name": "logical_connector_tests",
-          "status": "passed"
-        },
-        {
-          "name": "msrv_1_85_check",
-          "status": "passed"
-        },
-        {
-          "name": "supabase_disabled_tests",
-          "status": "passed"
-        },
-        {
-          "name": "supabase_rpc_tests",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "validation",
+      "artifact_hash": "sha256:e2e017bdee4be2a947618c2fbb570f1c24816c253983ae77a1ff6a85273b2df9",
+      "checks": [],
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "intent_id": "intent:issue-70-refinement",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "intent_id": "intent:issue-70-refinement",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
+            "detail": "trajectory:issue-70-refinement",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "intent_id": "intent:issue-70-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
+            "detail": "trajectory:issue-70-refinement",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "intent_id": "intent:issue-70-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79E1V9WENHWMA3D0YPHWBED": {
+          "issue-70-refinement": {
             "evidence_only": true,
-            "id": "branch_01M79E1V9WENHWMA3D0YPHWBED",
-            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "id": "issue-70-refinement",
+            "intent_id": "intent:issue-70-refinement",
             "steps": [
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/config.toml",
                   "src/lib.rs",
-                  "src/cloud.rs",
-                  "src/supabase_rpc.rs",
-                  "tests/cloud_connector.rs",
-                  "tests/supabase_disabled.rs",
-                  "docs/cloud-connectors.md"
+                  "src/adapter/mod.rs",
+                  "tests/native_service.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "root"
+                  "Dactyl issue refinement"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "verified_offline",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/cloud.rs",
                   "src/lib.rs",
-                  "tests/cloud_connector.rs",
-                  "tests/supabase_disabled.rs",
-                  "docs/cloud-connectors.md",
-                  "src/connector.rs",
-                  "src/cloud.rs",
-                  "src/lib.rs",
-                  "tests/logical_connector.rs",
-                  "tests/cloud_connector.rs",
-                  "tests/supabase_disabled.rs",
-                  "docs/cloud-connectors.md",
-                  "README.md",
-                  "CHANGELOG.md",
-                  "tests/logical_connector.rs (6 passed all-features, 2 passed sqlite, 1 passed no-default-features); tests/cloud_connector.rs (12 passed); tests/supabase_rpc.rs (9 passed); tests/supabase_disabled.rs (2 passed); MSRV 1.85.0 check passed; local_postgres, hosted_supabase, and live_propodus remain unavailable in offline proof"
+                  "src/adapter/mod.rs",
+                  "tests/native_service.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
                 ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_8way",
-                  "logical_connector_tests",
-                  "cloud_connector_tests",
-                  "supabase_rpc_tests",
-                  "supabase_disabled_tests",
-                  "msrv_1_85_check",
-                  "local_postgres",
-                  "hosted_supabase",
-                  "live_propodus"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "Dactyl issue refinement"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification"
-                ]
-              },
-              {
-                "action": "verified_offline",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/cloud.rs",
-                  "src/lib.rs",
-                  "tests/cloud_connector.rs",
-                  "tests/supabase_disabled.rs",
-                  "docs/cloud-connectors.md",
-                  "src/connector.rs",
-                  "src/cloud.rs",
-                  "src/lib.rs",
-                  "tests/logical_connector.rs",
-                  "tests/cloud_connector.rs",
-                  "tests/supabase_disabled.rs",
-                  "docs/cloud-connectors.md",
-                  "README.md",
-                  "CHANGELOG.md",
-                  "tests/logical_connector.rs (6 passed all-features, 2 passed sqlite, 1 passed no-default-features); tests/cloud_connector.rs (12 passed); tests/supabase_rpc.rs (9 passed); tests/supabase_disabled.rs (2 passed); MSRV 1.85.0 check passed; local_postgres, hosted_supabase, and live_propodus remain unavailable in offline proof"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_8way",
-                  "logical_connector_tests",
-                  "cloud_connector_tests",
-                  "supabase_rpc_tests",
-                  "supabase_disabled_tests",
-                  "msrv_1_85_check",
-                  "local_postgres",
-                  "hosted_supabase",
-                  "live_propodus"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": [
-                  "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification"
-                ]
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_38775415dd491f7e completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
-      "destination": "pull request",
+      "declared_commands": [],
       "evidence": [
-        "tests/logical_connector.rs (6 passed all-features, 2 passed sqlite, 1 passed no-default-features); tests/cloud_connector.rs (12 passed); tests/supabase_rpc.rs (9 passed); tests/supabase_disabled.rs (2 passed); MSRV 1.85.0 check passed; local_postgres, hosted_supabase, and live_propodus remain unavailable in offline proof",
-        "validation epoch ve_38775415dd491f7e completed with zero failures"
+        "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
       ],
       "inspected_files": [
-        ".decapod/config.toml",
-        "docs/cloud-connectors.md",
-        "src/cloud.rs",
+        "src/adapter/mod.rs",
         "src/lib.rs",
-        "src/supabase_rpc.rs",
-        "tests/cloud_connector.rs",
-        "tests/supabase_disabled.rs"
+        "tests/native_service.rs"
       ],
-      "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+      "intent_id": "intent:issue-70-refinement",
       "modified_files": [
-        ".decapod/governance.json",
-        "CHANGELOG.md",
-        "README.md",
-        "docs/cloud-connectors.md",
-        "src/cloud.rs",
-        "src/connector.rs",
-        "src/lib.rs",
-        "tests/cloud_connector.rs",
-        "tests/logical_connector.rs",
-        "tests/supabase_disabled.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "publish"
+        ".decapod/managed/specs/VALIDATION.md"
       ],
       "repo_scope": [
-        "root"
+        "Dactyl issue refinement"
       ],
-      "run_id": "branch_01M79E1V9WENHWMA3D0YPHWBED",
+      "run_id": "issue-70-refinement",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m79e0tq1xk4js5",
+      "task_id": "bugs_01m79ny5c898d1tv",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification"
-      ]
-    },
-    "validation": {
-      "ci_prediction": {
-        "confidence": "medium",
-        "recommendations": [
-          "Review the reported validation warnings before relying on the CI result.",
-          "Use `decapod validate -v --format json` to inspect the affected gate output."
-        ],
-        "result": "review"
-      },
-      "decapod_release": "0.143.0",
-      "drift_findings": [],
-      "elapsed_ms": 7407,
-      "epoch_ref": "ve_38775415dd491f7e",
-      "fail_count": 0,
-      "failures": [],
-      "gate_timings": [
-        {
-          "elapsed_ms": 2835,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 759,
-          "name": "validate_machine_contract"
-        },
-        {
-          "elapsed_ms": 749,
-          "name": "validate_stale_workspaces"
-        },
-        {
-          "elapsed_ms": 577,
-          "name": "validate_validation_rules"
-        },
-        {
-          "elapsed_ms": 331,
-          "name": "validate_markdown_primitives_roundtrip_gate"
-        },
-        {
-          "elapsed_ms": 307,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 110,
-          "name": "validate_obligations"
-        },
-        {
-          "elapsed_ms": 93,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 68,
-          "name": "validate_legacy_jsonl_retired"
-        },
-        {
-          "elapsed_ms": 65,
-          "name": "validate_git_push_pr_gate"
-        },
-        {
-          "elapsed_ms": 43,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 39,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 34,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 31,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 25,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 25,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 25,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 21,
-          "name": "validate_database_schema_versions"
-        },
-        {
-          "elapsed_ms": 21,
-          "name": "validate_lineage_hard_gate"
-        },
-        {
-          "elapsed_ms": 19,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 16,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 15,
-          "name": "validate_watcher_purity"
-        },
-        {
-          "elapsed_ms": 15,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 15,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 14,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 14,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_context_capsules_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_spec_drift"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_tooling_gate"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_root_dockerfile_seed_detection"
-        }
-      ],
-      "git_revision": "f47fd24f1b166c4dd4d284ad8fe6ebb800c9e161",
-      "kind": "validation_receipt",
-      "parallelism": 1,
-      "pass_count": 186,
-      "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:2fe3289cbc669d0a992d8b5442605093be14bd8d4a70495579bee0893feb0b0a",
-      "repo_signal_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
-      "schema_version": "1.0.0",
-      "status": "ok",
-      "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:2a6f9c4d5be2ebc7e86ed712d2b770d54999f3817e4ac7cda8009bc0aaddb8a9",
-      "trajectory_run_id": "branch_01M79E1V9WENHWMA3D0YPHWBED",
-      "warn_count": 6,
-      "warnings": [
-        "Audit log contains 4 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
-        "Risk map missing (run `decapod riskmap init`)",
-        "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
-        "Stale workspaces preserved for explicit review: <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
-        "Watcher audit trail missing (run `decapod govern watcher run`)",
-        "Workspace branch 'agent/dactyl-connector-100/code_01m79e0tq1xk4js5-logical-connectors' has unpushed commits or does not exist on origin. Branch pushes and iteration are allowed before preflight; hold PR creation until intent is converged, the branch is mergeable, and full `decapod validate` succeeds against the exact current candidate and accepted target."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
