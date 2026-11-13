@@ -138,6 +138,11 @@
       "id": "conn-100-10-changelog",
       "summary": "docs(changelog): record unreleased logical connector and session readiness additions (#100)",
       "input_digest": "sha256:d4d27a18d175a004f047b6af94cc40628786e6f89e31e4cfd0f165188d441297"
+    },
+    {
+      "id": "conn-100-11-spec-intent",
+      "summary": "docs(specs): update INTENT.md for per-workspace LogicalConnector and session readiness (#100)",
+      "input_digest": "sha256:b2e36c15eb3a2d1eecb27da1c27a50cca478da29155e313f00c4f527185d24b9"
     }
   ],
   "intents": {
