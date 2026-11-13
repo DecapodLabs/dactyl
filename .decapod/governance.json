@@ -97,6 +97,14 @@
       "proof_refs": [
         "source:.decapod/config.toml"
       ]
+    },
+    {
+      "id": "file-11-49a996391c",
+      "summary": "docs(specs): reconcile issue 91 .manifest.json",
+      "input_digest": "sha256:a6dc9e9e4a7d1bf419b2fcf16ff2766730cfea968cd81203a8c944838ce69fb9",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
