@@ -66,12 +66,21 @@ they say: the requested path is an ordinary SQLite database.
 
 ## Logical local/cloud connectors
 
-Applications can select `Backend::Local` or `Backend::Cloud` through
-`DatastoreRoute::for_backend`. Dactyl resolves SQLite or native Supabase RPC;
-`CloudConnector` discovers the public deployment profile and provides managed
-authentication transport. The application owns browser interaction and private
-session storage. Propodus is the IaC for the Supabase backend, where identity,
-repository roles and RLS are enforced. See [the connector and auth contract](docs/cloud-connectors.md).
+Applications can select `Backend::Local` or `Backend::Cloud` per workspace
+through `LogicalTarget` and `LogicalConnector` (or `DatastoreRoute::for_backend`)
+without process-global state or ambient environment variables. Portable
+connector, session, and account types (`LogicalTarget`, `LogicalConnector`,
+`AuthenticationSecrets`, `AuthenticationStart`, `UserSession`,
+`AccountOperation`, `ScmProvider`, `ScmCredential`) compile across all feature
+combinations. Dactyl resolves SQLite or native Supabase RPC, never falls back to
+SQLite on cloud discovery/capability errors, and surfaces `outcome_unknown` on
+post-send ambiguous one-time/mutating calls so callers never blindly replay
+them. `LogicalConnector` and `CloudConnector` discover the public deployment
+profile and provide managed authentication and account readiness transport
+(`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`). The application
+owns browser interaction and private session storage. Propodus is the IaC for
+the Supabase backend, where identity, repository roles and RLS are enforced.
+See [the connector and auth contract](docs/cloud-connectors.md).
 
 ## Supabase service route (opt-in)
 

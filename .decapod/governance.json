@@ -128,6 +128,11 @@
       "id": "conn-100-08-docs-cloud",
       "summary": "docs(cloud): document LogicalConnector, Manage/Portal, and outcome_unknown (#100)",
       "input_digest": "sha256:84b9338a229df545984c3dccd2261e9843414d457f28aaed77377a158853a389"
+    },
+    {
+      "id": "conn-100-09-readme",
+      "summary": "docs(readme): summarize per-workspace LogicalTarget and LogicalConnector (#100)",
+      "input_digest": "sha256:a07997b3f2a60564fb70850b6524f70c53026a7038768e3796878043cd82cbaa"
     }
   ],
   "intents": {
