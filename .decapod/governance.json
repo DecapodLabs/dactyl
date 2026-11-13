@@ -220,6 +220,14 @@
       "proof_refs": [
         "source:tests/support/native_scenarios.rs"
       ]
+    },
+    {
+      "id": "file-221-2dbb980fd9",
+      "summary": "docs(native): correct serialized row expectations",
+      "input_digest": "sha256:2326c150eb383c63f882effa65f4fca1146dd5d8da31a69f136a02740482d590",
+      "proof_refs": [
+        "source:docs/supabase-conformance.md"
+      ]
     }
   ],
   "intents": {

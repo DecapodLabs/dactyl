@@ -69,7 +69,7 @@ reviewed client/service commit IDs and statements supported by that service:
     "principal": 0,
     "access_mode": "read_only",
     "operations": [{"kind": "read", "sql": "SERVICE_OWNED_SQL", "params": []}],
-    "expected": {"outcome": "success", "results": [{"Rows": {"rows": []}}]}
+    "expected": {"outcome": "success", "results": [{"Rows": []}]}
   }],
   "receipt_path": "/private/disposable/new-native-receipt.json"
 }
@@ -83,7 +83,7 @@ bounds and deadlines remain active. Each connection has explicit access mode,
 native RPC route and opaque context, without ambient backend selection.
 
 Success results use the public `OperationResult` serialization: rows are
-`{"Rows":{"rows":[{"columns":["name"],"values":["value"]}]}}`; writes are
+`{"Rows":[{"columns":["name"],"values":["value"]}]}`; writes are
 `{"Write":{"affected_rows":1,"generated_keys":["returned-id"]}}`. Types, column
 order, row order, counts and keys must match exactly. An error expectation is
 `{"outcome":"error","kind":"Authorization","origin":"RemotePolicy","mutation":"Uncertain"}`.
