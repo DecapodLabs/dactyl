@@ -188,6 +188,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-219-6382248af7",
+      "summary": "chore(specs): refresh native scenario VALIDATION.md",
+      "input_digest": "sha256:230a8aed7381d03a838b88d583e05fbc6af4eac679b66448bac23d8a9f47acd0",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -250,7 +258,7 @@
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [
         "No mutation without explicit disposable scenario fixture; no credentials or raw values in receipts"
       ],
@@ -262,7 +270,7 @@
         "Authorized disposable hosted fixture not yet supplied"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794564743Z"
+      "updated_at": "1794564762Z"
     },
     "trajectory": {
       "active_boundaries": [
