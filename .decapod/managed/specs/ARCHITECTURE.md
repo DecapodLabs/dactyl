@@ -24,20 +24,35 @@ does not adopt its schema, migrate data or collect semantic evidence.
 
 ## Logical connector and authentication boundary
 
-`src/cloud.rs` resolves a public versioned deployment profile from a trusted
-origin and builds the existing native `SupabaseRpcConfig`. Discovery carries no
-user credential and cannot redirect the selected origin. Managed Auth and
-onboarding requests use fixed same-origin paths through Dactyl; application
-callbacks/browser interaction and private session persistence remain caller-owned.
-The hosted runtime is Supabase Auth, PostgreSQL/RPC and deployed functions,
-provisioned by Propodus IaC. No additional Propodus task server is required.
+`src/connector.rs` defines the unconditional per-workspace `LogicalTarget`,
+`LogicalConnector`, and portable redacted session/account types so local and
+cloud workspaces can be resolved, isolated, and opened side-by-side without
+process-global caches, ambient environment variables, or downstream
+`#[cfg(feature = "supabase")]` branching. Local `LogicalConnector` handles open
+SQLite routes and fail closed with `Capability`
+(`cloud_connector_required`) if cloud auth/account methods are
+called. `src/cloud.rs` resolves a public versioned deployment profile from a
+trusted origin and builds the existing native `SupabaseRpcConfig`. Failed cloud
+discovery or disabled `supabase` compilation never falls back to local SQLite.
+Discovery carries no user credential and cannot redirect the selected origin.
+Managed Auth and onboarding requests use fixed same-origin paths through Dactyl;
+application callbacks/browser interaction and private session persistence remain
+caller-owned. The hosted runtime is Supabase Auth, PostgreSQL/RPC and deployed
+functions, provisioned by Propodus IaC. No additional Propodus task server is
+required.
 
-The separate account channel accepts an `AccountOperation`, an opaque JSON body,
-the current Supabase bearer and optional explicit `ScmCredential`. Fixed provider
+The separate account channel accepts an `AccountOperation` (`Register`,
+`Status`, `Quote`, `Checkout`, `Manage`, `Portal`), an opaque JSON body, the
+current Supabase bearer and optional explicit `ScmCredential`. Fixed provider
 and host metadata accompany only that linking credential. A managed sign-in
 provider token may be Google and is never inferred to be an SCM credential.
-All connector HTTP disables redirects and retries, including one-time exchanges,
-rotating refresh and account mutations. The caller owns unknown-outcome recovery.
+Untrusted connector HTTP responses enforce bounded JSON nesting
+(`MAX_JSON_DEPTH = 64`), map HTTP `409` to `Conflict`, and extract allowlisted
+public error codes across Propodus (`error.code`), Supabase GoTrue v2
+(`error_code`), and OAuth2 (`error`). All connector HTTP disables redirects and
+retries; post-send failures or oversized responses on mutating/one-time calls
+attach `outcome_unknown` so callers preserve pending checkpoints instead of
+replaying ambiguous mutations.
 
 ## Secure shared-directory SQLite recovery
 
@@ -214,8 +229,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

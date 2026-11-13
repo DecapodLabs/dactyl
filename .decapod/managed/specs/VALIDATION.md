@@ -1,5 +1,9 @@
 # Validation
 
+## Reconciled 0.15.0 + Decapod v0.143.0 controller pin (issue 100)
+
+The reconciled `#100` merge against `origin/main` (`dactyl-db 0.15.0`, `#112` + `#114`) updates `.decapod/config.toml` `reviewed_sources_digest` for the `0.15.0` `Cargo.toml`/`Cargo.lock` release while keeping `reviewed_commands_digest` and `tools/proof/check.py` unchanged, and advances `tools/proof/Containerfile`, `.decapod/managed/Dockerfile.decapod`, canonical entrypoints, and `.decapod/managed/specs/.manifest.json` to independently published `decapod v0.143.0` so hosted `decapod-validate.yml` evaluates the exact same controller version with zero drift.
+
 ## Resource-budget, catalog-predicate, and recovery proof (issue 101)
 
 `.decapod/config.toml` reconciles `reviewed_sources_digest` with the accepted `0.14.0` release while preserving `tools/proof/check.py` (`reviewed_commands_digest` unchanged) and the `0.138.3` controller pin. `tests/resource_budgets.rs`, `tests/catalog_predicates.rs`, `tests/catalog_capabilities.rs`, `tests/unit/sqlite_catalog.rs`, and seam extensions in `tests/storage_fixtures.rs`, `tests/supabase_contract.rs`, `tests/supabase_service.rs`, `tests/sqlite_maintenance.rs`, and `src/adapter/sqlite/recovery/tests.rs` verify `OpenOptions` struct-literal compatibility, exact `N` vs `N + 1` and `u64` overflow boundaries, pre-allocation `32x` BLOB result charging, lying `Content-Length` and JSON depth > 64 rejection, `visit_rows` lock release vs budget error, single-prepare SQLite catalog predicates (1 vs 161 statements), local atomic rollback vs remote `MutationOutcome::Uncertain` reconciliation, compact opaque component references `(component_kind, codec_version, byte_len, content_sha256)`, and C-ABI streaming recovery under tight result budgets. Evidence remains explicitly separated into executed `local_sqlite`, `synthetic_http`, and `neon_mock` checks versus `unavailable` external `local_postgres`, `hosted_supabase`, and `live_propodus` profiles.
@@ -23,6 +27,19 @@ Cargo cache/build directories prepared for that UID/GID. Storage ancestry
 ownership checks remain enabled.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
+
+`tests/logical_connector.rs`, `tests/cloud_connector.rs`, and
+`tests/supabase_disabled.rs` verify per-workspace `LogicalTarget` and
+`LogicalConnector` isolation across concurrent local SQLite files and separate
+loopback cloud origins without ambient environment variables, portable
+credential redaction across `--no-default-features` / `sqlite` / `all-features`,
+existing-bearer reuse, missing-session bootstrap through readiness (`Status`,
+`Manage`, `Portal`) to native RPC and logout, fail-closed cloud discovery without
+SQLite fallback, GoTrue/OAuth2/Propodus allowlisted error-code normalization, and
+`outcome_unknown` classification on post-send ambiguous mutating/one-time
+failures. These proofs exercise `local_sqlite` and `synthetic_http` only;
+`local_postgres`, `hosted_supabase`, and `live_propodus` remain `unavailable`
+until independently executed against deployed services.
 
 The MSRV proposal preserves all fifteen existing Rust checks, including both
 locked all-feature execution and fresh-consumer resolution, with the actual
@@ -281,8 +298,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

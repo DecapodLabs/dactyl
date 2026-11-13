@@ -50,6 +50,7 @@ stateDiagram-v2
 - Concurrent local writers serialize on the route lock file. Cleanup is a caller-owned `DROP TABLE` / `DROP INDEX`; Dactyl does not retain scoped test schemas.
 - A local route is a real SQLite database. Read/write opens may create the requested file; read-only opens require it to exist. SQLite owns file-format compatibility, locking, journaling, and recovery. Dactyl configures foreign-key enforcement and the caller's busy timeout.
 - Atomic local batches begin one SQLite transaction and roll back the entire batch on any operation failure. Dactyl does not import, convert, snapshot, or rewrite local database files.
+- Per-workspace `LogicalConnector` resolution binds either a local SQLite target or a cloud Supabase origin without global state or ambient environment variables; cloud discovery/capability errors fail closed without SQLite fallback, and post-send failures on one-time auth exchanges, token rotations, revocations, or mutating account operations (`Register`, `Checkout`, `Manage`) carry `outcome_unknown` rather than replaying automatically.
 
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
@@ -108,7 +109,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

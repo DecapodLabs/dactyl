@@ -99,7 +99,7 @@ This path follows the [release-please version override contract](https://github.
 Merged-PR body commit overrides are unsupported for plain merges.
 
 **CI/CD Notes**:
-- `tools/proof/Containerfile` and the accepted validation entrypoints pin the independent published Decapod controller to `0.138.3`. Full `decapod validate` runs the unchanged reviewed Rust proof through `tools/proof/check.py`, including locked and lock-free consumer checks on Rust 1.85; preparation only fetches dependencies.
+- `tools/proof/Containerfile` and the accepted validation entrypoints pin the independent published Decapod controller to `0.143.0`. Full `decapod validate` runs the unchanged reviewed Rust proof through `tools/proof/check.py`, including locked and lock-free consumer checks on Rust 1.85; preparation only fetches dependencies.
 - The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md`.
 
 ## Local SQLite operations
@@ -113,6 +113,10 @@ The local route path is an ordinary SQLite database. Operators may use standard 
 | `OpenOptions::lock_timeout` | SQLite busy timeout | retry or surface the typed busy/locked error; Dactyl does not retry |
 
 Read-only opens never create or mutate a database. Existing SQLite files are opened directly; there is no migration/import command in Dactyl. Decapod remains responsible for explicit schema and migration policy.
+
+## Logical connector and managed-session operations
+
+Per-workspace `LogicalConnector` resolution (`src/connector.rs`) holds no process-global cache, background worker, or durable token file. Callers checkpoint pending one-time auth exchanges, token rotations, and mutating account actions (`Register`, `Checkout`, `Manage`) before dispatch; if Dactyl returns `code = Some("outcome_unknown")` after sending a mutating or one-time request, operators/callers must reconcile account or session status before re-attempting rather than replaying blindly. Failed cloud profile discovery never degrades to local SQLite. Offline synthetic HTTP and local SQLite proofs do not attest hosted Supabase Auth, live Propodus Edge Functions, or PostgreSQL pooler availability (`unavailable` until exercised in deployment).
 
 ## Capacity Planning
 - Traffic patterns:
@@ -191,7 +195,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

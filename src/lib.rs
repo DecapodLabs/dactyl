@@ -8,6 +8,7 @@ mod adapter;
 mod budget;
 #[cfg(feature = "supabase")]
 mod cloud;
+mod connector;
 mod contract;
 mod inspection;
 mod rows;
@@ -17,6 +18,10 @@ mod supabase_rpc;
 pub mod error;
 
 pub use crate::budget::{FailureOrigin, MutationOutcome, ResourceBudget, RESOURCE_BUDGET_VERSION};
+pub use crate::connector::{
+    AccountOperation, AuthenticationSecrets, AuthenticationStart, LogicalConnector, LogicalTarget,
+    ScmCredential, ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
+};
 pub use crate::contract::{
     AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,
     OperationKind, OperationResult, RecoveryJournalMode, RecoveryOptions, RecoveryResult,
@@ -30,10 +35,7 @@ pub use crate::schema::{
 };
 
 #[cfg(feature = "supabase")]
-pub use crate::cloud::{
-    AccountOperation, AuthenticationSecrets, AuthenticationStart, CloudConnector, ScmCredential,
-    ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
-};
+pub use crate::cloud::CloudConnector;
 pub use crate::supabase_rpc::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
 
 /// The application-facing choice; Dactyl owns its physical connector mapping.

@@ -24,19 +24,31 @@ adapters fail explicitly without introducing a second schema or maintenance path
 
 ## Logical backend access and user sessions
 
-Applications expose local/cloud selection; Dactyl resolves SQLite or the native
-Supabase connector through `Backend`, `DatastoreRoute::for_backend` and
-`CloudConnector` in `src/lib.rs` and `src/cloud.rs`. Propodus names the IaC for
-the hosted backend. Dactyl discovers its public deployment profile and transports
-managed Auth requests and current-user RPC credentials. The application retains
-browser interaction, durable pending-flow state and private session custody.
-Ordinary cloud authority is the authenticated Supabase user and active assigned
-seat within the tenant/project. Linked code-host identities and separately scoped
-governance grants remain backend policy; repository permissions are not mirrored
-as ordinary data authority. Dactyl transports opaque account registration, status,
-quote and checkout requests without interpreting entitlement or purchase consent.
-Offline connector/auth fixtures establish transport behavior only; hosted OAuth
-and deployed profile availability require separate rollout evidence.
+Applications expose per-workspace local/cloud selection; Dactyl resolves SQLite
+or the native Supabase connector through `Backend`, `LogicalTarget`,
+`LogicalConnector`, `DatastoreRoute::for_backend`, and `CloudConnector` in
+`src/lib.rs`, `src/connector.rs`, and `src/cloud.rs` without ambient environment
+variables or process-global connector state. Portable connector, session, and
+account types (`LogicalTarget`, `LogicalConnector`, `AuthenticationSecrets`,
+`AuthenticationStart`, `UserSession`, `AccountOperation`, `ScmProvider`,
+`ScmCredential`, `DEFAULT_CLOUD_ORIGIN`) compile across all Cargo feature
+combinations so consumers never re-gate session/account models. Propodus names
+the IaC for the hosted backend. Dactyl discovers its public deployment profile,
+fails closed without SQLite fallback when discovery or compilation fails, and
+transports managed Auth requests, account readiness/billing requests
+(`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`), and
+current-user RPC credentials. The application retains browser interaction,
+durable pending-flow state and private session custody. Ordinary cloud authority
+is the authenticated Supabase user and active assigned seat within the
+tenant/project. Linked code-host identities and separately scoped governance
+grants remain backend policy; repository permissions are not mirrored as
+ordinary data authority. Post-send transport or truncation failures on mutating
+or one-time requests surface `outcome_unknown` so callers never blindly replay
+ambiguous writes. Offline connector/auth fixtures (`tests/logical_connector.rs`,
+`tests/cloud_connector.rs`) establish local SQLite and synthetic HTTP transport
+behavior only; `local_postgres`, `hosted_supabase`, and `live_propodus` OAuth,
+checkout, and deployed profile availability remain separate rollout evidence and
+are recorded as `unavailable` when unexercised.
 
 ## Secure shared-directory SQLite recovery
 
@@ -176,8 +188,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
