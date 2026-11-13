@@ -118,6 +118,11 @@
       "id": "conn-100-06-test-cloud",
       "summary": "test(cloud): cover Manage and Portal account onboarding routes (#100)",
       "input_digest": "sha256:f58974d7e4a82b67811d35e3b70c8d8a7c886d76e09fc73ef186886ac8652344"
+    },
+    {
+      "id": "conn-100-07-test-disabled",
+      "summary": "test(connector): verify LogicalConnector fails closed without supabase feature (#100)",
+      "input_digest": "sha256:01cfb7264d5c272052f939b91018ab8f708c3dd192a7e199bc2be882219ca616"
     }
   ],
   "intents": {
