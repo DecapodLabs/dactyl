@@ -138,6 +138,11 @@
       "id": "growth-101-09-facade",
       "summary": "Expose open_with_budget, visit_rows, has_table, and has_column on Connection",
       "input_digest": "sha256:f02de0b1a98b51d9a2919d68af8e166130b115b77e2ad16c43a83ab87694dfa0"
+    },
+    {
+      "id": "growth-101-10-catalog-unit",
+      "summary": "Add unit test verifying single-prepare SQLite catalog predicates",
+      "input_digest": "sha256:2a66602df970cbe026eb3e45f0e907a3c1a839f763ebb4a16742f1dd59730236"
     }
   ],
   "intents": {
