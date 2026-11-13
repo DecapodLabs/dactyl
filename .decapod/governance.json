@@ -137,6 +137,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "file-16-df22c206cd",
+      "summary": "docs(specs): reconcile issue 94 SECURITY.md",
+      "input_digest": "sha256:69f092e1c3012a0b69ce780adeabfba41ce36eec8b7663f51f53a251d7128fc5",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
