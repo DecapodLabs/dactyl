@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v4",
-  "generated_at": "1794552365Z",
+  "generated_at": "1794554284Z",
   "repo_signal_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
   "declared_capabilities": [
     "authentication",
@@ -15,8 +15,8 @@
     "secrets-handling"
   ],
   "capability_definition_version": "1.0.0",
-  "config_input_hash": "1c8cea2e64f7f47b839e8a0448e226a14985840f79993409897a1f2ed4f7e63d",
-  "spec_input_hash": "fa517473e28dc74475bb633036b051a85e5dec63a75101b2e05d423a8d3ca4b9",
+  "config_input_hash": "835eb27f2ab364cf0753f37689d6dbe336900cc8a2b1a94fd1e373378688046e",
+  "spec_input_hash": "8d1b3d11f7a80894427fb2ddb0ad17578e9b4037786d9110f095420fadb59ab6",
   "decapod_release": "0.143.0",
   "entrypoints": [
     {
@@ -54,7 +54,7 @@
     {
       "path": ".decapod/managed/specs/INTENT.md",
       "template_hash": "3ba50176cfbff82f638be0fa161384608529ff0289049752b7117c9a6d188594",
-      "content_hash": "5d62270509c5f01e8375371bd107196038d4abc31cabc5da6b864dca204db593",
+      "content_hash": "e71db40338e70e812b458e891501484aa05e591c6befad9588260d499186e5ac",
       "fingerprint": ""
     },
     {

@@ -1,5 +1,41 @@
 # Supabase-backed authenticated service contract
 
+## Relationship to the current native connector
+
+This document specifies the explicit compatibility service transport, already
+implemented by the `supabase` feature. It is not the default logical cloud wire
+profile. In current source, applications select `Backend::Cloud` through
+`LogicalTarget` / `LogicalConnector`; discovery resolves the public deployment
+profile and native Supabase Data API. See [logical connectors](cloud-connectors.md)
+and [RPC v1](supabase-rpc-v1.md). Both paths remain public, explicit APIs:
+
+| Selection | Execution path | Credentials supplied by the application |
+| --- | --- | --- |
+| `DatastoreRoute::supabase` / `DATASTORE=supabase` | Service `/query`, `/batch` | Service user bearer and opaque context |
+| `DatastoreRoute::supabase_rpc` | Native `/rest/v1/rpc/` | Publishable key, current managed user bearer and opaque context |
+| Cloud `LogicalConnector` | Discover public profile, then native RPC | Selected origin and current managed user bearer |
+
+Propodus is the IaC and private SQL/Auth/onboarding boundary for the native
+backend. A separate generic Go application server is not a prerequisite for
+native RPC. Decapod owns its local/cloud setting, browser interaction and durable
+private user-session custody; Dactyl transports generic authentication and
+account operations without parsing Decapod configuration or retaining secrets.
+Effective identity, account/project grants and SQL policy remain server-owned.
+
+Issue 91 therefore tracks qualification of these existing capabilities, rather
+than adding the third provider again. Current source includes separate native
+read-only batch routing, logical connectors, managed Auth and resource budgets.
+Source/transport tests do not independently establish a deployed service.
+Issue 79 owns capability coverage, issue 70 real hosted execution, issue 85
+failure/concurrency proof and issue 94 registry-consumer handoff. Preserve the
+generic service fixture below separately from the narrower native task profile.
+
+Neither HTTPS transport establishes a service-side PostgreSQL connection mode.
+Direct, session-pooler and transaction-pooler/prepared-statement support require
+separate operator evidence for each actual deployed configuration. Unsupported
+capabilities and unavailable proof must remain explicit; a release or synthetic
+HTTP success cannot establish physical transactions, RLS or managed OAuth.
+
 ## Provider, transport, and activation
 
 `supabase` is an opt-in Dactyl Cargo feature. `Datastore::Supabase` selects the
