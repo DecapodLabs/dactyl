@@ -105,6 +105,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-12",
+      "summary": "docs(specs): reconcile issue 70 INTENT.md",
+      "input_digest": "sha256:095c349386b3ed2962fbb07a625c42b678fea886564d6a1bff3755232ee4319f",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
