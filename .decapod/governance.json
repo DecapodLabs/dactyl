@@ -198,6 +198,11 @@
       "id": "growth-101-21-doc-catalog-proof-ledger",
       "summary": "Record falsifiable catalog predicate proof ledger by evidence class",
       "input_digest": "sha256:26a23eb0df09aa5a7defa999327688fd79cf874bbae0281584e1be8d02f57aa2"
+    },
+    {
+      "id": "growth-101-22-doc-dogfooding-inventory",
+      "summary": "Record synthetic component-reference amplification inventory and compact projection sizing",
+      "input_digest": "sha256:5b247da29362aa6af00ce9f3a76679252d7a3f4d47df8a5a37649a106e756d69"
     }
   ],
   "intents": {
