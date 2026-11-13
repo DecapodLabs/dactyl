@@ -238,6 +238,11 @@
       "id": "growth-101-29-spec-operations",
       "summary": "Update OPERATIONS.md with bounded maintenance, recovery statement reuse, and uncertain write reconciliation",
       "input_digest": "sha256:0d04aafc9a811d1813ba669c3dedec90080a0b9c4af62805bd08b6bff2c1eed1"
+    },
+    {
+      "id": "growth-101-30-spec-security",
+      "summary": "Update SECURITY.md with wire/JSON-depth bounds, pre-allocation BLOB charging, and fail-closed catalog predicates",
+      "input_digest": "sha256:ce323c3af90bff87bd75ec4b85635e7794216fac6d696406799b145b75e1c4d6"
     }
   ],
   "intents": {
