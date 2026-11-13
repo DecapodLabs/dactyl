@@ -128,6 +128,11 @@
       "id": "growth-101-07-neon-adapter",
       "summary": "Enforce wire/result budgets, worker isolation, and uncertain outcomes in Neon",
       "input_digest": "sha256:f28254c6a014b2b70c7f0195183a2c25d99cff4f1aefd16774f3f1f400f87112"
+    },
+    {
+      "id": "growth-101-08-supabase-adapter",
+      "summary": "Wire ResourceBudget, bounded visits, and uncertain outcomes in Supabase",
+      "input_digest": "sha256:53bac4605af5ac4a2c2e30bee4802ec4d9c2e3addde7269e3cf2e7d64ede10d7"
     }
   ],
   "intents": {
