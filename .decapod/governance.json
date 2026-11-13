@@ -103,6 +103,11 @@
       "id": "conn-100-03-src-cloud",
       "summary": "feat(cloud): add Manage/Portal routes, GoTrue/OAuth codes, and outcome_unknown (#100)",
       "input_digest": "sha256:a14b134fe02810e44aa5900b456336878ff24e4ae337da9f482b2d8ad0c701cd"
+    },
+    {
+      "id": "conn-100-04-src-lib",
+      "summary": "feat(api): export LogicalTarget, LogicalConnector, and portable connector types (#100)",
+      "input_digest": "sha256:764f63086d6d88465583f1394c7672c8b910c086de2f650aab89ee4bc902ab43"
     }
   ],
   "intents": {
