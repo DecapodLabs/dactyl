@@ -143,6 +143,11 @@
       "id": "conn-100-11-spec-intent",
       "summary": "docs(specs): update INTENT.md for per-workspace LogicalConnector and session readiness (#100)",
       "input_digest": "sha256:b2e36c15eb3a2d1eecb27da1c27a50cca478da29155e313f00c4f527185d24b9"
+    },
+    {
+      "id": "conn-100-12-spec-architecture",
+      "summary": "docs(specs): update ARCHITECTURE.md for src/connector.rs and outcome_unknown boundary (#100)",
+      "input_digest": "sha256:d0c061c488a06c3b5116e28f6f22fe32a488098f3bdce3c9cd72a4d2b7902795"
     }
   ],
   "intents": {
