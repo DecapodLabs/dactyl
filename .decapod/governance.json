@@ -153,6 +153,11 @@
       "id": "growth-101-12-catalog-predicates-test",
       "summary": "Add SQLite catalog predicate parity, visibility, and non-mutation integration suite",
       "input_digest": "sha256:c064c3cd18a9da0e97d4f6118ffa3b73e3f83e72ca17875b4899ffeaff2b0d68"
+    },
+    {
+      "id": "growth-101-13-catalog-capabilities-test",
+      "summary": "Add remote adapter local capability rejection tests for catalog predicates",
+      "input_digest": "sha256:10d2d425264d17b89f13102d2eea6630a8141581931261dd1919eeeee74dcff9"
     }
   ],
   "intents": {
