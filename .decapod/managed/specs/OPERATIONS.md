@@ -1,5 +1,11 @@
 # Operations
 
+## Current registry and consumer handoff (issue 94)
+
+The official 0.16.0 archive matches sparse-index SHA-256 `af724e4a561da93c4cf9bf8ca63f25c6d227bee6a49318fdbd5dbf7bc93083ca` and source `7d539730f9f3218f58f244c284c529c5b19967fb`. `docs/registry-handoff.md` records an executed clean crates.io consumer on Rust/Cargo 1.85.0 with SQLite, Neon and Supabase enabled, no Git/path patch, public connector/session/RPC types compiled and Quinn 0.11.19 resolved. This establishes registry compilation, not hosted runtime acceptance; complete candidate feature tests remain independently required.
+
+README.md documents the accepted 0.16.0 API, Rust/Cargo 1.85 and the distinction between logical connectors, explicit ambient service routes and native RPC. DATASTORE_TOKEN is remote-only and required by the Supabase service. Package metadata already names SQLite, Neon and Supabase; exact registry/checksum/package and clean registry-consumer observations are recorded above, while hosted provider qualification and subsequent consumer rollout retain their own evidence requirements. Decapod has adopted registry =0.14.0, completing its security handoff in issue 1638; a future SDK upgrade requires separate consumer validation. A GitHub release or path-based package proof cannot establish registry-consumer execution or hosted readiness. Normal release automation retains publication authority; this documentation work neither publishes nor deploys.
+
 ## Capacity, dogfooding inventory, and recovery guardrails (issue 101)
 
 `docs/datastore/dogfooding-inventory.json` records read-only physical snapshot metrics from the repository's `.decapod/data/decapod.db` (`13,344,768` apparent bytes across `3,258` pages; `events` holds `18,941` rows and `94.3%` of live allocated B-tree bytes). Operators and callers use `ResourceBudget` (`docs/datastore/resource-budgets.md`) and `Connection::visit_rows` to prevent unbounded single-call memory or HTTP payload growth while applying caller-level concurrency limits across multiple connections. When `DactylError::mutation_outcome()` returns `MutationOutcome::Uncertain` after a remote transport, timeout, or post-send response failure, callers must reconcile persisted state or supply an idempotency key rather than blindly replaying non-idempotent writes. Explicit SQLite `recover_from_dump_reload` now streams table data through one staging transaction and one reused C-ABI prepared `INSERT` per table, avoiding `32x` JSON BLOB memory amplification during incident recovery.
@@ -195,7 +201,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb`
+- Repository signal fingerprint: `146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
