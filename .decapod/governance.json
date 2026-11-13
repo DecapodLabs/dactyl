@@ -113,6 +113,11 @@
       "id": "growth-101-04-sqlite-ffi",
       "summary": "Bind sqlite3_reset and sqlite3_clear_bindings symbols",
       "input_digest": "sha256:3d09c524d66ada25c871fca6d8667870c951ea1abde7510fd045e4a2b6d7333f"
+    },
+    {
+      "id": "growth-101-05-sqlite-adapter",
+      "summary": "Enforce resource budgets, streaming visits, and catalog predicates in SQLite",
+      "input_digest": "sha256:df0663cf8233286c78e7f935a91c4430b9b7d0457ff0f37efc3cceacd9e59167"
     }
   ],
   "intents": {
