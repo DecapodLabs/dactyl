@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "7d539730f9f3218f58f244c284c529c5b19967fb",
-    "release": "v0.16.0",
+    "accepted_commit": "a2fb58f1f04bfe061ada4b52731d76c413a6a107",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -53,6 +52,7 @@
         "question": "Which project capability should replace this template claim first?",
         "status": "open"
       },
+      "plan:fa14b63e5def878c": "Actual hosted execution requires independently provisioned disposable principals and operator authorization",
       "trajectory:0f28ad308b4829ca": "Hosted proof image still installed .136.2, reverting .138.3 entrypoint headers; update independently released controller pin, preserve all14 required checks, rerun exact candidate",
       "trajectory:24c00c22af3b9e66": "No hosted OAuth, deployment, package publication or real checkout is attested by offline connector proof.",
       "trajectory:2aca121a5c7eef59": "No compact representation selected before local inventory and agreed budgets; no live rewrite or hosted deployment authorized.",
@@ -65,13 +65,13 @@
     }
   },
   "change": {
-    "id": "change_01M79NYVYYETSSZC3CXQNSEJPF",
-    "base_commit": "7d539730f9f3218f58f244c284c529c5b19967fb",
+    "id": "dactyl117-rebase-a2fb58f",
+    "base_commit": "a2fb58f1f04bfe061ada4b52731d76c413a6a107",
     "target_base": "origin/main"
   },
   "claims": {
-    "issue-70-contract": {
-      "statement": "Issue 70 documentation distinguishes current implemented surfaces from remaining external qualification",
+    "issue-79-contract": {
+      "statement": "Issue 79 documentation distinguishes current implemented surfaces from remaining external qualification",
       "falsifier": "A documented API is absent from accepted source, or local/synthetic evidence is labeled as hosted execution",
       "status": "supported",
       "proof_refs": [
@@ -83,104 +83,16 @@
   },
   "checkpoints": [
     {
-      "id": "file-1",
-      "summary": "docs(cloud): distinguish native hosted qualification from service fixtures",
-      "input_digest": "sha256:519665892a54091f76ca89ef516c16af5f6d92565cac070a4a1661b24b2cd0b9",
+      "id": "file-200-5342a9a99a",
+      "summary": "docs: rebase backend capability matrix onto accepted PR116",
+      "input_digest": "sha256:78e0c8dde2e84236ee22e132e70187b7eb5ab88c0cadc9bfb1ba0ee65529f67f",
       "proof_refs": [
-        "source:docs/supabase-conformance.md"
-      ]
-    },
-    {
-      "id": "file-10",
-      "summary": "docs(specs): reconcile issue 70 .manifest.json",
-      "input_digest": "sha256:c4533db757d25d2e44267c7573798ecb3ae59ed987448a4e8113970c34ede182",
-      "proof_refs": [
-        "source:.decapod/managed/specs/.manifest.json"
-      ]
-    },
-    {
-      "id": "file-11",
-      "summary": "docs(specs): reconcile issue 70 ARCHITECTURE.md",
-      "input_digest": "sha256:58971a3f446edd56feb7f685b9ec85e53c41e4a0fc07c52ef65d7758e718adb1",
-      "proof_refs": [
-        "source:.decapod/managed/specs/ARCHITECTURE.md"
-      ]
-    },
-    {
-      "id": "file-12",
-      "summary": "docs(specs): reconcile issue 70 INTENT.md",
-      "input_digest": "sha256:095c349386b3ed2962fbb07a625c42b678fea886564d6a1bff3755232ee4319f",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTENT.md"
-      ]
-    },
-    {
-      "id": "file-13",
-      "summary": "docs(specs): reconcile issue 70 INTERFACES.md",
-      "input_digest": "sha256:30daa6ed9be861ef74aa33f3a64d6235ccd9017f4b762efcdb2d293936a3cb05",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTERFACES.md"
-      ]
-    },
-    {
-      "id": "file-14",
-      "summary": "docs(specs): reconcile issue 70 OPERATIONS.md",
-      "input_digest": "sha256:6b5e1e76203e92a07773177ac0fa47506a1486ff01a3e6861677cb8f86dee947",
-      "proof_refs": [
-        "source:.decapod/managed/specs/OPERATIONS.md"
-      ]
-    },
-    {
-      "id": "file-15",
-      "summary": "docs(specs): reconcile issue 70 README.md",
-      "input_digest": "sha256:3cdb1576836322b64a90c5332c22f0141bd53f85b325390906f3fc36f82f4c2d",
-      "proof_refs": [
-        "source:.decapod/managed/specs/README.md"
-      ]
-    },
-    {
-      "id": "file-16",
-      "summary": "docs(specs): reconcile issue 70 SECURITY.md",
-      "input_digest": "sha256:73967ee6278fc20dd59ef91e307f6535d6623c6ac53340086749be0eb76240c7",
-      "proof_refs": [
-        "source:.decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "file-17",
-      "summary": "docs(specs): reconcile issue 70 SEMANTICS.md",
-      "input_digest": "sha256:9e9bd140fdfc696549fa753a2c23e583e0f17b565688da850b9087049b08c2cf",
-      "proof_refs": [
-        "source:.decapod/managed/specs/SEMANTICS.md"
-      ]
-    },
-    {
-      "id": "file-18",
-      "summary": "docs(specs): reconcile issue 70 VALIDATION.md",
-      "input_digest": "sha256:003efbf7a82736e6bba62034a30a193ec3db406e510438048019d7256adccc53",
-      "proof_refs": [
-        "source:.decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "file-100-d6ff9e6278",
-      "summary": "chore(proof): reconcile reviewed 0.16 inventory config.toml",
-      "input_digest": "sha256:05e03130053a1ddfb0a0a7658f4cfb35486e78b2ddcdc450ba3e2a7217dc150c",
-      "proof_refs": [
-        "source:.decapod/config.toml"
-      ]
-    },
-    {
-      "id": "file-102-3d2165f869",
-      "summary": "chore(proof): reconcile reviewed 0.16 inventory .manifest.json",
-      "input_digest": "sha256:3ae10a93922e91ad30a986156a6632a4290fcf7e4f97528fe4d826889486a31c",
-      "proof_refs": [
-        "source:.decapod/managed/specs/.manifest.json"
+        "source:docs/backend-capabilities.md"
       ]
     }
   ],
   "intents": {
-    "intent:issue-70-refinement": {
+    "intent:issue-79-refinement": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -190,11 +102,11 @@
         "Dactyl issue refinement"
       ],
       "created_sequence": 1,
-      "id": "intent:issue-70-refinement",
+      "id": "intent:issue-79-refinement",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "Refine the five open Dactyl issues against current Decapod and Propodus direction and create a PR for each",
-      "refined_intent": "Reconcile issue 70 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
+      "refined_intent": "Reconcile issue 79 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -205,92 +117,60 @@
         "file_touch_budget": null,
         "forbidden_paths": []
       },
-      "deferred_questions": [
-        "Actual hosted execution requires independently provisioned disposable principals and operator authorization"
-      ],
+      "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reconcile issue 70 with accepted native Supabase direction, document exact existing proof boundaries and remaining hosted evidence; prepare a focused documentation PR without claiming hosted execution or closing the issue",
+      "intent": "Rebase PR117 onto accepted PR116, preserve the capability matrix and issue79 interface spec, and rerun full validation on the new candidate without claiming old proof still applies",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
-          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
-          "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
-          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
-          "spec_material_hash": "9259e54a875c6918161927f6945a0bcd65be19e3253ac8fc0f91157b78c16aeb"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
-          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
-          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Refine issue 70: native hosted evidence contract and remaining live proof",
+      "title": "Refine backend capability inventory (#79 / PR117)",
       "todo_ids": [
-        "bugs_01m79ny5c898d1tv"
+        "bugs_01m79p29754rgtk8"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794548662Z"
+      "updated_at": "1794550095Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Documentation and specifications only; no package release, deployment, merge or hosted data access"
       ],
-      "artifact_hash": "sha256:e2e017bdee4be2a947618c2fbb570f1c24816c253983ae77a1ff6a85273b2df9",
+      "artifact_hash": "sha256:c47476d87c41451af191931bd74e439fde22b875693b05c16fc6aedea9ea068a",
       "checks": [],
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:issue-70-refinement",
+            "intent_id": "intent:issue-79-refinement",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:issue-70-refinement",
+            "intent_id": "intent:issue-79-refinement",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:issue-70-refinement",
+            "detail": "trajectory:issue-79-refinement",
             "event_id": "event:4",
-            "intent_id": "intent:issue-70-refinement",
+            "intent_id": "intent:issue-79-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:issue-70-refinement",
-            "event_id": "event:5",
-            "intent_id": "intent:issue-70-refinement",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "issue-70-refinement": {
+          "issue-79-refinement": {
             "evidence_only": true,
-            "id": "issue-70-refinement",
-            "intent_id": "intent:issue-70-refinement",
+            "id": "issue-79-refinement",
+            "intent_id": "intent:issue-79-refinement",
             "steps": [
               {
                 "action": "trajectory.record",
@@ -299,7 +179,7 @@
                   "src/lib.rs",
                   "src/adapter/mod.rs",
                   "tests/native_service.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/INTERFACES.md",
                   "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
                 ],
                 "proof_refs": [],
@@ -307,23 +187,6 @@
                   "Dactyl issue refinement"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/lib.rs",
-                  "src/adapter/mod.rs",
-                  "tests/native_service.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "Dactyl issue refinement"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -339,17 +202,17 @@
         "src/lib.rs",
         "tests/native_service.rs"
       ],
-      "intent_id": "intent:issue-70-refinement",
+      "intent_id": "intent:issue-79-refinement",
       "modified_files": [
-        ".decapod/managed/specs/VALIDATION.md"
+        ".decapod/managed/specs/INTERFACES.md"
       ],
       "repo_scope": [
         "Dactyl issue refinement"
       ],
-      "run_id": "issue-70-refinement",
+      "run_id": "issue-79-refinement",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79ny5c898d1tv",
+      "task_id": "bugs_01m79p29754rgtk8",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
