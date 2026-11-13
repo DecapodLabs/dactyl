@@ -98,6 +98,11 @@
       "id": "growth-101-01-budget",
       "summary": "Add versioned ResourceBudget and bounded wire/result trackers",
       "input_digest": "sha256:e01e056672eb2f7e712f8550e07c4027639a4eebcd6916cd236cef1789ece0a1"
+    },
+    {
+      "id": "growth-101-02-error",
+      "summary": "Classify FailureOrigin and MutationOutcome on DactylError",
+      "input_digest": "sha256:634f4433089ce4442235352be96e6c0f717d705c2e7a17d3c7ea2a60a3733a84"
     }
   ],
   "intents": {
