@@ -158,6 +158,11 @@
       "id": "growth-101-13-catalog-capabilities-test",
       "summary": "Add remote adapter local capability rejection tests for catalog predicates",
       "input_digest": "sha256:10d2d425264d17b89f13102d2eea6630a8141581931261dd1919eeeee74dcff9"
+    },
+    {
+      "id": "growth-101-14-resource-budgets-test",
+      "summary": "Add cross-adapter resource budget, visit_rows, FailureOrigin, and MutationOutcome suite",
+      "input_digest": "sha256:859cb14c001000c1e35565c4045c0466c2b0ec2b120420213fe9738670a94f33"
     }
   ],
   "intents": {
