@@ -163,6 +163,11 @@
       "id": "conn-100-15-spec-security",
       "summary": "docs(specs): update SECURITY.md for portable credential redaction and MAX_JSON_DEPTH (#100)",
       "input_digest": "sha256:78480d79202cf9e258b89305ee0ffff2449a1290fce6050ed9109ffef843efdb"
+    },
+    {
+      "id": "conn-100-16-spec-semantics",
+      "summary": "docs(specs): update SEMANTICS.md for LogicalConnector isolation and outcome_unknown (#100)",
+      "input_digest": "sha256:1cced80b623518811a4cdf692a4d44883abcf364ad343f36c9b4bd0decf0dd0c"
     }
   ],
   "intents": {
