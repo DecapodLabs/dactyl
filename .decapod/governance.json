@@ -196,6 +196,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "native-readiness-candidate",
+      "summary": "Approve protected native scenario candidate for complete validation",
+      "input_digest": "sha256:230a8aed7381d03a838b88d583e05fbc6af4eac679b66448bac23d8a9f47acd0",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
     }
   ],
   "intents": {
