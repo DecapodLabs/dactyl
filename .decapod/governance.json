@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
+    "accepted_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
+    "release": "v0.14.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -63,46 +64,53 @@
     }
   },
   "change": {
-    "id": "change_01M77WK8TMW569S387VPY61NW6",
-    "base_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
+    "id": "change_01M797P7VZTMB6M215F9A8GTSN",
+    "base_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
     "target_base": "origin/main"
+  },
+  "claims": {
+    "bounded-catalog-predicates": {
+      "statement": "Connection::has_table and Connection::has_column answer single-statement SQLite catalog queries with exact StoreSchema::table and table_info parity without full-table row counts, and fail closed with unsupported_schema_inspection on remote routes.",
+      "falsifier": "A catalog predicate prepares per-table COUNT(*) statements, disagrees with inspect_schema visibility or temp shadowing, mutates persisted bytes, or issues a remote network request.",
+      "status": "open",
+      "proof_refs": [
+        "tests/catalog_capabilities.rs",
+        "tests/catalog_predicates.rs"
+      ]
+    },
+    "resource-budget-and-bounded-reads": {
+      "statement": "Versioned ResourceBudget enforces preflight SQL/context/parameter/cell/batch/wire limits and decoded row/column/cell/result-byte limits across SQLite, Neon, and Supabase without breaking OpenOptions or Rows compatibility or silently truncating results, and distinguishes preflight rejection, transactional rollback, and post-send uncertain mutation outcomes.",
+      "falsifier": "An OpenOptions or Rows consumer fails to compile, an oversized request allocates an unbounded wire buffer, Neon reads an unbounded response body, a local atomic result-budget violation commits partial state, a truncated scan returns complete=true, or an uncertain post-send mutation is reported as NotAttempted.",
+      "status": "open",
+      "proof_refs": [
+        "tests/resource_budgets.rs",
+        "tools/proof/check.py"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "patched-quinn-release-prep-01",
-      "summary": "Document unreleased Rust1.85 patched inactive Quinn migration and ordinary Release-As automation, preserving historical Supabase notes and runtime/proof contracts",
-      "input_digest": "sha256:45585ad63fdb5626635ed31ae61b76e949458f210d60336f4d081b68aa56f04d",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
-        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
-      ]
-    },
-    {
-      "id": "patched-quinn-release-prep-02",
-      "summary": "Record completed independent native proof environment and clear resolved setup-pending blocker; include genuine validator manifest refresh",
-      "input_digest": "sha256:d55769daae13e0ac31d7e1152e674db66a68d005ca7611cda7c674cd74b7b683",
-      "proof_refs": [
-        "Owned container dactyl-release-prep-proof-01383 actual Decapod0.138.3 and Rust1.85, locked/fresh-consumer fetch-only preparation and can_work=true native binding"
-      ]
+      "id": "growth-101-00-config-digest",
+      "summary": "Reconcile reviewed sources digest with accepted 0.14.0 release",
+      "input_digest": "sha256:63464a674a8b2c05dbe05e3bde2bd71bed9fa4b91ea49f75e120eb3eee867bec"
     }
   ],
   "intents": {
-    "intent:change_01M77WK8TMW569S387VPY61NW6": {
+    "intent:change_01M797P7VZTMB6M215F9A8GTSN": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "file:CHANGELOG.md",
-        "file:.decapod/managed/specs/OPERATIONS.md"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+      "id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
-      "refined_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
+      "raw_intent": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
+      "refined_intent": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -111,226 +119,119 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": [
-          "src",
-          "tools/proof",
-          ".github/workflows",
-          "Cargo.toml",
-          "Cargo.lock"
-        ]
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prepare reviewable 0.14.0 compatibility/release notes for the already accepted Rust/Cargo 1.85 and patched inactive Quinn constraints from SDK108. Preserve runtime source/API/features, proof matrix, workflows and Cargo package version. A conventional breaking fix with Release-As: 0.14.0 requests the ordinary bot release PR only after maintainer merge; no package publication or privileged dispatch.",
+      "intent": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documentation-only release preparation preserves existing reqwest transport, inactive patched Quinn boundary and components; no implementation or proof topology changes.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "13fa83c57551a71d6940fea3250d312ff038fa89b2c1401d8ba44d9716f5d2c7"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No public Rust API, feature key or wire contract changes; new changelog migration guidance matches the accepted Rust/Cargo1.85 and downstream lock-free consumer contract.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "2056a6ae6336bd92245abf6a4c81ba3d484917183ddddec01b7fe9b155bc42a8"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No token, storage, authorization or HTTP3 activation changes; compatibility notes retain explicit inactive-dependency exposure and audit limits rather than asserting hosted proof.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "e800bd95c173f1e51451668bc4fefef54aeb499d8c2ab7ab1b3cd486cd4fe5f8"
-        }
-      ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Unavailable independently published controller support or explicit authorization denial"
-      ],
-      "title": "Prepare patched Quinn and Rust 1.85 release notes",
+      "stop_conditions": [],
+      "title": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
       "todo_ids": [
-        "bugs_01m77wjh57ym1md5"
+        "feat_01m797m0s2man72q"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794488592Z"
+      "updated_at": "1794532770Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No runtime API, workflow, proof matrix or package version edits; no merge, release or package publication"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4cc73fe09c190de719fa6b76981cd96a30e934e430ba26aced33177398647b27",
-      "checks": [
-        {
-          "name": "authored-diff-whitespace",
-          "status": "passed"
-        },
-        {
-          "name": "current-ci",
-          "status": "unavailable"
-        },
-        {
-          "name": "independent-controller-toolchain-custody",
-          "status": "passed"
-        },
-        {
-          "name": "native-exact-source",
-          "status": "unavailable"
-        }
-      ],
-      "current_phase": "validation",
+      "artifact_hash": "sha256:84988b2d7bbc8b86e627bceb18314f8331f68912db1f843366f3eb4fef99e87b",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+            "detail": "trajectory:branch_01M797P7XKMHWQBAQQ4JX7GV3S",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M77WK8XBNPT4WJ1V9A6JG1E5": {
+          "branch_01M797P7XKMHWQBAQQ4JX7GV3S": {
             "evidence_only": true,
-            "id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "id": "branch_01M797P7XKMHWQBAQQ4JX7GV3S",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "steps": [
               {
-                "action": "review",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "README.md",
-                  "Cargo.toml",
-                  ".github/workflows/release.yml",
-                  "tools/proof/check.py",
+                  "src/lib.rs",
+                  "src/contract.rs",
+                  "src/error.rs",
+                  "src/rows.rs",
+                  "src/inspection.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/sqlite/mod.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
                   "CHANGELOG.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "https://github.com/googleapis/release-please#how-do-i-change-the-version-number",
-                  "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464"
+                  "README.md"
                 ],
-                "proof_refs": [
-                  "authored-diff-whitespace"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "No manual shadow builds; prior SDK108 proof is historical only"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [],
-                "proof_refs": [
-                  "native-exact-source",
-                  "current-ci"
-                ],
-                "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
-                  "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker"
-                ],
-                "proof_refs": [
-                  "native-exact-source",
-                  "independent-controller-toolchain-custody"
-                ],
-                "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker",
-        "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
-        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
-      ],
+      "evidence": [],
       "inspected_files": [
-        ".github/workflows/release.yml",
-        "Cargo.toml",
+        "CHANGELOG.md",
         "README.md",
-        "tools/proof/check.py"
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
+        "src/adapter/sqlite/mod.rs",
+        "src/adapter/supabase.rs",
+        "src/contract.rs",
+        "src/error.rs",
+        "src/inspection.rs",
+        "src/lib.rs",
+        "src/rows.rs"
       ],
-      "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-      "modified_files": [
-        ".decapod/managed/specs/OPERATIONS.md",
-        "CHANGELOG.md"
-      ],
+      "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
+      "modified_files": [],
       "next_transitions": [
-        "Checkpoint and publish explicitly authorized draft; continue exact-source native validate and CI",
-        "Commit resolved setup status and refreshed manifest, then rerun full native validation on exact candidate",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "file:.decapod/managed/specs/OPERATIONS.md",
-        "file:CHANGELOG.md"
+        "root"
       ],
-      "run_id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+      "run_id": "branch_01M797P7XKMHWQBAQQ4JX7GV3S",
       "schema_version": "1.1.0",
-      "shortcut_risk_signals": [
-        "No manual shadow builds; prior SDK108 proof is historical only"
-      ],
-      "task_id": "bugs_01m77wjh57ym1md5",
+      "shortcut_risk_signals": [],
+      "task_id": "feat_01m797m0s2man72q",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
