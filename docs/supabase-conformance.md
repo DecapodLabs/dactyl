@@ -1,5 +1,55 @@
 # Real-service adapter conformance
 
+## Current native cloud qualification (issue 70)
+
+The application path is logical `Backend::Cloud` → `LogicalConnector` → native
+Supabase RPC, with the current managed user bearer and opaque `StorageContext`.
+Propodus supplies the private SQL, Auth/onboarding infrastructure and effective
+authorization. Explicit Neon and Supabase HTTP service routes remain compatibility
+surfaces. Their `/query` and `/batch` evidence does not qualify native RPC.
+
+Keep the following evidence profiles separate:
+
+| Profile | Existing executable evidence surface | What it cannot establish |
+| --- | --- | --- |
+| `local_sqlite` | `tests/storage_fixtures.rs`, real local files | PostgreSQL, RLS or hosted execution |
+| `neon_mock` | `tests/storage_fixtures.rs`, HTTP mock executing SQLite | Neon/PostgreSQL dialect or deployment parity |
+| `synthetic_http` | `tests/supabase_rpc.rs`, `tests/cloud_connector.rs`, `tests/logical_connector.rs` | Physical transactions, managed OAuth or deployed authorization |
+| Local native service | `tests/native_service.rs::local_native_read_only_contract` | Hosted execution, independent authorization or server-side mutation denial |
+| Generic PostgreSQL service | The `dactyl_service_v1` fixture below | A task-only native RPC service or Supabase pooler modes |
+| Protected hosted native service | Remaining issue 70 deliverable | Unavailable until independently provisioned and exercised |
+
+The local native test requires a private `DACTYL_NATIVE_FIXTURE` and a disposable
+literal-loopback HTTP origin. Invoke it explicitly from the candidate checkout:
+
+```sh
+cargo test --locked --features supabase --test native_service \
+  local_native_read_only_contract -- --ignored --exact
+```
+
+Supply `DACTYL_NATIVE_FIXTURE` through private environment configuration. The
+test issues two reads in a read-only batch; its write rejection happens in the
+client. It does **not** send a disguised mutation to prove physical PostgreSQL
+read-only enforcement. Do not substitute a hosted URL: this fixture rejects it.
+The normal proof suite tests refusal without the fixture, not a database pass.
+
+Issue 70 owns the remaining hosted happy-path qualification: released SDK and
+actual Decapod consumer, a disposable authorized scope, normalized typed values
+and affected counts, ordered commit/rollback, independent database observations,
+and verified cleanup. Record immutable client/service revisions, SDK version,
+wire/profile version, database version and connection mode, commands and outcomes.
+Attach sanitized artifact digests and distinguish `passed`, `failed`, `unavailable`
+and deliberately unsupported cases. A receipt needs actual observations; source
+presence, a GitHub release, HTTP 200 and skipped tests are insufficient.
+
+Issue 79 owns the capability matrix; issue 85 owns fault/concurrency and uncertain
+outcomes; issue 91 owns provider qualification; issue 94 owns registry handoff.
+Propodus's `docs/proofs/cloud-integration.md` records historical local PostgreSQL/
+PostgREST consumer evidence with a source-patched Dactyl. Preserve those revision
+limits: they do not establish current registry-consumer or hosted acceptance.
+
+## Existing generic HTTP service profile
+
 This is the runnable client profile for [issue #93](https://github.com/DecapodLabs/dactyl/issues/93).
 It tests the public `Connection` read/write/atomic API against an authenticated
 HTTP service that executes real PostgreSQL. It does not implement that service,
