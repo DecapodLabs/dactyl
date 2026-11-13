@@ -153,6 +153,11 @@
       "id": "conn-100-13-spec-interfaces",
       "summary": "docs(specs): update INTERFACES.md for LogicalTarget, Manage/Portal, and GoTrue codes (#100)",
       "input_digest": "sha256:a5542969d0275e6a153b76c2037d7cdbfe4528da1773437c89f491a273c315d1"
+    },
+    {
+      "id": "conn-100-14-spec-operations",
+      "summary": "docs(specs): update OPERATIONS.md for outcome_unknown reconciliation and evidence classes (#100)",
+      "input_digest": "sha256:b797b6519c3609293173e0417632ff0249114ba158fa3a29916e4779b8c819f1"
     }
   ],
   "intents": {

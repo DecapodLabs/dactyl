@@ -110,6 +110,10 @@ The local route path is an ordinary SQLite database. Operators may use standard 
 
 Read-only opens never create or mutate a database. Existing SQLite files are opened directly; there is no migration/import command in Dactyl. Decapod remains responsible for explicit schema and migration policy.
 
+## Logical connector and managed-session operations
+
+Per-workspace `LogicalConnector` resolution (`src/connector.rs`) holds no process-global cache, background worker, or durable token file. Callers checkpoint pending one-time auth exchanges, token rotations, and mutating account actions (`Register`, `Checkout`, `Manage`) before dispatch; if Dactyl returns `code = Some("outcome_unknown")` after sending a mutating or one-time request, operators/callers must reconcile account or session status before re-attempting rather than replaying blindly. Failed cloud profile discovery never degrades to local SQLite. Offline synthetic HTTP and local SQLite proofs do not attest hosted Supabase Auth, live Propodus Edge Functions, or PostgreSQL pooler availability (`unavailable` until exercised in deployment).
+
 ## Capacity Planning
 - Traffic patterns:
 - Resource utilization:
@@ -187,7 +191,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
+- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
