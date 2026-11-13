@@ -132,6 +132,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-212-0b94baf1ec",
+      "summary": "chore(specs): refresh native scenario ARCHITECTURE.md",
+      "input_digest": "sha256:810d04b28a069845709ac8ca3abd5be0dbcdc6e7e7f259b7130730807c76e014",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
