@@ -93,6 +93,11 @@
       "id": "growth-101-00-config-digest",
       "summary": "Reconcile reviewed sources digest with accepted 0.14.0 release",
       "input_digest": "sha256:63464a674a8b2c05dbe05e3bde2bd71bed9fa4b91ea49f75e120eb3eee867bec"
+    },
+    {
+      "id": "growth-101-01-budget",
+      "summary": "Add versioned ResourceBudget and bounded wire/result trackers",
+      "input_digest": "sha256:e01e056672eb2f7e712f8550e07c4027639a4eebcd6916cd236cef1789ece0a1"
     }
   ],
   "intents": {
