@@ -193,6 +193,11 @@
       "id": "growth-101-20-doc-catalog-measurements",
       "summary": "Record SQLite catalog predicate statement-prepare measurements vs full inspect_schema",
       "input_digest": "sha256:198b1593f303d2909bb088ad735bbbb4cad75538a34c991b9bc6a686bae058e2"
+    },
+    {
+      "id": "growth-101-21-doc-catalog-proof-ledger",
+      "summary": "Record falsifiable catalog predicate proof ledger by evidence class",
+      "input_digest": "sha256:26a23eb0df09aa5a7defa999327688fd79cf874bbae0281584e1be8d02f57aa2"
     }
   ],
   "intents": {
