@@ -116,6 +116,14 @@
       "proof_refs": [
         "source:docs/supabase-conformance.md"
       ]
+    },
+    {
+      "id": "file-206-cbcf37a373",
+      "summary": "docs(specs): bind native scenario proof and independent evidence limits",
+      "input_digest": "sha256:0e17f2b3600fe519cde3e3a25baad184df521ab42ff9d30cb80116e3d5b432e8",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
