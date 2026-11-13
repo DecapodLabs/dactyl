@@ -253,6 +253,11 @@
       "id": "growth-101-32-spec-validation",
       "summary": "Update VALIDATION.md with #101 budget/catalog test suites and explicit unavailable live-service classes",
       "input_digest": "sha256:d2aaeb821b710954df7b5839c0cec6d8b414992532686a608722f9bbe1c2fce3"
+    },
+    {
+      "id": "growth-101-33-spec-readme",
+      "summary": "Refresh managed specs index README projection for updated source and test inventory",
+      "input_digest": "sha256:f2ea5d34f44e97c2e83191be3d414418273ae5bc867bbb135a7f82da68b7fe15"
     }
   ],
   "intents": {
