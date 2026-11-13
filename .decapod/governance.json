@@ -168,6 +168,11 @@
       "id": "growth-101-15-storage-fixtures",
       "summary": "Extend storage fixture suite with compact component refs and bounded visit_rows",
       "input_digest": "sha256:5e71ec76b297b325b5e4aeb4e537cdd7c8ab16b705bf291a94c7fe12ec44b40f"
+    },
+    {
+      "id": "growth-101-16-supabase-contract",
+      "summary": "Extend Supabase contract tests with catalog capability, FailureOrigin, and budgeted visits",
+      "input_digest": "sha256:0f98a6db866e100b13113315278dd08dfbc391ca8a65e655db9febe9a9d478ec"
     }
   ],
   "intents": {
