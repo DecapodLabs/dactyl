@@ -98,6 +98,11 @@
       "id": "conn-100-02-src-connector",
       "summary": "feat(connector): add LogicalTarget, LogicalConnector, and portable session types (#100)",
       "input_digest": "sha256:de29ba9ce95776d13f6d3d1d4c3edde48798bee0686cfcecfb8bc446a4e68598"
+    },
+    {
+      "id": "conn-100-03-src-cloud",
+      "summary": "feat(cloud): add Manage/Portal routes, GoTrue/OAuth codes, and outcome_unknown (#100)",
+      "input_digest": "sha256:a14b134fe02810e44aa5900b456336878ff24e4ae337da9f482b2d8ad0c701cd"
     }
   ],
   "intents": {

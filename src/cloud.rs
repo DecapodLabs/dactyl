@@ -4,16 +4,17 @@
 use std::io::Read;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
-use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+use serde::Deserialize;
 
+use crate::connector::{
+    validate_opaque_credential, AccountOperation, AuthenticationSecrets, AuthenticationStart,
+    ScmCredential, UserSession, DEFAULT_CLOUD_ORIGIN,
+};
 use crate::{AdapterErrorKind, DactylError, DatastoreRoute, SupabaseRpcConfig};
 
-/// Public deployment origin provisioned by the Propodus infrastructure project.
-pub const DEFAULT_CLOUD_ORIGIN: &str = "https://goyxpcmxetztjlrrcwew.supabase.co";
 const ONBOARDING: &str = "/functions/v1/propodus-onboarding";
 const BODY_LIMIT: u64 = 16 * 1024;
+const MAX_JSON_DEPTH: usize = 64;
 
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -24,173 +25,16 @@ struct DeploymentProfile {
     schema: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CloudConnector {
     config: SupabaseRpcConfig,
 }
 
-/// Account operations have fixed backend routes; their versioned payloads and
-/// authorization policy remain opaque to the connector.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AccountOperation {
-    Register,
-    Status,
-    Quote,
-    Checkout,
-}
-
-impl AccountOperation {
-    fn action(self) -> &'static str {
-        match self {
-            Self::Register => "account-register",
-            Self::Status => "account-status",
-            Self::Quote => "billing-quote",
-            Self::Checkout => "billing-checkout",
-        }
-    }
-}
-
-/// Transport labels for an explicitly supplied SCM linking credential.
-/// These labels do not establish identity or backend authorization.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ScmProvider {
-    GitHub,
-    GitLab,
-}
-
-impl ScmProvider {
-    fn label(self) -> &'static str {
-        match self {
-            Self::GitHub => "github",
-            Self::GitLab => "gitlab",
-        }
-    }
-
-    fn host(self) -> &'static str {
-        match self {
-            Self::GitHub => "github.com",
-            Self::GitLab => "gitlab.com",
-        }
-    }
-}
-
-/// An optional, explicit SCM linking credential for the account channel.
-/// The backend independently verifies its provider, subject and freshness.
-#[derive(Clone)]
-pub struct ScmCredential {
-    provider: ScmProvider,
-    token: String,
-}
-
-impl std::fmt::Debug for ScmCredential {
+impl std::fmt::Debug for CloudConnector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ScmCredential")
-            .field("provider", &self.provider)
-            .field("host", &self.host())
-            .field("token", &"[redacted]")
+        f.debug_struct("CloudConnector")
+            .field("config", &self.config)
             .finish()
-    }
-}
-
-impl ScmCredential {
-    pub fn github(token: impl Into<String>) -> Result<Self, DactylError> {
-        Self::new(ScmProvider::GitHub, token.into())
-    }
-
-    pub fn gitlab(token: impl Into<String>) -> Result<Self, DactylError> {
-        Self::new(ScmProvider::GitLab, token.into())
-    }
-
-    pub fn provider(&self) -> ScmProvider {
-        self.provider
-    }
-
-    pub fn host(&self) -> &'static str {
-        self.provider.host()
-    }
-
-    fn new(provider: ScmProvider, token: String) -> Result<Self, DactylError> {
-        opaque(&token)?;
-        reqwest::header::HeaderValue::from_str(&token)
-            .map_err(|_| protocol("invalid SCM credential"))?;
-        Ok(Self { provider, token })
-    }
-}
-
-/// Durable pending-flow secrets. Serialize only to the caller's private store.
-#[derive(Clone, Serialize, Deserialize)]
-pub struct AuthenticationSecrets {
-    verifier: String,
-    poll_secret: String,
-}
-
-impl std::fmt::Debug for AuthenticationSecrets {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("AuthenticationSecrets([redacted])")
-    }
-}
-
-impl AuthenticationSecrets {
-    pub fn generate() -> Result<Self, DactylError> {
-        fn random() -> Result<String, DactylError> {
-            let mut bytes = [0; 32];
-            getrandom::getrandom(&mut bytes)
-                .map_err(|_| protocol("secure randomness unavailable"))?;
-            Ok(URL_SAFE_NO_PAD.encode(bytes))
-        }
-        Ok(Self {
-            verifier: random()?,
-            poll_secret: random()?,
-        })
-    }
-
-    fn challenge(value: &str) -> String {
-        URL_SAFE_NO_PAD.encode(Sha256::digest(value.as_bytes()))
-    }
-
-    fn validate(&self) -> Result<(), DactylError> {
-        for value in [&self.verifier, &self.poll_secret] {
-            if value.len() != 43
-                || URL_SAFE_NO_PAD
-                    .decode(value)
-                    .map_or(true, |v| v.len() != 32)
-            {
-                return Err(protocol("invalid pending authentication secrets"));
-            }
-        }
-        Ok(())
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct AuthenticationStart {
-    pub flow_id: String,
-    pub browser_url: String,
-    pub expires_at: String,
-}
-
-impl std::fmt::Debug for AuthenticationStart {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("AuthenticationStart([redacted])")
-    }
-}
-
-/// A user session issued by managed Auth, never a separate Propodus session.
-#[derive(Clone, Serialize, Deserialize)]
-pub struct UserSession {
-    pub access_token: String,
-    pub refresh_token: String,
-    pub expires_at_unix: u64,
-    /// Optional credential returned by the sign-in provider. This is not proof
-    /// of a linked SCM identity; the account backend verifies that binding.
-    /// Refresh may omit it. The caller decides whether to retain prior custody.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub provider_token: Option<String>,
-}
-
-impl std::fmt::Debug for UserSession {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("UserSession([redacted])")
     }
 }
 
@@ -205,6 +49,8 @@ impl CloudConnector {
 
     /// Production uses one built-in origin. An explicit override supports
     /// controlled test/private deployments without changing project policy.
+    /// Prefer [`crate::LogicalTarget::cloud`] or
+    /// [`crate::LogicalTarget::cloud_with_origin`] for process-isolated selection.
     pub fn default_origin() -> String {
         std::env::var("DACTYL_CLOUD_ORIGIN")
             .ok()
@@ -222,6 +68,7 @@ impl CloudConnector {
             None,
             None,
             None,
+            false,
         )?;
         if profile.version != 1
             || profile.project_origin.trim_end_matches('/') != origin.trim_end_matches('/')
@@ -264,6 +111,10 @@ impl CloudConnector {
     /// bearer. Optional SCM credentials are for explicit account linking only,
     /// never data or Auth token requests. Dactyl does not infer identity, roles,
     /// pricing or consent, including from a managed Auth provider token.
+    ///
+    /// Mutating operations (`Register`, `Checkout`, `Manage`, `Portal`) attach
+    /// error code `"outcome_unknown"` if transport fails after dispatch so
+    /// callers reconcile server state rather than blindly replaying a write.
     pub fn account_request(
         &self,
         operation: AccountOperation,
@@ -279,6 +130,7 @@ impl CloudConnector {
             Some(body.clone()),
             Some(bearer),
             scm,
+            operation.is_mutating(),
         )
     }
 
@@ -291,11 +143,13 @@ impl CloudConnector {
         let response: AuthenticationStart = self.auth_request(
             "start",
             &serde_json::json!({
-                "version": 1, "repository": repository,
+                "version": 1,
+                "repository": repository,
                 "pkce_challenge": AuthenticationSecrets::challenge(&secrets.verifier),
                 "poll_challenge": AuthenticationSecrets::challenge(&secrets.poll_secret)
             }),
             None,
+            false,
         )?;
         self.validate_start(&response)?;
         Ok(response)
@@ -341,7 +195,7 @@ impl CloudConnector {
         secrets: &AuthenticationSecrets,
     ) -> Result<String, DactylError> {
         let response: serde_json::Value =
-            self.auth_request("status", &flow_body(flow_id, secrets)?, None)?;
+            self.auth_request("status", &flow_body(flow_id, secrets)?, None, false)?;
         match response.get("status").and_then(|v| v.as_str()) {
             Some(status @ ("pending" | "ready" | "consumed" | "complete")) => Ok(status.into()),
             _ => Err(protocol("invalid authentication status")),
@@ -349,18 +203,25 @@ impl CloudConnector {
     }
 
     /// One-time operation. The caller must persist an in-flight marker before
-    /// calling; a lost response cannot be retried as if it never committed.
+    /// calling; a lost response returns code `"outcome_unknown"` and cannot be
+    /// retried as if it never committed.
     pub fn exchange_authentication_code(
         &self,
         flow_id: &str,
         secrets: &AuthenticationSecrets,
     ) -> Result<String, DactylError> {
         let response: serde_json::Value =
-            self.auth_request("exchange", &flow_body(flow_id, secrets)?, None)?;
+            self.auth_request("exchange", &flow_body(flow_id, secrets)?, None, true)?;
         let code = response
             .get("auth_code")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| protocol("authentication exchange returned no code"))?;
+            .ok_or_else(|| {
+                DactylError::adapter_with_code(
+                    AdapterErrorKind::Protocol,
+                    "outcome_unknown",
+                    "authentication exchange returned no code",
+                )
+            })?;
         opaque(code)?;
         Ok(code.into())
     }
@@ -374,7 +235,7 @@ impl CloudConnector {
         opaque(code)?;
         self.token_request(
             "pkce",
-            serde_json::json!({"auth_code":code,"code_verifier":secrets.verifier}),
+            serde_json::json!({"auth_code": code, "code_verifier": secrets.verifier}),
         )
     }
 
@@ -382,7 +243,7 @@ impl CloudConnector {
         opaque(refresh_token)?;
         self.token_request(
             "refresh_token",
-            serde_json::json!({"refresh_token":refresh_token}),
+            serde_json::json!({"refresh_token": refresh_token}),
         )
     }
 
@@ -392,10 +253,18 @@ impl CloudConnector {
         secrets: &AuthenticationSecrets,
         bearer: &str,
     ) -> Result<(), DactylError> {
-        let result: serde_json::Value =
-            self.auth_request("complete", &flow_body(flow_id, secrets)?, Some(bearer))?;
+        let result: serde_json::Value = self.auth_request(
+            "complete",
+            &flow_body(flow_id, secrets)?,
+            Some(bearer),
+            true,
+        )?;
         if result.get("status").and_then(|v| v.as_str()) != Some("complete") {
-            return Err(protocol("authentication completion was not confirmed"));
+            return Err(DactylError::adapter_with_code(
+                AdapterErrorKind::Protocol,
+                "outcome_unknown",
+                "authentication completion was not confirmed",
+            ));
         }
         Ok(())
     }
@@ -409,6 +278,7 @@ impl CloudConnector {
             None,
             Some(bearer),
             None,
+            true,
         )?;
         Ok(())
     }
@@ -434,6 +304,7 @@ impl CloudConnector {
             Some(body),
             None,
             None,
+            true,
         )?;
         opaque(&response.access_token)?;
         opaque(&response.refresh_token)?;
@@ -460,6 +331,7 @@ impl CloudConnector {
         action: &str,
         body: &serde_json::Value,
         bearer: Option<&str>,
+        is_mutating: bool,
     ) -> Result<T, DactylError> {
         request(
             self.origin(),
@@ -469,6 +341,7 @@ impl CloudConnector {
             Some(body.clone()),
             bearer,
             None,
+            is_mutating,
         )
     }
 }
@@ -479,7 +352,7 @@ fn flow_body(
 ) -> Result<serde_json::Value, DactylError> {
     secrets.validate()?;
     validate_flow_id(flow_id)?;
-    Ok(serde_json::json!({"version":1,"flow_id":flow_id,"poll_secret":secrets.poll_secret}))
+    Ok(serde_json::json!({"version": 1, "flow_id": flow_id, "poll_secret": secrets.poll_secret}))
 }
 
 fn validate_flow_id(value: &str) -> Result<(), DactylError> {
@@ -498,13 +371,7 @@ fn validate_flow_id(value: &str) -> Result<(), DactylError> {
 }
 
 fn opaque(value: &str) -> Result<(), DactylError> {
-    if value.is_empty()
-        || value.len() > 16384
-        || value.chars().any(|c| c.is_whitespace() || c.is_control())
-    {
-        return Err(protocol("invalid authentication credential"));
-    }
-    Ok(())
+    validate_opaque_credential(value, "invalid authentication credential")
 }
 
 fn validate_origin(origin: &str) -> Result<reqwest::Url, DactylError> {
@@ -519,6 +386,102 @@ fn protocol(message: &'static str) -> DactylError {
     DactylError::adapter(AdapterErrorKind::Protocol, message)
 }
 
+fn post_send_error(
+    kind: AdapterErrorKind,
+    is_mutating: bool,
+    message: &'static str,
+) -> DactylError {
+    if is_mutating {
+        DactylError::adapter_with_code(kind, "outcome_unknown", message)
+    } else {
+        DactylError::adapter(kind, message)
+    }
+}
+
+fn check_json_depth(bytes: &[u8]) -> bool {
+    let mut depth = 0_usize;
+    let mut in_string = false;
+    let mut escaped = false;
+    for &byte in bytes {
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == b'"' {
+                in_string = false;
+            }
+            continue;
+        }
+        match byte {
+            b'"' => in_string = true,
+            b'{' | b'[' => {
+                depth += 1;
+                if depth > MAX_JSON_DEPTH {
+                    return false;
+                }
+            }
+            b'}' | b']' => {
+                depth = depth.saturating_sub(1);
+            }
+            _ => {}
+        }
+    }
+    true
+}
+
+fn public_error_code(envelope: &serde_json::Value) -> Option<&'static str> {
+    let raw = envelope
+        .get("error")
+        .and_then(|v| v.get("code"))
+        .and_then(|v| v.as_str())
+        .or_else(|| envelope.get("error_code").and_then(|v| v.as_str()))
+        .or_else(|| envelope.get("code").and_then(|v| v.as_str()))
+        .or_else(|| envelope.get("error").and_then(|v| v.as_str()))?;
+
+    match raw {
+        "authentication_required" => Some("authentication_required"),
+        "invalid_token" => Some("invalid_token"),
+        "invalid_grant" => Some("invalid_grant"),
+        "bad_jwt" => Some("bad_jwt"),
+        "session_expired" => Some("session_expired"),
+        "session_revoked" => Some("session_revoked"),
+        "session_not_found" => Some("session_not_found"),
+        "refresh_token_not_found" => Some("refresh_token_not_found"),
+        "refresh_token_already_used" => Some("refresh_token_already_used"),
+        "authorization_denied" => Some("authorization_denied"),
+        "repository_not_authorized" => Some("repository_not_authorized"),
+        "entitlement_required" => Some("entitlement_required"),
+        "organization_seat_required" => Some("organization_seat_required"),
+        "seat_required" => Some("seat_required"),
+        "seat_unassigned" => Some("seat_unassigned"),
+        "seat_revoked" => Some("seat_revoked"),
+        "account_setup_required" => Some("account_setup_required"),
+        "identity_link_required" => Some("identity_link_required"),
+        "custody_conflict" => Some("custody_conflict"),
+        "owner_protected" => Some("owner_protected"),
+        "member_not_found" => Some("member_not_found"),
+        "invitation_expired" => Some("invitation_expired"),
+        "invitation_not_found" => Some("invitation_not_found"),
+        "project_not_found" => Some("project_not_found"),
+        "quote_confirmation_required" => Some("quote_confirmation_required"),
+        "billing_binding_required" => Some("billing_binding_required"),
+        "payment_pending" => Some("payment_pending"),
+        "billing_not_configured" => Some("billing_not_configured"),
+        "billing_unavailable" => Some("billing_unavailable"),
+        "provider_unavailable" => Some("provider_unavailable"),
+        "invalid_request" => Some("invalid_request"),
+        "rate_limited" => Some("rate_limited"),
+        "method_not_allowed" => Some("method_not_allowed"),
+        "not_found" => Some("not_found"),
+        "flow_expired" => Some("flow_expired"),
+        "flow_not_found" => Some("flow_not_found"),
+        "invalid_flow_state" => Some("invalid_flow_state"),
+        _ => None,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     origin: &str,
     key: Option<&str>,
@@ -527,6 +490,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     body: Option<serde_json::Value>,
     bearer: Option<&str>,
     scm: Option<&ScmCredential>,
+    is_mutating: bool,
 ) -> Result<T, DactylError> {
     validate_origin(origin)?;
     let endpoint = format!("{}{path}", origin.trim_end_matches('/'));
@@ -548,9 +512,9 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     let scm = scm
         .map(|credential| {
             Ok::<_, DactylError>((
-                credential.provider.label(),
+                credential.provider().label(),
                 credential.host(),
-                header(&credential.token)?,
+                header(credential.token())?,
             ))
         })
         .transpose()?;
@@ -563,19 +527,18 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     std::thread::Builder::new()
         .name("dactyl-cloud-auth".into())
         .spawn(move || {
-            let transport = || {
-                DactylError::adapter(
-                    AdapterErrorKind::Unavailable,
-                    "cloud authentication transport failed",
-                )
-            };
             let client = reqwest::blocking::Client::builder()
                 .connect_timeout(Duration::from_secs(5))
                 .timeout(Duration::from_secs(15))
                 .redirect(reqwest::redirect::Policy::none())
                 .retry(reqwest::retry::never())
                 .build()
-                .map_err(|_| transport())?;
+                .map_err(|_| {
+                    DactylError::adapter(
+                        AdapterErrorKind::Unavailable,
+                        "cloud authentication transport failed",
+                    )
+                })?;
             let mut request = client
                 .request(method, endpoint)
                 .header("Accept", "application/json");
@@ -598,12 +561,17 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
             }
             let response = request.send().map_err(|e| {
                 if e.is_timeout() {
-                    DactylError::adapter(
+                    post_send_error(
                         AdapterErrorKind::Timeout,
+                        is_mutating,
                         "cloud authentication timed out",
                     )
                 } else {
-                    transport()
+                    post_send_error(
+                        AdapterErrorKind::Unavailable,
+                        is_mutating,
+                        "cloud authentication transport failed",
+                    )
                 }
             })?;
             let status = response.status();
@@ -613,57 +581,39 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
                 .read_to_end(&mut bytes)
                 .map_err(|error| {
                     if crate::adapter::supabase::body_read_timed_out(&error) {
-                        DactylError::adapter(
+                        post_send_error(
                             AdapterErrorKind::Timeout,
+                            is_mutating,
                             "cloud authentication timed out",
                         )
                     } else {
-                        transport()
+                        post_send_error(
+                            AdapterErrorKind::Unavailable,
+                            is_mutating,
+                            "cloud authentication transport failed",
+                        )
                     }
                 })?;
             if bytes.len() as u64 > BODY_LIMIT {
-                return Err(protocol("auth response exceeds body limit"));
+                return Err(post_send_error(
+                    AdapterErrorKind::Protocol,
+                    is_mutating,
+                    "auth response exceeds body limit",
+                ));
             }
             if !status.is_success() {
                 let kind = match status.as_u16() {
                     400 | 401 => AdapterErrorKind::Authentication,
                     403 => AdapterErrorKind::Authorization,
+                    409 => AdapterErrorKind::Conflict,
                     429 => AdapterErrorKind::RateLimited,
                     500..=599 => AdapterErrorKind::Unavailable,
                     _ => AdapterErrorKind::Protocol,
                 };
-                let envelope = serde_json::from_slice::<serde_json::Value>(&bytes).ok();
-                let code = envelope
-                    .as_ref()
-                    .and_then(|v| {
-                        v.get("error")
-                            .and_then(|v| v.get("code"))
-                            .or_else(|| v.get("code"))
-                    })
-                    .and_then(|v| v.as_str());
-                if let Some(
-                    code @ ("authentication_required"
-                    | "invalid_token"
-                    | "invalid_grant"
-                    | "refresh_token_not_found"
-                    | "authorization_denied"
-                    | "entitlement_required"
-                    | "seat_required"
-                    | "seat_unassigned"
-                    | "account_setup_required"
-                    | "identity_link_required"
-                    | "quote_confirmation_required"
-                    | "billing_binding_required"
-                    | "billing_not_configured"
-                    | "billing_unavailable"
-                    | "provider_unavailable"
-                    | "invalid_request"
-                    | "rate_limited"
-                    | "flow_expired"
-                    | "flow_not_found"
-                    | "invalid_flow_state"),
-                ) = code
-                {
+                let envelope = check_json_depth(&bytes)
+                    .then(|| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+                    .flatten();
+                if let Some(code) = envelope.as_ref().and_then(public_error_code) {
                     return Err(DactylError::adapter_with_code(
                         kind,
                         code,
@@ -675,8 +625,20 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
                     "cloud authentication request was rejected",
                 ));
             }
-            serde_json::from_slice(if bytes.is_empty() { b"null" } else { &bytes })
-                .map_err(|_| protocol("invalid cloud authentication response"))
+            if !check_json_depth(&bytes) {
+                return Err(post_send_error(
+                    AdapterErrorKind::Protocol,
+                    is_mutating,
+                    "cloud response exceeded JSON nesting limit",
+                ));
+            }
+            serde_json::from_slice(if bytes.is_empty() { b"null" } else { &bytes }).map_err(|_| {
+                post_send_error(
+                    AdapterErrorKind::Protocol,
+                    is_mutating,
+                    "invalid cloud authentication response",
+                )
+            })
         })
         .map_err(|_| protocol("auth worker unavailable"))?
         .join()
