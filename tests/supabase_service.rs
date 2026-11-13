@@ -1012,6 +1012,32 @@ mod offline {
             db.inspect_schema().unwrap_err().adapter_kind(),
             Some(AdapterErrorKind::Capability)
         );
+        for pred in [db.has_table(TABLE), db.has_column(TABLE, "id")] {
+            let err = pred.unwrap_err();
+            assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Capability));
+            assert_eq!(err.adapter_code(), Some("unsupported_schema_inspection"));
+            assert_eq!(
+                err.mutation_outcome(),
+                dactyl_db::MutationOutcome::NotAttempted
+            );
+        }
+        let budgeted = Connection::open_with_budget(
+            DatastoreRoute::supabase(&fixture.endpoint, Some(fixture.allowed[0].token.clone())),
+            dactyl_db::OpenOptions::default(),
+            Some(fixture.allowed[0].context.clone()),
+            dactyl_db::ResourceBudget::v1().with_max_sql_bytes(8),
+        )
+        .unwrap();
+        let sql_err = budgeted.read(SELECT_COUNT, &[]).unwrap_err();
+        assert_eq!(sql_err.adapter_kind(), Some(AdapterErrorKind::Quota));
+        assert_eq!(
+            sql_err.failure_origin(),
+            dactyl_db::FailureOrigin::LocalBudget
+        );
+        assert_eq!(
+            sql_err.mutation_outcome(),
+            dactyl_db::MutationOutcome::NotAttempted
+        );
         assert_eq!(
             db.verify_integrity().unwrap_err().adapter_kind(),
             Some(AdapterErrorKind::Capability)

@@ -173,6 +173,11 @@
       "id": "growth-101-16-supabase-contract",
       "summary": "Extend Supabase contract tests with catalog capability, FailureOrigin, and budgeted visits",
       "input_digest": "sha256:0f98a6db866e100b13113315278dd08dfbc391ca8a65e655db9febe9a9d478ec"
+    },
+    {
+      "id": "growth-101-17-supabase-service",
+      "summary": "Extend offline Supabase service contract with catalog capability and preflight budget checks",
+      "input_digest": "sha256:c04eff9c5bea0d7eace675a87ca1626fe8ae969a2b794843099f9e290ce3dbbe"
     }
   ],
   "intents": {
