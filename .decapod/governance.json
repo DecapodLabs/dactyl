@@ -72,8 +72,9 @@
     "logical-local-cloud-connector-boundary": {
       "statement": "LogicalTarget and LogicalConnector resolve local SQLite and cloud public-profile deployments per instance without process-global routing, cross-workspace leakage, or SQLite fallback on failed cloud discovery, across all Cargo feature combinations.",
       "falsifier": "Resolving cloud mutates or depends on ambient DATASTORE* env vars, leaks credentials across independent workspaces, falls back to SQLite when cloud discovery or capability fails, or sends user credentials to public discovery.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
+        "src/connector.rs",
         "tests/logical_connector.rs",
         "tests/supabase_disabled.rs"
       ]
@@ -81,8 +82,9 @@
     "managed-session-and-account-readiness-transport": {
       "statement": "CloudConnector and LogicalConnector transport public discovery, PKCE bootstrap/exchange/refresh/logout, and hosted account/billing readiness routes with redacted diagnostics, complete public error-code allowlist, and explicit outcome_unknown marking on post-send ambiguous mutations.",
       "falsifier": "A credential or private body appears in Debug/Display, a redirect or automatic retry occurs, a Supabase GoTrue error_code or Propodus denial code is dropped, or a lost post-send one-time/mutating response omits outcome_unknown.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
+        "src/cloud.rs",
         "tests/cloud_connector.rs",
         "tests/logical_connector.rs"
       ]
@@ -183,6 +185,11 @@
       "id": "conn-100-19-spec-manifest",
       "summary": "docs(specs): refresh specs .manifest.json hashes for #100 (#100)",
       "input_digest": "sha256:67e7eeddf36601a29002f7a68d6f2bc8f94c883859fecebe27c8acd16171b51b"
+    },
+    {
+      "id": "conn-100-20-governance",
+      "summary": "chore(governance): record #100 spec reviews, supported claims, and trajectory evidence",
+      "input_digest": "sha256:98af208d3cab87183fd8514b59cf538d63ea2a4de4428c92595ae35807ae42c4"
     }
   ],
   "intents": {
@@ -219,6 +226,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented src/connector.rs per-workspace isolation, feature-unconditional portable types, and HTTP JSON depth/outcome_unknown boundaries",
+          "reviewed_code_fingerprint": "f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468",
+          "spec_material_hash": "e679594d9c01a658582b46e0aa893350fcdc7b254c083938d15ac47c2a721234"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented LogicalTarget, LogicalConnector, Manage/Portal account routes, allowlisted GoTrue/OAuth/Propodus codes, and outcome_unknown",
+          "reviewed_code_fingerprint": "f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468",
+          "spec_material_hash": "9916b7a89f6ccaab071a090932e41c563065b2cbdacbe8beed2e2f052a6d2fd4"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented portable secret Debug redaction across features, MAX_JSON_DEPTH=64, zero SQLite fallback, and outcome_unknown on post-send mutations",
+          "reviewed_code_fingerprint": "f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468",
+          "spec_material_hash": "1aa2a226e414845c391ea8f56922793db49bf42570e7e7ab12f88c6145c7e4f0"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
@@ -227,15 +257,56 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794539491Z"
+      "updated_at": "1794541075Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7c098bfedb7a7adee424af934e692d3439d0a88ec6daec190e7075a3eabc4611",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:c0d57ee3ed0efd8bb0fc4bdce8eff0f299f1d027813e62eb16730753df49de17",
+      "checks": [
+        {
+          "name": "cargo_clippy_8way",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_connector_tests",
+          "status": "passed"
+        },
+        {
+          "name": "hosted_supabase",
+          "status": "unavailable"
+        },
+        {
+          "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "local_postgres",
+          "status": "unavailable"
+        },
+        {
+          "name": "logical_connector_tests",
+          "status": "passed"
+        },
+        {
+          "name": "msrv_1_85_check",
+          "status": "passed"
+        },
+        {
+          "name": "supabase_disabled_tests",
+          "status": "passed"
+        },
+        {
+          "name": "supabase_rpc_tests",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "verified_offline",
       "custody": {
         "events": [
           {
@@ -256,10 +327,24 @@
             "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79E1V9WENHWMA3D0YPHWBED": {
@@ -285,6 +370,86 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verified_offline",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/cloud.rs",
+                  "src/lib.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/supabase_disabled.rs",
+                  "docs/cloud-connectors.md",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/lib.rs",
+                  "tests/logical_connector.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/supabase_disabled.rs",
+                  "docs/cloud-connectors.md",
+                  "README.md",
+                  "CHANGELOG.md",
+                  "tests/logical_connector.rs (6 passed all-features, 2 passed sqlite, 1 passed no-default-features); tests/cloud_connector.rs (12 passed); tests/supabase_rpc.rs (9 passed); tests/supabase_disabled.rs (2 passed); MSRV 1.85.0 check passed; local_postgres, hosted_supabase, and live_propodus remain unavailable in offline proof"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy_8way",
+                  "logical_connector_tests",
+                  "cloud_connector_tests",
+                  "supabase_rpc_tests",
+                  "supabase_disabled_tests",
+                  "msrv_1_85_check",
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification"
+                ]
+              },
+              {
+                "action": "verified_offline",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/cloud.rs",
+                  "src/lib.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/supabase_disabled.rs",
+                  "docs/cloud-connectors.md",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/lib.rs",
+                  "tests/logical_connector.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/supabase_disabled.rs",
+                  "docs/cloud-connectors.md",
+                  "README.md",
+                  "CHANGELOG.md",
+                  "tests/logical_connector.rs (6 passed all-features, 2 passed sqlite, 1 passed no-default-features); tests/cloud_connector.rs (12 passed); tests/supabase_rpc.rs (9 passed); tests/supabase_disabled.rs (2 passed); MSRV 1.85.0 check passed; local_postgres, hosted_supabase, and live_propodus remain unavailable in offline proof"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy_8way",
+                  "logical_connector_tests",
+                  "cloud_connector_tests",
+                  "supabase_rpc_tests",
+                  "supabase_disabled_tests",
+                  "msrv_1_85_check",
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification"
+                ]
               }
             ]
           }
@@ -292,7 +457,9 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "tests/logical_connector.rs (6 passed all-features, 2 passed sqlite, 1 passed no-default-features); tests/cloud_connector.rs (12 passed); tests/supabase_rpc.rs (9 passed); tests/supabase_disabled.rs (2 passed); MSRV 1.85.0 check passed; local_postgres, hosted_supabase, and live_propodus remain unavailable in offline proof"
+      ],
       "inspected_files": [
         ".decapod/config.toml",
         "docs/cloud-connectors.md",
@@ -303,7 +470,17 @@
         "tests/supabase_disabled.rs"
       ],
       "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
-      "modified_files": [],
+      "modified_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/cloud-connectors.md",
+        "src/cloud.rs",
+        "src/connector.rs",
+        "src/lib.rs",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs",
+        "tests/supabase_disabled.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -315,7 +492,9 @@
       "shortcut_risk_signals": [],
       "task_id": "code_01m79e0tq1xk4js5",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Hosted Supabase GoTrue, live Propodus Edge Functions (/config, account-*, billing-*), and real PostgreSQL pooler behavior remain unavailable in offline container proof and require separate live deployment verification"
+      ]
     }
   },
   "legacy_digests": {
