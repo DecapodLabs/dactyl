@@ -228,6 +228,14 @@
       "proof_refs": [
         "source:docs/supabase-conformance.md"
       ]
+    },
+    {
+      "id": "file-222-aec2519968",
+      "summary": "test(native): validate documented fixture against public serialization",
+      "input_digest": "sha256:07ca46c79cbacfc7705118561197b2f71f1be6a3c5bdf005dac4ae1417409266",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
     }
   ],
   "intents": {

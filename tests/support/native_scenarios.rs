@@ -300,6 +300,20 @@ mod tests {
     use std::net::TcpListener;
     use std::time::{Duration, Instant};
 
+    #[test]
+    fn documented_fixture_matches_the_public_result_serialization() {
+        let text = include_str!("../../docs/supabase-conformance.md");
+        let example = text
+            .split_once("```json\n")
+            .unwrap()
+            .1
+            .split_once("\n```")
+            .unwrap()
+            .0;
+        let f: Fixture = parse(example.as_bytes()).unwrap();
+        validate(&f, Profile::LocalNative, false).unwrap();
+    }
+
     // Synthetic only. A real service and independent observer remain external.
     fn serve(listener: TcpListener, lose_second_response: bool) -> std::thread::JoinHandle<()> {
         std::thread::spawn(move || {
