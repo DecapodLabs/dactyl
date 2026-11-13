@@ -72,18 +72,20 @@
     "bounded-catalog-predicates": {
       "statement": "Connection::has_table and Connection::has_column answer single-statement SQLite catalog queries with exact StoreSchema::table and table_info parity without full-table row counts, and fail closed with unsupported_schema_inspection on remote routes.",
       "falsifier": "A catalog predicate prepares per-table COUNT(*) statements, disagrees with inspect_schema visibility or temp shadowing, mutates persisted bytes, or issues a remote network request.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
         "tests/catalog_capabilities.rs",
-        "tests/catalog_predicates.rs"
+        "tests/catalog_predicates.rs",
+        "tests/unit/sqlite_catalog.rs"
       ]
     },
     "resource-budget-and-bounded-reads": {
       "statement": "Versioned ResourceBudget enforces preflight SQL/context/parameter/cell/batch/wire limits and decoded row/column/cell/result-byte limits across SQLite, Neon, and Supabase without breaking OpenOptions or Rows compatibility or silently truncating results, and distinguishes preflight rejection, transactional rollback, and post-send uncertain mutation outcomes.",
       "falsifier": "An OpenOptions or Rows consumer fails to compile, an oversized request allocates an unbounded wire buffer, Neon reads an unbounded response body, a local atomic result-budget violation commits partial state, a truncated scan returns complete=true, or an uncertain post-send mutation is reported as NotAttempted.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
         "tests/resource_budgets.rs",
+        "tests/storage_fixtures.rs",
         "tools/proof/check.py"
       ]
     }
@@ -263,6 +265,11 @@
       "id": "growth-101-34-spec-manifest",
       "summary": "Refresh managed specs .manifest.json hashes and repo signal fingerprint",
       "input_digest": "sha256:9b6a4ab2133314acf2fe5f32c09f20531d773d4ae56757f949a06dbf26b95e9f"
+    },
+    {
+      "id": "growth-101-35-governance-claims-reviews",
+      "summary": "Record spec reviews, supported claims, and verification trajectory for Issue #101",
+      "input_digest": "sha256:578efe4af5b500646aacbcab69a85b778e5d6ee36fa20a7e35aa8b1fc2b0257c"
     }
   ],
   "intents": {
@@ -299,6 +306,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed and updated for Issue #101 ResourceBudget, visit_rows, FailureOrigin, MutationOutcome, Neon parity, and SQLite catalog predicates",
+          "reviewed_code_fingerprint": "f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726",
+          "spec_material_hash": "df30080f83b97c0cfcac355c960cd8badff4b48626943ec93893c740821a652a"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed and updated for Issue #101 ResourceBudget, visit_rows, FailureOrigin, MutationOutcome, Neon parity, and SQLite catalog predicates",
+          "reviewed_code_fingerprint": "f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726",
+          "spec_material_hash": "69136a62d4791933f5c50b501aa54a39c0eacfa5a679c873a24f87c917cfa3c3"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed and updated for Issue #101 ResourceBudget, visit_rows, FailureOrigin, MutationOutcome, Neon parity, and SQLite catalog predicates",
+          "reviewed_code_fingerprint": "f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726",
+          "spec_material_hash": "111ace7edce2c782919f83e30d6ee0a2a916570accca89805fc0c7db14189b18"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
@@ -307,15 +337,44 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794532770Z"
+      "updated_at": "1794539104Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:84988b2d7bbc8b86e627bceb18314f8331f68912db1f843366f3eb4fef99e87b",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:17afbd628f392d43d8fdefdb38aa38ddbc262448632cadfb9de4f3b6b18d525e",
+      "checks": [
+        {
+          "name": "cargo_test_all_features",
+          "status": "passed"
+        },
+        {
+          "name": "clippy_feature_matrix",
+          "status": "passed"
+        },
+        {
+          "name": "fmt",
+          "status": "passed"
+        },
+        {
+          "name": "hosted_supabase",
+          "status": "unavailable"
+        },
+        {
+          "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "local_postgres",
+          "status": "unavailable"
+        },
+        {
+          "name": "msrv_1_85_check",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -336,10 +395,17 @@
             "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M797P7XKMHWQBAQQ4JX7GV3S",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M797P7XKMHWQBAQQ4JX7GV3S": {
@@ -369,14 +435,69 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "command": "cargo fmt --all --check",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  "src/budget.rs",
+                  "src/error.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/sqlite/ffi.rs",
+                  "src/adapter/sqlite/mod.rs",
+                  "src/adapter/sqlite/recovery.rs",
+                  "src/adapter/sqlite/recovery/tests.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "tests/unit/sqlite_catalog.rs",
+                  "tests/catalog_predicates.rs",
+                  "tests/catalog_capabilities.rs",
+                  "tests/resource_budgets.rs",
+                  "tests/storage_fixtures.rs",
+                  "tests/supabase_contract.rs",
+                  "tests/supabase_service.rs",
+                  "tests/sqlite_maintenance.rs",
+                  "docs/datastore/catalog-predicates.md",
+                  "docs/datastore/catalog-measurements.json",
+                  "docs/datastore/catalog-proof-ledger.json",
+                  "docs/datastore/dogfooding-inventory.json",
+                  "docs/datastore/resource-budgets.md",
+                  "CHANGELOG.md",
+                  "README.md",
+                  "local_sqlite, neon_mock, and synthetic_http suites passed; live remote services remain unavailable and unattested"
+                ],
+                "proof_refs": [
+                  "fmt",
+                  "clippy_feature_matrix",
+                  "cargo_test_all_features",
+                  "msrv_1_85_check",
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo +1.85.0 check --locked --all-targets --all-features",
+        "cargo clippy --locked --all-targets --all-features -- -D warnings",
+        "cargo fmt --all --check",
+        "cargo test --locked --all-features"
+      ],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "local_sqlite, neon_mock, and synthetic_http suites passed; live remote services remain unavailable and unattested"
+      ],
       "inspected_files": [
         "CHANGELOG.md",
         "README.md",
@@ -391,7 +512,34 @@
         "src/rows.rs"
       ],
       "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/config.toml",
+        "CHANGELOG.md",
+        "README.md",
+        "docs/datastore/catalog-measurements.json",
+        "docs/datastore/catalog-predicates.md",
+        "docs/datastore/catalog-proof-ledger.json",
+        "docs/datastore/dogfooding-inventory.json",
+        "docs/datastore/resource-budgets.md",
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
+        "src/adapter/sqlite/ffi.rs",
+        "src/adapter/sqlite/mod.rs",
+        "src/adapter/sqlite/recovery.rs",
+        "src/adapter/sqlite/recovery/tests.rs",
+        "src/adapter/supabase.rs",
+        "src/budget.rs",
+        "src/error.rs",
+        "src/lib.rs",
+        "tests/catalog_capabilities.rs",
+        "tests/catalog_predicates.rs",
+        "tests/resource_budgets.rs",
+        "tests/sqlite_maintenance.rs",
+        "tests/storage_fixtures.rs",
+        "tests/supabase_contract.rs",
+        "tests/supabase_service.rs",
+        "tests/unit/sqlite_catalog.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
