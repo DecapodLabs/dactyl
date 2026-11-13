@@ -248,10 +248,15 @@ does not invent a version-conflict policy for the local store.
 
 ```toml
 [dependencies]
-dactyl-db = { version = "0.14.0", features = ["sqlite", "neon", "supabase"] }
+dactyl-db = { version = "0.16.0", features = ["sqlite", "neon", "supabase"] }
 ```
 
-Select the backend with environment variables:
+For independent per-workspace selection, use `LogicalTarget` and
+`LogicalConnector` as described in [logical connectors](docs/cloud-connectors.md).
+Local resolves to SQLite; cloud discovers the native Supabase profile and uses
+the current managed user bearer. The caller retains private session custody.
+
+The explicit ambient compatibility API instead selects these file/service routes:
 
 ```text
 DATASTORE=sqlite DATASTORE_ROUTE=/path/to/app.db
@@ -261,7 +266,7 @@ DATASTORE=neon DATASTORE_ROUTE=https://propodus.example DATASTORE_TOKEN=...
 DATASTORE=supabase DATASTORE_ROUTE=https://storage-service.example DATASTORE_TOKEN=...
 ```
 
-Use the same calls for either backend:
+Use the same calls for these explicit backends:
 
 ```rust
 use dactyl_db::{read, write, Parameter};
@@ -330,19 +335,38 @@ let result = db.atomic(&[
 
 | Variable | Meaning |
 |---|---|
-| `DATASTORE` | `sqlite` or `neon` |
-| `DATASTORE_ROUTE` | Dactyl local-store path or Neon service endpoint |
-| `DATASTORE_TOKEN` | Optional opaque bearer token for Neon |
+| `DATASTORE` | `sqlite`, `neon` or `supabase` (explicit service HTTP, not native RPC) |
+| `DATASTORE_ROUTE` | Local SQLite path or the selected Neon/Supabase service endpoint |
+| `DATASTORE_TOKEN` | Opaque user bearer for remote routes; required for Supabase service HTTP |
 | `DACTYL_SQLITE_LIBRARY` | Optional explicit host SQLite shared-library path for non-standard loader paths |
 
 `DATASTORE` is the only ambient selector. Dactyl requires a non-empty
 `DATASTORE_ROUTE` for whichever selector is chosen and fails before adapter
 construction when either value is missing, empty, or unsupported. There is no
 implicit SQLite fallback, so a deployment cannot silently write to a local
-file when its Neon configuration is malformed. `DATASTORE_TOKEN` is read only
-for `neon`; an unset or blank token is treated as absent and does not change
-the context requirement. Explicit `Connection::open` routes bypass ambient
+file when its remote configuration is malformed. `DATASTORE_TOKEN` is read only
+for remote selectors; an unset or blank token is treated as absent, which the
+Supabase service rejects before a request. The remote context requirement remains
+independent of token presence. Explicit `Connection::open` routes bypass ambient
 selection without changing the free-function signatures.
+
+Native RPC uses `DatastoreRoute::supabase_rpc` or a cloud `LogicalConnector`,
+with a public project key, current managed bearer and API schema. It does not
+reinterpret `DATASTORE=supabase`. `CloudConnector::from_runtime` separately accepts
+`DACTYL_CLOUD_ORIGIN` and an explicitly provisioned `DACTYL_CLOUD_PUBLISHABLE_KEY`;
+these connector inputs do not mutate a project's logical backend setting. Never
+supply a database password or service-role key to a client route.
+
+## Release and consumer verification
+
+Rust and Cargo 1.85 are required. The manifest and this example describe 0.16.0;
+verify the exact registry artifact and lockfile when adopting a release. A clean
+consumer must resolve `dactyl-db` from crates.io without a Git dependency or path
+patch and enable its intended features. The repository's path-based package/MSRV
+proof is preparation evidence; it cannot establish registry availability or
+hosted Supabase acceptance. Issue 94 tracks that handoff, while service proof
+and protected credentials remain separately scoped. Package publication follows
+normal release automation after review; source changes do not activate a service.
 
 The database schema and backend endpoint contract are application-owned. Dactyl
 executes caller-supplied schema statements but does not assign migration ids,

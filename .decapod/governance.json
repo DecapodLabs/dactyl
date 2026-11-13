@@ -161,6 +161,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-19-241665f6e3",
+      "summary": "docs(specs): reconcile issue 94 README.md",
+      "input_digest": "sha256:f338d2a19d7dc3a78682f4a26af5d22e4199575a8b6ffcb3a3ba836cbac53e82",
+      "proof_refs": [
+        "source:README.md"
+      ]
     }
   ],
   "intents": {
