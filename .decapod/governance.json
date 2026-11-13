@@ -218,6 +218,11 @@
       "id": "growth-101-25-readme",
       "summary": "Document open_with_budget, visit_rows, catalog predicates, and error classifications in README",
       "input_digest": "sha256:7d95bc46ad85f8a2cba667a2f92e988966d57a4906a0115cfb509dbcb9d50b45"
+    },
+    {
+      "id": "growth-101-26-spec-intent",
+      "summary": "Update INTENT.md with bounded resource growth, streaming reads, and catalog predicate goals",
+      "input_digest": "sha256:511a811e90fbc3ce1eb9b4ad4f1650aba7ed7cea76e46c1c6db900023a454168"
     }
   ],
   "intents": {
