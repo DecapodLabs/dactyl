@@ -183,6 +183,11 @@
       "id": "growth-101-18-sqlite-maintenance",
       "summary": "Verify SQLite online backup preserves large blobs under tight connection result budget",
       "input_digest": "sha256:796b40ee2b168b9c7bf9538284ee5304d34631dbedb6b5bd0a98bbf2a030ce31"
+    },
+    {
+      "id": "growth-101-19-doc-catalog-predicates",
+      "summary": "Document SQLite catalog predicate contract, complexity, and remote capability boundary",
+      "input_digest": "sha256:1e6fd435109a14ce442ec1ee74d1b0f6ad235940064dbc314d47a655358593fa"
     }
   ],
   "intents": {
