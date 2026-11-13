@@ -228,6 +228,11 @@
       "id": "growth-101-27-spec-architecture",
       "summary": "Update ARCHITECTURE.md with budget.rs, Neon worker isolation, C-ABI streaming, and catalog seams",
       "input_digest": "sha256:745aa0112de77ddba65ce3f67b8301075ee7d2462f53b011cf5772c095a82511"
+    },
+    {
+      "id": "growth-101-28-spec-interfaces",
+      "summary": "Update INTERFACES.md with ResourceBudget, open_with_budget, visit_rows, has_table, has_column, FailureOrigin, and MutationOutcome",
+      "input_digest": "sha256:3688645b84e5aa3bb92d54e59f9b761930dcd1e9c5937515c57dde2bf229e0ca"
     }
   ],
   "intents": {
