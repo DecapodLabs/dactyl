@@ -2,6 +2,18 @@
 
 ## Current registry and consumer handoff (issue 94)
 
+Native proof disables incremental caches and dev/test debug information through
+the reviewed `CARGO_INCREMENTAL=0`, `CARGO_PROFILE_DEV_DEBUG=0` and
+`CARGO_PROFILE_TEST_DEBUG=0` execution environment. Repeated source snapshots
+otherwise exhausted the shared host disk with disposable build artifacts.
+These [Cargo profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
+control caches and debugging information; debug assertions, overflow checks,
+optimization levels, toolchain paths and all 17 required checks retain their
+existing settings. No test is filtered or converted into a skipped check, and
+the published crate manifest and consumers' build profiles are unchanged.
+The command-contract digest is explicitly re-reviewed for this environment
+change; complete exact-candidate validation remains required.
+
 The official 0.16.0 archive matches sparse-index SHA-256 `af724e4a561da93c4cf9bf8ca63f25c6d227bee6a49318fdbd5dbf7bc93083ca` and source `7d539730f9f3218f58f244c284c529c5b19967fb`. `docs/registry-handoff.md` records an executed clean crates.io consumer on Rust/Cargo 1.85.0 with SQLite, Neon and Supabase enabled, no Git/path patch, public connector/session/RPC types compiled and Quinn 0.11.19 resolved. This establishes registry compilation, not hosted runtime acceptance; complete candidate feature tests remain independently required.
 
 README.md documents the accepted 0.16.0 API, Rust/Cargo 1.85 and the distinction between logical connectors, explicit ambient service routes and native RPC. DATASTORE_TOKEN is remote-only and required by the Supabase service. Package metadata already names SQLite, Neon and Supabase; exact registry/checksum/package and clean registry-consumer observations are recorded above, while hosted provider qualification and subsequent consumer rollout retain their own evidence requirements. Decapod has adopted registry =0.14.0, completing its security handoff in issue 1638; a future SDK upgrade requires separate consumer validation. A GitHub release or path-based package proof cannot establish registry-consumer execution or hosted readiness. Normal release automation retains publication authority; this documentation work neither publishes nor deploys.

@@ -185,6 +185,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-503-519c7290a7",
+      "summary": "chore(proof): bound disposable build artifacts OPERATIONS.md",
+      "input_digest": "sha256:9b011398ec145340fcbf10367203a1c2fdd4d4ead3df2c98c7fbd8eda360fca9",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
