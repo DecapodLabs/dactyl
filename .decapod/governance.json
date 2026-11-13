@@ -223,6 +223,11 @@
       "id": "growth-101-26-spec-intent",
       "summary": "Update INTENT.md with bounded resource growth, streaming reads, and catalog predicate goals",
       "input_digest": "sha256:511a811e90fbc3ce1eb9b4ad4f1650aba7ed7cea76e46c1c6db900023a454168"
+    },
+    {
+      "id": "growth-101-27-spec-architecture",
+      "summary": "Update ARCHITECTURE.md with budget.rs, Neon worker isolation, C-ABI streaming, and catalog seams",
+      "input_digest": "sha256:745aa0112de77ddba65ce3f67b8301075ee7d2462f53b011cf5772c095a82511"
     }
   ],
   "intents": {
