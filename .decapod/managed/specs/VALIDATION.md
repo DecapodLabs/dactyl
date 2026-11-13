@@ -1,5 +1,9 @@
 # Validation
 
+## Native hosted qualification (issue 70)
+
+docs/supabase-conformance.md separates real local SQLite, SQLite-backed Neon mocks, synthetic HTTP, generic service PostgreSQL and native hosted evidence. The existing local_native_read_only_contract in tests/native_service.rs accepts disposable loopback HTTP and rejects its write in the client; it does not establish physical server read-only enforcement. Issue 70 requires released SDK/actual consumer execution, independent database commit/rollback observations and cleanup on an authorized disposable hosted native fixture. Missing hosted access remains unavailable. No new hosted pass is asserted by this documentation change.
+
 ## Reconciled 0.15.0 + Decapod v0.143.0 controller pin (issue 100)
 
 The reconciled `#100` merge against `origin/main` (`dactyl-db 0.15.0`, `#112` + `#114`) updates `.decapod/config.toml` `reviewed_sources_digest` for the `0.15.0` `Cargo.toml`/`Cargo.lock` release while keeping `reviewed_commands_digest` and `tools/proof/check.py` unchanged, and advances `tools/proof/Containerfile`, `.decapod/managed/Dockerfile.decapod`, canonical entrypoints, and `.decapod/managed/specs/.manifest.json` to independently published `decapod v0.143.0` so hosted `decapod-validate.yml` evaluates the exact same controller version with zero drift.
@@ -298,7 +302,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Repository signal fingerprint: `1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -153,6 +153,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-18",
+      "summary": "docs(specs): reconcile issue 70 VALIDATION.md",
+      "input_digest": "sha256:003efbf7a82736e6bba62034a30a193ec3db406e510438048019d7256adccc53",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
