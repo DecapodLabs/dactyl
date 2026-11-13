@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
+    "accepted_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
+    "release": "v0.14.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -63,46 +64,230 @@
     }
   },
   "change": {
-    "id": "change_01M77WK8TMW569S387VPY61NW6",
-    "base_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
+    "id": "change_01M797P7VZTMB6M215F9A8GTSN",
+    "base_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
     "target_base": "origin/main"
+  },
+  "claims": {
+    "bounded-catalog-predicates": {
+      "statement": "Connection::has_table and Connection::has_column answer single-statement SQLite catalog queries with exact StoreSchema::table and table_info parity without full-table row counts, and fail closed with unsupported_schema_inspection on remote routes.",
+      "falsifier": "A catalog predicate prepares per-table COUNT(*) statements, disagrees with inspect_schema visibility or temp shadowing, mutates persisted bytes, or issues a remote network request.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/catalog_capabilities.rs",
+        "tests/catalog_predicates.rs",
+        "tests/unit/sqlite_catalog.rs"
+      ]
+    },
+    "resource-budget-and-bounded-reads": {
+      "statement": "Versioned ResourceBudget enforces preflight SQL/context/parameter/cell/batch/wire limits and decoded row/column/cell/result-byte limits across SQLite, Neon, and Supabase without breaking OpenOptions or Rows compatibility or silently truncating results, and distinguishes preflight rejection, transactional rollback, and post-send uncertain mutation outcomes.",
+      "falsifier": "An OpenOptions or Rows consumer fails to compile, an oversized request allocates an unbounded wire buffer, Neon reads an unbounded response body, a local atomic result-budget violation commits partial state, a truncated scan returns complete=true, or an uncertain post-send mutation is reported as NotAttempted.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/resource_budgets.rs",
+        "tests/storage_fixtures.rs",
+        "tools/proof/check.py"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "patched-quinn-release-prep-01",
-      "summary": "Document unreleased Rust1.85 patched inactive Quinn migration and ordinary Release-As automation, preserving historical Supabase notes and runtime/proof contracts",
-      "input_digest": "sha256:45585ad63fdb5626635ed31ae61b76e949458f210d60336f4d081b68aa56f04d",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
-        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
-      ]
+      "id": "growth-101-00-config-digest",
+      "summary": "Reconcile reviewed sources digest with accepted 0.14.0 release",
+      "input_digest": "sha256:63464a674a8b2c05dbe05e3bde2bd71bed9fa4b91ea49f75e120eb3eee867bec"
     },
     {
-      "id": "patched-quinn-release-prep-02",
-      "summary": "Record completed independent native proof environment and clear resolved setup-pending blocker; include genuine validator manifest refresh",
-      "input_digest": "sha256:d55769daae13e0ac31d7e1152e674db66a68d005ca7611cda7c674cd74b7b683",
-      "proof_refs": [
-        "Owned container dactyl-release-prep-proof-01383 actual Decapod0.138.3 and Rust1.85, locked/fresh-consumer fetch-only preparation and can_work=true native binding"
-      ]
+      "id": "growth-101-01-budget",
+      "summary": "Add versioned ResourceBudget and bounded wire/result trackers",
+      "input_digest": "sha256:e01e056672eb2f7e712f8550e07c4027639a4eebcd6916cd236cef1789ece0a1"
+    },
+    {
+      "id": "growth-101-02-error",
+      "summary": "Classify FailureOrigin and MutationOutcome on DactylError",
+      "input_digest": "sha256:634f4433089ce4442235352be96e6c0f717d705c2e7a17d3c7ea2a60a3733a84"
+    },
+    {
+      "id": "growth-101-03-adapter",
+      "summary": "Add visit_rows and catalog predicate adapter trait seams",
+      "input_digest": "sha256:d96b591d11f06029eb14853f22d2daa43cc04b838c1f531632e8e448b7c10511"
+    },
+    {
+      "id": "growth-101-04-sqlite-ffi",
+      "summary": "Bind sqlite3_reset and sqlite3_clear_bindings symbols",
+      "input_digest": "sha256:3d09c524d66ada25c871fca6d8667870c951ea1abde7510fd045e4a2b6d7333f"
+    },
+    {
+      "id": "growth-101-05-sqlite-adapter",
+      "summary": "Enforce resource budgets, streaming visits, and catalog predicates in SQLite",
+      "input_digest": "sha256:df0663cf8233286c78e7f935a91c4430b9b7d0457ff0f37efc3cceacd9e59167"
+    },
+    {
+      "id": "growth-101-06-sqlite-recovery",
+      "summary": "Reuse prepared inserts and single transaction during SQLite recovery",
+      "input_digest": "sha256:c8c904b8a652e5f6ff639c805e927c2f44b781b210b34813d4891343a9313fd0"
+    },
+    {
+      "id": "growth-101-07-neon-adapter",
+      "summary": "Enforce wire/result budgets, worker isolation, and uncertain outcomes in Neon",
+      "input_digest": "sha256:f28254c6a014b2b70c7f0195183a2c25d99cff4f1aefd16774f3f1f400f87112"
+    },
+    {
+      "id": "growth-101-08-supabase-adapter",
+      "summary": "Wire ResourceBudget, bounded visits, and uncertain outcomes in Supabase",
+      "input_digest": "sha256:53bac4605af5ac4a2c2e30bee4802ec4d9c2e3addde7269e3cf2e7d64ede10d7"
+    },
+    {
+      "id": "growth-101-09-facade",
+      "summary": "Expose open_with_budget, visit_rows, has_table, and has_column on Connection",
+      "input_digest": "sha256:f02de0b1a98b51d9a2919d68af8e166130b115b77e2ad16c43a83ab87694dfa0"
+    },
+    {
+      "id": "growth-101-10-catalog-unit",
+      "summary": "Add unit test verifying single-prepare SQLite catalog predicates",
+      "input_digest": "sha256:2a66602df970cbe026eb3e45f0e907a3c1a839f763ebb4a16742f1dd59730236"
+    },
+    {
+      "id": "growth-101-11-recovery-blob-test",
+      "summary": "Add multi-row BLOB recovery streaming regression under tight result budget",
+      "input_digest": "sha256:0dfab6d0217fd2fe6a84b124383a8be4fe915f20f7d7a8e1410953781f6d5dbf"
+    },
+    {
+      "id": "growth-101-12-catalog-predicates-test",
+      "summary": "Add SQLite catalog predicate parity, visibility, and non-mutation integration suite",
+      "input_digest": "sha256:c064c3cd18a9da0e97d4f6118ffa3b73e3f83e72ca17875b4899ffeaff2b0d68"
+    },
+    {
+      "id": "growth-101-13-catalog-capabilities-test",
+      "summary": "Add remote adapter local capability rejection tests for catalog predicates",
+      "input_digest": "sha256:10d2d425264d17b89f13102d2eea6630a8141581931261dd1919eeeee74dcff9"
+    },
+    {
+      "id": "growth-101-14-resource-budgets-test",
+      "summary": "Add cross-adapter resource budget, visit_rows, FailureOrigin, and MutationOutcome suite",
+      "input_digest": "sha256:859cb14c001000c1e35565c4045c0466c2b0ec2b120420213fe9738670a94f33"
+    },
+    {
+      "id": "growth-101-15-storage-fixtures",
+      "summary": "Extend storage fixture suite with compact component refs and bounded visit_rows",
+      "input_digest": "sha256:5e71ec76b297b325b5e4aeb4e537cdd7c8ab16b705bf291a94c7fe12ec44b40f"
+    },
+    {
+      "id": "growth-101-16-supabase-contract",
+      "summary": "Extend Supabase contract tests with catalog capability, FailureOrigin, and budgeted visits",
+      "input_digest": "sha256:0f98a6db866e100b13113315278dd08dfbc391ca8a65e655db9febe9a9d478ec"
+    },
+    {
+      "id": "growth-101-17-supabase-service",
+      "summary": "Extend offline Supabase service contract with catalog capability and preflight budget checks",
+      "input_digest": "sha256:c04eff9c5bea0d7eace675a87ca1626fe8ae969a2b794843099f9e290ce3dbbe"
+    },
+    {
+      "id": "growth-101-18-sqlite-maintenance",
+      "summary": "Verify SQLite online backup preserves large blobs under tight connection result budget",
+      "input_digest": "sha256:796b40ee2b168b9c7bf9538284ee5304d34631dbedb6b5bd0a98bbf2a030ce31"
+    },
+    {
+      "id": "growth-101-19-doc-catalog-predicates",
+      "summary": "Document SQLite catalog predicate contract, complexity, and remote capability boundary",
+      "input_digest": "sha256:1e6fd435109a14ce442ec1ee74d1b0f6ad235940064dbc314d47a655358593fa"
+    },
+    {
+      "id": "growth-101-20-doc-catalog-measurements",
+      "summary": "Record SQLite catalog predicate statement-prepare measurements vs full inspect_schema",
+      "input_digest": "sha256:198b1593f303d2909bb088ad735bbbb4cad75538a34c991b9bc6a686bae058e2"
+    },
+    {
+      "id": "growth-101-21-doc-catalog-proof-ledger",
+      "summary": "Record falsifiable catalog predicate proof ledger by evidence class",
+      "input_digest": "sha256:26a23eb0df09aa5a7defa999327688fd79cf874bbae0281584e1be8d02f57aa2"
+    },
+    {
+      "id": "growth-101-22-doc-dogfooding-inventory",
+      "summary": "Record synthetic component-reference amplification inventory and compact projection sizing",
+      "input_digest": "sha256:5b247da29362aa6af00ce9f3a76679252d7a3f4d47df8a5a37649a106e756d69"
+    },
+    {
+      "id": "growth-101-23-doc-resource-budgets",
+      "summary": "Document ResourceBudget v1 limits, FailureOrigin, MutationOutcome, and streaming scans",
+      "input_digest": "sha256:5aa733ffd30e6987822173b3c5a5e395101d97f0cac7ecf3d4c3705fa678afc2"
+    },
+    {
+      "id": "growth-101-24-changelog",
+      "summary": "Record unreleased #101 resource budgets, visit_rows, and catalog predicates in CHANGELOG",
+      "input_digest": "sha256:9d0d6e2c29b3e5dfcceb4f5d0c752d8aae422769502c84ab691c20c9ee6d33a1"
+    },
+    {
+      "id": "growth-101-25-readme",
+      "summary": "Document open_with_budget, visit_rows, catalog predicates, and error classifications in README",
+      "input_digest": "sha256:7d95bc46ad85f8a2cba667a2f92e988966d57a4906a0115cfb509dbcb9d50b45"
+    },
+    {
+      "id": "growth-101-26-spec-intent",
+      "summary": "Update INTENT.md with bounded resource growth, streaming reads, and catalog predicate goals",
+      "input_digest": "sha256:511a811e90fbc3ce1eb9b4ad4f1650aba7ed7cea76e46c1c6db900023a454168"
+    },
+    {
+      "id": "growth-101-27-spec-architecture",
+      "summary": "Update ARCHITECTURE.md with budget.rs, Neon worker isolation, C-ABI streaming, and catalog seams",
+      "input_digest": "sha256:745aa0112de77ddba65ce3f67b8301075ee7d2462f53b011cf5772c095a82511"
+    },
+    {
+      "id": "growth-101-28-spec-interfaces",
+      "summary": "Update INTERFACES.md with ResourceBudget, open_with_budget, visit_rows, has_table, has_column, FailureOrigin, and MutationOutcome",
+      "input_digest": "sha256:3688645b84e5aa3bb92d54e59f9b761930dcd1e9c5937515c57dde2bf229e0ca"
+    },
+    {
+      "id": "growth-101-29-spec-operations",
+      "summary": "Update OPERATIONS.md with bounded maintenance, recovery statement reuse, and uncertain write reconciliation",
+      "input_digest": "sha256:0d04aafc9a811d1813ba669c3dedec90080a0b9c4af62805bd08b6bff2c1eed1"
+    },
+    {
+      "id": "growth-101-30-spec-security",
+      "summary": "Update SECURITY.md with wire/JSON-depth bounds, pre-allocation BLOB charging, and fail-closed catalog predicates",
+      "input_digest": "sha256:ce323c3af90bff87bd75ec4b85635e7794216fac6d696406799b145b75e1c4d6"
+    },
+    {
+      "id": "growth-101-31-spec-semantics",
+      "summary": "Update SEMANTICS.md with FailureOrigin, MutationOutcome, ScanOutcome, and catalog visibility invariants",
+      "input_digest": "sha256:eafd9f282b75393cbd7407348cdef06767af6caea4c8511cf3af5d11108b86cb"
+    },
+    {
+      "id": "growth-101-32-spec-validation",
+      "summary": "Update VALIDATION.md with #101 budget/catalog test suites and explicit unavailable live-service classes",
+      "input_digest": "sha256:d2aaeb821b710954df7b5839c0cec6d8b414992532686a608722f9bbe1c2fce3"
+    },
+    {
+      "id": "growth-101-33-spec-readme",
+      "summary": "Refresh managed specs index README projection for updated source and test inventory",
+      "input_digest": "sha256:f2ea5d34f44e97c2e83191be3d414418273ae5bc867bbb135a7f82da68b7fe15"
+    },
+    {
+      "id": "growth-101-34-spec-manifest",
+      "summary": "Refresh managed specs .manifest.json hashes and repo signal fingerprint",
+      "input_digest": "sha256:9b6a4ab2133314acf2fe5f32c09f20531d773d4ae56757f949a06dbf26b95e9f"
+    },
+    {
+      "id": "growth-101-35-governance-claims-reviews",
+      "summary": "Record spec reviews, supported claims, and verification trajectory for Issue #101",
+      "input_digest": "sha256:578efe4af5b500646aacbcab69a85b778e5d6ee36fa20a7e35aa8b1fc2b0257c"
     }
   ],
   "intents": {
-    "intent:change_01M77WK8TMW569S387VPY61NW6": {
+    "intent:change_01M797P7VZTMB6M215F9A8GTSN": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "file:CHANGELOG.md",
-        "file:.decapod/managed/specs/OPERATIONS.md"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+      "id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
-      "refined_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
+      "raw_intent": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
+      "refined_intent": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -111,17 +296,11 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": [
-          "src",
-          "tools/proof",
-          ".github/workflows",
-          "Cargo.toml",
-          "Cargo.lock"
-        ]
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prepare reviewable 0.14.0 compatibility/release notes for the already accepted Rust/Cargo 1.85 and patched inactive Quinn constraints from SDK108. Preserve runtime source/API/features, proof matrix, workflows and Cargo package version. A conventional breaking fix with Release-As: 0.14.0 requests the ordinary bot release PR only after maintainer merge; no package publication or privileged dispatch.",
+      "intent": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -129,166 +308,180 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documentation-only release preparation preserves existing reqwest transport, inactive patched Quinn boundary and components; no implementation or proof topology changes.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "13fa83c57551a71d6940fea3250d312ff038fa89b2c1401d8ba44d9716f5d2c7"
+          "reason": "Reviewed and updated for Issue #101 ResourceBudget, visit_rows, FailureOrigin, MutationOutcome, Neon parity, and SQLite catalog predicates",
+          "reviewed_code_fingerprint": "f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726",
+          "spec_material_hash": "df30080f83b97c0cfcac355c960cd8badff4b48626943ec93893c740821a652a"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No public Rust API, feature key or wire contract changes; new changelog migration guidance matches the accepted Rust/Cargo1.85 and downstream lock-free consumer contract.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "2056a6ae6336bd92245abf6a4c81ba3d484917183ddddec01b7fe9b155bc42a8"
+          "reason": "Reviewed and updated for Issue #101 ResourceBudget, visit_rows, FailureOrigin, MutationOutcome, Neon parity, and SQLite catalog predicates",
+          "reviewed_code_fingerprint": "f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726",
+          "spec_material_hash": "69136a62d4791933f5c50b501aa54a39c0eacfa5a679c873a24f87c917cfa3c3"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No token, storage, authorization or HTTP3 activation changes; compatibility notes retain explicit inactive-dependency exposure and audit limits rather than asserting hosted proof.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "e800bd95c173f1e51451668bc4fefef54aeb499d8c2ab7ab1b3cd486cd4fe5f8"
+          "reason": "Reviewed and updated for Issue #101 ResourceBudget, visit_rows, FailureOrigin, MutationOutcome, Neon parity, and SQLite catalog predicates",
+          "reviewed_code_fingerprint": "f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726",
+          "spec_material_hash": "111ace7edce2c782919f83e30d6ee0a2a916570accca89805fc0c7db14189b18"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Unavailable independently published controller support or explicit authorization denial"
-      ],
-      "title": "Prepare patched Quinn and Rust 1.85 release notes",
+      "stop_conditions": [],
+      "title": "Implement Dactyl #101 resource budgets, bounded reads, Neon parity, and catalog predicates",
       "todo_ids": [
-        "bugs_01m77wjh57ym1md5"
+        "feat_01m797m0s2man72q"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794488592Z"
+      "updated_at": "1794539104Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No runtime API, workflow, proof matrix or package version edits; no merge, release or package publication"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4cc73fe09c190de719fa6b76981cd96a30e934e430ba26aced33177398647b27",
+      "artifact_hash": "sha256:17afbd628f392d43d8fdefdb38aa38ddbc262448632cadfb9de4f3b6b18d525e",
       "checks": [
         {
-          "name": "authored-diff-whitespace",
+          "name": "cargo_test_all_features",
           "status": "passed"
         },
         {
-          "name": "current-ci",
-          "status": "unavailable"
-        },
-        {
-          "name": "independent-controller-toolchain-custody",
+          "name": "clippy_feature_matrix",
           "status": "passed"
         },
         {
-          "name": "native-exact-source",
+          "name": "fmt",
+          "status": "passed"
+        },
+        {
+          "name": "hosted_supabase",
           "status": "unavailable"
+        },
+        {
+          "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "local_postgres",
+          "status": "unavailable"
+        },
+        {
+          "name": "msrv_1_85_check",
+          "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+            "detail": "trajectory:branch_01M797P7XKMHWQBAQQ4JX7GV3S",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+            "detail": "trajectory:branch_01M797P7XKMHWQBAQQ4JX7GV3S",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M77WK8XBNPT4WJ1V9A6JG1E5": {
+          "branch_01M797P7XKMHWQBAQQ4JX7GV3S": {
             "evidence_only": true,
-            "id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "id": "branch_01M797P7XKMHWQBAQQ4JX7GV3S",
+            "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
             "steps": [
               {
-                "action": "review",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "README.md",
-                  "Cargo.toml",
-                  ".github/workflows/release.yml",
-                  "tools/proof/check.py",
+                  "src/lib.rs",
+                  "src/contract.rs",
+                  "src/error.rs",
+                  "src/rows.rs",
+                  "src/inspection.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/sqlite/mod.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
                   "CHANGELOG.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "https://github.com/googleapis/release-please#how-do-i-change-the-version-number",
-                  "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464"
+                  "README.md"
                 ],
-                "proof_refs": [
-                  "authored-diff-whitespace"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "No manual shadow builds; prior SDK108 proof is historical only"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [],
-                "proof_refs": [
-                  "native-exact-source",
-                  "current-ci"
-                ],
-                "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "validation",
-                "custody_event_id": "event:6",
+                "action": "verification",
+                "command": "cargo fmt --all --check",
+                "custody_event_id": "event:5",
                 "observations": [
-                  "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
-                  "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker"
+                  ".decapod/config.toml",
+                  "src/budget.rs",
+                  "src/error.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/sqlite/ffi.rs",
+                  "src/adapter/sqlite/mod.rs",
+                  "src/adapter/sqlite/recovery.rs",
+                  "src/adapter/sqlite/recovery/tests.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "tests/unit/sqlite_catalog.rs",
+                  "tests/catalog_predicates.rs",
+                  "tests/catalog_capabilities.rs",
+                  "tests/resource_budgets.rs",
+                  "tests/storage_fixtures.rs",
+                  "tests/supabase_contract.rs",
+                  "tests/supabase_service.rs",
+                  "tests/sqlite_maintenance.rs",
+                  "docs/datastore/catalog-predicates.md",
+                  "docs/datastore/catalog-measurements.json",
+                  "docs/datastore/catalog-proof-ledger.json",
+                  "docs/datastore/dogfooding-inventory.json",
+                  "docs/datastore/resource-budgets.md",
+                  "CHANGELOG.md",
+                  "README.md",
+                  "local_sqlite, neon_mock, and synthetic_http suites passed; live remote services remain unavailable and unattested"
                 ],
                 "proof_refs": [
-                  "native-exact-source",
-                  "independent-controller-toolchain-custody"
+                  "fmt",
+                  "clippy_feature_matrix",
+                  "cargo_test_all_features",
+                  "msrv_1_85_check",
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
                 ],
                 "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
+                  "root"
                 ],
-                "sequence": 6,
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -296,41 +489,67 @@
         }
       },
       "declared_commands": [
-        "decapod validate"
+        "cargo +1.85.0 check --locked --all-targets --all-features",
+        "cargo clippy --locked --all-targets --all-features -- -D warnings",
+        "cargo fmt --all --check",
+        "cargo test --locked --all-features"
       ],
       "destination": "pull request",
       "evidence": [
-        "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker",
-        "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
-        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
+        "local_sqlite, neon_mock, and synthetic_http suites passed; live remote services remain unavailable and unattested"
       ],
       "inspected_files": [
-        ".github/workflows/release.yml",
-        "Cargo.toml",
+        "CHANGELOG.md",
         "README.md",
-        "tools/proof/check.py"
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
+        "src/adapter/sqlite/mod.rs",
+        "src/adapter/supabase.rs",
+        "src/contract.rs",
+        "src/error.rs",
+        "src/inspection.rs",
+        "src/lib.rs",
+        "src/rows.rs"
       ],
-      "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+      "intent_id": "intent:change_01M797P7VZTMB6M215F9A8GTSN",
       "modified_files": [
-        ".decapod/managed/specs/OPERATIONS.md",
-        "CHANGELOG.md"
+        ".decapod/config.toml",
+        "CHANGELOG.md",
+        "README.md",
+        "docs/datastore/catalog-measurements.json",
+        "docs/datastore/catalog-predicates.md",
+        "docs/datastore/catalog-proof-ledger.json",
+        "docs/datastore/dogfooding-inventory.json",
+        "docs/datastore/resource-budgets.md",
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
+        "src/adapter/sqlite/ffi.rs",
+        "src/adapter/sqlite/mod.rs",
+        "src/adapter/sqlite/recovery.rs",
+        "src/adapter/sqlite/recovery/tests.rs",
+        "src/adapter/supabase.rs",
+        "src/budget.rs",
+        "src/error.rs",
+        "src/lib.rs",
+        "tests/catalog_capabilities.rs",
+        "tests/catalog_predicates.rs",
+        "tests/resource_budgets.rs",
+        "tests/sqlite_maintenance.rs",
+        "tests/storage_fixtures.rs",
+        "tests/supabase_contract.rs",
+        "tests/supabase_service.rs",
+        "tests/unit/sqlite_catalog.rs"
       ],
       "next_transitions": [
-        "Checkpoint and publish explicitly authorized draft; continue exact-source native validate and CI",
-        "Commit resolved setup status and refreshed manifest, then rerun full native validation on exact candidate",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "file:.decapod/managed/specs/OPERATIONS.md",
-        "file:CHANGELOG.md"
+        "root"
       ],
-      "run_id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+      "run_id": "branch_01M797P7XKMHWQBAQQ4JX7GV3S",
       "schema_version": "1.1.0",
-      "shortcut_risk_signals": [
-        "No manual shadow builds; prior SDK108 proof is historical only"
-      ],
-      "task_id": "bugs_01m77wjh57ym1md5",
+      "shortcut_risk_signals": [],
+      "task_id": "feat_01m797m0s2man72q",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

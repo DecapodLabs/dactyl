@@ -5,7 +5,8 @@ use crate::contract::{
     RecoveryResult, WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
-use crate::rows::{Parameter, Rows};
+use crate::inspection::ScanOutcome;
+use crate::rows::{Parameter, Row, Rows};
 use crate::schema::StoreSchema;
 
 /// The small operation seam Dactyl needs from each backend.
@@ -23,9 +24,29 @@ pub trait Adapter {
     }
 
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError>;
+    fn visit_rows(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
+    ) -> Result<ScanOutcome, DactylError>;
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError>;
     fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DactylError>;
     fn access_mode(&self) -> AccessMode;
+    fn has_table(&self, _table: &str) -> Result<bool, DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_schema_inspection",
+            "schema inspection is a local-store operation",
+        ))
+    }
+    fn has_column(&self, _table: &str, _column: &str) -> Result<bool, DactylError> {
+        Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "unsupported_schema_inspection",
+            "schema inspection is a local-store operation",
+        ))
+    }
     fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
         Err(DactylError::adapter_with_code(
             AdapterErrorKind::Capability,

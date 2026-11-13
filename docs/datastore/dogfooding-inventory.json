@@ -1,0 +1,7050 @@
+{
+  "application_binary_sha256": "sha256:db22fbf2c0d2cac9c8c481cab4306503a0fab14247ffee79fb6246fd1a978789",
+  "application_version": "0.141.0",
+  "btree": [
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "agent_prompts",
+        155648,
+        140120,
+        9640,
+        940,
+        38
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "agents",
+        4096,
+        950,
+        3086,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "approvals",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "archives",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "authoring_bindings",
+        16384,
+        7964,
+        8260,
+        24,
+        4
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "categories",
+        4096,
+        1539,
+        2489,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "claims",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "cron_jobs",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "decisions",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "events",
+        11272192,
+        10351232,
+        761368,
+        21612,
+        2752
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "feedback",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "health_cache",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_agent_prompts_context",
+        24576,
+        16144,
+        5652,
+        904,
+        6
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_agents_last_seen",
+        4096,
+        194,
+        3855,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_agents_status",
+        4096,
+        137,
+        3912,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_approvals_fingerprint",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_decisions_session",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_decisions_tree",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_events_stream_seq_unique",
+        364544,
+        264662,
+        41995,
+        18941,
+        89
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_events_subject",
+        200704,
+        119205,
+        24092,
+        18941,
+        49
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_fed_nodes_priority",
+        4096,
+        142,
+        3907,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_fed_nodes_scope",
+        4096,
+        103,
+        3946,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_fed_nodes_status",
+        4096,
+        129,
+        3920,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_fed_nodes_type",
+        4096,
+        180,
+        3869,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_fed_nodes_updated",
+        4096,
+        194,
+        3855,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_knowledge_active_merge_scope",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_knowledge_created",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_knowledge_merge_key",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_knowledge_status",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_lcm_originals_kind",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_lcm_originals_ts",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_lcm_summaries_scope",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_node_edges_source",
+        4096,
+        479,
+        3564,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_node_edges_target",
+        4096,
+        479,
+        3564,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_node_edges_type",
+        4096,
+        157,
+        3886,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_preferences_access",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_preferences_category",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_preferences_key",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_request_dedupe_created_at",
+        4096,
+        780,
+        3152,
+        52,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_risk_zones_name",
+        4096,
+        158,
+        3906,
+        8,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_sessions_status",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_sessions_tree",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_task_dependencies_depends_on",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_task_dependencies_task",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_task_owners_task",
+        4096,
+        74,
+        4005,
+        3,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_task_owners_task_agent",
+        4096,
+        136,
+        3943,
+        3,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_task_tags_tag",
+        4096,
+        306,
+        3752,
+        10,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_task_verification_status",
+        4096,
+        7,
+        4078,
+        1,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_tasks_dir",
+        4096,
+        419,
+        3632,
+        12,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_tasks_hash",
+        4096,
+        119,
+        3933,
+        12,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_tasks_scope",
+        4096,
+        352,
+        3700,
+        12,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "idx_tasks_status",
+        4096,
+        95,
+        3957,
+        12,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "knowledge",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "legacy_event_imports",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "meta",
+        4096,
+        1990,
+        2068,
+        8,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "node_edges",
+        4096,
+        2287,
+        1728,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "nodes",
+        12288,
+        5933,
+        6255,
+        14,
+        3
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "obligation_edges",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "obligations",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "originals_index",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "preferences",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "proof_events",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "reflexes",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "repository_scope",
+        4096,
+        63,
+        4021,
+        1,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "request_dedupe",
+        61440,
+        46209,
+        14756,
+        65,
+        15
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "risk_zones",
+        4096,
+        897,
+        3159,
+        8,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sessions",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_agent_prompts_1",
+        40960,
+        27896,
+        10236,
+        904,
+        10
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_agents_1",
+        4096,
+        304,
+        3745,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_approvals_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_archives_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_authoring_bindings_1",
+        12288,
+        4701,
+        7467,
+        22,
+        3
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_categories_1",
+        4096,
+        449,
+        3594,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_categories_2",
+        4096,
+        149,
+        3894,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_claims_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_cron_jobs_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_decisions_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_events_1",
+        745472,
+        589943,
+        96526,
+        18941,
+        182
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_feedback_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_health_cache_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_knowledge_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_legacy_event_imports_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_node_edges_1",
+        4096,
+        494,
+        3549,
+        15,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_nodes_1",
+        4096,
+        415,
+        3634,
+        13,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_obligation_edges_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_obligation_edges_2",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_obligations_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_originals_index_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_preferences_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_preferences_2",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_proof_events_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_reflexes_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_request_dedupe_1",
+        4096,
+        1560,
+        2372,
+        52,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_risk_zones_1",
+        4096,
+        239,
+        3825,
+        8,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_risk_zones_2",
+        4096,
+        158,
+        3906,
+        8,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_sessions_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_summaries_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_task_dependencies_1",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_task_dependencies_2",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_task_owners_1",
+        4096,
+        89,
+        3990,
+        3,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_task_verification_1",
+        4096,
+        24,
+        4061,
+        1,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_autoindex_tasks_1",
+        4096,
+        299,
+        3753,
+        12,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "sqlite_schema",
+        24576,
+        18487,
+        5439,
+        112,
+        6
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "summaries",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "task_dependencies",
+        4096,
+        0,
+        4088,
+        0,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "task_owners",
+        4096,
+        272,
+        3804,
+        3,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "task_tags",
+        4096,
+        306,
+        3752,
+        10,
+        1
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "task_verification",
+        12288,
+        9609,
+        2654,
+        1,
+        3
+      ]
+    },
+    {
+      "columns": [
+        "name",
+        "allocated_bytes",
+        "payload_bytes",
+        "unused_bytes",
+        "physical_cells",
+        "pages"
+      ],
+      "values": [
+        "tasks",
+        12288,
+        6535,
+        5658,
+        13,
+        3
+      ]
+    }
+  ],
+  "checkpoint_sampling": {
+    "coverage": "complete",
+    "method": "separate task.journal.checkpoint primary-key prefix; same per-table row ceiling and shared snapshot budgets",
+    "rows": 55,
+    "sample_rows": 55
+  },
+  "component_classes": {
+    "checkpoint_dependencies": {
+      "largest_lengths": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "logical_bytes": 110,
+      "max": 2,
+      "non_null": 55,
+      "null": 0,
+      "p50": 2,
+      "p95": 2,
+      "p99": 2,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_description": {
+      "largest_lengths": [
+        806,
+        806,
+        806,
+        806,
+        441
+      ],
+      "logical_bytes": 11619,
+      "max": 806,
+      "non_null": 55,
+      "null": 0,
+      "p50": 180,
+      "p95": 806,
+      "p99": 806,
+      "potential_repeated_bytes": 8802,
+      "repeated_values": 27,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_event_metadata": {
+      "largest_lengths": [
+        190,
+        190,
+        190,
+        190,
+        186
+      ],
+      "logical_bytes": 9964,
+      "max": 190,
+      "non_null": 55,
+      "null": 0,
+      "p50": 181,
+      "p95": 190,
+      "p99": 190,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_owners": {
+      "largest_lengths": [
+        130,
+        126,
+        126,
+        126,
+        126
+      ],
+      "logical_bytes": 3678,
+      "max": 130,
+      "non_null": 55,
+      "null": 0,
+      "p50": 111,
+      "p95": 126,
+      "p99": 130,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_proof_plan": {
+      "largest_lengths": [
+        20,
+        20
+      ],
+      "logical_bytes": 40,
+      "max": 20,
+      "non_null": 2,
+      "null": 0,
+      "p50": 20,
+      "p95": 20,
+      "p99": 20,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_scope": {
+      "largest_lengths": [
+        114,
+        114,
+        114,
+        114,
+        73
+      ],
+      "logical_bytes": 1337,
+      "max": 114,
+      "non_null": 55,
+      "null": 0,
+      "p50": 4,
+      "p95": 114,
+      "p99": 114,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_tags": {
+      "largest_lengths": [
+        34,
+        34,
+        34,
+        34,
+        34
+      ],
+      "logical_bytes": 469,
+      "max": 34,
+      "non_null": 55,
+      "null": 0,
+      "p50": 2,
+      "p95": 34,
+      "p99": 34,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_task": {
+      "largest_lengths": [
+        1581,
+        1534,
+        1534,
+        1529,
+        1249
+      ],
+      "logical_bytes": 50212,
+      "max": 1581,
+      "non_null": 55,
+      "null": 0,
+      "p50": 870,
+      "p95": 1534,
+      "p99": 1581,
+      "potential_repeated_bytes": 1004,
+      "repeated_values": 1,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_verification": {
+      "largest_lengths": [
+        10160,
+        10160
+      ],
+      "logical_bytes": 20320,
+      "max": 10160,
+      "non_null": 2,
+      "null": 53,
+      "p50": 10160,
+      "p95": 10160,
+      "p99": 10160,
+      "potential_repeated_bytes": 10160,
+      "repeated_values": 1,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "checkpoint_verification_artifacts": {
+      "largest_lengths": [
+        9513,
+        9513
+      ],
+      "logical_bytes": 19026,
+      "max": 9513,
+      "non_null": 2,
+      "null": 0,
+      "p50": 9513,
+      "p95": 9513,
+      "p99": 9513,
+      "potential_repeated_bytes": 9513,
+      "repeated_values": 1,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    },
+    "embedded_event_metadata": {
+      "largest_lengths": [
+        190,
+        190,
+        190,
+        190,
+        186
+      ],
+      "logical_bytes": 1511740,
+      "max": 190,
+      "non_null": 18926,
+      "null": 0,
+      "p50": 78,
+      "p95": 81,
+      "p99": 126,
+      "potential_repeated_bytes": 0,
+      "repeated_values": 0,
+      "reuse_coverage": "complete_within_sample",
+      "untracked_candidate_values": 0
+    }
+  },
+  "component_json_unavailable_observations": 0,
+  "consistency": "one Dactyl deferred read transaction; filesystem stats observed separately before/after",
+  "coverage": "complete",
+  "effective_schema_digest": "sha256:c3c045607878ae3a8741653dd57f58a52a886d145ad642b9cc4382e590507092",
+  "engine": {
+    "application_id": 0,
+    "encoding": "UTF-8",
+    "name": "sqlite",
+    "user_version": 0,
+    "version": "3.54.0"
+  },
+  "event_payload_byte_method": "Exact SQLite length(CAST(payload AS BLOB)) grouped into checkpoint/other classes in engine encoding; excludes cell/index overhead; classes partition events and must not be added to table totals",
+  "event_payload_classes": {
+    "other_event": {
+      "null_payload_rows": 0,
+      "payload_cast_blob_bytes": 8802470,
+      "rows": 18886
+    },
+    "task_checkpoint": {
+      "null_payload_rows": 0,
+      "payload_cast_blob_bytes": 118744,
+      "payload_sample": {
+        "largest_lengths": [
+          12142,
+          12041,
+          2562,
+          2397,
+          2387
+        ],
+        "logical_bytes": 118744,
+        "max": 12142,
+        "non_null": 55,
+        "null": 0,
+        "p50": 1727,
+        "p95": 2562,
+        "p99": 12142,
+        "potential_repeated_bytes": 0,
+        "repeated_values": 0,
+        "reuse_coverage": "complete_within_sample",
+        "untracked_candidate_values": 0
+      },
+      "rows": 55
+    }
+  },
+  "files_after": {
+    "lifecycle_lock": {
+      "allocated_bytes": 0,
+      "apparent_bytes": 0,
+      "status": "observed"
+    },
+    "main": {
+      "allocated_bytes": 13680640,
+      "apparent_bytes": 13344768,
+      "status": "observed"
+    },
+    "rollback_journal": {
+      "allocated_bytes": null,
+      "apparent_bytes": null,
+      "status": "absent"
+    },
+    "shm": {
+      "allocated_bytes": null,
+      "apparent_bytes": null,
+      "status": "absent"
+    },
+    "wal": {
+      "allocated_bytes": null,
+      "apparent_bytes": null,
+      "status": "absent"
+    }
+  },
+  "files_before": {
+    "lifecycle_lock": {
+      "allocated_bytes": 0,
+      "apparent_bytes": 0,
+      "status": "observed"
+    },
+    "main": {
+      "allocated_bytes": 13680640,
+      "apparent_bytes": 13344768,
+      "status": "observed"
+    },
+    "rollback_journal": {
+      "allocated_bytes": null,
+      "apparent_bytes": null,
+      "status": "absent"
+    },
+    "shm": {
+      "allocated_bytes": null,
+      "apparent_bytes": null,
+      "status": "absent"
+    },
+    "wal": {
+      "allocated_bytes": null,
+      "apparent_bytes": null,
+      "status": "absent"
+    }
+  },
+  "format_observation_scope": "Sampled event_type task.journal.checkpoint JSON version fields and summaries text/BLOB headers only; no chain, digest, body or migration validation",
+  "interpretation": [
+    "B-tree allocated, payload and unused bytes are nested quantities; do not add them together",
+    "Freelist bytes are reusable pages, not proof that retained live content is disposable",
+    "Field lengths are UTF-8 text/raw BLOB/canonical-JSON scalar bytes, not physical cell allocation",
+    "Field reuse compares SHA-256 over type-tagged exact bytes >=128 bytes; checkpoint classes compare decoded logical component bytes; embedded metadata uses sorted JSON projection; no content hashes are emitted",
+    "Component classes overlap stored field totals and must not be added to them",
+    "Potential reuse excludes reference/index/codec overhead and is not measured savings",
+    "Table samples follow declared primary-key order, otherwise rowid; quantiles describe the sample only",
+    "No backups/artifacts or hosted PostgreSQL footprint are inferred from this local report"
+  ],
+  "measured_savings_bytes": null,
+  "observation_time": "2026-11-13T01:51:00.033334+00:00",
+  "observed_application_schema": {
+    "todo": {
+      "status": "observed",
+      "version": 18
+    }
+  },
+  "options": {
+    "allow_long_read": false,
+    "duration_seconds": 5,
+    "report_bytes": 4194304,
+    "rows_per_table": 25000,
+    "scan_bytes": 67108864
+  },
+  "physical": {
+    "freelist_count": 0,
+    "journal_mode": "delete",
+    "page_count": 3258,
+    "page_size": 4096
+  },
+  "sampled_format_observations": {
+    "checkpoint_json_unavailable_observations": 0,
+    "checkpoint_sample_observations": 55,
+    "checkpoint_unknown_version_rows": 0,
+    "checkpoint_version_overflow_rows": 0,
+    "checkpoint_versions": {
+      "1": 55
+    },
+    "lcm_declared_decoded_bytes_unverified": 0,
+    "lcm_plain_text_cells": 0,
+    "lcm_unknown_cells": 0,
+    "lcm_v1_header_cells": 0
+  },
+  "schema": "decapod.storage-inventory.v1",
+  "scope": "dactyl",
+  "status": "ok",
+  "tables": [
+    {
+      "coverage": "complete",
+      "fields": {
+        "active": {
+          "largest_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 904,
+          "max": 1,
+          "non_null": 904,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "context": {
+          "largest_lengths": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "logical_bytes": 11752,
+          "max": 20,
+          "non_null": 904,
+          "null": 0,
+          "p50": 10,
+          "p95": 20,
+          "p99": 20,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 9944,
+          "max": 11,
+          "non_null": 904,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            26,
+            26,
+            26,
+            26,
+            26
+          ],
+          "logical_bytes": 23504,
+          "max": 26,
+          "non_null": 904,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "last_shown_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 904,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "priority": {
+          "largest_lengths": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "logical_bytes": 2034,
+          "max": 3,
+          "non_null": 904,
+          "null": 0,
+          "p50": 2,
+          "p95": 3,
+          "p99": 3,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "prompt_text": {
+          "largest_lengths": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "logical_bytes": 84072,
+          "max": 100,
+          "non_null": 904,
+          "null": 0,
+          "p50": 91,
+          "p95": 100,
+          "p99": 100,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 904,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "usage_count": {
+          "largest_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 904,
+          "max": 1,
+          "non_null": 904,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 904,
+      "sample_rows": 904,
+      "table": "agent_prompts"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "agent_id": {
+          "largest_lengths": [
+            29,
+            25,
+            25,
+            23,
+            22
+          ],
+          "logical_bytes": 253,
+          "max": 29,
+          "non_null": 13,
+          "null": 0,
+          "p50": 20,
+          "p95": 29,
+          "p99": 29,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "category_claims_json": {
+          "largest_lengths": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "logical_bytes": 26,
+          "max": 2,
+          "non_null": 13,
+          "null": 0,
+          "p50": 2,
+          "p95": 2,
+          "p99": 2,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "expertise_json": {
+          "largest_lengths": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "logical_bytes": 26,
+          "max": 2,
+          "non_null": 13,
+          "null": 0,
+          "p50": 2,
+          "p95": 2,
+          "p99": 2,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "last_seen": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 143,
+          "max": 11,
+          "non_null": 13,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
+          "logical_bytes": 86,
+          "max": 7,
+          "non_null": 13,
+          "null": 0,
+          "p50": 7,
+          "p95": 7,
+          "p99": 7,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "trust_granted_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 13,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "trust_granted_by": {
+          "largest_lengths": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "logical_bytes": 78,
+          "max": 6,
+          "non_null": 13,
+          "null": 0,
+          "p50": 6,
+          "p95": 6,
+          "p99": 6,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "trust_level": {
+          "largest_lengths": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
+          "logical_bytes": 65,
+          "max": 5,
+          "non_null": 13,
+          "null": 0,
+          "p50": 5,
+          "p95": 5,
+          "p99": 5,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 143,
+          "max": 11,
+          "non_null": 13,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 13,
+      "sample_rows": 13,
+      "table": "agents"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "action_fingerprint": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "actor": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "approval_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "expires_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ts": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "approvals"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "content_hash": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "path": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "summary_hash": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "archives"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "agent_id": {
+          "largest_lengths": [
+            29,
+            29,
+            29,
+            29,
+            25
+          ],
+          "logical_bytes": 470,
+          "max": 29,
+          "non_null": 22,
+          "null": 0,
+          "p50": 21,
+          "p95": 29,
+          "p99": 29,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "branch": {
+          "largest_lengths": [
+            75,
+            75,
+            71,
+            70,
+            69
+          ],
+          "logical_bytes": 1405,
+          "max": 75,
+          "non_null": 22,
+          "null": 0,
+          "p50": 65,
+          "p95": 75,
+          "p99": 75,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "lease_generation": {
+          "largest_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 22,
+          "max": 1,
+          "non_null": 22,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "repository_id": {
+          "largest_lengths": [
+            26,
+            26,
+            26,
+            26,
+            26
+          ],
+          "logical_bytes": 572,
+          "max": 26,
+          "non_null": 22,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "task_id": {
+          "largest_lengths": [
+            21,
+            21,
+            21,
+            21,
+            21
+          ],
+          "logical_bytes": 462,
+          "max": 21,
+          "non_null": 22,
+          "null": 0,
+          "p50": 21,
+          "p95": 21,
+          "p99": 21,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 242,
+          "max": 11,
+          "non_null": 22,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "worktree_id": {
+          "largest_lengths": [
+            228,
+            225,
+            223,
+            221,
+            218
+          ],
+          "logical_bytes": 4592,
+          "max": 228,
+          "non_null": 22,
+          "null": 0,
+          "p50": 211,
+          "p95": 225,
+          "p99": 228,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 22,
+      "sample_rows": 22,
+      "table": "authoring_bindings"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 165,
+          "max": 11,
+          "non_null": 15,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "description": {
+          "largest_lengths": [
+            32,
+            29,
+            27,
+            26,
+            25
+          ],
+          "logical_bytes": 353,
+          "max": 32,
+          "non_null": 15,
+          "null": 0,
+          "p50": 25,
+          "p95": 32,
+          "p99": 32,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            26,
+            26,
+            26,
+            26,
+            26
+          ],
+          "logical_bytes": 390,
+          "max": 26,
+          "non_null": 15,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "keywords": {
+          "largest_lengths": [
+            42,
+            38,
+            36,
+            35,
+            33
+          ],
+          "logical_bytes": 451,
+          "max": 42,
+          "non_null": 15,
+          "null": 0,
+          "p50": 31,
+          "p95": 42,
+          "p99": 42,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "name": {
+          "largest_lengths": [
+            11,
+            8,
+            8,
+            8,
+            8
+          ],
+          "logical_bytes": 90,
+          "max": 11,
+          "non_null": 15,
+          "null": 0,
+          "p50": 7,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 15,
+      "sample_rows": 15,
+      "table": "categories"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "kind": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "provenance": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "subject": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "claims"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "command": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "description": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "dir_path": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "last_run": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "name": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "next_run": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "schedule": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tags": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "cron_jobs"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "actor": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "chosen_label": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "chosen_value": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "federation_node_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "question_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "question_text": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "rationale": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "session_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tree_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "user_note": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "decisions"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "actor": {
+          "largest_lengths": [
+            29,
+            29,
+            29,
+            29,
+            29
+          ],
+          "logical_bytes": 142709,
+          "max": 29,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 7,
+          "p95": 7,
+          "p99": 23,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "event_id": {
+          "largest_lengths": [
+            77,
+            77,
+            77,
+            77,
+            77
+          ],
+          "logical_bytes": 495311,
+          "max": 77,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "event_type": {
+          "largest_lengths": [
+            86,
+            86,
+            86,
+            86,
+            86
+          ],
+          "logical_bytes": 218361,
+          "max": 86,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 11,
+          "p95": 15,
+          "p99": 23,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "payload": {
+          "largest_lengths": [
+            123914,
+            111775,
+            12688,
+            12142,
+            12041
+          ],
+          "logical_bytes": 8921214,
+          "max": 123914,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 462,
+          "p95": 478,
+          "p99": 516,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "bounded_lower_bound",
+          "untracked_candidate_values": 17917
+        },
+        "seq": {
+          "largest_lengths": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
+          "logical_bytes": 82009,
+          "max": 5,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 4,
+          "p95": 5,
+          "p99": 5,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "stream": {
+          "largest_lengths": [
+            19,
+            19,
+            19,
+            19,
+            19
+          ],
+          "logical_bytes": 113627,
+          "max": 19,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 6,
+          "p95": 6,
+          "p99": 6,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "subject_id": {
+          "largest_lengths": [
+            40,
+            28,
+            28,
+            28,
+            28
+          ],
+          "logical_bytes": 3337,
+          "max": 40,
+          "non_null": 153,
+          "null": 18788,
+          "p50": 21,
+          "p95": 28,
+          "p99": 28,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "subject_kind": {
+          "largest_lengths": [
+            6,
+            4,
+            4,
+            4,
+            4
+          ],
+          "logical_bytes": 2350,
+          "max": 6,
+          "non_null": 587,
+          "null": 18354,
+          "p50": 4,
+          "p95": 4,
+          "p99": 4,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ts": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 208351,
+          "max": 11,
+          "non_null": 18941,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 18941,
+      "sample_rows": 18941,
+      "table": "events"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "links": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "source": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "text": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "feedback"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "claim_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "computed_state": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "reason": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "health_cache"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "claim_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "content": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "dir_path": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "expires_ts": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "merge_key": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "provenance": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "supersedes_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tags": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "title": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ttl_policy": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "knowledge"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "content_hash": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "filename": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "imported_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "record_count": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "legacy_event_imports"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "key": {
+          "largest_lengths": [
+            33,
+            24,
+            24,
+            23,
+            22
+          ],
+          "logical_bytes": 175,
+          "max": 33,
+          "non_null": 8,
+          "null": 0,
+          "p50": 22,
+          "p95": 33,
+          "p99": 33,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "namespace": {
+          "largest_lengths": [
+            10,
+            8,
+            8,
+            8,
+            8
+          ],
+          "logical_bytes": 62,
+          "max": 10,
+          "non_null": 8,
+          "null": 0,
+          "p50": 8,
+          "p95": 10,
+          "p99": 10,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "value": {
+          "largest_lengths": [
+            306,
+            302,
+            285,
+            276,
+            273
+          ],
+          "logical_bytes": 1715,
+          "max": 306,
+          "non_null": 8,
+          "null": 0,
+          "p50": 273,
+          "p95": 306,
+          "p99": 306,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 8,
+      "sample_rows": 8,
+      "table": "meta"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "actor": {
+          "largest_lengths": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
+          "logical_bytes": 105,
+          "max": 7,
+          "non_null": 15,
+          "null": 0,
+          "p50": 7,
+          "p95": 7,
+          "p99": 7,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 165,
+          "max": 11,
+          "non_null": 15,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "edge_type": {
+          "largest_lengths": [
+            10,
+            10,
+            6,
+            6,
+            6
+          ],
+          "logical_bytes": 98,
+          "max": 10,
+          "non_null": 15,
+          "null": 0,
+          "p50": 6,
+          "p95": 10,
+          "p99": 10,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            29,
+            29,
+            29,
+            29,
+            29
+          ],
+          "logical_bytes": 435,
+          "max": 29,
+          "non_null": 15,
+          "null": 0,
+          "p50": 29,
+          "p95": 29,
+          "p99": 29,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "metadata": {
+          "largest_lengths": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "logical_bytes": 524,
+          "max": 40,
+          "non_null": 15,
+          "null": 0,
+          "p50": 40,
+          "p95": 40,
+          "p99": 40,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "source_id": {
+          "largest_lengths": [
+            28,
+            28,
+            28,
+            28,
+            28
+          ],
+          "logical_bytes": 420,
+          "max": 28,
+          "non_null": 15,
+          "null": 0,
+          "p50": 28,
+          "p95": 28,
+          "p99": 28,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "target_id": {
+          "largest_lengths": [
+            28,
+            28,
+            28,
+            28,
+            28
+          ],
+          "logical_bytes": 420,
+          "max": 28,
+          "non_null": 15,
+          "null": 0,
+          "p50": 28,
+          "p95": 28,
+          "p99": 28,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 15,
+      "sample_rows": 15,
+      "table": "node_edges"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "actor": {
+          "largest_lengths": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
+          "logical_bytes": 91,
+          "max": 7,
+          "non_null": 13,
+          "null": 0,
+          "p50": 7,
+          "p95": 7,
+          "p99": 7,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "body": {
+          "largest_lengths": [
+            511,
+            447,
+            402,
+            364,
+            323
+          ],
+          "logical_bytes": 2991,
+          "max": 511,
+          "non_null": 13,
+          "null": 0,
+          "p50": 200,
+          "p95": 511,
+          "p99": 511,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "confidence": {
+          "largest_lengths": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "logical_bytes": 182,
+          "max": 14,
+          "non_null": 13,
+          "null": 0,
+          "p50": 14,
+          "p95": 14,
+          "p99": 14,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 143,
+          "max": 11,
+          "non_null": 13,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "dir_path": {
+          "largest_lengths": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
+          "logical_bytes": 455,
+          "max": 35,
+          "non_null": 13,
+          "null": 0,
+          "p50": 35,
+          "p95": 35,
+          "p99": 35,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "effective_from": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 13,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "effective_to": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 13,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            28,
+            28,
+            28,
+            28,
+            28
+          ],
+          "logical_bytes": 364,
+          "max": 28,
+          "non_null": 13,
+          "null": 0,
+          "p50": 28,
+          "p95": 28,
+          "p99": 28,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "node_type": {
+          "largest_lengths": [
+            11,
+            10,
+            10,
+            10,
+            10
+          ],
+          "logical_bytes": 129,
+          "max": 11,
+          "non_null": 13,
+          "null": 0,
+          "p50": 10,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "priority": {
+          "largest_lengths": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
+          "logical_bytes": 91,
+          "max": 7,
+          "non_null": 13,
+          "null": 0,
+          "p50": 7,
+          "p95": 7,
+          "p99": 7,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
+          "logical_bytes": 52,
+          "max": 4,
+          "non_null": 13,
+          "null": 0,
+          "p50": 4,
+          "p95": 4,
+          "p99": 4,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "logical_bytes": 78,
+          "max": 6,
+          "non_null": 13,
+          "null": 0,
+          "p50": 6,
+          "p95": 6,
+          "p99": 6,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tags": {
+          "largest_lengths": [
+            26,
+            18,
+            16,
+            15,
+            14
+          ],
+          "logical_bytes": 101,
+          "max": 26,
+          "non_null": 13,
+          "null": 0,
+          "p50": 0,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "title": {
+          "largest_lengths": [
+            104,
+            96,
+            92,
+            80,
+            74
+          ],
+          "logical_bytes": 882,
+          "max": 104,
+          "non_null": 13,
+          "null": 0,
+          "p50": 61,
+          "p95": 104,
+          "p99": 104,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 143,
+          "max": 11,
+          "non_null": 13,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 13,
+      "sample_rows": 13,
+      "table": "nodes"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "edge_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "from_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "kind": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "to_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "obligation_edges"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "intent_ref": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "metadata": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "required_proofs": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "risk_tier": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "state_commit_root": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "obligations"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "actor": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "byte_size": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "content_hash": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "event_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "kind": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "session_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ts": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "originals_index"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "access_count": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "category": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "confidence": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "context": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "key": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "last_accessed_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "source": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "value": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "preferences"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "claim_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "event_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "result": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "sla_seconds": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "surface": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ts": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "proof_events"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "action_config": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "action_type": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "description": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "dir_path": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "name": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tags": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "trigger_config": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "trigger_type": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "reflexes"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "local_user": {
+          "largest_lengths": [
+            10
+          ],
+          "logical_bytes": 10,
+          "max": 10,
+          "non_null": 1,
+          "null": 0,
+          "p50": 10,
+          "p95": 10,
+          "p99": 10,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "organization_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 1,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "owner_kind": {
+          "largest_lengths": [
+            1
+          ],
+          "logical_bytes": 1,
+          "max": 1,
+          "non_null": 1,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "owner_name": {
+          "largest_lengths": [
+            11
+          ],
+          "logical_bytes": 11,
+          "max": 11,
+          "non_null": 1,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "provider": {
+          "largest_lengths": [
+            1
+          ],
+          "logical_bytes": 1,
+          "max": 1,
+          "non_null": 1,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "repository_key": {
+          "largest_lengths": [
+            1
+          ],
+          "logical_bytes": 1,
+          "max": 1,
+          "non_null": 1,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "repository_name": {
+          "largest_lengths": [
+            6
+          ],
+          "logical_bytes": 6,
+          "max": 6,
+          "non_null": 1,
+          "null": 0,
+          "p50": 6,
+          "p95": 6,
+          "p99": 6,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "stable_id": {
+          "largest_lengths": [
+            26
+          ],
+          "logical_bytes": 26,
+          "max": 26,
+          "non_null": 1,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "version": {
+          "largest_lengths": [
+            1
+          ],
+          "logical_bytes": 1,
+          "max": 1,
+          "non_null": 1,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 1,
+      "sample_rows": 1,
+      "table": "repository_scope"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "commit_marker": {
+          "largest_lengths": [
+            38,
+            38,
+            38,
+            38,
+            38
+          ],
+          "logical_bytes": 1862,
+          "max": 38,
+          "non_null": 49,
+          "null": 3,
+          "p50": 38,
+          "p95": 38,
+          "p99": 38,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 572,
+          "max": 11,
+          "non_null": 52,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "payload_hash": {
+          "largest_lengths": [
+            64,
+            64,
+            64,
+            64,
+            64
+          ],
+          "logical_bytes": 3328,
+          "max": 64,
+          "non_null": 52,
+          "null": 0,
+          "p50": 64,
+          "p95": 64,
+          "p99": 64,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "request_id": {
+          "largest_lengths": [
+            26,
+            26,
+            26,
+            26,
+            26
+          ],
+          "logical_bytes": 1352,
+          "max": 26,
+          "non_null": 52,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "result_envelope": {
+          "largest_lengths": [
+            1804,
+            1712,
+            1505,
+            1362,
+            1137
+          ],
+          "logical_bytes": 38113,
+          "max": 1804,
+          "non_null": 52,
+          "null": 0,
+          "p50": 645,
+          "p95": 1505,
+          "p99": 1804,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "retry_after_ms_hint": {
+          "largest_lengths": [
+            4
+          ],
+          "logical_bytes": 4,
+          "max": 4,
+          "non_null": 1,
+          "null": 51,
+          "p50": 4,
+          "p95": 4,
+          "p99": 4,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "logical_bytes": 460,
+          "max": 9,
+          "non_null": 52,
+          "null": 0,
+          "p50": 9,
+          "p95": 9,
+          "p99": 9,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 52,
+      "sample_rows": 52,
+      "table": "request_dedupe"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 88,
+          "max": 11,
+          "non_null": 8,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "description": {
+          "largest_lengths": [
+            58,
+            57,
+            49,
+            48,
+            48
+          ],
+          "logical_bytes": 369,
+          "max": 58,
+          "non_null": 8,
+          "null": 0,
+          "p50": 48,
+          "p95": 58,
+          "p99": 58,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            26,
+            26,
+            26,
+            26,
+            26
+          ],
+          "logical_bytes": 208,
+          "max": 26,
+          "non_null": 8,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "required_trust_level": {
+          "largest_lengths": [
+            8,
+            8,
+            8,
+            5,
+            5
+          ],
+          "logical_bytes": 48,
+          "max": 8,
+          "non_null": 8,
+          "null": 0,
+          "p50": 5,
+          "p95": 8,
+          "p99": 8,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "requires_approval": {
+          "largest_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 8,
+          "max": 1,
+          "non_null": 8,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "zone_name": {
+          "largest_lengths": [
+            20,
+            18,
+            17,
+            17,
+            15
+          ],
+          "logical_bytes": 127,
+          "max": 20,
+          "non_null": 8,
+          "null": 0,
+          "p50": 15,
+          "p95": 20,
+          "p99": 20,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 8,
+      "sample_rows": 8,
+      "table": "risk_zones"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "actor": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "completed_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "description": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "dir_path": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "federation_node_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "title": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tree_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "sessions"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "original_hashes": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "summary_hash": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "summary_text": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "token_estimate": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ts": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "summaries"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "created_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "depends_on_task_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "task_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 0,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 0,
+      "sample_rows": 0,
+      "table": "task_dependencies"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "agent_id": {
+          "largest_lengths": [
+            22,
+            20,
+            17
+          ],
+          "logical_bytes": 59,
+          "max": 22,
+          "non_null": 3,
+          "null": 0,
+          "p50": 20,
+          "p95": 22,
+          "p99": 22,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "claim_type": {
+          "largest_lengths": [
+            7,
+            7,
+            7
+          ],
+          "logical_bytes": 21,
+          "max": 7,
+          "non_null": 3,
+          "null": 0,
+          "p50": 7,
+          "p95": 7,
+          "p99": 7,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "claimed_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 33,
+          "max": 11,
+          "non_null": 3,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            26,
+            26,
+            26
+          ],
+          "logical_bytes": 78,
+          "max": 26,
+          "non_null": 3,
+          "null": 0,
+          "p50": 26,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "task_id": {
+          "largest_lengths": [
+            21,
+            21,
+            21
+          ],
+          "logical_bytes": 63,
+          "max": 21,
+          "non_null": 3,
+          "null": 0,
+          "p50": 21,
+          "p95": 21,
+          "p99": 21,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 3,
+      "sample_rows": 3,
+      "table": "task_owners"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "tag": {
+          "largest_lengths": [
+            12,
+            10,
+            9,
+            8,
+            7
+          ],
+          "logical_bytes": 66,
+          "max": 12,
+          "non_null": 10,
+          "null": 0,
+          "p50": 4,
+          "p95": 12,
+          "p99": 12,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "task_id": {
+          "largest_lengths": [
+            21,
+            21,
+            21,
+            21,
+            21
+          ],
+          "logical_bytes": 210,
+          "max": 21,
+          "non_null": 10,
+          "null": 0,
+          "p50": 21,
+          "p95": 21,
+          "p99": 21,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 10,
+      "sample_rows": 10,
+      "table": "task_tags"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "last_verified_at": {
+          "largest_lengths": [
+            11
+          ],
+          "logical_bytes": 11,
+          "max": 11,
+          "non_null": 1,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "last_verified_notes": {
+          "largest_lengths": [
+            17
+          ],
+          "logical_bytes": 17,
+          "max": 17,
+          "non_null": 1,
+          "null": 0,
+          "p50": 17,
+          "p95": 17,
+          "p99": 17,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "last_verified_status": {
+          "largest_lengths": [
+            4
+          ],
+          "logical_bytes": 4,
+          "max": 4,
+          "non_null": 1,
+          "null": 0,
+          "p50": 4,
+          "p95": 4,
+          "p99": 4,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "proof_plan": {
+          "largest_lengths": [
+            20
+          ],
+          "logical_bytes": 20,
+          "max": 20,
+          "non_null": 1,
+          "null": 0,
+          "p50": 20,
+          "p95": 20,
+          "p99": 20,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "todo_id": {
+          "largest_lengths": [
+            21
+          ],
+          "logical_bytes": 21,
+          "max": 21,
+          "non_null": 1,
+          "null": 0,
+          "p50": 21,
+          "p95": 21,
+          "p99": 21,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [
+            11
+          ],
+          "logical_bytes": 11,
+          "max": 11,
+          "non_null": 1,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "verification_artifacts": {
+          "largest_lengths": [
+            9513
+          ],
+          "logical_bytes": 9513,
+          "max": 9513,
+          "non_null": 1,
+          "null": 0,
+          "p50": 9513,
+          "p95": 9513,
+          "p99": 9513,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "verification_policy_days": {
+          "largest_lengths": [
+            2
+          ],
+          "logical_bytes": 2,
+          "max": 2,
+          "non_null": 1,
+          "null": 0,
+          "p50": 2,
+          "p95": 2,
+          "p99": 2,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 1,
+      "sample_rows": 1,
+      "table": "task_verification"
+    },
+    {
+      "coverage": "complete",
+      "fields": {
+        "assigned_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 44,
+          "max": 11,
+          "non_null": 4,
+          "null": 8,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "assigned_to": {
+          "largest_lengths": [
+            22,
+            21,
+            20,
+            17,
+            0
+          ],
+          "logical_bytes": 80,
+          "max": 22,
+          "non_null": 12,
+          "null": 0,
+          "p50": 0,
+          "p95": 22,
+          "p99": 22,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "blocks": {
+          "largest_lengths": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "logical_bytes": 0,
+          "max": 0,
+          "non_null": 12,
+          "null": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "category": {
+          "largest_lengths": [
+            11,
+            8,
+            8,
+            8,
+            8
+          ],
+          "logical_bytes": 64,
+          "max": 11,
+          "non_null": 12,
+          "null": 0,
+          "p50": 4,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "closed_at": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 12,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "completed_at": {
+          "largest_lengths": [
+            11
+          ],
+          "logical_bytes": 11,
+          "max": 11,
+          "non_null": 1,
+          "null": 11,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "component": {
+          "largest_lengths": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "logical_bytes": 0,
+          "max": 0,
+          "non_null": 12,
+          "null": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "created_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 132,
+          "max": 11,
+          "non_null": 12,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "depends_on": {
+          "largest_lengths": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "logical_bytes": 0,
+          "max": 0,
+          "non_null": 12,
+          "null": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "description": {
+          "largest_lengths": [
+            806,
+            441,
+            379,
+            334,
+            294
+          ],
+          "logical_bytes": 2817,
+          "max": 806,
+          "non_null": 12,
+          "null": 0,
+          "p50": 180,
+          "p95": 806,
+          "p99": 806,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "dir_path": {
+          "largest_lengths": [
+            140,
+            21,
+            21,
+            21,
+            21
+          ],
+          "logical_bytes": 371,
+          "max": 140,
+          "non_null": 12,
+          "null": 0,
+          "p50": 21,
+          "p95": 140,
+          "p99": 140,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "due": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 12,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "hash": {
+          "largest_lengths": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "logical_bytes": 72,
+          "max": 6,
+          "non_null": 12,
+          "null": 0,
+          "p50": 6,
+          "p95": 6,
+          "p99": 6,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "id": {
+          "largest_lengths": [
+            21,
+            21,
+            21,
+            21,
+            21
+          ],
+          "logical_bytes": 252,
+          "max": 21,
+          "non_null": 12,
+          "null": 0,
+          "p50": 21,
+          "p95": 21,
+          "p99": 21,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "intent_anchor": {
+          "largest_lengths": [
+            33,
+            33,
+            33,
+            33,
+            33
+          ],
+          "logical_bytes": 396,
+          "max": 33,
+          "non_null": 12,
+          "null": 0,
+          "p50": 33,
+          "p95": 33,
+          "p99": 33,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "lease_expires_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 99,
+          "max": 11,
+          "non_null": 9,
+          "null": 3,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "lease_generation": {
+          "largest_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 12,
+          "max": 1,
+          "non_null": 12,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "lease_lifecycle": {
+          "largest_lengths": [
+            8,
+            8,
+            8,
+            8,
+            7
+          ],
+          "logical_bytes": 88,
+          "max": 8,
+          "non_null": 12,
+          "null": 0,
+          "p50": 7,
+          "p95": 8,
+          "p99": 8,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "one_shot": {
+          "largest_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 12,
+          "max": 1,
+          "non_null": 12,
+          "null": 0,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "owner": {
+          "largest_lengths": [
+            29,
+            25,
+            22,
+            21,
+            20
+          ],
+          "logical_bytes": 154,
+          "max": 29,
+          "non_null": 12,
+          "null": 0,
+          "p50": 17,
+          "p95": 29,
+          "p99": 29,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "parent_task_id": {
+          "largest_lengths": [],
+          "logical_bytes": 0,
+          "max": null,
+          "non_null": 0,
+          "null": 12,
+          "p50": null,
+          "p95": null,
+          "p99": null,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "priority": {
+          "largest_lengths": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "logical_bytes": 66,
+          "max": 6,
+          "non_null": 12,
+          "null": 0,
+          "p50": 6,
+          "p95": 6,
+          "p99": 6,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "ref": {
+          "largest_lengths": [
+            48,
+            48,
+            47,
+            0,
+            0
+          ],
+          "logical_bytes": 143,
+          "max": 48,
+          "non_null": 12,
+          "null": 0,
+          "p50": 0,
+          "p95": 48,
+          "p99": 48,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "revision": {
+          "largest_lengths": [
+            2,
+            1,
+            1,
+            1,
+            1
+          ],
+          "logical_bytes": 13,
+          "max": 2,
+          "non_null": 12,
+          "null": 0,
+          "p50": 1,
+          "p95": 2,
+          "p99": 2,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "scope": {
+          "largest_lengths": [
+            114,
+            73,
+            59,
+            17,
+            11
+          ],
+          "logical_bytes": 302,
+          "max": 114,
+          "non_null": 12,
+          "null": 0,
+          "p50": 4,
+          "p95": 114,
+          "p99": 114,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "status": {
+          "largest_lengths": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
+          "logical_bytes": 48,
+          "max": 4,
+          "non_null": 12,
+          "null": 0,
+          "p50": 4,
+          "p95": 4,
+          "p99": 4,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "tags": {
+          "largest_lengths": [
+            26,
+            15,
+            14,
+            12,
+            4
+          ],
+          "logical_bytes": 71,
+          "max": 26,
+          "non_null": 12,
+          "null": 0,
+          "p50": 0,
+          "p95": 26,
+          "p99": 26,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "title": {
+          "largest_lengths": [
+            98,
+            90,
+            86,
+            74,
+            68
+          ],
+          "logical_bytes": 798,
+          "max": 98,
+          "non_null": 12,
+          "null": 0,
+          "p50": 55,
+          "p95": 98,
+          "p99": 98,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        },
+        "updated_at": {
+          "largest_lengths": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "logical_bytes": 132,
+          "max": 11,
+          "non_null": 12,
+          "null": 0,
+          "p50": 11,
+          "p95": 11,
+          "p99": 11,
+          "potential_repeated_bytes": 0,
+          "repeated_values": 0,
+          "reuse_coverage": "complete_within_sample",
+          "untracked_candidate_values": 0
+        }
+      },
+      "rows": 12,
+      "sample_rows": 12,
+      "table": "tasks"
+    }
+  ]
+}

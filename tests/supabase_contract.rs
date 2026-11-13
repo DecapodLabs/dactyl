@@ -299,6 +299,15 @@ fn read_only_and_unsupported_maintenance_fail_before_network() {
         db.inspect_schema().unwrap_err().adapter_kind(),
         Some(AdapterErrorKind::Capability)
     );
+    for pred in [db.has_table("tasks"), db.has_column("tasks", "id")] {
+        let err = pred.unwrap_err();
+        assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Capability));
+        assert_eq!(err.adapter_code(), Some("unsupported_schema_inspection"));
+        assert_eq!(
+            err.mutation_outcome(),
+            dactyl_db::MutationOutcome::NotAttempted
+        );
+    }
     assert_eq!(
         db.verify_integrity().unwrap_err().adapter_kind(),
         Some(AdapterErrorKind::Capability)
@@ -453,6 +462,39 @@ fn request_and_response_size_limits_are_enforced() {
         .read("select 1", &[])
         .unwrap_err();
     assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+    assert_eq!(
+        error.failure_origin(),
+        dactyl_db::FailureOrigin::MalformedResponse
+    );
+    received.recv().unwrap();
+    server.join().unwrap();
+
+    // Custom ResourceBudget enforces caller wire/row limits, visit_rows, and Uncertain mutation outcomes.
+    let (endpoint, received, server) = fixture(
+        200,
+        json!({"columns":["id"],"rows":[{"id":1},{"id":2}],"affected_rows":2,"generated_keys":[]}),
+    );
+    let budgeted = Connection::open_with_budget(
+        DatastoreRoute::supabase(&endpoint, Some("synthetic-user-bearer".into())),
+        OpenOptions::default(),
+        Some(context()),
+        dactyl_db::ResourceBudget::v1().with_max_rows(2),
+    )
+    .unwrap();
+    let scan = budgeted
+        .visit_rows(
+            "select id from tasks",
+            &[],
+            |row| Ok(row.get_int("id")? < 1),
+        )
+        .unwrap();
+    assert_eq!(
+        scan,
+        dactyl_db::ScanOutcome {
+            rows: 1,
+            complete: false
+        }
+    );
     received.recv().unwrap();
     server.join().unwrap();
 }

@@ -227,3 +227,48 @@ fn recovery_refuses_open_sibling_connections_and_existing_archive_without_mutati
         0
     );
 }
+
+#[test]
+fn online_backup_preserves_large_blobs_under_tight_connection_result_budget() {
+    let directory = TempDir::new().unwrap();
+    let source_path = directory.path().join("budget-source.db");
+    let backup_path = directory.path().join("budget-backup.db");
+    let setup = sqlite(&source_path);
+    setup
+        .write(
+            "create table blobs (id integer primary key, payload blob not null)",
+            &[],
+        )
+        .unwrap();
+    let payload = vec![0xCD_u8; 32 * 1024];
+    setup
+        .write(
+            "insert into blobs (id, payload) values (1, $1)",
+            &[payload.clone().into()],
+        )
+        .unwrap();
+    drop(setup);
+
+    let budgeted = Connection::open_with_budget(
+        DatastoreRoute::sqlite(source_path.to_string_lossy()),
+        dactyl_db::OpenOptions::default(),
+        None,
+        dactyl_db::ResourceBudget::v1()
+            .with_max_cell_bytes(64 * 1024)
+            .with_max_result_bytes(64 * 1024),
+    )
+    .unwrap();
+    let backup = budgeted.backup(&backup_path).unwrap();
+    assert!(backup.bytes >= 32 * 1024);
+
+    let verify = sqlite(&backup_path);
+    assert_eq!(
+        verify
+            .read("select payload from blobs where id = 1", &[])
+            .unwrap()
+            .as_slice()[0]
+            .get_blob("payload")
+            .unwrap(),
+        payload
+    );
+}

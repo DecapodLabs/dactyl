@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Additive `ResourceBudget` (`RESOURCE_BUDGET_VERSION = 1`) and
+  `Connection::open_with_budget` / `Connection::budget` bounding SQL length,
+  serialized `StorageContext` size, bound parameter cell/total bytes, atomic
+  batch operation counts, HTTP wire request/response sizes, JSON nesting depth,
+  decoded column/row counts, conservative decoded result bytes (including `32x`
+  BLOB JSON-array expansion), and connect/request deadlines across SQLite,
+  Neon, and Supabase without changing `OpenOptions` struct-literal or `Rows`
+  compatibility (#101).
+- Incremental `Connection::visit_rows` across SQLite, Neon, and Supabase,
+  distinguishing deliberate early visitor stop (`ScanOutcome.complete = false`,
+  with immediate SQLite statement finalization) from budget exhaustion errors.
+- Targeted `Connection::has_table` and `Connection::has_column` predicates for
+  single-statement local SQLite catalog checks, failing closed locally on
+  remote adapters (`AdapterErrorKind::Capability` /
+  `unsupported_schema_inspection`) without issuing network requests.
+- `FailureOrigin` (`LocalBudget`, `RemotePolicy`, `MalformedResponse`, `Other`)
+  and `MutationOutcome` (`NotAttempted`, `RolledBack`, `Uncertain`) classifiers
+  on `DactylError`.
+- SQLite `recover_from_dump_reload` now wraps staging table restoration in a
+  single transaction and reuses one prepared `INSERT` per table via raw C-ABI
+  column binding, avoiding per-row `serde_json::Value` BLOB amplification.
+
 ## [0.14.0](https://github.com/DecapodLabs/dactyl/compare/v0.13.1...v0.14.0) (2026-11-12)
 
 
@@ -16,11 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **release:** document patched dependency compatibility ([3efd39f](https://github.com/DecapodLabs/dactyl/commit/3efd39f751e837a6cf753838727ea4beafac63e8))
 
-## [Unreleased]
+### Historical 0.14.0 compatibility notes
 
-### Breaking compatibility
-
-- The next release requires Rust and Cargo 1.85 or newer. Upgrade the consumer
+- Dactyl 0.14.0 requires Rust and Cargo 1.85 or newer. Upgrade the consumer
   toolchain before adopting it; the public Rust API, feature names and transport
   behavior are unchanged by this requirement.
 - The dependency graph requires `quinn-proto >=0.11.19,<0.12` and removes the
@@ -32,9 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a downstream application's resolution. The checked-in and fresh-consumer
   Quinn-floor checks are regression guards, not a complete vulnerability audit.
 
-These compatibility changes were accepted in [#108](https://github.com/DecapodLabs/dactyl/pull/108).
-They remain unreleased until the normal release PR is reviewed, merged and
-published. This note does not enable HTTP/3 or change cloud authorization.
+These compatibility changes were accepted in [#108](https://github.com/DecapodLabs/dactyl/pull/108)
+and shipped in [0.14.0](https://github.com/DecapodLabs/dactyl/releases/tag/v0.14.0).
+This note does not enable HTTP/3 or change cloud authorization.
 
 ## [0.13.1](https://github.com/DecapodLabs/dactyl/compare/v0.13.0...v0.13.1) (2026-11-12)
 

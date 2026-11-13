@@ -39,7 +39,18 @@ are specific regression guards and do not replace a consumer's full audit.
 
 SQLite, Neon, and Supabase expose the same application contract:
 
-- `read(sql, params)` returns owned `Rows`.
+- `read(sql, params)` returns owned `Rows`; `Connection::visit_rows(sql, params, visitor)`
+  streams normalized `Row` values incrementally and distinguishes deliberate
+  early stop (`ScanOutcome.complete = false`) from resource-budget errors.
+- `Connection::open_with_budget(route, options, context, ResourceBudget)`
+  applies explicit per-operation and per-batch bounds on SQL, context,
+  parameters, wire bodies, columns, rows, decoded result bytes, and HTTP
+  deadlines while keeping `OpenOptions { access_mode, lock_timeout }` struct
+  literals source-compatible. See [resource budgets](docs/datastore/resource-budgets.md).
+- `DactylError::failure_origin()` and `DactylError::mutation_outcome()` classify
+  `LocalBudget` vs `RemotePolicy` vs `MalformedResponse` and `NotAttempted` vs
+  `RolledBack` vs `Uncertain` so callers never blindly replay an uncertain
+  remote write without idempotency.
 - `write(sql, params)` returns the affected-row count for compatibility;
   `write_result` also returns explicit generated keys.
 - `atomic(&[Operation])` executes an opaque all-or-nothing batch and preserves
@@ -126,7 +137,12 @@ from `docs/` as GitHub Pages.
 
 `Connection::inspect_schema()` returns a backend-neutral catalog containing
 tables, columns, nullability/defaults, primary and unique keys, indexes,
-foreign keys, delete actions, and row counts. Callers do not need to issue
+foreign keys, delete actions, and row counts. When callers only need to check a
+single table or column without full schema inspection or table row counts,
+`Connection::has_table(name)` and `Connection::has_column(table, column)`
+execute a single bound SQLite catalog query and return typed capability errors
+(`unsupported_schema_inspection`) on remote adapters without network I/O; see
+[catalog predicates](docs/datastore/catalog-predicates.md). Callers do not need to issue
 SQLite-specific catalog queries. Blobs are normalized to JSON arrays of bytes
 and are read back with `Row::get_blob`; NULL, text, integer, REAL, and blob
 values remain distinct through the public row contract.
@@ -223,7 +239,7 @@ does not invent a version-conflict policy for the local store.
 
 ```toml
 [dependencies]
-dactyl-db = { version = "0.8.0", features = ["sqlite", "neon"] }
+dactyl-db = { version = "0.14.0", features = ["sqlite", "neon", "supabase"] }
 ```
 
 Select the backend with environment variables:
@@ -232,6 +248,8 @@ Select the backend with environment variables:
 DATASTORE=sqlite DATASTORE_ROUTE=/path/to/app.db
 # or
 DATASTORE=neon DATASTORE_ROUTE=https://propodus.example DATASTORE_TOKEN=...
+# or
+DATASTORE=supabase DATASTORE_ROUTE=https://storage-service.example DATASTORE_TOKEN=...
 ```
 
 Use the same calls for either backend:

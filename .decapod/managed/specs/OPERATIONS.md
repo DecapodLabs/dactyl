@@ -1,5 +1,9 @@
 # Operations
 
+## Capacity, dogfooding inventory, and recovery guardrails (issue 101)
+
+`docs/datastore/dogfooding-inventory.json` records read-only physical snapshot metrics from the repository's `.decapod/data/decapod.db` (`13,344,768` apparent bytes across `3,258` pages; `events` holds `18,941` rows and `94.3%` of live allocated B-tree bytes). Operators and callers use `ResourceBudget` (`docs/datastore/resource-budgets.md`) and `Connection::visit_rows` to prevent unbounded single-call memory or HTTP payload growth while applying caller-level concurrency limits across multiple connections. When `DactylError::mutation_outcome()` returns `MutationOutcome::Uncertain` after a remote transport, timeout, or post-send response failure, callers must reconcile persisted state or supply an idempotency key rather than blindly replaying non-idempotent writes. Explicit SQLite `recover_from_dump_reload` now streams table data through one staging transaction and one reused C-ABI prepared `INSERT` per table, avoiding `32x` JSON BLOB memory amplification during incident recovery.
+
 ## Operational Readiness Checklist
 - [ ] On-call ownership defined.
 - [ ] SLOs and alert thresholds defined.
@@ -187,7 +191,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
+- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -2,23 +2,22 @@
 //!
 //! This adapter never connects to PostgreSQL or interprets tenant policy.
 
-use std::io::Read;
-use std::time::Duration;
-
 use serde::{Deserialize, Serialize};
 
 use crate::adapter::Adapter;
+use crate::budget::{
+    ensure_json_depth, mark_remote_uncertain, preflight_batch, preflight_statement,
+    read_bounded_body, result_limit, serialize_bounded_json, BoundedReadError,
+    DecodedResultTracker, ResourceBudget,
+};
 use crate::contract::{
     AccessMode, AtomicResult, GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult,
     StorageContext, WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
+use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
 use crate::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
-
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
-const MAX_BODY_BYTES: u64 = 4 * 1024 * 1024;
 
 pub(crate) struct SupabaseAdapter {
     endpoint: String,
@@ -26,6 +25,7 @@ pub(crate) struct SupabaseAdapter {
     access_mode: AccessMode,
     context: StorageContext,
     rpc_headers: Option<reqwest::header::HeaderMap>,
+    budget: ResourceBudget,
 }
 
 #[derive(Serialize)]
@@ -138,7 +138,9 @@ impl SupabaseAdapter {
         options: OpenOptions,
         context: Option<StorageContext>,
         rpc: Option<&SupabaseRpcConfig>,
+        budget: ResourceBudget,
     ) -> Result<Self, DactylError> {
+        budget.validate()?;
         let url = match rpc {
             Some(config) => validate_rpc(config)?,
             None => validate_endpoint(endpoint)?,
@@ -191,6 +193,7 @@ impl SupabaseAdapter {
             bearer,
             access_mode: options.access_mode,
             context,
+            budget,
         })
     }
 
@@ -198,25 +201,22 @@ impl SupabaseAdapter {
         &self,
         path: &str,
         request: &impl Serialize,
+        mutates: bool,
     ) -> Result<T, DactylError> {
+        let max_wire_bytes = self.budget.max_wire_bytes();
         let body = if self.rpc_headers.is_some() {
-            serde_json::to_vec(&RpcRequest {
-                request: VersionedRequest {
-                    version: SUPABASE_RPC_CONTRACT_VERSION,
-                    body: request,
+            serialize_bounded_json(
+                &RpcRequest {
+                    request: VersionedRequest {
+                        version: SUPABASE_RPC_CONTRACT_VERSION,
+                        body: request,
+                    },
                 },
-            })
+                max_wire_bytes,
+            )?
         } else {
-            serde_json::to_vec(request)
-        }
-        .map_err(|_| DactylError::adapter(AdapterErrorKind::Value, "invalid request value"))?;
-        if body.len() as u64 > MAX_BODY_BYTES {
-            return Err(DactylError::adapter_with_code(
-                AdapterErrorKind::Quota,
-                "payload_too_large",
-                "Supabase request exceeds the 4 MiB limit",
-            ));
-        }
+            serialize_bounded_json(request, max_wire_bytes)?
+        };
         let path = if self.rpc_headers.is_some() {
             match path {
                 "/query" => "/rest/v1/rpc/dactyl_query_v1",
@@ -232,15 +232,16 @@ impl SupabaseAdapter {
         let endpoint = format!("{}{path}", self.endpoint);
         let rpc_headers = self.rpc_headers.clone();
         let bearer = self.bearer.clone();
+        let budget = self.budget;
         // The facade is synchronous, but callers may enter from an async
         // runtime. reqwest::blocking must be constructed, used AND dropped
         // outside that runtime. Keep the entire bounded request on this worker.
         std::thread::Builder::new()
             .name("dactyl-supabase-http".into())
-            .spawn(move || send_request(endpoint, bearer, body, rpc_headers))
+            .spawn(move || send_request(endpoint, bearer, body, rpc_headers, budget, mutates))
             .map_err(|_| transport_error(false))?
             .join()
-            .map_err(|_| transport_error(false))?
+            .map_err(|_| maybe_uncertain(transport_error(false), mutates))?
     }
 
     fn request(
@@ -248,8 +249,10 @@ impl SupabaseAdapter {
         sql: &str,
         params: &[Parameter],
         kind: OperationKind,
+        mutates: bool,
     ) -> Result<Response, DactylError> {
         check_parameters(params)?;
+        preflight_statement(&self.budget, sql, params)?;
         self.send(
             "/query",
             &Request {
@@ -265,7 +268,16 @@ impl SupabaseAdapter {
                 },
                 context: &self.context,
             },
+            mutates,
         )
+    }
+}
+
+fn maybe_uncertain(error: DactylError, mutates: bool) -> DactylError {
+    if mutates {
+        mark_remote_uncertain(error)
+    } else {
+        error
     }
 }
 
@@ -274,10 +286,12 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     bearer: reqwest::header::HeaderValue,
     body: Vec<u8>,
     rpc_headers: Option<reqwest::header::HeaderMap>,
+    budget: ResourceBudget,
+    mutates: bool,
 ) -> Result<T, DactylError> {
     let client = reqwest::blocking::Client::builder()
-        .connect_timeout(CONNECT_TIMEOUT)
-        .timeout(REQUEST_TIMEOUT)
+        .connect_timeout(budget.connect_timeout())
+        .timeout(budget.request_timeout())
         .redirect(reqwest::redirect::Policy::none())
         .retry(reqwest::retry::never())
         .build()
@@ -290,46 +304,80 @@ fn send_request<T: for<'de> Deserialize<'de>>(
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(body)
         .send()
-        .map_err(|error| transport_error(error.is_timeout()))?;
+        .map_err(|error| maybe_uncertain(transport_error(error.is_timeout()), mutates))?;
     let status = response.status().as_u16();
-    let mut bytes = Vec::new();
-    response
-        .take(MAX_BODY_BYTES + 1)
-        .read_to_end(&mut bytes)
-        .map_err(|error| transport_error(body_read_timed_out(&error)))?;
-    if bytes.len() as u64 > MAX_BODY_BYTES {
-        return Err(protocol_error("Supabase response exceeds the 4 MiB limit"));
-    }
+    let bytes = match read_bounded_body(response, budget.max_wire_bytes()) {
+        Ok(bytes) => bytes,
+        Err(BoundedReadError::TooLarge) => {
+            return Err(maybe_uncertain(
+                DactylError::adapter_with_code(
+                    AdapterErrorKind::Protocol,
+                    "response_too_large",
+                    "Supabase response exceeds max_wire_bytes",
+                ),
+                mutates,
+            ))
+        }
+        Err(BoundedReadError::Io(error)) => {
+            return Err(maybe_uncertain(
+                transport_error(body_read_timed_out(&error)),
+                mutates,
+            ))
+        }
+    };
     if !(200..300).contains(&status) {
-        return Err(remote_error(status, &bytes, rpc));
+        let error = remote_error(status, &bytes, rpc);
+        return if mutates && matches!(status, 408 | 502 | 504) {
+            Err(mark_remote_uncertain(error))
+        } else {
+            Err(error)
+        };
     }
+    let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
+        maybe_uncertain(
+            protocol_error(if rpc {
+                "invalid RPC response"
+            } else {
+                "invalid Supabase service response"
+            }),
+            mutates,
+        )
+    })?;
+    ensure_json_depth(&value).map_err(|error| maybe_uncertain(error, mutates))?;
     if rpc {
-        let value: serde_json::Value =
-            serde_json::from_slice(&bytes).map_err(|_| protocol_error("invalid RPC response"))?;
         if let Some(results) = value.get("results") {
-            for result in results
-                .as_array()
-                .ok_or_else(|| protocol_error("invalid RPC batch response"))?
-            {
-                validate_rpc_result(result)?;
+            let mut tracker = DecodedResultTracker::new(budget);
+            for result in results.as_array().ok_or_else(|| {
+                maybe_uncertain(protocol_error("invalid RPC batch response"), mutates)
+            })? {
+                validate_rpc_result(result, budget, &mut tracker)
+                    .map_err(|error| maybe_uncertain(error, mutates))?;
             }
         } else {
-            validate_rpc_result(&value)?;
+            let mut tracker = DecodedResultTracker::new(budget);
+            validate_rpc_result(&value, budget, &mut tracker)
+                .map_err(|error| maybe_uncertain(error, mutates))?;
         }
-        return serde_json::from_value(value).map_err(|_| protocol_error("invalid RPC response"));
+        return serde_json::from_value(value)
+            .map_err(|_| maybe_uncertain(protocol_error("invalid RPC response"), mutates));
     }
-    serde_json::from_slice(&bytes).map_err(|_| protocol_error("invalid Supabase service response"))
+    serde_json::from_value(value)
+        .map_err(|_| maybe_uncertain(protocol_error("invalid Supabase service response"), mutates))
 }
 
 // Strict native results include keys and validate auxiliary write rows too.
 // A client decoding failure does not establish rollback of a committed write.
-fn validate_rpc_result(value: &serde_json::Value) -> Result<(), DactylError> {
+fn validate_rpc_result(
+    value: &serde_json::Value,
+    budget: ResourceBudget,
+    tracker: &mut DecodedResultTracker,
+) -> Result<(), DactylError> {
     if value.get("generated_keys").is_none() {
         return Err(protocol_error("RPC result requires generated_keys"));
     }
     let result: Response =
         serde_json::from_value(value.clone()).map_err(|_| protocol_error("invalid RPC result"))?;
-    rows_from_response(result).map(|_| ())
+    rows_from_response_budgeted(result, budget, tracker).map(|_| ())
 }
 
 pub(crate) fn body_read_timed_out(error: &std::io::Error) -> bool {
@@ -344,31 +392,53 @@ pub(crate) fn body_read_timed_out(error: &std::io::Error) -> bool {
 
 impl Adapter for SupabaseAdapter {
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
-        rows_from_response(self.request(sql, params, OperationKind::Read)?)
+        let response = self.request(sql, params, OperationKind::Read, false)?;
+        let mut tracker = DecodedResultTracker::new(self.budget);
+        rows_from_response_budgeted(response, self.budget, &mut tracker)
+    }
+
+    fn visit_rows(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
+    ) -> Result<ScanOutcome, DactylError> {
+        let response = self.request(sql, params, OperationKind::Read, false)?;
+        let mut tracker = DecodedResultTracker::new(self.budget);
+        visit_response_rows(response, self.budget, &mut tracker, visitor)
     }
 
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError> {
         ensure_writable(self.access_mode)?;
-        Ok(write_from_response(self.request(
-            sql,
-            params,
-            OperationKind::Write,
-        )?))
+        let response = self.request(sql, params, OperationKind::Write, true)?;
+        if !response.rows.is_empty() || !response.columns.is_empty() {
+            let mut tracker = DecodedResultTracker::new(self.budget);
+            let auxiliary = Response {
+                columns: response.columns.clone(),
+                rows: response.rows.clone(),
+                affected_rows: response.affected_rows,
+                generated_keys: Vec::new(),
+            };
+            rows_from_response_budgeted(auxiliary, self.budget, &mut tracker)
+                .map_err(mark_remote_uncertain)?;
+        }
+        Ok(write_from_response(response))
     }
 
     fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DactylError> {
         if operations.is_empty() {
             return Ok(AtomicResult::default());
         }
-        if operations
+        let mutates = operations
             .iter()
-            .any(|operation| operation.kind() != OperationKind::Read)
-        {
+            .any(|operation| operation.kind() != OperationKind::Read);
+        if mutates {
             ensure_writable(self.access_mode)?;
         }
         for operation in operations {
             check_parameters(operation.params())?;
         }
+        preflight_batch(&self.budget, operations)?;
         let response: BatchResponse = self.send(
             "/batch",
             &BatchRequest {
@@ -376,17 +446,24 @@ impl Adapter for SupabaseAdapter {
                 access_mode: self.access_mode,
                 context: &self.context,
             },
+            mutates,
         )?;
         if response.results.len() != operations.len() {
-            return Err(protocol_error(
-                "Supabase batch result count does not match operation count",
+            return Err(maybe_uncertain(
+                protocol_error("Supabase batch result count does not match operation count"),
+                mutates,
             ));
         }
+        let mut tracker = DecodedResultTracker::new(self.budget);
         let results = operations
             .iter()
             .zip(response.results)
             .map(|(operation, result)| match operation.kind() {
-                OperationKind::Read => rows_from_response(result).map(OperationResult::Rows),
+                OperationKind::Read => {
+                    rows_from_response_budgeted(result, self.budget, &mut tracker)
+                        .map(OperationResult::Rows)
+                        .map_err(|error| maybe_uncertain(error, mutates))
+                }
                 OperationKind::Write | OperationKind::Schema => {
                     Ok(OperationResult::Write(write_from_response(result)))
                 }
@@ -433,7 +510,25 @@ fn write_from_response(response: Response) -> WriteResult {
     }
 }
 
-fn rows_from_response(response: Response) -> Result<Rows, DactylError> {
+fn rows_from_response_budgeted(
+    response: Response,
+    budget: ResourceBudget,
+    tracker: &mut DecodedResultTracker,
+) -> Result<Rows, DactylError> {
+    let mut rows = Vec::with_capacity(response.rows.len());
+    visit_response_rows(response, budget, tracker, &mut |row| {
+        rows.push(row.clone());
+        Ok(true)
+    })?;
+    Ok(Rows(rows))
+}
+
+fn visit_response_rows(
+    response: Response,
+    budget: ResourceBudget,
+    tracker: &mut DecodedResultTracker,
+    visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
+) -> Result<ScanOutcome, DactylError> {
     // Object rows cannot preserve two distinct values with the same alias.
     let names: std::collections::HashSet<_> = response.columns.iter().collect();
     if names.len() != response.columns.len() {
@@ -441,53 +536,66 @@ fn rows_from_response(response: Response) -> Result<Rows, DactylError> {
             "duplicate columns are not representable by the service row contract",
         ));
     }
-    let rows = response
-        .rows
-        .into_iter()
-        .map(|value| {
-            let object = value
-                .as_object()
-                .ok_or_else(|| protocol_error("Supabase row must be an object"))?;
-            if object.len() != response.columns.len() {
-                return Err(protocol_error("Supabase row does not match columns"));
+    if response.rows.len() as u64 > budget.max_rows() {
+        return Err(result_limit(
+            "row_budget_exceeded",
+            "decoded row count exceeds max_rows",
+        ));
+    }
+    tracker.charge_columns(&response.columns)?;
+    let mut visited = 0_u64;
+    for value in response.rows {
+        let object = value
+            .as_object()
+            .ok_or_else(|| protocol_error("Supabase row must be an object"))?;
+        if object.len() != response.columns.len() {
+            return Err(protocol_error("Supabase row does not match columns"));
+        }
+        tracker.charge_row_overhead(&response.columns)?;
+        let mut values = Vec::with_capacity(response.columns.len());
+        for name in &response.columns {
+            let cell = object
+                .get(name)
+                .ok_or_else(|| protocol_error("Supabase row is missing a column"))?;
+            let supported = match cell {
+                serde_json::Value::Null
+                | serde_json::Value::Bool(_)
+                | serde_json::Value::String(_) => true,
+                serde_json::Value::Number(number) => {
+                    number.as_i64().is_some()
+                        || (number.is_f64() && number.as_f64().is_some_and(f64::is_finite))
+                }
+                serde_json::Value::Array(bytes) => bytes
+                    .iter()
+                    .all(|byte| byte.as_u64().is_some_and(|n| n <= 255)),
+                _ => false,
+            };
+            if !supported {
+                return Err(DactylError::adapter_with_code(
+                    AdapterErrorKind::Capability,
+                    "unsupported_type",
+                    "service returned a value outside the portable scalar/blob profile",
+                ));
             }
-            let values = response
-                .columns
-                .iter()
-                .map(|name| {
-                    let value = object
-                        .get(name)
-                        .ok_or_else(|| protocol_error("Supabase row is missing a column"))?;
-                    let supported = match value {
-                        serde_json::Value::Null
-                        | serde_json::Value::Bool(_)
-                        | serde_json::Value::String(_) => true,
-                        serde_json::Value::Number(number) => {
-                            number.as_i64().is_some()
-                                || (number.is_f64() && number.as_f64().is_some_and(f64::is_finite))
-                        }
-                        serde_json::Value::Array(bytes) => bytes
-                            .iter()
-                            .all(|byte| byte.as_u64().is_some_and(|n| n <= 255)),
-                        _ => false,
-                    };
-                    if !supported {
-                        return Err(DactylError::adapter_with_code(
-                            AdapterErrorKind::Capability,
-                            "unsupported_type",
-                            "service returned a value outside the portable scalar/blob profile",
-                        ));
-                    }
-                    Ok(value.clone())
-                })
-                .collect::<Result<_, _>>()?;
-            Ok(Row {
-                columns: response.columns.clone(),
-                values,
-            })
-        })
-        .collect::<Result<_, _>>()?;
-    Ok(Rows(rows))
+            tracker.charge_json_value(cell)?;
+            values.push(cell.clone());
+        }
+        let row = Row {
+            columns: response.columns.clone(),
+            values,
+        };
+        visited += 1;
+        if !visitor(&row)? {
+            return Ok(ScanOutcome {
+                rows: visited,
+                complete: false,
+            });
+        }
+    }
+    Ok(ScanOutcome {
+        rows: visited,
+        complete: true,
+    })
 }
 
 fn protocol_error(message: &'static str) -> DactylError {

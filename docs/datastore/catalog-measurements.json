@@ -1,0 +1,236 @@
+{
+  "baseline_source": "Legacy full inspection from Dactyl 1fa52a2 / published 0.11.1 versus additive targeted API; identical fixture in one process",
+  "cases": [
+    {
+      "file_bytes": 274432,
+      "history_rows": 0,
+      "legacy": {
+        "p50_ns": 1399917,
+        "p95_ns": 1585833,
+        "p99_ns": 1760125,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 17208,
+        "p95_ns": 28500,
+        "p99_ns": 40625,
+        "samples": 256
+      },
+      "trial": 0
+    },
+    {
+      "file_bytes": 274432,
+      "history_rows": 0,
+      "legacy": {
+        "p50_ns": 1384500,
+        "p95_ns": 1584250,
+        "p99_ns": 1649750,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 16917,
+        "p95_ns": 33083,
+        "p99_ns": 62000,
+        "samples": 256
+      },
+      "trial": 1
+    },
+    {
+      "file_bytes": 274432,
+      "history_rows": 0,
+      "legacy": {
+        "p50_ns": 1400084,
+        "p95_ns": 1617875,
+        "p99_ns": 2183958,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 17292,
+        "p95_ns": 31625,
+        "p99_ns": 41000,
+        "samples": 256
+      },
+      "trial": 2
+    },
+    {
+      "file_bytes": 1662976,
+      "history_rows": 1000,
+      "legacy": {
+        "p50_ns": 1405500,
+        "p95_ns": 1594417,
+        "p99_ns": 1683167,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 17208,
+        "p95_ns": 30459,
+        "p99_ns": 37458,
+        "samples": 256
+      },
+      "trial": 0
+    },
+    {
+      "file_bytes": 1662976,
+      "history_rows": 1000,
+      "legacy": {
+        "p50_ns": 1414375,
+        "p95_ns": 1619375,
+        "p99_ns": 1708041,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 17458,
+        "p95_ns": 32834,
+        "p99_ns": 47459,
+        "samples": 256
+      },
+      "trial": 1
+    },
+    {
+      "file_bytes": 1662976,
+      "history_rows": 1000,
+      "legacy": {
+        "p50_ns": 1419666,
+        "p95_ns": 2747167,
+        "p99_ns": 5316875,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 17667,
+        "p95_ns": 40625,
+        "p99_ns": 78959,
+        "samples": 256
+      },
+      "trial": 2
+    },
+    {
+      "file_bytes": 14168064,
+      "history_rows": 10000,
+      "legacy": {
+        "p50_ns": 1523125,
+        "p95_ns": 1814000,
+        "p99_ns": 2049916,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 19583,
+        "p95_ns": 38459,
+        "p99_ns": 55208,
+        "samples": 256
+      },
+      "trial": 0
+    },
+    {
+      "file_bytes": 14168064,
+      "history_rows": 10000,
+      "legacy": {
+        "p50_ns": 1524833,
+        "p95_ns": 3053708,
+        "p99_ns": 6755250,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 19417,
+        "p95_ns": 43833,
+        "p99_ns": 86834,
+        "samples": 256
+      },
+      "trial": 1
+    },
+    {
+      "file_bytes": 14168064,
+      "history_rows": 10000,
+      "legacy": {
+        "p50_ns": 1443916,
+        "p95_ns": 1652459,
+        "p99_ns": 1865042,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 16916,
+        "p95_ns": 39125,
+        "p99_ns": 81083,
+        "samples": 256
+      },
+      "trial": 2
+    },
+    {
+      "file_bytes": 139362304,
+      "history_rows": 100000,
+      "legacy": {
+        "p50_ns": 1540292,
+        "p95_ns": 3899167,
+        "p99_ns": 21189291,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 18875,
+        "p95_ns": 59541,
+        "p99_ns": 143042,
+        "samples": 256
+      },
+      "trial": 0
+    },
+    {
+      "file_bytes": 139362304,
+      "history_rows": 100000,
+      "legacy": {
+        "p50_ns": 1660584,
+        "p95_ns": 2275791,
+        "p99_ns": 2851167,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 24958,
+        "p95_ns": 44667,
+        "p99_ns": 123500,
+        "samples": 256
+      },
+      "trial": 1
+    },
+    {
+      "file_bytes": 139362304,
+      "history_rows": 100000,
+      "legacy": {
+        "p50_ns": 1658375,
+        "p95_ns": 2296875,
+        "p99_ns": 2744417,
+        "samples": 256
+      },
+      "sqlite_version": "3.54.0",
+      "table_count": 32,
+      "targeted_api": {
+        "p50_ns": 23833,
+        "p95_ns": 41166,
+        "p99_ns": 72500,
+        "samples": 256
+      },
+      "trial": 2
+    }
+  ],
+  "fixture": "32 tables, one growing history, 1024-byte payload, unique stream/sequence index; 3 alternating-order trials, 256 positive/negative pairs per trial",
+  "schema_version": 1,
+  "scope": "Warm in-process predicates, real Dactyl adapter; no CLI cold-start, allocation, cloud, mutation, durability or network claim; no runtime pragma changes"
+}

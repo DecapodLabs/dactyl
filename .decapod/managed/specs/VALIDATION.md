@@ -1,5 +1,9 @@
 # Validation
 
+## Resource-budget, catalog-predicate, and recovery proof (issue 101)
+
+`.decapod/config.toml` reconciles `reviewed_sources_digest` with the accepted `0.14.0` release while preserving `tools/proof/check.py` (`reviewed_commands_digest` unchanged) and the `0.138.3` controller pin. `tests/resource_budgets.rs`, `tests/catalog_predicates.rs`, `tests/catalog_capabilities.rs`, `tests/unit/sqlite_catalog.rs`, and seam extensions in `tests/storage_fixtures.rs`, `tests/supabase_contract.rs`, `tests/supabase_service.rs`, `tests/sqlite_maintenance.rs`, and `src/adapter/sqlite/recovery/tests.rs` verify `OpenOptions` struct-literal compatibility, exact `N` vs `N + 1` and `u64` overflow boundaries, pre-allocation `32x` BLOB result charging, lying `Content-Length` and JSON depth > 64 rejection, `visit_rows` lock release vs budget error, single-prepare SQLite catalog predicates (1 vs 161 statements), local atomic rollback vs remote `MutationOutcome::Uncertain` reconciliation, compact opaque component references `(component_kind, codec_version, byte_len, content_sha256)`, and C-ABI streaming recovery under tight result budgets. Evidence remains explicitly separated into executed `local_sqlite`, `synthetic_http`, and `neon_mock` checks versus `unavailable` external `local_postgres`, `hosted_supabase`, and `live_propodus` profiles.
+
 The snapshot-inspection candidate uses independently released Decapod v0.138.3
 for both workbranch validation and `tools/proof/Containerfile`. Hosted validation
 must evaluate entrypoints with that same version. PR #104's first hosted run
@@ -277,8 +281,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
+- Repository signal fingerprint: `f5752330fe1310e344cf6a0568843d072cad2d47ceaaf5b8ff752a5b82f69726`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (20 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
