@@ -108,6 +108,11 @@
       "id": "growth-101-03-adapter",
       "summary": "Add visit_rows and catalog predicate adapter trait seams",
       "input_digest": "sha256:d96b591d11f06029eb14853f22d2daa43cc04b838c1f531632e8e448b7c10511"
+    },
+    {
+      "id": "growth-101-04-sqlite-ffi",
+      "summary": "Bind sqlite3_reset and sqlite3_clear_bindings symbols",
+      "input_digest": "sha256:3d09c524d66ada25c871fca6d8667870c951ea1abde7510fd045e4a2b6d7333f"
     }
   ],
   "intents": {
