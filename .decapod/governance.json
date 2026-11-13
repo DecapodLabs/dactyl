@@ -148,6 +148,11 @@
       "id": "growth-101-11-recovery-blob-test",
       "summary": "Add multi-row BLOB recovery streaming regression under tight result budget",
       "input_digest": "sha256:0dfab6d0217fd2fe6a84b124383a8be4fe915f20f7d7a8e1410953781f6d5dbf"
+    },
+    {
+      "id": "growth-101-12-catalog-predicates-test",
+      "summary": "Add SQLite catalog predicate parity, visibility, and non-mutation integration suite",
+      "input_digest": "sha256:c064c3cd18a9da0e97d4f6118ffa3b73e3f83e72ca17875b4899ffeaff2b0d68"
     }
   ],
   "intents": {
