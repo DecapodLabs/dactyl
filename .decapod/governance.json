@@ -173,6 +173,11 @@
       "id": "conn-100-17-spec-validation",
       "summary": "docs(specs): update VALIDATION.md for logical_connector offline proofs and unavailable live targets (#100)",
       "input_digest": "sha256:b42f864b9ef73a22b42cd03351d8c6d3e7751c33636ffdf77bfe6f7c0b989bae"
+    },
+    {
+      "id": "conn-100-18-spec-readme",
+      "summary": "docs(specs): refresh specs README attestation for #100 inventory (#100)",
+      "input_digest": "sha256:610f49a96bf38a70984507036406b852a0aa41dde3099d513e3049cfaeffa942"
     }
   ],
   "intents": {
