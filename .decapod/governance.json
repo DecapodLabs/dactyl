@@ -180,6 +180,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-218-811933cee8",
+      "summary": "chore(specs): refresh native scenario SEMANTICS.md",
+      "input_digest": "sha256:37e37b4aa396ec8c93056dbb2fa89992272760136afddb23c0845c8d17873618",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
