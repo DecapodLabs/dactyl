@@ -164,6 +164,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "file-216-cfe19c0fd7",
+      "summary": "chore(specs): refresh native scenario README.md",
+      "input_digest": "sha256:1e4d6112351660f31ac0e25633a9996bcc0c548a62a0d6f26ec348d17182e5b3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
