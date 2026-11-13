@@ -132,11 +132,11 @@ detected_surfaces = [
     "cargo",
     "rust",
 ]
-done_criteria = "The outcome is complete when equivalent queries across all nine Decapod stores produce equivalent row projections through both adapters, compile-time query analysis works for literal queries, runtime analysis works for dynamic queries, inline datastore directives are honored, and the full formatting, linting, and conformance suite passes."
+done_criteria = "The public Rust read, write, atomic, value, access-mode and resource-budget contracts pass the reviewed feature, formatting, lint, MSRV and package checks; logical local/cloud connectors preserve per-workspace isolation and private caller-owned sessions; unsupported service SQL, catalog and maintenance capabilities fail explicitly. Real PostgreSQL, hosted native RPC, managed Auth and registry-consumer qualification retain exact versioned evidence and unavailable limits rather than inheriting a synthetic pass."
 external_tracker = false
 primary_languages = ["Rust"]
 product_name = "dactyl-db"
-product_summary = "Establish Dactyl as the governed datastore boundary for Decapod, allowing callers to execute the same query contract against either local SQLite or remote Neon-backed storage without changing application logic. Dactyl must select the requested datastore, analyze SQL before execution, reject unsupported dialect constructs when rewriting is disabled, apply permitted rewrites when enabled, and preserve a narrow public API that does not expose adapter internals."
+product_summary = "Provide a thin Rust datastore and managed authentication transport over local SQLite, explicit Neon and Supabase HTTP services, and native Supabase RPC. Dactyl resolves per-workspace logical local/cloud connectors, binds values, normalizes bounded results and typed errors, and preserves physical atomicity without exposing adapter handles. Applications own schemas, migration ordering, retries, governance and private session custody; the trusted service owns effective authorization and its supported SQL profile."
 product_type = "service_or_library"
 
 [tracker]
