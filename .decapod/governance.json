@@ -163,6 +163,11 @@
       "id": "growth-101-14-resource-budgets-test",
       "summary": "Add cross-adapter resource budget, visit_rows, FailureOrigin, and MutationOutcome suite",
       "input_digest": "sha256:859cb14c001000c1e35565c4045c0466c2b0ec2b120420213fe9738670a94f33"
+    },
+    {
+      "id": "growth-101-15-storage-fixtures",
+      "summary": "Extend storage fixture suite with compact component refs and bounded visit_rows",
+      "input_digest": "sha256:5e71ec76b297b325b5e4aeb4e537cdd7c8ab16b705bf291a94c7fe12ec44b40f"
     }
   ],
   "intents": {
