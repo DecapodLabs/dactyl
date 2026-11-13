@@ -129,6 +129,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "file-15",
+      "summary": "docs(specs): reconcile issue 70 README.md",
+      "input_digest": "sha256:3cdb1576836322b64a90c5332c22f0141bd53f85b325390906f3fc36f82f4c2d",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
