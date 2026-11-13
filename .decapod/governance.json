@@ -148,6 +148,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-214-5e9a97d481",
+      "summary": "chore(specs): refresh native scenario INTERFACES.md",
+      "input_digest": "sha256:cfd6cd9288562b85a995635f8bf0302595acd890fbb0628d6ff6f523e5cc88df",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
