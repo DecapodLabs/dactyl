@@ -12,7 +12,9 @@ pub fn read(path: &Path) -> Check<Vec<u8>> {
         return Err("fixture must be a protected regular file");
     }
     let file = File::open(path).map_err(|_| "fixture unavailable")?;
-    let after = file.metadata().map_err(|_| "fixture metadata unavailable")?;
+    let after = file
+        .metadata()
+        .map_err(|_| "fixture metadata unavailable")?;
     if !after.is_file() || after.len() > LIMIT {
         return Err("fixture must be a bounded regular file");
     }
@@ -49,7 +51,9 @@ pub fn reserve(path: &Path) -> Check<File> {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    options.open(path).map_err(|_| "receipt unavailable or already exists")
+    options
+        .open(path)
+        .map_err(|_| "receipt unavailable or already exists")
 }
 
 pub fn write(file: &mut File, value: &serde_json::Value) -> Check<()> {

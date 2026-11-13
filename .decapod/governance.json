@@ -92,6 +92,14 @@
       "proof_refs": [
         "source:tests/support/native_scenarios.rs"
       ]
+    },
+    {
+      "id": "file-202-e1c7535eb8",
+      "summary": "style(test): format protected fixture helper",
+      "input_digest": "sha256:1c1d5a53d7bedf09936b4a57354cea74e01f8fcfd132a1d0beeac66425b0a0ca",
+      "proof_refs": [
+        "source:tests/support/protected_fixture.rs"
+      ]
     }
   ],
   "intents": {
