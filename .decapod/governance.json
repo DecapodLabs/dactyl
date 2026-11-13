@@ -105,6 +105,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-12-feb3977f6e",
+      "summary": "docs(specs): reconcile issue 91 INTENT.md",
+      "input_digest": "sha256:7223db3f7a91057d0a92b78486293b711e281a30a11ba8e4c34a0c1ae7aaafc3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
