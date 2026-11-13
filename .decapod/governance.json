@@ -113,6 +113,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-13-715b25109b",
+      "summary": "docs(specs): reconcile issue 94 INTERFACES.md",
+      "input_digest": "sha256:ea3500257390934de2c69421da9ac6680fde2bb5d4d434f1b8b61783541ff2cb",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
