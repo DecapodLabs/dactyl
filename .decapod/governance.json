@@ -300,6 +300,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-239-28dd8dafa1",
+      "summary": "chore(specs): refresh corrected native scenarios VALIDATION.md",
+      "input_digest": "sha256:9d21c59127226543d4913ce173580dfd82eb8564de9525db188d316183290ab2",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
