@@ -20,6 +20,19 @@ ownership checks remain enabled.
 Hosted OAuth, checkout, deployment and registry
 publication require separate evidence.
 
+`tests/logical_connector.rs`, `tests/cloud_connector.rs`, and
+`tests/supabase_disabled.rs` verify per-workspace `LogicalTarget` and
+`LogicalConnector` isolation across concurrent local SQLite files and separate
+loopback cloud origins without ambient environment variables, portable
+credential redaction across `--no-default-features` / `sqlite` / `all-features`,
+existing-bearer reuse, missing-session bootstrap through readiness (`Status`,
+`Manage`, `Portal`) to native RPC and logout, fail-closed cloud discovery without
+SQLite fallback, GoTrue/OAuth2/Propodus allowlisted error-code normalization, and
+`outcome_unknown` classification on post-send ambiguous mutating/one-time
+failures. These proofs exercise `local_sqlite` and `synthetic_http` only;
+`local_postgres`, `hosted_supabase`, and `live_propodus` remain `unavailable`
+until independently executed against deployed services.
+
 The MSRV proposal preserves all fifteen existing Rust checks, including both
 locked all-feature execution and fresh-consumer resolution, with the actual
 Rust 1.85 toolchain. Two additional lock inspections require patched or absent
@@ -277,8 +290,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
+- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

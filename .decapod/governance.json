@@ -168,6 +168,11 @@
       "id": "conn-100-16-spec-semantics",
       "summary": "docs(specs): update SEMANTICS.md for LogicalConnector isolation and outcome_unknown (#100)",
       "input_digest": "sha256:1cced80b623518811a4cdf692a4d44883abcf364ad343f36c9b4bd0decf0dd0c"
+    },
+    {
+      "id": "conn-100-17-spec-validation",
+      "summary": "docs(specs): update VALIDATION.md for logical_connector offline proofs and unavailable live targets (#100)",
+      "input_digest": "sha256:b42f864b9ef73a22b42cd03351d8c6d3e7751c33636ffdf77bfe6f7c0b989bae"
     }
   ],
   "intents": {
