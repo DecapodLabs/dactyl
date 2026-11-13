@@ -124,6 +124,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-211-fd6fe1414c",
+      "summary": "chore(specs): refresh native scenario .manifest.json",
+      "input_digest": "sha256:28ae31e275795ea15b4691737d873bd3a78fe85710ab5f17e97b79df00e4b08e",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -152,7 +160,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 6,
+        "file_touch_budget": 16,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -163,7 +171,30 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "state": "APPROVED",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed native RPC/HTTP adapter and connector boundaries. Changes are opt-in client tests only; service-owned catalog, deployment, physical transaction and concurrency policy stay external. VALIDATION records the new fixture execution boundary.",
+          "reviewed_code_fingerprint": "a7a057f783efbf536549d413204a9e09cae9e963fb7a89f823cb25e6e7f56cf1",
+          "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Public SDK Operation/AtomicResult and native v1 envelopes remain unchanged; legacy Propodus consumer fixture still works. The private v2 fixture is documented in conformance guide and VALIDATION rather than changing runtime API specifications.",
+          "reviewed_code_fingerprint": "a7a057f783efbf536549d413204a9e09cae9e963fb7a89f823cb25e6e7f56cf1",
+          "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed credential redaction, explicit origin trust, local loopback exception, private fixture permissions, identity checks and exclusive receipts. Only test-owned fixture handling changes; no production auth, grants, service SQL or SDK resource/retry boundary changes. Private directories must be protected from concurrent hostile writers.",
+          "reviewed_code_fingerprint": "a7a057f783efbf536549d413204a9e09cae9e963fb7a89f823cb25e6e7f56cf1",
+          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
+        }
+      ],
+      "state": "DRAFT",
       "stop_conditions": [
         "No mutation without explicit disposable scenario fixture; no credentials or raw values in receipts"
       ],
@@ -175,7 +206,7 @@
         "Authorized disposable hosted fixture not yet supplied"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794563409Z"
+      "updated_at": "1794564743Z"
     },
     "trajectory": {
       "active_boundaries": [
