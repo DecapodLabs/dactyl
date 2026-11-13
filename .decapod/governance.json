@@ -100,6 +100,14 @@
       "proof_refs": [
         "source:tests/support/protected_fixture.rs"
       ]
+    },
+    {
+      "id": "file-204-62c3c24921",
+      "summary": "test(native): expose protected hosted scenarios and harden legacy fixture",
+      "input_digest": "sha256:063c149ae1189f10750aca49a668982f49c9ece41ef670a9e7cdf74f45a2daf4",
+      "proof_refs": [
+        "source:tests/native_service.rs"
+      ]
     }
   ],
   "intents": {
