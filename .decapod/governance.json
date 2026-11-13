@@ -213,6 +213,11 @@
       "id": "growth-101-24-changelog",
       "summary": "Record unreleased #101 resource budgets, visit_rows, and catalog predicates in CHANGELOG",
       "input_digest": "sha256:9d0d6e2c29b3e5dfcceb4f5d0c752d8aae422769502c84ab691c20c9ee6d33a1"
+    },
+    {
+      "id": "growth-101-25-readme",
+      "summary": "Document open_with_budget, visit_rows, catalog predicates, and error classifications in README",
+      "input_digest": "sha256:7d95bc46ad85f8a2cba667a2f92e988966d57a4906a0115cfb509dbcb9d50b45"
     }
   ],
   "intents": {
