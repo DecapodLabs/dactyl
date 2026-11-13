@@ -97,6 +97,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-11",
+      "summary": "docs(specs): reconcile issue 70 ARCHITECTURE.md",
+      "input_digest": "sha256:58971a3f446edd56feb7f685b9ec85e53c41e4a0fc07c52ef65d7758e718adb1",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
