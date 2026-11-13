@@ -93,6 +93,11 @@
       "id": "conn-100-01-config-digest",
       "summary": "Reconcile reviewed sources digest with accepted 0.14.0 release and initialize #100 plan/claims",
       "input_digest": "sha256:ddeaa9c811f46afc5c2cc167b7806ca0cc5b52a2fdf6affa99efa2e40b38d8b3"
+    },
+    {
+      "id": "conn-100-02-src-connector",
+      "summary": "feat(connector): add LogicalTarget, LogicalConnector, and portable session types (#100)",
+      "input_digest": "sha256:de29ba9ce95776d13f6d3d1d4c3edde48798bee0686cfcecfb8bc446a4e68598"
     }
   ],
   "intents": {
