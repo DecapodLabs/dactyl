@@ -84,6 +84,14 @@
       "proof_refs": [
         "source:tests/support/protected_fixture.rs"
       ]
+    },
+    {
+      "id": "file-203-17859f2145",
+      "summary": "test(native): execute bounded service-owned scenarios and record client outcomes",
+      "input_digest": "sha256:a03ee92917d4560bfa1053a9e2a92445a18b7ad44296fd6a573d4b4b2b5cae84",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
     }
   ],
   "intents": {
@@ -141,9 +149,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:009e94d1210b8233d3d978f42ebc38e66a37f9c98e4602d7ed7175f49ce6942e",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:34ca4f0167f98e0a10ce4cd4fd20eb9f3340d295b52efc7f7393cb19ec1082d4",
+      "checks": [
+        {
+          "name": "hosted-native",
+          "status": "unavailable"
+        }
+      ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -157,19 +170,66 @@
             "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7A4YME86QXVMVRC0WQVAWF2",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7A4YME86QXVMVRC0WQVAWF2": {
+            "evidence_only": true,
+            "id": "branch_01M7A4YME86QXVMVRC0WQVAWF2",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
+            "steps": [
+              {
+                "action": "implementation",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "tests/supabase_rpc.rs",
+                  "tests/native_service.rs",
+                  "tests/support/protected_fixture.rs",
+                  "tests/support/native_scenarios.rs",
+                  "tests/native_service.rs",
+                  "Reviewed Propodus origin/main 312bca6 native Dactyl consumer and physical read-only tests. Preserve service-owned SQL; maintain v1 interface and add bounded v2 client-only scenarios. No hosted credentials supplied."
+                ],
+                "proof_refs": [
+                  "hosted-native"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs/VALIDATION.md\"]",
+                  "\"docs/supabase-conformance.md\"",
+                  "\"tests/support\"",
+                  "paths:[\"tests/native_service.rs\""
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "Reviewed Propodus origin/main 312bca6 native Dactyl consumer and physical read-only tests. Preserve service-owned SQL; maintain v1 interface and add bounded v2 client-only scenarios. No hosted credentials supplied."
+      ],
+      "inspected_files": [
+        "tests/native_service.rs",
+        "tests/supabase_rpc.rs"
+      ],
       "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
-      "modified_files": [],
+      "modified_files": [
+        "tests/native_service.rs",
+        "tests/support/native_scenarios.rs",
+        "tests/support/protected_fixture.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
