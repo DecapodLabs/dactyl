@@ -203,6 +203,11 @@
       "id": "growth-101-22-doc-dogfooding-inventory",
       "summary": "Record synthetic component-reference amplification inventory and compact projection sizing",
       "input_digest": "sha256:5b247da29362aa6af00ce9f3a76679252d7a3f4d47df8a5a37649a106e756d69"
+    },
+    {
+      "id": "growth-101-23-doc-resource-budgets",
+      "summary": "Document ResourceBudget v1 limits, FailureOrigin, MutationOutcome, and streaming scans",
+      "input_digest": "sha256:5aa733ffd30e6987822173b3c5a5e395101d97f0cac7ecf3d4c3705fa678afc2"
     }
   ],
   "intents": {
