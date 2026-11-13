@@ -258,6 +258,11 @@
       "id": "growth-101-33-spec-readme",
       "summary": "Refresh managed specs index README projection for updated source and test inventory",
       "input_digest": "sha256:f2ea5d34f44e97c2e83191be3d414418273ae5bc867bbb135a7f82da68b7fe15"
+    },
+    {
+      "id": "growth-101-34-spec-manifest",
+      "summary": "Refresh managed specs .manifest.json hashes and repo signal fingerprint",
+      "input_digest": "sha256:9b6a4ab2133314acf2fe5f32c09f20531d773d4ae56757f949a06dbf26b95e9f"
     }
   ],
   "intents": {
