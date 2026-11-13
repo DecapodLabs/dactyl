@@ -292,6 +292,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-238-281b414f87",
+      "summary": "chore(specs): refresh corrected native scenarios SEMANTICS.md",
+      "input_digest": "sha256:31c5dcd8cc618dd1e07540b6900212e27c6613b68e4426430dd799e6bc533c7e",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
