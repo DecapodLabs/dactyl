@@ -108,6 +108,11 @@
       "id": "conn-100-04-src-lib",
       "summary": "feat(api): export LogicalTarget, LogicalConnector, and portable connector types (#100)",
       "input_digest": "sha256:764f63086d6d88465583f1394c7672c8b910c086de2f650aab89ee4bc902ab43"
+    },
+    {
+      "id": "conn-100-05-test-logical",
+      "summary": "test(connector): add multi-workspace, session readiness, and outcome_unknown tests (#100)",
+      "input_digest": "sha256:6ac02fa866622af704877db7ea57692cc2e366da2b8f9f4681350c9577691b8c"
     }
   ],
   "intents": {
