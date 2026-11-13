@@ -233,6 +233,11 @@
       "id": "growth-101-28-spec-interfaces",
       "summary": "Update INTERFACES.md with ResourceBudget, open_with_budget, visit_rows, has_table, has_column, FailureOrigin, and MutationOutcome",
       "input_digest": "sha256:3688645b84e5aa3bb92d54e59f9b761930dcd1e9c5937515c57dde2bf229e0ca"
+    },
+    {
+      "id": "growth-101-29-spec-operations",
+      "summary": "Update OPERATIONS.md with bounded maintenance, recovery statement reuse, and uncertain write reconciliation",
+      "input_digest": "sha256:0d04aafc9a811d1813ba669c3dedec90080a0b9c4af62805bd08b6bff2c1eed1"
     }
   ],
   "intents": {
