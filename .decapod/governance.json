@@ -248,6 +248,11 @@
       "id": "growth-101-31-spec-semantics",
       "summary": "Update SEMANTICS.md with FailureOrigin, MutationOutcome, ScanOutcome, and catalog visibility invariants",
       "input_digest": "sha256:eafd9f282b75393cbd7407348cdef06767af6caea4c8511cf3af5d11108b86cb"
+    },
+    {
+      "id": "growth-101-32-spec-validation",
+      "summary": "Update VALIDATION.md with #101 budget/catalog test suites and explicit unavailable live-service classes",
+      "input_digest": "sha256:d2aaeb821b710954df7b5839c0cec6d8b414992532686a608722f9bbe1c2fce3"
     }
   ],
   "intents": {
