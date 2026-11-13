@@ -135,6 +135,8 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         (AccountOperation::Status, "account-status"),
         (AccountOperation::Quote, "billing-quote"),
         (AccountOperation::Checkout, "billing-checkout"),
+        (AccountOperation::Manage, "billing-manage"),
+        (AccountOperation::Portal, "billing-portal"),
     ];
     let result =
         json!({"backend_authorized":false,"future":{"opaque":[1,false,"provider-policy"]}});
@@ -175,7 +177,9 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
     .unwrap()
     .read("select fixture", &[])
     .unwrap();
-    let requests: Vec<_> = (0..7).map(|_| rx.recv().unwrap()).collect();
+    let requests: Vec<_> = (0..operations.len() + 3)
+        .map(|_| rx.recv().unwrap())
+        .collect();
     for (index, ((_, action), (headers, body))) in operations.iter().zip(&requests).enumerate() {
         assert!(headers.starts_with(&format!("POST /functions/v1/propodus-onboarding/{action} ")));
         assert_eq!(header(headers, "authorization"), Some("Bearer user-access"));
@@ -191,20 +195,26 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         assert_eq!(*body, payload);
         assert!(!body.to_string().contains("scm-credential"));
     }
-    for (headers, _) in &requests[4..] {
+    for (headers, _) in &requests[operations.len()..] {
         for name in ["x-scm-token", "x-scm-provider", "x-scm-host"] {
             assert_eq!(header(headers, name), None);
         }
     }
-    assert_eq!(header(&requests[5].0, "authorization"), None);
-    assert!(requests[6]
+    assert_eq!(
+        header(&requests[operations.len() + 1].0, "authorization"),
+        None
+    );
+    assert!(requests[operations.len() + 2]
         .0
         .starts_with("POST /rest/v1/rpc/dactyl_query_v1 "));
     assert_eq!(
-        header(&requests[6].0, "authorization"),
+        header(&requests[operations.len() + 2].0, "authorization"),
         Some("Bearer user-access")
     );
-    assert!(!requests[6].1.to_string().contains("user-refresh"));
+    assert!(!requests[operations.len() + 2]
+        .1
+        .to_string()
+        .contains("user-refresh"));
     handle.join().unwrap();
 }
 

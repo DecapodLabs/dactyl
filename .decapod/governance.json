@@ -113,6 +113,11 @@
       "id": "conn-100-05-test-logical",
       "summary": "test(connector): add multi-workspace, session readiness, and outcome_unknown tests (#100)",
       "input_digest": "sha256:6ac02fa866622af704877db7ea57692cc2e366da2b8f9f4681350c9577691b8c"
+    },
+    {
+      "id": "conn-100-06-test-cloud",
+      "summary": "test(cloud): cover Manage and Portal account onboarding routes (#100)",
+      "input_digest": "sha256:f58974d7e4a82b67811d35e3b70c8d8a7c886d76e09fc73ef186886ac8652344"
     }
   ],
   "intents": {
