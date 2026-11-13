@@ -284,6 +284,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "file-237-57b1327d65",
+      "summary": "chore(specs): refresh corrected native scenarios SECURITY.md",
+      "input_digest": "sha256:b46f88dced3725d91358f6574452e191fe9972f372a07f5c0d5a14fbdac2e0d8",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
