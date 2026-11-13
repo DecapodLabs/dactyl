@@ -1,5 +1,9 @@
 # Semantics
 
+## Client knowledge and independent server outcomes (issue 85)
+
+docs/cloud-failure-conformance.md defines the remaining native fault/concurrency proof matrix. LocalBudget/NotAttempted, known local rollback, conservative remote Uncertain outcomes and managed-auth/account outcome_unknown retain their existing src/error.rs and src/cloud.rs semantics. A transport failure cannot establish server rollback. Independent observers must distinguish actual commit, abort or unresolved state; callers retain reconciliation/idempotency policy and never automatically replay uncertain mutations. Synthetic tests and client-side read-only refusal do not establish real server enforcement, concurrent winners, effective grants or hosted proof capture. Decapod owns applicability; Propodus owns authenticated authority and physical state/event transactions.
+
 ## Resource-budget, scan, and mutation-outcome invariants (issue 101)
 
 - Deliberate visitor stop (`Ok(false)` in `Connection::visit_rows`) returns `Ok(ScanOutcome { rows, complete: false })` and releases native SQLite statement locks before returning; budget exhaustion (`max_columns`, `max_rows`, `max_cell_bytes`, `max_result_bytes`, `max_wire_bytes`) always returns `Err(DactylError)`, never silent partial truncation.
