@@ -188,6 +188,11 @@
       "id": "growth-101-19-doc-catalog-predicates",
       "summary": "Document SQLite catalog predicate contract, complexity, and remote capability boundary",
       "input_digest": "sha256:1e6fd435109a14ce442ec1ee74d1b0f6ad235940064dbc314d47a655358593fa"
+    },
+    {
+      "id": "growth-101-20-doc-catalog-measurements",
+      "summary": "Record SQLite catalog predicate statement-prepare measurements vs full inspect_schema",
+      "input_digest": "sha256:198b1593f303d2909bb088ad735bbbb4cad75538a34c991b9bc6a686bae058e2"
     }
   ],
   "intents": {
