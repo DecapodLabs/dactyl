@@ -236,6 +236,14 @@
       "proof_refs": [
         "source:tests/support/native_scenarios.rs"
       ]
+    },
+    {
+      "id": "file-231-9f4faab4fe",
+      "summary": "chore(specs): refresh corrected native scenarios .manifest.json",
+      "input_digest": "sha256:37438d0ee137a93652838859f13d920a7db9b9c7b29e815937f1121433b979d7",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -281,22 +289,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed native RPC/HTTP adapter and connector boundaries. Changes are opt-in client tests only; service-owned catalog, deployment, physical transaction and concurrency policy stay external. VALIDATION records the new fixture execution boundary.",
-          "reviewed_code_fingerprint": "a7a057f783efbf536549d413204a9e09cae9e963fb7a89f823cb25e6e7f56cf1",
+          "reason": "Reviewed current native scenario repair: public Rows tuple serialization corrected in private fixtures/docs and tested against the guide. SDK runtime API, service-owned SQL, policy and credential/redaction boundaries are unchanged; authored VALIDATION preserves external hosted/physical evidence limits.",
+          "reviewed_code_fingerprint": "64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4",
           "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public SDK Operation/AtomicResult and native v1 envelopes remain unchanged; legacy Propodus consumer fixture still works. The private v2 fixture is documented in conformance guide and VALIDATION rather than changing runtime API specifications.",
-          "reviewed_code_fingerprint": "a7a057f783efbf536549d413204a9e09cae9e963fb7a89f823cb25e6e7f56cf1",
+          "reason": "Reviewed current native scenario repair: public Rows tuple serialization corrected in private fixtures/docs and tested against the guide. SDK runtime API, service-owned SQL, policy and credential/redaction boundaries are unchanged; authored VALIDATION preserves external hosted/physical evidence limits.",
+          "reviewed_code_fingerprint": "64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4",
           "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed credential redaction, explicit origin trust, local loopback exception, private fixture permissions, identity checks and exclusive receipts. Only test-owned fixture handling changes; no production auth, grants, service SQL or SDK resource/retry boundary changes. Private directories must be protected from concurrent hostile writers.",
-          "reviewed_code_fingerprint": "a7a057f783efbf536549d413204a9e09cae9e963fb7a89f823cb25e6e7f56cf1",
+          "reason": "Reviewed current native scenario repair: public Rows tuple serialization corrected in private fixtures/docs and tested against the guide. SDK runtime API, service-owned SQL, policy and credential/redaction boundaries are unchanged; authored VALIDATION preserves external hosted/physical evidence limits.",
+          "reviewed_code_fingerprint": "64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
@@ -310,7 +318,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794564829Z"
+      "updated_at": "1794565098Z"
     },
     "trajectory": {
       "active_boundaries": [
