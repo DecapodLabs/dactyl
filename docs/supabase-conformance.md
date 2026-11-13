@@ -17,7 +17,7 @@ Keep the following evidence profiles separate:
 | `synthetic_http` | `tests/supabase_rpc.rs`, `tests/cloud_connector.rs`, `tests/logical_connector.rs` | Physical transactions, managed OAuth or deployed authorization |
 | Local native service | `tests/native_service.rs::local_native_read_only_contract` | Hosted execution, independent authorization or server-side mutation denial |
 | Generic PostgreSQL service | The `dactyl_service_v1` fixture below | A task-only native RPC service or Supabase pooler modes |
-| Protected hosted native service | Remaining issue 70 deliverable | Unavailable until independently provisioned and exercised |
+| Protected native scenarios | `tests/native_service.rs::{local_native_scenarios,protected_hosted_native_scenarios}` | Client scenarios only; hosted/database qualification still requires actual execution and independent observations |
 
 The local native test requires a private `DACTYL_NATIVE_FIXTURE` and a disposable
 literal-loopback HTTP origin. Invoke it explicitly from the candidate checkout:
@@ -32,6 +32,107 @@ test issues two reads in a read-only batch; its write rejection happens in the
 client. It does **not** send a disguised mutation to prove physical PostgreSQL
 read-only enforcement. Do not substitute a hosted URL: this fixture rejects it.
 The normal proof suite tests refusal without the fixture, not a database pass.
+
+### Protected native scenario fixture (version 2)
+
+The separate v2 runner accepts operations and exact expectations from the service
+owner. It does not install generic SQL in Propodus's private statement catalog.
+Use a fresh disposable fixture for each run; the scenarios may mutate its data.
+The v1 loopback interface above remains compatible with Propodus's existing
+exact-source consumer test.
+
+Keep the fixture in a trusted private directory outside Git, as a regular file
+with mode `0600`. The loader rejects symlinks, changed file identity, group/other
+permissions and input larger than 64 KiB. Diagnostics never echo JSON/OS errors.
+The fixture owner must protect the directory against concurrent replacement.
+Only ordinary user bearers and a publishable key enter this client.
+
+The following shape uses synthetic placeholders; the operator supplies the exact
+reviewed client/service commit IDs and statements supported by that service:
+
+```json
+{
+  "version": 2,
+  "profile": "local_native",
+  "disposable": true,
+  "independent_principals": true,
+  "endpoint": "http://127.0.0.1:8080",
+  "publishable_key": "sb_publishable_fixture",
+  "schema": "dactyl_api",
+  "client_revision": "1111111111111111111111111111111111111111",
+  "service_revision": "2222222222222222222222222222222222222222",
+  "principals": [
+    {"token": "synthetic-one", "context": {"version": 1, "payload": {"service_owned": "scope"}}},
+    {"token": "synthetic-two", "context": {"version": 1, "payload": {"service_owned": "scope"}}}
+  ],
+  "scenarios": [{
+    "principal": 0,
+    "access_mode": "read_only",
+    "operations": [{"kind": "read", "sql": "SERVICE_OWNED_SQL", "params": []}],
+    "expected": {"outcome": "success", "results": [{"Rows": []}]}
+  }],
+  "receipt_path": "/private/disposable/new-native-receipt.json"
+}
+```
+
+Every scenario runs once through `Connection::atomic`, preserving operation and
+result order. `principal` indexes 2–8 distinct fixture bearers. There are at most
+32 scenarios, each with 1–16 read/write operations and at most 64 bound parameters
+per operation; schema operations are excluded. The SDK's normal request/result
+bounds and deadlines remain active. Each connection has explicit access mode,
+native RPC route and opaque context, without ambient backend selection.
+
+Success results use the public `OperationResult` serialization: rows are
+`{"Rows":[{"columns":["name"],"values":["value"]}]}`; writes are
+`{"Write":{"affected_rows":1,"generated_keys":["returned-id"]}}`. Types, column
+order, row order, counts and keys must match exactly. An error expectation is
+`{"outcome":"error","kind":"Authorization","origin":"RemotePolicy","mutation":"Uncertain"}`.
+These are the public enum variant names. Match the actual SDK boundary: a remote
+failed mutation may remain `Uncertain` even when an independent observer later
+establishes rollback. A client-side `ReadOnly` refusal with `NotAttempted` cannot
+stand in for server-side enforcement.
+
+Supply the private path in `DACTYL_NATIVE_FIXTURE`, then run the local profile:
+
+```sh
+cargo test --locked --features supabase --test native_service \
+  local_native_scenarios -- --ignored --exact
+```
+
+For an authorized disposable hosted fixture, set `profile` to `hosted_native`,
+use an HTTPS origin, and additionally opt in:
+
+```sh
+DACTYL_NATIVE_HOSTED_PROOF=1 cargo test --locked --features supabase \
+  --test native_service protected_hosted_native_scenarios -- --ignored --exact
+```
+
+Both profiles reject missing fixtures. An exclusive `0600` receipt is created
+before requests; existing files and symlinks are never overwritten. It records
+SDK/wire versions, operator-declared source revisions and completed scenario
+count, with no endpoint, token, context, SQL, parameters, row data or remote error
+text. A failure leaves an incomplete receipt identifying the next private
+scenario index. A killed process or receipt-write failure cannot become a
+complete pass. No request or failed mutation is automatically replayed.
+
+`client_scenarios_passed` means only the supplied expectations matched. It does
+not certify that the scenario inventory covers an issue's full acceptance matrix
+or that the declared revisions were independently verified. For issue 70, the
+service operator must supply typed roundtrips, returned counts/keys, cross-user
+visibility, ordered commit/rollback and read-only probes; issue 85 additionally
+requires controlled failures, independent concurrent callers and observations of
+actual outcomes. A sequential scenario runner cannot establish concurrent CAS
+winners by itself. Use read-kind mutation probes where the service supports
+them, and retain independent evidence distinguishing catalog rejection from
+physical PostgreSQL `READ ONLY`. This runner does not add fixture-only SQL to
+production policy, orchestrate faults, provision principals or destroy resources.
+
+The receipt always leaves independent DB/physical transaction evidence,
+authorization provisioning, connection mode and cleanup pending. The operator
+must bind its own observations and verified teardown to that exact run, including
+on failure, and separately verify source revisions, registry checksum/consumer
+provenance, database version and pooler mode. Hosted access is unavailable until
+such a fixture is independently supplied and exercised.
 
 Issue 70 owns the remaining hosted happy-path qualification: released SDK and
 actual Decapod consumer, a disposable authorized scope, normalized typed values

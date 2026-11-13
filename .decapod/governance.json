@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "ec96f44e51595f1f2e995de00a523b62215de603",
+    "accepted_commit": "5c03bae10903ebc3b58df93df53ef567af840fb8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -65,64 +65,270 @@
     }
   },
   "change": {
-    "id": "issue85-refine-ec96f44e",
-    "base_commit": "ec96f44e51595f1f2e995de00a523b62215de603",
+    "id": "change_01M7A4YMBAH626FSKG9DFQW89E",
+    "base_commit": "5c03bae10903ebc3b58df93df53ef567af840fb8",
     "target_base": "origin/main"
   },
   "claims": {
-    "issue-85-contract": {
-      "statement": "Issue 85 documentation distinguishes current implemented surfaces from remaining external qualification",
-      "falsifier": "A documented API is absent from accepted source, or local/synthetic evidence is labeled as hosted execution",
-      "status": "supported",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs",
-        "source:src/connector.rs",
-        "source:src/lib.rs"
-      ]
+    "native-client-proof": {
+      "statement": "Native fixture scenarios fail closed on unsafe fixture input and compare exact typed client results without exposing fixture content",
+      "falsifier": "An offline regression accepts unsafe fixture input or emits protected data, or scenario mismatch passes",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "file-300-91675e6526",
-      "summary": "docs: refine issue 85 on current accepted main",
-      "input_digest": "sha256:222b1478dc1755f4c8e36a9d7bca6478063af88baf400d1268dfd897623aca8d",
+      "id": "file-201-71f6ce28d1",
+      "summary": "test(native): protect fixture reads and reserve private receipts",
+      "input_digest": "sha256:eac9a365f18452b40ef9d1fd98884f3d739fc620047879cef4e94b460bd3b2ec",
       "proof_refs": [
-        "source:docs/cloud-failure-conformance.md"
+        "source:tests/support/protected_fixture.rs"
       ]
     },
     {
-      "id": "file-10-80c5302be0",
-      "summary": "docs(specs): reconcile issue 85 .manifest.json",
-      "input_digest": "sha256:8ad4b34d4b407c95b14c65bd7641ffb06430afa79ef06996d496dcaa82e6b4e3",
+      "id": "file-203-17859f2145",
+      "summary": "test(native): execute bounded service-owned scenarios and record client outcomes",
+      "input_digest": "sha256:a03ee92917d4560bfa1053a9e2a92445a18b7ad44296fd6a573d4b4b2b5cae84",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
+    },
+    {
+      "id": "file-202-e1c7535eb8",
+      "summary": "style(test): format protected fixture helper",
+      "input_digest": "sha256:1c1d5a53d7bedf09936b4a57354cea74e01f8fcfd132a1d0beeac66425b0a0ca",
+      "proof_refs": [
+        "source:tests/support/protected_fixture.rs"
+      ]
+    },
+    {
+      "id": "file-204-62c3c24921",
+      "summary": "test(native): expose protected hosted scenarios and harden legacy fixture",
+      "input_digest": "sha256:063c149ae1189f10750aca49a668982f49c9ece41ef670a9e7cdf74f45a2daf4",
+      "proof_refs": [
+        "source:tests/native_service.rs"
+      ]
+    },
+    {
+      "id": "file-205-f4e36479dd",
+      "summary": "docs(native): describe protected service-owned scenario qualification",
+      "input_digest": "sha256:d511ed757098dba824a2f4f814fdb0e6f63054b3269c38d98dbd6e1d02ed2736",
+      "proof_refs": [
+        "source:docs/supabase-conformance.md"
+      ]
+    },
+    {
+      "id": "file-206-cbcf37a373",
+      "summary": "docs(specs): bind native scenario proof and independent evidence limits",
+      "input_digest": "sha256:0e17f2b3600fe519cde3e3a25baad184df521ab42ff9d30cb80116e3d5b432e8",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
+    },
+    {
+      "id": "file-211-fd6fe1414c",
+      "summary": "chore(specs): refresh native scenario .manifest.json",
+      "input_digest": "sha256:28ae31e275795ea15b4691737d873bd3a78fe85710ab5f17e97b79df00e4b08e",
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
     },
     {
-      "id": "file-11-96bf69da1b",
-      "summary": "docs(specs): reconcile issue 85 SEMANTICS.md",
-      "input_digest": "sha256:d3d119516fb938ff599c0f3477cac4baca709e55aff4bc55d485d7115e363ed2",
+      "id": "file-212-0b94baf1ec",
+      "summary": "chore(specs): refresh native scenario ARCHITECTURE.md",
+      "input_digest": "sha256:810d04b28a069845709ac8ca3abd5be0dbcdc6e7e7f259b7130730807c76e014",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "file-213-391617f60d",
+      "summary": "chore(specs): refresh native scenario INTENT.md",
+      "input_digest": "sha256:283e7999d4b25dfa0aa450684f015654841b51dd3ad0aebb261356a4a99b0d9a",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "file-214-5e9a97d481",
+      "summary": "chore(specs): refresh native scenario INTERFACES.md",
+      "input_digest": "sha256:cfd6cd9288562b85a995635f8bf0302595acd890fbb0628d6ff6f523e5cc88df",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "file-215-a67168a95b",
+      "summary": "chore(specs): refresh native scenario OPERATIONS.md",
+      "input_digest": "sha256:23766b76347915be69f6c0bae12cbfbab248e34ced237678d1aa2a796f932e12",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "file-216-cfe19c0fd7",
+      "summary": "chore(specs): refresh native scenario README.md",
+      "input_digest": "sha256:1e4d6112351660f31ac0e25633a9996bcc0c548a62a0d6f26ec348d17182e5b3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
+    },
+    {
+      "id": "file-217-ae54518f4d",
+      "summary": "chore(specs): refresh native scenario SECURITY.md",
+      "input_digest": "sha256:2d8aa82283feb16ff3eb738c6d8807a1998871576b57c4235cca491b1dcba684",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "file-218-811933cee8",
+      "summary": "chore(specs): refresh native scenario SEMANTICS.md",
+      "input_digest": "sha256:37e37b4aa396ec8c93056dbb2fa89992272760136afddb23c0845c8d17873618",
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "file-219-6382248af7",
+      "summary": "chore(specs): refresh native scenario VALIDATION.md",
+      "input_digest": "sha256:230a8aed7381d03a838b88d583e05fbc6af4eac679b66448bac23d8a9f47acd0",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
+    },
+    {
+      "id": "native-readiness-candidate",
+      "summary": "Approve protected native scenario candidate for complete validation",
+      "input_digest": "sha256:230a8aed7381d03a838b88d583e05fbc6af4eac679b66448bac23d8a9f47acd0",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
+    },
+    {
+      "id": "native-scope-external-proof",
+      "summary": "Separate client harness validation from deferred external hosted qualification",
+      "input_digest": "sha256:0364fa57fb302317b15f4d825d0b23ea14e297d8caa7afce2b1c2744b83d126e",
+      "proof_refs": [
+        "source:docs/supabase-conformance.md"
+      ]
+    },
+    {
+      "id": "file-220-b4715a0081",
+      "summary": "fix(test): use public Rows tuple and serialized array shape",
+      "input_digest": "sha256:e4dc03bce43c8c14538197e79c3f3e009fd95e57be96a819a4f2478bbd888386",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
+    },
+    {
+      "id": "file-221-2dbb980fd9",
+      "summary": "docs(native): correct serialized row expectations",
+      "input_digest": "sha256:2326c150eb383c63f882effa65f4fca1146dd5d8da31a69f136a02740482d590",
+      "proof_refs": [
+        "source:docs/supabase-conformance.md"
+      ]
+    },
+    {
+      "id": "file-222-aec2519968",
+      "summary": "test(native): validate documented fixture against public serialization",
+      "input_digest": "sha256:07ca46c79cbacfc7705118561197b2f71f1be6a3c5bdf005dac4ae1417409266",
+      "proof_refs": [
+        "source:tests/support/native_scenarios.rs"
+      ]
+    },
+    {
+      "id": "file-231-9f4faab4fe",
+      "summary": "chore(specs): refresh corrected native scenarios .manifest.json",
+      "input_digest": "sha256:37438d0ee137a93652838859f13d920a7db9b9c7b29e815937f1121433b979d7",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
+    },
+    {
+      "id": "file-232-142495272f",
+      "summary": "chore(specs): refresh corrected native scenarios ARCHITECTURE.md",
+      "input_digest": "sha256:c498b87840e7d96b1881e544f291be10019f979bd4d9a72bdeb65b7fd5616461",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "file-233-fd350a5e40",
+      "summary": "chore(specs): refresh corrected native scenarios INTENT.md",
+      "input_digest": "sha256:3ad372a7060ee3c665553d2c14f1b56245d862a07e8f8c787008dbebf1869555",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "file-234-aa84c08b44",
+      "summary": "chore(specs): refresh corrected native scenarios INTERFACES.md",
+      "input_digest": "sha256:089e5d245e2a3bbf626f7b48af9d6e78fa46e4839e80765868e894f292b82240",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "file-235-5f336628fc",
+      "summary": "chore(specs): refresh corrected native scenarios OPERATIONS.md",
+      "input_digest": "sha256:e73f419dd1dfd1af6dd768f84b94f8d3694e6a7a7ce75c13d867364570e73463",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "file-236-8dd2dfb2a3",
+      "summary": "chore(specs): refresh corrected native scenarios README.md",
+      "input_digest": "sha256:cdbdd4853d757ccd14e173ba8aedf856878707017a34694c784025eb257f4239",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
+    },
+    {
+      "id": "file-237-57b1327d65",
+      "summary": "chore(specs): refresh corrected native scenarios SECURITY.md",
+      "input_digest": "sha256:b46f88dced3725d91358f6574452e191fe9972f372a07f5c0d5a14fbdac2e0d8",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "file-238-281b414f87",
+      "summary": "chore(specs): refresh corrected native scenarios SEMANTICS.md",
+      "input_digest": "sha256:31c5dcd8cc618dd1e07540b6900212e27c6613b68e4426430dd799e6bc533c7e",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "file-239-28dd8dafa1",
+      "summary": "chore(specs): refresh corrected native scenarios VALIDATION.md",
+      "input_digest": "sha256:9d21c59127226543d4913ce173580dfd82eb8564de9525db188d316183290ab2",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
       ]
     }
   ],
   "intents": {
-    "intent:issue-85-refinement": {
+    "intent:change_01M7A4YMBAH626FSKG9DFQW89E": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Documentation and specifications only; no package release, deployment, merge or hosted data access"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "Dactyl issue refinement"
+        "paths:[\"tests/native_service.rs\"",
+        "\"tests/support\"",
+        "\"docs/supabase-conformance.md\"",
+        "\".decapod/managed/specs/VALIDATION.md\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:issue-85-refinement",
+      "id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Refine the five open Dactyl issues against current Decapod and Propodus direction and create a PR for each",
-      "refined_intent": "Reconcile issue 85 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
+      "raw_intent": "Implement protected native RPC conformance fixtures and server read-only probes for issues 70 and 85",
+      "refined_intent": "Implement protected native RPC conformance fixtures and server read-only probes for issues 70 and 85",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -130,12 +336,14 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 16,
         "forbidden_paths": []
       },
-      "deferred_questions": [],
+      "deferred_questions": [
+        "Actual hosted qualification remains external to this client-harness PR: no authorized disposable hosted fixture supplied; keep issues 70 and 85 open. Private fixture path requested asynchronously."
+      ],
       "human_questions": [],
-      "intent": "Rebase the existing issue 85 refinement onto current accepted main. Preserve merged provider/release context, proof resource settings and supported interfaces; push the updated existing PR with a lease and keep prior full-validation identities distinct from the rebased candidate.",
+      "intent": "Extend native conformance without changing runtime policy: preserve the local v1 consumer; add protected local/hosted v2 service-owned scenarios with exact typed outcomes and sanitized receipts. Hosted and independent database proof remain unavailable until externally exercised.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -145,87 +353,130 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue 85 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
+          "reason": "Reviewed current native scenario repair: public Rows tuple serialization corrected in private fixtures/docs and tested against the guide. SDK runtime API, service-owned SQL, policy and credential/redaction boundaries are unchanged; authored VALIDATION preserves external hosted/physical evidence limits.",
+          "reviewed_code_fingerprint": "64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4",
           "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Issue 85 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
+          "reason": "Reviewed current native scenario repair: public Rows tuple serialization corrected in private fixtures/docs and tested against the guide. SDK runtime API, service-owned SQL, policy and credential/redaction boundaries are unchanged; authored VALIDATION preserves external hosted/physical evidence limits.",
+          "reviewed_code_fingerprint": "64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4",
           "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Issue 85 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
+          "reason": "Reviewed current native scenario repair: public Rows tuple serialization corrected in private fixtures/docs and tested against the guide. SDK runtime API, service-owned SQL, policy and credential/redaction boundaries are unchanged; authored VALIDATION preserves external hosted/physical evidence limits.",
+          "reviewed_code_fingerprint": "64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Refine Dactyl issue 85 against current native cloud direction",
+      "stop_conditions": [
+        "No mutation without explicit disposable scenario fixture; no credentials or raw values in receipts"
+      ],
+      "title": "Implement protected native RPC conformance fixtures and server read-only probes for issues 70 and 85",
       "todo_ids": [
-        "bugs_01m79p51g3tdbrnj"
+        "feat_01m7a4rq7vn3j1gz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794560002Z"
+      "updated_at": "1794565098Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Documentation and specifications only; no package release, deployment, merge or hosted data access"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:becd686c5d124d5e1eb35e0eec99aa11c374ea205f3c0a11dd23c3b2346eeb8d",
-      "checks": [],
+      "artifact_hash": "sha256:00dd49c10405404621c5e3e32c71dc416f647d7a53ac7fcb6e5c6c7c9cec7021",
+      "checks": [
+        {
+          "name": "hosted-native",
+          "status": "unavailable"
+        },
+        {
+          "name": "rust-contract",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:issue-85-refinement",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:issue-85-refinement",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:issue-85-refinement",
+            "detail": "trajectory:branch_01M7A4YME86QXVMVRC0WQVAWF2",
             "event_id": "event:4",
-            "intent_id": "intent:issue-85-refinement",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7A4YME86QXVMVRC0WQVAWF2",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "issue-85-refinement": {
+          "branch_01M7A4YME86QXVMVRC0WQVAWF2": {
             "evidence_only": true,
-            "id": "issue-85-refinement",
-            "intent_id": "intent:issue-85-refinement",
+            "id": "branch_01M7A4YME86QXVMVRC0WQVAWF2",
+            "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/lib.rs",
-                  "src/adapter/mod.rs",
+                  "tests/supabase_rpc.rs",
                   "tests/native_service.rs",
-                  ".decapod/managed/specs/SEMANTICS.md",
-                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
+                  "tests/support/protected_fixture.rs",
+                  "tests/support/native_scenarios.rs",
+                  "tests/native_service.rs",
+                  "Reviewed Propodus origin/main 312bca6 native Dactyl consumer and physical read-only tests. Preserve service-owned SQL; maintain v1 interface and add bounded v2 client-only scenarios. No hosted credentials supplied."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "hosted-native"
+                ],
                 "scope": [
-                  "Dactyl issue refinement"
+                  "\".decapod/managed/specs/VALIDATION.md\"]",
+                  "\"docs/supabase-conformance.md\"",
+                  "\"tests/support\"",
+                  "paths:[\"tests/native_service.rs\""
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Full exact-candidate validation 22309dd failed: new tests constructed Rows as named-field struct instead of public tuple struct; correction changes test expectations and fixture guide, not runtime contract. Failure retained in private evidence-native-rows-failure."
+                ],
+                "proof_refs": [
+                  "rust-contract"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs/VALIDATION.md\"]",
+                  "\"docs/supabase-conformance.md\"",
+                  "\"tests/support\"",
+                  "paths:[\"tests/native_service.rs\""
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -233,25 +484,34 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
+        "Full exact-candidate validation 22309dd failed: new tests constructed Rows as named-field struct instead of public tuple struct; correction changes test expectations and fixture guide, not runtime contract. Failure retained in private evidence-native-rows-failure.",
+        "Reviewed Propodus origin/main 312bca6 native Dactyl consumer and physical read-only tests. Preserve service-owned SQL; maintain v1 interface and add bounded v2 client-only scenarios. No hosted credentials supplied."
       ],
       "inspected_files": [
-        "src/adapter/mod.rs",
-        "src/lib.rs",
-        "tests/native_service.rs"
+        "tests/native_service.rs",
+        "tests/supabase_rpc.rs"
       ],
-      "intent_id": "intent:issue-85-refinement",
+      "intent_id": "intent:change_01M7A4YMBAH626FSKG9DFQW89E",
       "modified_files": [
-        ".decapod/managed/specs/SEMANTICS.md"
+        "tests/native_service.rs",
+        "tests/support/native_scenarios.rs",
+        "tests/support/protected_fixture.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "Dactyl issue refinement"
+        "\".decapod/managed/specs/VALIDATION.md\"]",
+        "\"docs/supabase-conformance.md\"",
+        "\"tests/support\"",
+        "paths:[\"tests/native_service.rs\""
       ],
-      "run_id": "issue-85-refinement",
+      "run_id": "branch_01M7A4YME86QXVMVRC0WQVAWF2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79p51g3tdbrnj",
+      "task_id": "feat_01m7a4rq7vn3j1gz",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

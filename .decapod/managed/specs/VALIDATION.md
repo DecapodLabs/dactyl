@@ -2,7 +2,7 @@
 
 ## Native hosted qualification (issue 70)
 
-docs/supabase-conformance.md separates real local SQLite, SQLite-backed Neon mocks, synthetic HTTP, generic service PostgreSQL and native hosted evidence. The existing local_native_read_only_contract in tests/native_service.rs accepts disposable loopback HTTP and rejects its write in the client; it does not establish physical server read-only enforcement. Issue 70 requires released SDK/actual consumer execution, independent database commit/rollback observations and cleanup on an authorized disposable hosted native fixture. Missing hosted access remains unavailable. No new hosted pass is asserted by this documentation change.
+docs/supabase-conformance.md separates real local SQLite, SQLite-backed Neon mocks, synthetic HTTP, generic service PostgreSQL and native hosted evidence. The v1 local_native_read_only_contract in tests/native_service.rs preserves Propodus's consumer interface; its rejected write remains client-side evidence. The additional local_native_scenarios and protected_hosted_native_scenarios accept bounded v2 fixtures with service-owned statements, explicit principals/contexts and exact ordered OperationResult or typed error/origin/mutation expectations. tests/support/protected_fixture.rs checks protected regular-file identity, permissions and size; exclusive private receipts prevent stale-output reuse. tests/support/native_scenarios.rs records progress without fixture values or remote errors, preserves incomplete receipts, exercises response loss without replay in synthetic tests, and leaves independent physical DB, authorization, pooler-mode and cleanup evidence pending even after matched client scenarios. Both v2 profiles explicitly fail without a fixture in the ordinary test suite. The runner is sequential and cannot establish concurrent CAS winners or full issue acceptance from a supplied subset of scenarios. No runtime provider, production SQL catalog or authorization policy changes. Issue 70 still requires released SDK/actual consumer execution and independent observations/cleanup on an authorized disposable hosted fixture; issue 85 still requires controlled native adversarial/concurrency execution. Missing hosted access remains unavailable.
 
 ## Reconciled 0.15.0 + Decapod v0.143.0 controller pin (issue 100)
 
@@ -302,8 +302,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
+- Repository signal fingerprint: `64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (23 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
