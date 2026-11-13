@@ -268,6 +268,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-235-5f336628fc",
+      "summary": "chore(specs): refresh corrected native scenarios OPERATIONS.md",
+      "input_digest": "sha256:e73f419dd1dfd1af6dd768f84b94f8d3694e6a7a7ce75c13d867364570e73463",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
