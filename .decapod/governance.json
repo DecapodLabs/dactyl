@@ -89,6 +89,14 @@
       "proof_refs": [
         "source:docs/backend-capabilities.md"
       ]
+    },
+    {
+      "id": "file-10-57bbe81f70",
+      "summary": "docs(specs): reconcile issue 79 .manifest.json",
+      "input_digest": "sha256:588b8c00ec06aebdb89ca29e1b4e097e8e74d809cebc0c368d40e5899f992107",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -125,6 +133,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Issue 79 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
+          "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Issue 79 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. Authored current issue contract and external proof limits.",
+          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
+          "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Issue 79 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
+          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Refine backend capability inventory (#79 / PR117)",
@@ -133,13 +164,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794550095Z"
+      "updated_at": "1794550138Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Documentation and specifications only; no package release, deployment, merge or hosted data access"
       ],
-      "artifact_hash": "sha256:c47476d87c41451af191931bd74e439fde22b875693b05c16fc6aedea9ea068a",
+      "artifact_hash": "sha256:4e32ccb4957e7856130e0240315008a3d1789b9544e69e3fb62be59414536c15",
       "checks": [],
       "custody": {
         "events": [
@@ -161,10 +192,17 @@
             "intent_id": "intent:issue-79-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:issue-79-refinement",
+            "event_id": "event:5",
+            "intent_id": "intent:issue-79-refinement",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "issue-79-refinement": {
@@ -187,6 +225,23 @@
                   "Dactyl issue refinement"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/lib.rs",
+                  "src/adapter/mod.rs",
+                  "tests/native_service.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Dactyl issue refinement"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
