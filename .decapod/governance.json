@@ -252,6 +252,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-233-fd350a5e40",
+      "summary": "chore(specs): refresh corrected native scenarios INTENT.md",
+      "input_digest": "sha256:3ad372a7060ee3c665553d2c14f1b56245d862a07e8f8c787008dbebf1869555",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
