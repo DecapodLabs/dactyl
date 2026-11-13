@@ -97,6 +97,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-11-96bf69da1b",
+      "summary": "docs(specs): reconcile issue 85 SEMANTICS.md",
+      "input_digest": "sha256:d3d119516fb938ff599c0f3477cac4baca709e55aff4bc55d485d7115e363ed2",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
