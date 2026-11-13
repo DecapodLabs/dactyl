@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
+    "accepted_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
+    "release": "v0.14.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -63,46 +64,53 @@
     }
   },
   "change": {
-    "id": "change_01M77WK8TMW569S387VPY61NW6",
-    "base_commit": "de2d7fc9aa7a91121e16764963b3aa72aebabd89",
+    "id": "change_01M79E1V8NKC35G53WMHDGGVBY",
+    "base_commit": "96f110fb3f6e63bda8355bcebad4b907226dec0f",
     "target_base": "origin/main"
+  },
+  "claims": {
+    "logical-local-cloud-connector-boundary": {
+      "statement": "LogicalTarget and LogicalConnector resolve local SQLite and cloud public-profile deployments per instance without process-global routing, cross-workspace leakage, or SQLite fallback on failed cloud discovery, across all Cargo feature combinations.",
+      "falsifier": "Resolving cloud mutates or depends on ambient DATASTORE* env vars, leaks credentials across independent workspaces, falls back to SQLite when cloud discovery or capability fails, or sends user credentials to public discovery.",
+      "status": "open",
+      "proof_refs": [
+        "tests/logical_connector.rs",
+        "tests/supabase_disabled.rs"
+      ]
+    },
+    "managed-session-and-account-readiness-transport": {
+      "statement": "CloudConnector and LogicalConnector transport public discovery, PKCE bootstrap/exchange/refresh/logout, and hosted account/billing readiness routes with redacted diagnostics, complete public error-code allowlist, and explicit outcome_unknown marking on post-send ambiguous mutations.",
+      "falsifier": "A credential or private body appears in Debug/Display, a redirect or automatic retry occurs, a Supabase GoTrue error_code or Propodus denial code is dropped, or a lost post-send one-time/mutating response omits outcome_unknown.",
+      "status": "open",
+      "proof_refs": [
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "patched-quinn-release-prep-01",
-      "summary": "Document unreleased Rust1.85 patched inactive Quinn migration and ordinary Release-As automation, preserving historical Supabase notes and runtime/proof contracts",
-      "input_digest": "sha256:45585ad63fdb5626635ed31ae61b76e949458f210d60336f4d081b68aa56f04d",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
-        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
-      ]
-    },
-    {
-      "id": "patched-quinn-release-prep-02",
-      "summary": "Record completed independent native proof environment and clear resolved setup-pending blocker; include genuine validator manifest refresh",
-      "input_digest": "sha256:d55769daae13e0ac31d7e1152e674db66a68d005ca7611cda7c674cd74b7b683",
-      "proof_refs": [
-        "Owned container dactyl-release-prep-proof-01383 actual Decapod0.138.3 and Rust1.85, locked/fresh-consumer fetch-only preparation and can_work=true native binding"
-      ]
+      "id": "conn-100-01-config-digest",
+      "summary": "Reconcile reviewed sources digest with accepted 0.14.0 release and initialize #100 plan/claims",
+      "input_digest": "sha256:ddeaa9c811f46afc5c2cc167b7806ca0cc5b52a2fdf6affa99efa2e40b38d8b3"
     }
   ],
   "intents": {
-    "intent:change_01M77WK8TMW569S387VPY61NW6": {
+    "intent:change_01M79E1V8NKC35G53WMHDGGVBY": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "file:CHANGELOG.md",
-        "file:.decapod/managed/specs/OPERATIONS.md"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+      "id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
-      "refined_intent": "Prepare patched Quinn and Rust 1.85 release notes\n\nRecover ordinary release recognition after merged SDK108 through meaningful compatibility/migration notes and a Release-As 0.14.0 conventional breaking fix commit; no runtime API, proof matrix, workflow, package version, merge or direct release changes.",
+      "raw_intent": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
+      "refined_intent": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -111,226 +119,111 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": [
-          "src",
-          "tools/proof",
-          ".github/workflows",
-          "Cargo.toml",
-          "Cargo.lock"
-        ]
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prepare reviewable 0.14.0 compatibility/release notes for the already accepted Rust/Cargo 1.85 and patched inactive Quinn constraints from SDK108. Preserve runtime source/API/features, proof matrix, workflows and Cargo package version. A conventional breaking fix with Release-As: 0.14.0 requests the ordinary bot release PR only after maintainer merge; no package publication or privileged dispatch.",
+      "intent": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documentation-only release preparation preserves existing reqwest transport, inactive patched Quinn boundary and components; no implementation or proof topology changes.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "13fa83c57551a71d6940fea3250d312ff038fa89b2c1401d8ba44d9716f5d2c7"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No public Rust API, feature key or wire contract changes; new changelog migration guidance matches the accepted Rust/Cargo1.85 and downstream lock-free consumer contract.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "2056a6ae6336bd92245abf6a4c81ba3d484917183ddddec01b7fe9b155bc42a8"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No token, storage, authorization or HTTP3 activation changes; compatibility notes retain explicit inactive-dependency exposure and audit limits rather than asserting hosted proof.",
-          "reviewed_code_fingerprint": "e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54",
-          "spec_material_hash": "e800bd95c173f1e51451668bc4fefef54aeb499d8c2ab7ab1b3cd486cd4fe5f8"
-        }
-      ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Unavailable independently published controller support or explicit authorization denial"
-      ],
-      "title": "Prepare patched Quinn and Rust 1.85 release notes",
+      "stop_conditions": [],
+      "title": "Resolve logical local/cloud connectors and transport managed sessions through Dactyl (#100)",
       "todo_ids": [
-        "bugs_01m77wjh57ym1md5"
+        "code_01m79e0tq1xk4js5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794488592Z"
+      "updated_at": "1794539491Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No runtime API, workflow, proof matrix or package version edits; no merge, release or package publication"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4cc73fe09c190de719fa6b76981cd96a30e934e430ba26aced33177398647b27",
-      "checks": [
-        {
-          "name": "authored-diff-whitespace",
-          "status": "passed"
-        },
-        {
-          "name": "current-ci",
-          "status": "unavailable"
-        },
-        {
-          "name": "independent-controller-toolchain-custody",
-          "status": "passed"
-        },
-        {
-          "name": "native-exact-source",
-          "status": "unavailable"
-        }
-      ],
-      "current_phase": "validation",
+      "artifact_hash": "sha256:7c098bfedb7a7adee424af934e692d3439d0a88ec6daec190e7075a3eabc4611",
+      "checks": [],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+            "detail": "trajectory:branch_01M79E1V9WENHWMA3D0YPHWBED",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M77WK8XBNPT4WJ1V9A6JG1E5": {
+          "branch_01M79E1V9WENHWMA3D0YPHWBED": {
             "evidence_only": true,
-            "id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
-            "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
+            "id": "branch_01M79E1V9WENHWMA3D0YPHWBED",
+            "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
             "steps": [
               {
-                "action": "review",
-                "command": "decapod validate",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "README.md",
-                  "Cargo.toml",
-                  ".github/workflows/release.yml",
-                  "tools/proof/check.py",
-                  "CHANGELOG.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "https://github.com/googleapis/release-please#how-do-i-change-the-version-number",
-                  "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464"
+                  ".decapod/config.toml",
+                  "src/lib.rs",
+                  "src/cloud.rs",
+                  "src/supabase_rpc.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/supabase_disabled.rs",
+                  "docs/cloud-connectors.md"
                 ],
-                "proof_refs": [
-                  "authored-diff-whitespace"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "No manual shadow builds; prior SDK108 proof is historical only"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [],
-                "proof_refs": [
-                  "native-exact-source",
-                  "current-ci"
-                ],
-                "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
-                  "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker"
-                ],
-                "proof_refs": [
-                  "native-exact-source",
-                  "independent-controller-toolchain-custody"
-                ],
-                "scope": [
-                  "file:.decapod/managed/specs/OPERATIONS.md",
-                  "file:CHANGELOG.md"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "First native attempt:188 prerequisite passes, no SDK checks executed; blocked by now-resolved recorded setup-pending trajectory blocker",
-        "Owned Apple container dactyl-release-prep-proof-01383: actual controller0.138.3; Rust1.85 installed; accepted fetch-only prep complete; workspace ensure can_work=true/in_container=true",
-        "https://github.com/DecapodLabs/dactyl/actions/runs/43194332464",
-        "https://github.com/googleapis/release-please#how-do-i-change-the-version-number"
-      ],
+      "evidence": [],
       "inspected_files": [
-        ".github/workflows/release.yml",
-        "Cargo.toml",
-        "README.md",
-        "tools/proof/check.py"
+        ".decapod/config.toml",
+        "docs/cloud-connectors.md",
+        "src/cloud.rs",
+        "src/lib.rs",
+        "src/supabase_rpc.rs",
+        "tests/cloud_connector.rs",
+        "tests/supabase_disabled.rs"
       ],
-      "intent_id": "intent:change_01M77WK8TMW569S387VPY61NW6",
-      "modified_files": [
-        ".decapod/managed/specs/OPERATIONS.md",
-        "CHANGELOG.md"
-      ],
+      "intent_id": "intent:change_01M79E1V8NKC35G53WMHDGGVBY",
+      "modified_files": [],
       "next_transitions": [
-        "Checkpoint and publish explicitly authorized draft; continue exact-source native validate and CI",
-        "Commit resolved setup status and refreshed manifest, then rerun full native validation on exact candidate",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "file:.decapod/managed/specs/OPERATIONS.md",
-        "file:CHANGELOG.md"
+        "root"
       ],
-      "run_id": "branch_01M77WK8XBNPT4WJ1V9A6JG1E5",
+      "run_id": "branch_01M79E1V9WENHWMA3D0YPHWBED",
       "schema_version": "1.1.0",
-      "shortcut_risk_signals": [
-        "No manual shadow builds; prior SDK108 proof is historical only"
-      ],
-      "task_id": "bugs_01m77wjh57ym1md5",
+      "shortcut_risk_signals": [],
+      "task_id": "code_01m79e0tq1xk4js5",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
