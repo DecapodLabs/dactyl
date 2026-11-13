@@ -21,12 +21,17 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::adapter::Adapter;
+use crate::budget::{
+    mark_local_rollback, mark_remote_uncertain, preflight_batch, preflight_statement,
+    DecodedResultTracker, ResourceBudget,
+};
 use crate::contract::{
     AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,
     OperationKind, OperationResult, RecoveryJournalMode, RecoveryOptions, RecoveryResult,
     WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
+use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
 use crate::schema::{
     ColumnSchema, ForeignKeyAction, ForeignKeySchema, IndexSchema, StoreSchema, TableSchema,
@@ -37,6 +42,7 @@ const SCHEMA_DESCRIPTION_VERSION: u32 = 1;
 pub struct SqliteAdapter {
     connection: Mutex<SqliteConnection>,
     options: OpenOptions,
+    budget: ResourceBudget,
     path: String,
     #[cfg(any(target_os = "linux", target_os = "android"))]
     file_identity: Option<(u64, u64)>,
@@ -142,7 +148,17 @@ impl SqliteConnection {
 }
 
 impl SqliteAdapter {
+    #[allow(dead_code)]
     pub fn open_with_options(path: &str, options: OpenOptions) -> Result<Self, DactylError> {
+        Self::open_with_options_and_budget(path, options, ResourceBudget::default())
+    }
+
+    pub fn open_with_options_and_budget(
+        path: &str,
+        options: OpenOptions,
+        budget: ResourceBudget,
+    ) -> Result<Self, DactylError> {
+        budget.validate()?;
         if path != ":memory:" {
             let path_ref = Path::new(path);
             if options.access_mode == AccessMode::ReadOnly && !path_ref.exists() {
@@ -188,6 +204,7 @@ impl SqliteAdapter {
         Ok(Self {
             connection: Mutex::new(connection),
             options,
+            budget,
             path: path.to_string(),
             #[cfg(any(target_os = "linux", target_os = "android"))]
             file_identity: file_identity(path),
@@ -326,12 +343,27 @@ impl Adapter for SqliteAdapter {
     }
 
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
+        preflight_statement(&self.budget, sql, params)?;
         let connection = self.connection()?;
-        query_rows(&connection, sql, params)
+        let mut tracker = DecodedResultTracker::new(self.budget);
+        query_rows_budgeted(&connection, sql, params, &mut tracker)
+    }
+
+    fn visit_rows(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
+    ) -> Result<ScanOutcome, DactylError> {
+        preflight_statement(&self.budget, sql, params)?;
+        let connection = self.connection()?;
+        let mut tracker = DecodedResultTracker::new(self.budget);
+        visit_rows_budgeted(&connection, sql, params, &mut tracker, visitor)
     }
 
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError> {
         ensure_writable(self.options.access_mode)?;
+        preflight_statement(&self.budget, sql, params)?;
         let connection = self.connection()?;
         execute_write(&connection, sql, params)
     }
@@ -347,6 +379,7 @@ impl Adapter for SqliteAdapter {
         if mutates {
             ensure_writable(self.options.access_mode)?;
         }
+        preflight_batch(&self.budget, operations)?;
 
         let connection = self.connection()?;
         if mutates {
@@ -355,10 +388,11 @@ impl Adapter for SqliteAdapter {
             })?;
         }
 
+        let mut tracker = DecodedResultTracker::new(self.budget);
         let result = (|| {
             let mut results = Vec::with_capacity(operations.len());
             for operation in operations {
-                results.push(execute_operation(&connection, operation)?);
+                results.push(execute_operation(&connection, operation, &mut tracker)?);
             }
             Ok(AtomicResult { results })
         })();
@@ -370,21 +404,54 @@ impl Adapter for SqliteAdapter {
         match result {
             Ok(value) => {
                 if let Err(error) = exec_sql(&connection, "COMMIT") {
-                    let _ = exec_sql(&connection, "ROLLBACK");
-                    Err(connection.error_from_failure("commit SQLite transaction", error))
+                    let commit_error =
+                        connection.error_from_failure("commit SQLite transaction", error);
+                    if exec_sql(&connection, "ROLLBACK").is_ok() {
+                        Err(mark_local_rollback(commit_error))
+                    } else {
+                        Err(mark_remote_uncertain(commit_error))
+                    }
                 } else {
                     Ok(value)
                 }
             }
             Err(error) => {
-                let _ = exec_sql(&connection, "ROLLBACK");
-                Err(error)
+                if exec_sql(&connection, "ROLLBACK").is_ok() {
+                    Err(mark_local_rollback(error))
+                } else {
+                    Err(mark_remote_uncertain(error))
+                }
             }
         }
     }
 
     fn access_mode(&self) -> AccessMode {
         self.options.access_mode
+    }
+
+    fn has_table(&self, table: &str) -> Result<bool, DactylError> {
+        let connection = self.connection()?;
+        catalog_predicate(
+            &connection,
+            "SELECT EXISTS(SELECT 1 FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name IN (?1,?2))",
+            &[
+                Parameter::Text(table.into()),
+                Parameter::Text(table.to_ascii_lowercase()),
+            ],
+        )
+    }
+
+    fn has_column(&self, table: &str, column: &str) -> Result<bool, DactylError> {
+        let connection = self.connection()?;
+        catalog_predicate(
+            &connection,
+            "SELECT EXISTS(SELECT 1 FROM sqlite_schema AS s, pragma_table_info(s.name) AS c WHERE s.type='table' AND s.name NOT LIKE 'sqlite_%' AND s.name IN (?1,?2) AND c.name=?3)",
+            &[
+                Parameter::Text(table.into()),
+                Parameter::Text(table.to_ascii_lowercase()),
+                Parameter::Text(column.into()),
+            ],
+        )
     }
 
     fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
@@ -755,6 +822,7 @@ fn storage_io(operation: &str, error: std::io::Error) -> DactylError {
 fn execute_operation(
     connection: &SqliteConnection,
     operation: &Operation,
+    tracker: &mut DecodedResultTracker,
 ) -> Result<OperationResult, DactylError> {
     let first = first_word(operation.sql());
     match operation.kind() {
@@ -765,10 +833,11 @@ fn execute_operation(
                     "read operation requires a query statement",
                 ));
             }
-            Ok(OperationResult::Rows(query_rows(
+            Ok(OperationResult::Rows(query_rows_budgeted(
                 connection,
                 operation.sql(),
                 operation.params(),
+                tracker,
             )?))
         }
         OperationKind::Write => Ok(OperationResult::Write(execute_write(
@@ -837,6 +906,77 @@ fn execute_write(
     })
 }
 
+fn query_rows_budgeted(
+    connection: &SqliteConnection,
+    sql: &str,
+    params: &[Parameter],
+    tracker: &mut DecodedResultTracker,
+) -> Result<Rows, DactylError> {
+    let mut rows = Vec::new();
+    visit_rows_budgeted(connection, sql, params, tracker, &mut |row| {
+        rows.push(row.clone());
+        Ok(true)
+    })?;
+    Ok(Rows(rows))
+}
+
+fn visit_rows_budgeted(
+    connection: &SqliteConnection,
+    sql: &str,
+    params: &[Parameter],
+    tracker: &mut DecodedResultTracker,
+    visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
+) -> Result<ScanOutcome, DactylError> {
+    let mut statement = Statement::prepare(connection, sql)?;
+    statement.bind_all(params)?;
+    let column_count = unsafe { connection.api.column_count(statement.statement) }.max(0);
+    let columns = (0..column_count)
+        .map(|index| statement.column_name(index))
+        .collect::<Result<Vec<_>, _>>()?;
+    tracker.charge_columns(&columns)?;
+    let mut rows = 0_u64;
+    while statement.step()? == ffi::SQLITE_ROW {
+        tracker.charge_row_overhead(&columns)?;
+        for index in 0..column_count {
+            let kind = unsafe { connection.api.column_type(statement.statement, index) };
+            let (raw_bytes, is_blob) = match kind {
+                ffi::SQLITE_NULL => (0_u64, false),
+                ffi::SQLITE_INTEGER | ffi::SQLITE_FLOAT => (8_u64, false),
+                ffi::SQLITE_TEXT => (
+                    unsafe { connection.api.column_bytes(statement.statement, index) }.max(0)
+                        as u64,
+                    false,
+                ),
+                ffi::SQLITE_BLOB => (
+                    unsafe { connection.api.column_bytes(statement.statement, index) }.max(0)
+                        as u64,
+                    true,
+                ),
+                _ => (8_u64, false),
+            };
+            tracker.charge_raw_cell(raw_bytes, is_blob)?;
+        }
+        let values = (0..column_count)
+            .map(|index| statement.value(index))
+            .collect::<Result<Vec<_>, _>>()?;
+        let row = Row {
+            columns: columns.clone(),
+            values,
+        };
+        rows += 1;
+        if !visitor(&row)? {
+            return Ok(ScanOutcome {
+                rows,
+                complete: false,
+            });
+        }
+    }
+    Ok(ScanOutcome {
+        rows,
+        complete: true,
+    })
+}
+
 fn query_rows(
     connection: &SqliteConnection,
     sql: &str,
@@ -868,6 +1008,8 @@ struct Statement<'a> {
 
 impl<'a> Statement<'a> {
     fn prepare(connection: &'a SqliteConnection, sql: &str) -> Result<Self, DactylError> {
+        #[cfg(test)]
+        CATALOG_TEST_PREPARES.with(|count| count.set(count.get() + 1));
         let sql = CString::new(sql).map_err(|_| {
             adapter_error(
                 AdapterErrorKind::InvalidOperation,
@@ -959,6 +1101,21 @@ impl<'a> Statement<'a> {
         } else {
             Err(self.connection.error("step SQLite statement", code))
         }
+    }
+
+    #[allow(dead_code)]
+    fn reset_and_clear(&mut self) -> Result<(), DactylError> {
+        let reset = unsafe { self.connection.api.reset(self.statement) };
+        if reset != ffi::SQLITE_OK {
+            return Err(self.connection.error("reset SQLite statement", reset));
+        }
+        let clear = unsafe { self.connection.api.clear_bindings(self.statement) };
+        if clear != ffi::SQLITE_OK {
+            return Err(self
+                .connection
+                .error("clear SQLite statement bindings", clear));
+        }
+        Ok(())
     }
 
     fn column_name(&self, index: c_int) -> Result<String, DactylError> {
@@ -1117,6 +1274,26 @@ fn map_sqlite_failure(operation: &str, failure: ffi::SqliteFailure) -> DactylErr
             failure.message, failure.extended_code
         ),
     )
+}
+
+fn catalog_predicate(
+    connection: &SqliteConnection,
+    sql: &str,
+    params: &[Parameter],
+) -> Result<bool, DactylError> {
+    let rows = query_rows(connection, sql, params)?;
+    let row = rows.as_slice().first().ok_or_else(|| {
+        adapter_error(
+            AdapterErrorKind::Value,
+            "SQLite returned no catalog predicate",
+        )
+    })?;
+    Ok(row_i64(row, 0)? != 0)
+}
+
+#[cfg(test)]
+thread_local! {
+    static CATALOG_TEST_PREPARES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 fn inspect_schema(connection: &SqliteConnection) -> Result<StoreSchema, DactylError> {
@@ -1371,3 +1548,7 @@ fn has_multiple_statements(sql: &str) -> bool {
     }
     false
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/sqlite_catalog.rs"]
+mod catalog_tests;

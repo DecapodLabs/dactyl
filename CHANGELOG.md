@@ -5,16 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.14.0](https://github.com/DecapodLabs/dactyl/compare/v0.13.1...v0.14.0) (2026-11-12)
+## [0.15.0](https://github.com/DecapodLabs/dactyl/compare/v0.14.0...v0.15.0) (2026-11-13)
 
 
-### ⚠ BREAKING CHANGES
+### Features
 
-* **release:** document patched dependency compatibility
+* **adapter:** add visit_rows and catalog predicate trait seams ([a95b42a](https://github.com/DecapodLabs/dactyl/commit/a95b42a2257716361bf44bafbec8447325ed1f88))
+* **budget:** add versioned ResourceBudget and bounded wire/result trackers ([e9f4ff3](https://github.com/DecapodLabs/dactyl/commit/e9f4ff316b74a7797ba8bbccf2e3c65c72ce88fb))
+* enforce versioned resource budgets, bounded row scans, and SQLite catalog predicates ([520ea10](https://github.com/DecapodLabs/dactyl/commit/520ea10d5ab1727ba67645d593eb0367ab945afe))
+* **error:** classify FailureOrigin and MutationOutcome on DactylError ([0c2002f](https://github.com/DecapodLabs/dactyl/commit/0c2002f26a3e82f4136df2462785e411bcfa42fc))
+* expose open_with_budget, visit_rows, has_table, and has_column ([f7138f3](https://github.com/DecapodLabs/dactyl/commit/f7138f3653befbfe10c0faa539535ec9982e887b))
+* **neon:** enforce wire/result budgets, worker isolation, and uncertain outcomes ([eb16030](https://github.com/DecapodLabs/dactyl/commit/eb16030783dbf2dfeede91a56fdbdd2e8e52b546))
+* **sqlite:** bind sqlite3_reset and sqlite3_clear_bindings symbols ([6b5c4e7](https://github.com/DecapodLabs/dactyl/commit/6b5c4e71d8da29e9c376f87a64e5bab10ba76705))
+* **sqlite:** enforce resource budgets, streaming visits, and catalog predicates ([210588f](https://github.com/DecapodLabs/dactyl/commit/210588f703bd4919dd89b85e62259a4797f1a171))
+* **supabase:** wire ResourceBudget, bounded visits, and uncertain outcomes ([147b4cb](https://github.com/DecapodLabs/dactyl/commit/147b4cb3d101a8ff65f6025ca456d3cb99b4eb41))
 
-### Bug Fixes
 
-* **release:** document patched dependency compatibility ([3efd39f](https://github.com/DecapodLabs/dactyl/commit/3efd39f751e837a6cf753838727ea4beafac63e8))
+### Performance Improvements
+
+* **sqlite:** reuse prepared inserts and single transaction during recovery ([c1783ef](https://github.com/DecapodLabs/dactyl/commit/c1783efae1b638ded19a028c87b0024c4feed4e0))
 
 ## [Unreleased]
 
@@ -32,10 +41,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `409` `Conflict` mapping, enforce bounded JSON nesting (`MAX_JSON_DEPTH = 64`),
   and surface `outcome_unknown` on post-send ambiguous mutating/one-time
   connector failures ([#100](https://github.com/DecapodLabs/dactyl/issues/100)).
+- Additive `ResourceBudget` (`RESOURCE_BUDGET_VERSION = 1`) and
+  `Connection::open_with_budget` / `Connection::budget` bounding SQL length,
+  serialized `StorageContext` size, bound parameter cell/total bytes, atomic
+  batch operation counts, HTTP wire request/response sizes, JSON nesting depth,
+  decoded column/row counts, conservative decoded result bytes (including `32x`
+  BLOB JSON-array expansion), and connect/request deadlines across SQLite,
+  Neon, and Supabase without changing `OpenOptions` struct-literal or `Rows`
+  compatibility (#101).
+- Incremental `Connection::visit_rows` across SQLite, Neon, and Supabase,
+  distinguishing deliberate early visitor stop (`ScanOutcome.complete = false`,
+  with immediate SQLite statement finalization) from budget exhaustion errors.
+- Targeted `Connection::has_table` and `Connection::has_column` predicates for
+  single-statement local SQLite catalog checks, failing closed locally on
+  remote adapters (`AdapterErrorKind::Capability` /
+  `unsupported_schema_inspection`) without issuing network requests.
+- `FailureOrigin` (`LocalBudget`, `RemotePolicy`, `MalformedResponse`, `Other`)
+  and `MutationOutcome` (`NotAttempted`, `RolledBack`, `Uncertain`) classifiers
+  on `DactylError`.
+- SQLite `recover_from_dump_reload` now wraps staging table restoration in a
+  single transaction and reuses one prepared `INSERT` per table via raw C-ABI
+  column binding, avoiding per-row `serde_json::Value` BLOB amplification.
 
-### Breaking compatibility
+## [0.14.0](https://github.com/DecapodLabs/dactyl/compare/v0.13.1...v0.14.0) (2026-11-12)
 
-- The next release requires Rust and Cargo 1.85 or newer. Upgrade the consumer
+
+### ⚠ BREAKING CHANGES
+
+* **release:** document patched dependency compatibility
+
+### Bug Fixes
+
+* **release:** document patched dependency compatibility ([3efd39f](https://github.com/DecapodLabs/dactyl/commit/3efd39f751e837a6cf753838727ea4beafac63e8))
+
+### Historical 0.14.0 compatibility notes
+
+- Dactyl 0.14.0 requires Rust and Cargo 1.85 or newer. Upgrade the consumer
   toolchain before adopting it; the public Rust API, feature names and transport
   behavior are unchanged by this requirement.
 - The dependency graph requires `quinn-proto >=0.11.19,<0.12` and removes the
@@ -47,9 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a downstream application's resolution. The checked-in and fresh-consumer
   Quinn-floor checks are regression guards, not a complete vulnerability audit.
 
-These compatibility changes were accepted in [#108](https://github.com/DecapodLabs/dactyl/pull/108).
-They remain unreleased until the normal release PR is reviewed, merged and
-published. This note does not enable HTTP/3 or change cloud authorization.
+These compatibility changes were accepted in [#108](https://github.com/DecapodLabs/dactyl/pull/108)
+and shipped in [0.14.0](https://github.com/DecapodLabs/dactyl/releases/tag/v0.14.0).
+This note does not enable HTTP/3 or change cloud authorization.
 
 ## [0.13.1](https://github.com/DecapodLabs/dactyl/compare/v0.13.0...v0.13.1) (2026-11-12)
 

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "baseline": "1fa52a2 / dactyl-db 0.11.1",
+  "full_inspection_body_sha256": "1ba6197b3a5218d815c780202b965d45bf080f24b9f6f99107bf09ab29be21d7",
+  "claims": [
+    {
+      "id": "semantic_compatibility",
+      "status": "passed",
+      "method": "Predicates compared with complete schema projection across original/ASCII-lowercase matching, quotes, Unicode, views, NUL/injection-shaped strings, temporary shadowing and DDL changes",
+      "fixture": "tests/catalog_predicates.rs::predicates_agree_with_full_inspection_and_observe_ddl"
+    },
+    {
+      "id": "byte_preservation",
+      "status": "passed",
+      "method": "Read-only predicates followed by exact file byte comparison",
+      "fixture": "tests/catalog_predicates.rs::predicates_work_read_only_without_changing_persisted_bytes"
+    },
+    {
+      "id": "statement_budget",
+      "status": "passed",
+      "method": "Thread-local test-only prepare counter; absent from production and timing builds",
+      "observed": "32-table fixture: complete inspection 161 statements; each new predicate exactly 1, including absent-table lookup",
+      "fixture": "tests/unit/sqlite_catalog.rs"
+    },
+    {
+      "id": "table_predicate_latency",
+      "status": "measured",
+      "method": "Paired real adapter calls, 3 alternating-order trials per history size, 256 samples per variant per trial",
+      "observed": "All trials in catalog-measurements.json",
+      "limits": "Warm unoptimized in-process table checks only; no column latency, allocations, CLI startup or remote claim"
+    },
+    {
+      "id": "remote_rejection",
+      "status": "passed",
+      "method": "Real Neon and Supabase Connection routes return typed capability errors without catalog HTTP or local fallback",
+      "fixtures": [
+        "tests/catalog_capabilities.rs",
+        "tests/supabase_contract.rs"
+      ]
+    },
+    {
+      "id": "repository_regression",
+      "status": "passed",
+      "method": "79 all-features tests, 7 feature combinations, clippy -D warnings; explicitly requested missing PostgreSQL fixture rejects unavailable as not passed",
+      "limits": "3 all-features cases ignored: benchmark and two service proof profiles; no hosted claim"
+    },
+    {
+      "id": "publication_readiness",
+      "status": "pending",
+      "method": "Full decapod validate required; legacy repository configuration has no required profile selected"
+    },
+    {
+      "id": "decapod_adoption",
+      "status": "pending",
+      "method": "Release Dactyl before consumer dependency update; benchmark actual owner-proxy and per-invocation paths separately"
+    }
+  ]
+}

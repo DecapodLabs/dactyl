@@ -1,5 +1,9 @@
 # Interfaces
 
+## Resource budgets, streaming scans, and catalog predicates (issue 101)
+
+`dactyl_db` re-exports `RESOURCE_BUDGET_VERSION` (`1`), `ResourceBudget`, `FailureOrigin`, and `MutationOutcome` alongside `Connection::open_with_budget`, `Connection::budget`, `Connection::visit_rows`, `Connection::has_table`, `Connection::has_column`, `DactylError::failure_origin`, and `DactylError::mutation_outcome`. `OpenOptions` retains its two public fields (`access_mode`, `lock_timeout`) so struct-literal callers compile unchanged. `ResourceBudget::v1()` defaults to 256 KiB SQL, 64 KiB serialized `StorageContext`, 4 MiB parameter/cell/wire limits, 256 columns, 100,000 rows, 64 MiB decoded result bytes, 1,024 batch operations, 5s connect timeout, and 15s request timeout; bounds apply per call or per `atomic` batch on a single `Connection`. `Connection::visit_rows` returns `Ok(ScanOutcome { rows, complete: false })` on visitor `Ok(false)` and `Err(DactylError)` (`AdapterErrorKind::Quota`) on budget exhaustion. `has_table` and `has_column` match `StoreSchema::table` / `table_info` visibility on SQLite and return `AdapterErrorKind::Capability` (`unsupported_schema_inspection`, `MutationOutcome::NotAttempted`) locally on Neon and Supabase.
+
 ## Compiler and consumer contract
 
 `Cargo.toml` declares Rust 1.85. This raises the consumer toolchain requirement
@@ -264,8 +268,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,5 +1,13 @@
 # Validation
 
+## Reconciled 0.15.0 + Decapod v0.143.0 controller pin (issue 100)
+
+The reconciled `#100` merge against `origin/main` (`dactyl-db 0.15.0`, `#112` + `#114`) updates `.decapod/config.toml` `reviewed_sources_digest` for the `0.15.0` `Cargo.toml`/`Cargo.lock` release while keeping `reviewed_commands_digest` and `tools/proof/check.py` unchanged, and advances `tools/proof/Containerfile`, `.decapod/managed/Dockerfile.decapod`, canonical entrypoints, and `.decapod/managed/specs/.manifest.json` to independently published `decapod v0.143.0` so hosted `decapod-validate.yml` evaluates the exact same controller version with zero drift.
+
+## Resource-budget, catalog-predicate, and recovery proof (issue 101)
+
+`.decapod/config.toml` reconciles `reviewed_sources_digest` with the accepted `0.14.0` release while preserving `tools/proof/check.py` (`reviewed_commands_digest` unchanged) and the `0.138.3` controller pin. `tests/resource_budgets.rs`, `tests/catalog_predicates.rs`, `tests/catalog_capabilities.rs`, `tests/unit/sqlite_catalog.rs`, and seam extensions in `tests/storage_fixtures.rs`, `tests/supabase_contract.rs`, `tests/supabase_service.rs`, `tests/sqlite_maintenance.rs`, and `src/adapter/sqlite/recovery/tests.rs` verify `OpenOptions` struct-literal compatibility, exact `N` vs `N + 1` and `u64` overflow boundaries, pre-allocation `32x` BLOB result charging, lying `Content-Length` and JSON depth > 64 rejection, `visit_rows` lock release vs budget error, single-prepare SQLite catalog predicates (1 vs 161 statements), local atomic rollback vs remote `MutationOutcome::Uncertain` reconciliation, compact opaque component references `(component_kind, codec_version, byte_len, content_sha256)`, and C-ABI streaming recovery under tight result budgets. Evidence remains explicitly separated into executed `local_sqlite`, `synthetic_http`, and `neon_mock` checks versus `unavailable` external `local_postgres`, `hosted_supabase`, and `live_propodus` profiles.
+
 The snapshot-inspection candidate uses independently released Decapod v0.138.3
 for both workbranch validation and `tools/proof/Containerfile`. Hosted validation
 must evaluate entrypoints with that same version. PR #104's first hosted run
@@ -290,8 +298,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

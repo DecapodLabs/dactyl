@@ -21,8 +21,9 @@ use std::thread;
 use std::time::Duration;
 
 use dactyl_db::{
-    AccessMode, AdapterErrorKind, Connection, DatastoreRoute, GeneratedKey, OpenOptions, Operation,
-    OperationResult, Parameter, StorageContext,
+    AccessMode, AdapterErrorKind, Connection, DatastoreRoute, FailureOrigin, GeneratedKey,
+    MutationOutcome, OpenOptions, Operation, OperationResult, Parameter, ResourceBudget,
+    ScanOutcome, StorageContext,
 };
 use serde_json::json;
 #[cfg(feature = "neon")]
@@ -296,6 +297,64 @@ fn constraint_is_typed(db: &Connection) {
     assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Constraint));
 }
 
+fn compact_component_refs_and_bounded_visit(db: &Connection) {
+    db.write(
+        "create table if not exists component_refs (id integer primary key, component_kind text not null, codec_version integer not null, byte_len integer not null, content_sha256 text not null)",
+        &[],
+    )
+    .unwrap();
+    db.atomic(&[
+        Operation::write(
+            "insert into component_refs (id, component_kind, codec_version, byte_len, content_sha256) values ($1, $2, $3, $4, $5)",
+            vec![
+                Parameter::Integer(1),
+                Parameter::Text("trajectory_capsule".into()),
+                Parameter::Integer(1),
+                Parameter::Integer(16_384),
+                Parameter::Text("sha256:1111111111111111111111111111111111111111111111111111111111111111".into()),
+            ],
+        ),
+        Operation::write(
+            "insert into component_refs (id, component_kind, codec_version, byte_len, content_sha256) values ($1, $2, $3, $4, $5)",
+            vec![
+                Parameter::Integer(2),
+                Parameter::Text("proof_bundle".into()),
+                Parameter::Integer(1),
+                Parameter::Integer(32_768),
+                Parameter::Text("sha256:2222222222222222222222222222222222222222222222222222222222222222".into()),
+            ],
+        ),
+    ])
+    .unwrap();
+    let mut visited = Vec::new();
+    let outcome = db
+        .visit_rows(
+            "select component_kind, codec_version, byte_len, content_sha256 from component_refs order by id",
+            &[],
+            |row| {
+                visited.push((
+                    row.get_str("component_kind")?.to_owned(),
+                    row.get_int("codec_version")?,
+                    row.get_int("byte_len")?,
+                    row.get_str("content_sha256")?.to_owned(),
+                ));
+                Ok(false)
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        outcome,
+        ScanOutcome {
+            rows: 1,
+            complete: false
+        }
+    );
+    assert_eq!(visited.len(), 1);
+    assert_eq!(visited[0].0, "trajectory_capsule");
+    assert_eq!(visited[0].1, 1);
+    assert_eq!(visited[0].2, 16_384);
+}
+
 fn context_is_local_noop(path: &str) {
     let without = open_local(path, None);
     setup_state_event_schema(&without);
@@ -423,6 +482,27 @@ fn run_local_matrix(path: &str) -> Vec<CaseOutcome> {
     ));
     constraint_is_typed(&db);
     outcomes.push(CaseOutcome::passed("constraint_is_typed", "local_sqlite"));
+    compact_component_refs_and_bounded_visit(&db);
+    outcomes.push(CaseOutcome::passed(
+        "compact_component_refs_and_bounded_visit",
+        "local_sqlite",
+    ));
+    let tight = Connection::open_with_budget(
+        DatastoreRoute::sqlite(path),
+        OpenOptions::default(),
+        None,
+        ResourceBudget::v1().with_max_rows(1),
+    )
+    .unwrap();
+    let over = tight
+        .read("select id from component_refs order by id", &[])
+        .unwrap_err();
+    assert_eq!(over.failure_origin(), FailureOrigin::LocalBudget);
+    assert_eq!(over.mutation_outcome(), MutationOutcome::RolledBack);
+    outcomes.push(CaseOutcome::passed(
+        "resource_budget_row_limit",
+        "local_sqlite",
+    ));
     context_is_local_noop(path);
     outcomes.push(CaseOutcome::passed("context_is_local_noop", "local_sqlite"));
     concurrent_scoped_writes_and_cleanup(path);
@@ -726,6 +806,19 @@ mod neon_executing_mock {
             atomic_state_plus_event_commit(&db);
             atomic_state_plus_event_rollback(&db);
             constraint_is_typed(&db);
+            compact_component_refs_and_bounded_visit(&db);
+
+            let tight = Connection::open_with_budget(
+                DatastoreRoute::neon(&endpoint, Some("fixture-token".into())),
+                OpenOptions::default(),
+                Some(opaque_tenancy_context()),
+                ResourceBudget::v1().with_max_rows(1),
+            )
+            .unwrap();
+            let over = tight
+                .read("select id from component_refs order by id", &[])
+                .unwrap_err();
+            assert_eq!(over.failure_origin(), FailureOrigin::LocalBudget);
 
             let error = db.write("authorization_failure", &[]).unwrap_err();
             assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authorization));
@@ -751,6 +844,7 @@ mod neon_executing_mock {
             atomic_state_plus_event_commit(&db);
             atomic_state_plus_event_rollback(&db);
             constraint_is_typed(&db);
+            compact_component_refs_and_bounded_visit(&db);
             let error = db.write("authorization_failure", &[]).unwrap_err();
             assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authorization));
 
@@ -764,6 +858,7 @@ mod neon_executing_mock {
                 CaseOutcome::passed("atomic_state_plus_event_commit", "neon_mock"),
                 CaseOutcome::passed("atomic_state_plus_event_rollback", "neon_mock"),
                 CaseOutcome::passed("constraint_is_typed", "neon_mock"),
+                CaseOutcome::passed("compact_component_refs_and_bounded_visit", "neon_mock"),
                 CaseOutcome::passed("typed_authorization_failure", "neon_mock"),
             ]);
             outcomes.extend(live_propodus_outcomes());

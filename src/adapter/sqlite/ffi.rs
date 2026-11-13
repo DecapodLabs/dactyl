@@ -50,6 +50,8 @@ type PrepareV2 = unsafe extern "C" fn(
     *mut *const c_char,
 ) -> c_int;
 type Finalize = unsafe extern "C" fn(*mut sqlite3_stmt) -> c_int;
+type Reset = unsafe extern "C" fn(*mut sqlite3_stmt) -> c_int;
+type ClearBindings = unsafe extern "C" fn(*mut sqlite3_stmt) -> c_int;
 type BindNull = unsafe extern "C" fn(*mut sqlite3_stmt, c_int) -> c_int;
 type BindInt64 = unsafe extern "C" fn(*mut sqlite3_stmt, c_int, i64) -> c_int;
 type BindDouble = unsafe extern "C" fn(*mut sqlite3_stmt, c_int, c_double) -> c_int;
@@ -116,6 +118,8 @@ pub struct Api {
     exec: Exec,
     prepare_v2: PrepareV2,
     finalize: Finalize,
+    reset: Reset,
+    clear_bindings: ClearBindings,
     bind_null: BindNull,
     bind_int64: BindInt64,
     bind_double: BindDouble,
@@ -182,6 +186,8 @@ impl Api {
             exec: symbol!("sqlite3_exec", Exec),
             prepare_v2: symbol!("sqlite3_prepare_v2", PrepareV2),
             finalize: symbol!("sqlite3_finalize", Finalize),
+            reset: symbol!("sqlite3_reset", Reset),
+            clear_bindings: symbol!("sqlite3_clear_bindings", ClearBindings),
             bind_null: symbol!("sqlite3_bind_null", BindNull),
             bind_int64: symbol!("sqlite3_bind_int64", BindInt64),
             bind_double: symbol!("sqlite3_bind_double", BindDouble),
@@ -255,6 +261,16 @@ impl Api {
 
     pub unsafe fn finalize(&self, statement: *mut sqlite3_stmt) -> c_int {
         (self.finalize)(statement)
+    }
+
+    #[allow(dead_code)]
+    pub unsafe fn reset(&self, statement: *mut sqlite3_stmt) -> c_int {
+        (self.reset)(statement)
+    }
+
+    #[allow(dead_code)]
+    pub unsafe fn clear_bindings(&self, statement: *mut sqlite3_stmt) -> c_int {
+        (self.clear_bindings)(statement)
     }
 
     pub unsafe fn prepare_v2(

@@ -1,5 +1,9 @@
 # Architecture
 
+## Resource budget and streaming execution boundary (issue 101)
+
+`src/budget.rs` centralizes `ResourceBudget` (`v1`), bounded JSON request serialization (`BoundedVecWriter`), chunked HTTP response reading (`read_bounded_body` without trusting `Content-Length`), recursive JSON nesting guards (`MAX_JSON_DEPTH = 64`), and `DecodedResultTracker` (charging column metadata, row overhead, and `32x` BLOB `serde_json::Value::Array` expansion with checked `u64` arithmetic before `Row` materialization). `src/adapter/sqlite/mod.rs` enforces preflight and pre-allocation result charges, implements `visit_rows_budgeted` with deterministic native `Statement` finalization on early stop or error, and answers `has_table` / `has_column` in one bound SQLite catalog query. `src/adapter/sqlite/recovery.rs` wraps staging table copies in one `BEGIN IMMEDIATE` ... `COMMIT` transaction and reuses a single prepared `INSERT` per table (`sqlite3_reset` + `sqlite3_clear_bindings`) via direct C-ABI column binds. `src/adapter/neon/mod.rs` and `src/adapter/supabase.rs` run bounded blocking HTTP on dedicated named worker threads (`dactyl-neon-http`, `dactyl-supabase-http`) safe inside Tokio runtimes, reject catalog predicates locally without network I/O, and mark post-send mutating failures as `MutationOutcome::Uncertain`.
+
 ## HTTP dependency compatibility boundary
 
 The Neon, Supabase and managed-auth implementations retain their existing
@@ -225,8 +229,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

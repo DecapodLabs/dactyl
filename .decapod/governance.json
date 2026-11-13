@@ -190,6 +190,18 @@
       "id": "conn-100-20-governance",
       "summary": "chore(governance): record #100 spec reviews, supported claims, and trajectory evidence",
       "input_digest": "sha256:98af208d3cab87183fd8514b59cf538d63ea2a4de4428c92595ae35807ae42c4"
+    },
+    {
+      "id": "conn-100-21-reconcile-main-01430",
+      "summary": "Merge origin/main (0.15.0, #112+#114) into #100 and refresh Decapod v0.143.0 pins, reviewed_sources_digest, and spec reviews",
+      "input_digest": "sha256:ec8140b5fc76ac478c50ecca00d1b18685b3856b8847d9b8778e8c479af60d11",
+      "proof_refs": [
+        "cargo check --all-targets --all-features",
+        "cargo check --all-targets --no-default-features",
+        "cargo fmt --all -- --check",
+        "tests/cloud_connector.rs (12 passed)",
+        "tests/logical_connector.rs (6 passed)"
+      ]
     }
   ],
   "intents": {
@@ -230,23 +242,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented src/connector.rs per-workspace isolation, feature-unconditional portable types, and HTTP JSON depth/outcome_unknown boundaries",
-          "reviewed_code_fingerprint": "f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468",
-          "spec_material_hash": "e679594d9c01a658582b46e0aa893350fcdc7b254c083938d15ac47c2a721234"
+          "reason": "Integrated #101 budget/recovery seams and #100 src/connector.rs boundaries against 0.15.0",
+          "reviewed_code_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
+          "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented LogicalTarget, LogicalConnector, Manage/Portal account routes, allowlisted GoTrue/OAuth/Propodus codes, and outcome_unknown",
-          "reviewed_code_fingerprint": "f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468",
-          "spec_material_hash": "9916b7a89f6ccaab071a090932e41c563065b2cbdacbe8beed2e2f052a6d2fd4"
+          "reason": "Integrated #101 Connection budget/predicate APIs and #100 LogicalTarget/LogicalConnector/Manage/Portal APIs",
+          "reviewed_code_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
+          "spec_material_hash": "9259e54a875c6918161927f6945a0bcd65be19e3253ac8fc0f91157b78c16aeb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented portable secret Debug redaction across features, MAX_JSON_DEPTH=64, zero SQLite fallback, and outcome_unknown on post-send mutations",
-          "reviewed_code_fingerprint": "f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468",
-          "spec_material_hash": "1aa2a226e414845c391ea8f56922793db49bf42570e7e7ab12f88c6145c7e4f0"
+          "reason": "Integrated #101 budget/JSON depth bounds and #100 credential redaction/outcome_unknown invariants",
+          "reviewed_code_fingerprint": "7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a",
+          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
       "state": "APPROVED",
@@ -257,7 +269,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794541075Z"
+      "updated_at": "1794542453Z"
     },
     "trajectory": {
       "active_boundaries": [

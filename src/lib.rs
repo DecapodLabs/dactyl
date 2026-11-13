@@ -5,6 +5,7 @@
 //! schema policy, migration ids/order, retries, analytics, or business logic.
 
 mod adapter;
+mod budget;
 #[cfg(feature = "supabase")]
 mod cloud;
 mod connector;
@@ -16,6 +17,7 @@ mod supabase_rpc;
 
 pub mod error;
 
+pub use crate::budget::{FailureOrigin, MutationOutcome, ResourceBudget, RESOURCE_BUDGET_VERSION};
 pub use crate::connector::{
     AccountOperation, AuthenticationSecrets, AuthenticationStart, LogicalConnector, LogicalTarget,
     ScmCredential, ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
@@ -267,18 +269,24 @@ pub struct Connection {
     adapter: Box<dyn Adapter>,
     route: DatastoreRoute,
     context: Option<StorageContext>,
+    budget: ResourceBudget,
 }
 
 impl Connection {
     pub fn open(route: DatastoreRoute) -> Result<Self, DactylError> {
-        Self::open_with_options_and_context(route, OpenOptions::default(), None)
+        Self::open_with_budget(
+            route,
+            OpenOptions::default(),
+            None,
+            ResourceBudget::default(),
+        )
     }
 
     pub fn open_with_options(
         route: DatastoreRoute,
         options: OpenOptions,
     ) -> Result<Self, DactylError> {
-        Self::open_with_options_and_context(route, options, None)
+        Self::open_with_budget(route, options, None, ResourceBudget::default())
     }
 
     /// Open a route with an optional caller-owned storage context.
@@ -289,7 +297,12 @@ impl Connection {
         route: DatastoreRoute,
         context: Option<StorageContext>,
     ) -> Result<Self, DactylError> {
-        Self::open_with_options_and_context(route, OpenOptions::default(), context)
+        Self::open_with_budget(
+            route,
+            OpenOptions::default(),
+            context,
+            ResourceBudget::default(),
+        )
     }
 
     pub fn open_with_options_and_context(
@@ -297,14 +310,31 @@ impl Connection {
         options: OpenOptions,
         context: Option<StorageContext>,
     ) -> Result<Self, DactylError> {
+        Self::open_with_budget(route, options, context, ResourceBudget::default())
+    }
+
+    /// Open a route with explicit [`OpenOptions`], optional [`StorageContext`], and
+    /// a versioned per-operation [`ResourceBudget`].
+    ///
+    /// Existing [`OpenOptions`] struct literals remain source-compatible; callers
+    /// that do not customize budgets receive [`ResourceBudget::v1`].
+    pub fn open_with_budget(
+        route: DatastoreRoute,
+        options: OpenOptions,
+        context: Option<StorageContext>,
+        budget: ResourceBudget,
+    ) -> Result<Self, DactylError> {
+        budget.validate()?;
         if let Some(context) = &context {
             context.validate()?;
         }
-        let adapter = build_adapter(&route, options, context.clone())?;
+        crate::budget::preflight_context(&budget, context.as_ref())?;
+        let adapter = build_adapter(&route, options, context.clone(), budget)?;
         Ok(Self {
             adapter,
             route,
             context,
+            budget,
         })
     }
 
@@ -324,9 +354,36 @@ impl Connection {
         self.context.as_ref()
     }
 
+    /// Return the active per-operation [`ResourceBudget`] for this connection.
+    pub fn budget(&self) -> &ResourceBudget {
+        &self.budget
+    }
+
     /// Read application rows from the selected backend.
     pub fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
         self.adapter.read(sql, params)
+    }
+
+    /// Visit application rows incrementally without materializing an owned [`Rows`] vector.
+    ///
+    /// When `visitor` returns `Ok(false)`, scanning stops immediately with
+    /// `ScanOutcome { rows, complete: false }` and local SQLite statements are finalized
+    /// before returning. Budget violations always return `Err(DactylError)`, never a
+    /// truncated `Ok(ScanOutcome)`.
+    ///
+    /// On HTTP-backed routes (`Neon` and `Supabase`), each call executes one bounded HTTP
+    /// query (`max_wire_bytes`, `max_rows`, and `max_result_bytes`); callers own keyset
+    /// `WHERE ... ORDER BY ... LIMIT` pagination across round-trips.
+    pub fn visit_rows<F>(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        mut visitor: F,
+    ) -> Result<ScanOutcome, DactylError>
+    where
+        F: FnMut(&Row) -> Result<bool, DactylError>,
+    {
+        self.adapter.visit_rows(sql, params, &mut visitor)
     }
 
     /// Write application data and return the explicit physical result.
@@ -354,6 +411,27 @@ impl Connection {
     /// Inspect the local SQLite catalog through the backend-neutral schema type.
     pub fn inspect_schema(&self) -> Result<StoreSchema, DactylError> {
         self.adapter.inspect_schema()
+    }
+
+    /// Test table visibility without inspecting indexes or counting data rows.
+    ///
+    /// SQLite follows [`StoreSchema::table`]'s original/ASCII-lowercase name
+    /// matching and existing catalog visibility rules. Each call reads current
+    /// schema state; no cache is maintained. Remote adapters return a typed
+    /// capability error without network access or local fallback.
+    pub fn has_table(&self, table: &str) -> Result<bool, DactylError> {
+        self.adapter.has_table(table)
+    }
+
+    /// Test for an exact column name in a visible table without counting rows.
+    ///
+    /// Uses the same table lookup and `table_info` visibility as full inspection,
+    /// including its temporary-table shadowing behavior. Generated/hidden columns
+    /// excluded by `table_info` remain excluded. The SQLite implementation uses
+    /// one bounded catalog query and requires table-valued pragmas (SQLite 3.16+).
+    /// Remote adapters return a typed capability error without a network call.
+    pub fn has_column(&self, table: &str, column: &str) -> Result<bool, DactylError> {
+        self.adapter.has_column(table, column)
     }
 
     /// Run caller-owned diagnostics in one consistent read transaction.
@@ -441,6 +519,7 @@ fn build_adapter(
     route: &DatastoreRoute,
     _options: OpenOptions,
     _context: Option<StorageContext>,
+    _budget: ResourceBudget,
 ) -> Result<Box<dyn Adapter>, DactylError> {
     match route.datastore {
         Datastore::Supabase => {
@@ -452,6 +531,7 @@ fn build_adapter(
                     _options,
                     _context,
                     route.rpc.as_ref(),
+                    _budget,
                 )?))
             }
             #[cfg(not(feature = "supabase"))]
@@ -465,9 +545,10 @@ fn build_adapter(
             #[cfg(feature = "sqlite")]
             {
                 Ok(Box::new(
-                    crate::adapter::sqlite::SqliteAdapter::open_with_options(
+                    crate::adapter::sqlite::SqliteAdapter::open_with_options_and_budget(
                         &route.route,
                         _options,
+                        _budget,
                     )?,
                 ))
             }
@@ -482,11 +563,12 @@ fn build_adapter(
             #[cfg(feature = "neon")]
             {
                 Ok(Box::new(
-                    crate::adapter::neon::NeonAdapter::new_with_options(
+                    crate::adapter::neon::NeonAdapter::new_with_options_and_budget(
                         &route.route,
                         route.token.clone(),
                         _options,
                         _context,
+                        _budget,
                     ),
                 ))
             }

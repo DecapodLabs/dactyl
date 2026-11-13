@@ -1,5 +1,9 @@
 # Security
 
+## Bounded resource envelopes and redacted remote transport (issue 101)
+
+`src/budget.rs` enforces preflight bounds on SQL, `StorageContext`, bound parameters, batch length, and serialized JSON request bytes (`BoundedVecWriter`) before local statement preparation or network transmission, preventing oversized outbound buffers. Inbound Neon and Supabase HTTP bodies are read in fixed chunks (`read_bounded_body`) up to `max_wire_bytes + 1` without trusting peer `Content-Length` headers, checked against `MAX_JSON_DEPTH = 64`, and charged against `DecodedResultTracker` (including `32x` BLOB array amplification with checked `u64` arithmetic) before `Row` materialization. Both Neon and Supabase disable HTTP redirects and automatic retries, redact transport/server error text, reject `has_table` / `has_column` locally without issuing ad-hoc catalog SQL, and surface post-send mutating failures as `MutationOutcome::Uncertain` so callers do not treat ambiguous remote writes as rolled back.
+
 ## Patched inactive dependency graph
 
 The manifest no longer constrains quinn-proto to the vulnerable pre-0.11.10
@@ -163,8 +167,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

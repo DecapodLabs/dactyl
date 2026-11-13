@@ -1,5 +1,9 @@
 # Operations
 
+## Capacity, dogfooding inventory, and recovery guardrails (issue 101)
+
+`docs/datastore/dogfooding-inventory.json` records read-only physical snapshot metrics from the repository's `.decapod/data/decapod.db` (`13,344,768` apparent bytes across `3,258` pages; `events` holds `18,941` rows and `94.3%` of live allocated B-tree bytes). Operators and callers use `ResourceBudget` (`docs/datastore/resource-budgets.md`) and `Connection::visit_rows` to prevent unbounded single-call memory or HTTP payload growth while applying caller-level concurrency limits across multiple connections. When `DactylError::mutation_outcome()` returns `MutationOutcome::Uncertain` after a remote transport, timeout, or post-send response failure, callers must reconcile persisted state or supply an idempotency key rather than blindly replaying non-idempotent writes. Explicit SQLite `recover_from_dump_reload` now streams table data through one staging transaction and one reused C-ABI prepared `INSERT` per table, avoiding `32x` JSON BLOB memory amplification during incident recovery.
+
 ## Operational Readiness Checklist
 - [ ] On-call ownership defined.
 - [ ] SLOs and alert thresholds defined.
@@ -95,7 +99,7 @@ This path follows the [release-please version override contract](https://github.
 Merged-PR body commit overrides are unsupported for plain merges.
 
 **CI/CD Notes**:
-- `tools/proof/Containerfile` and the accepted validation entrypoints pin the independent published Decapod controller to `0.138.3`. Full `decapod validate` runs the unchanged reviewed Rust proof through `tools/proof/check.py`, including locked and lock-free consumer checks on Rust 1.85; preparation only fetches dependencies.
+- `tools/proof/Containerfile` and the accepted validation entrypoints pin the independent published Decapod controller to `0.143.0`. Full `decapod validate` runs the unchanged reviewed Rust proof through `tools/proof/check.py`, including locked and lock-free consumer checks on Rust 1.85; preparation only fetches dependencies.
 - The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md`.
 
 ## Local SQLite operations
@@ -191,7 +195,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
+- Repository signal fingerprint: `7d96f35351b1ad69c8bda97b758ccbb163d3d4bd07d58732c3b11af4064ed57a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (21 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

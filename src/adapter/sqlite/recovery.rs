@@ -598,45 +598,63 @@ fn rebuild_database(
         let user_version = pragma_integer(source, "user_version")?;
         let application_id = pragma_integer(source, "application_id")?;
         let objects = schema_objects(source)?;
-        for object in objects.iter().filter(|object| object.kind == "table") {
-            if object.sql.to_ascii_lowercase().contains("virtual table") {
-                return Err(DactylError::adapter_with_code(
-                    AdapterErrorKind::Capability,
-                    "unsupported_recovery_object",
-                    format!(
-                        "logical recovery does not support virtual table {}",
-                        object.name
-                    ),
-                ));
+        exec_sql(&destination, "BEGIN IMMEDIATE").map_err(|error| {
+            destination.error_from_failure("begin recovery rebuild transaction", error)
+        })?;
+        let staged = (|| {
+            for object in objects.iter().filter(|object| object.kind == "table") {
+                if object.sql.to_ascii_lowercase().contains("virtual table") {
+                    return Err(DactylError::adapter_with_code(
+                        AdapterErrorKind::Capability,
+                        "unsupported_recovery_object",
+                        format!(
+                            "logical recovery does not support virtual table {}",
+                            object.name
+                        ),
+                    ));
+                }
+                exec_sql(&destination, &object.sql).map_err(|error| {
+                    destination.error_from_failure("create recovered SQLite table", error)
+                })?;
             }
-            exec_sql(&destination, &object.sql).map_err(|error| {
-                destination.error_from_failure("create recovered SQLite table", error)
+            for object in objects.iter().filter(|object| object.kind == "table") {
+                copy_table_rows(source, &destination, &object.name)?;
+            }
+            if has_sqlite_sequence(source)? {
+                copy_table_rows(source, &destination, "sqlite_sequence")?;
+            }
+            for object in objects
+                .iter()
+                .filter(|object| matches!(object.kind.as_str(), "index" | "view" | "trigger"))
+            {
+                exec_sql(&destination, &object.sql).map_err(|error| {
+                    destination.error_from_failure("create recovered SQLite schema object", error)
+                })?;
+            }
+            exec_sql(
+                &destination,
+                &format!("PRAGMA user_version = {user_version}"),
+            )
+            .map_err(|error| {
+                destination.error_from_failure("restore SQLite user_version", error)
             })?;
-        }
-        for object in objects.iter().filter(|object| object.kind == "table") {
-            copy_table_rows(source, &destination, &object.name)?;
-        }
-        if has_sqlite_sequence(source)? {
-            copy_table_rows(source, &destination, "sqlite_sequence")?;
-        }
-        for object in objects
-            .iter()
-            .filter(|object| matches!(object.kind.as_str(), "index" | "view" | "trigger"))
-        {
-            exec_sql(&destination, &object.sql).map_err(|error| {
-                destination.error_from_failure("create recovered SQLite schema object", error)
+            exec_sql(
+                &destination,
+                &format!("PRAGMA application_id = {application_id}"),
+            )
+            .map_err(|error| {
+                destination.error_from_failure("restore SQLite application_id", error)
             })?;
+            Ok(())
+        })();
+        if let Err(error) = staged {
+            let _ = exec_sql(&destination, "ROLLBACK");
+            return Err(error);
         }
-        exec_sql(
-            &destination,
-            &format!("PRAGMA user_version = {user_version}"),
-        )
-        .map_err(|error| destination.error_from_failure("restore SQLite user_version", error))?;
-        exec_sql(
-            &destination,
-            &format!("PRAGMA application_id = {application_id}"),
-        )
-        .map_err(|error| destination.error_from_failure("restore SQLite application_id", error))?;
+        exec_sql(&destination, "COMMIT").map_err(|error| {
+            let _ = exec_sql(&destination, "ROLLBACK");
+            destination.error_from_failure("commit recovery rebuild transaction", error)
+        })?;
         before_validation()?;
         exec_sql(&destination, "PRAGMA journal_mode = DELETE").map_err(|error| {
             destination.error_from_failure("set recovered SQLite journal mode", error)
@@ -706,17 +724,177 @@ fn copy_table_rows(
         quoted_columns.join(", "),
         placeholders
     );
-    let mut statement = Statement::prepare(source, &select_sql)?;
-    while statement.step()? == ffi::SQLITE_ROW {
-        let params = (0..columns.len())
-            .map(|index| {
-                let index = c_int::try_from(index).map_err(|_| {
-                    adapter_error(AdapterErrorKind::Value, "too many SQLite table columns")
-                })?;
-                parameter_from_value(statement.value(index)?)
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        execute_write(destination, &insert_sql, &params)?;
+    let mut select_statement = Statement::prepare(source, &select_sql)?;
+    let mut insert_statement = Statement::prepare(destination, &insert_sql)?;
+    while select_statement.step()? == ffi::SQLITE_ROW {
+        for column_offset in 0..columns.len() {
+            let source_index = c_int::try_from(column_offset).map_err(|_| {
+                adapter_error(AdapterErrorKind::Value, "too many SQLite table columns")
+            })?;
+            let bind_index = c_int::try_from(column_offset + 1).map_err(|_| {
+                adapter_error(AdapterErrorKind::Value, "too many SQLite bind parameters")
+            })?;
+            bind_recovered_column(
+                &select_statement,
+                &mut insert_statement,
+                source_index,
+                bind_index,
+            )?;
+        }
+        let step_result = (|| {
+            loop {
+                match insert_statement.step()? {
+                    ffi::SQLITE_ROW => continue,
+                    ffi::SQLITE_DONE => break,
+                    _ => unreachable!("Statement::step maps non-row/non-done to an error"),
+                }
+            }
+            Ok(())
+        })();
+        let reset_result = insert_statement.reset_and_clear();
+        step_result?;
+        reset_result?;
+    }
+    Ok(())
+}
+
+fn bind_recovered_column(
+    source: &Statement<'_>,
+    destination: &mut Statement<'_>,
+    source_index: c_int,
+    bind_index: c_int,
+) -> Result<(), DactylError> {
+    let kind = unsafe {
+        source
+            .connection
+            .api
+            .column_type(source.statement, source_index)
+    };
+    let code = unsafe {
+        match kind {
+            ffi::SQLITE_NULL => destination
+                .connection
+                .api
+                .bind_null(destination.statement, bind_index),
+            ffi::SQLITE_INTEGER => {
+                let value = source
+                    .connection
+                    .api
+                    .column_int64(source.statement, source_index);
+                destination
+                    .connection
+                    .api
+                    .bind_int64(destination.statement, bind_index, value)
+            }
+            ffi::SQLITE_FLOAT => {
+                let value = source
+                    .connection
+                    .api
+                    .column_double(source.statement, source_index);
+                if !value.is_finite() {
+                    return Err(adapter_error(
+                        AdapterErrorKind::Value,
+                        "SQLite returned a non-finite REAL",
+                    ));
+                }
+                destination
+                    .connection
+                    .api
+                    .bind_double(destination.statement, bind_index, value)
+            }
+            ffi::SQLITE_TEXT => {
+                let pointer = source
+                    .connection
+                    .api
+                    .column_text(source.statement, source_index);
+                let length = source
+                    .connection
+                    .api
+                    .column_bytes(source.statement, source_index);
+                if pointer.is_null() && length != 0 {
+                    return Err(adapter_error(
+                        AdapterErrorKind::Value,
+                        "SQLite returned a null text pointer",
+                    ));
+                }
+                if length < 0 {
+                    return Err(adapter_error(
+                        AdapterErrorKind::Value,
+                        "SQLite returned a negative text byte count",
+                    ));
+                }
+                if length == 0 {
+                    destination.connection.api.bind_text(
+                        destination.statement,
+                        bind_index,
+                        b"".as_ptr().cast(),
+                        0,
+                    )
+                } else {
+                    let slice = std::slice::from_raw_parts(pointer, length as usize);
+                    std::str::from_utf8(slice).map_err(|error| {
+                        adapter_error(
+                            AdapterErrorKind::Value,
+                            format!("SQLite returned invalid UTF-8 text: {error}"),
+                        )
+                    })?;
+                    destination.connection.api.bind_text(
+                        destination.statement,
+                        bind_index,
+                        pointer.cast(),
+                        length,
+                    )
+                }
+            }
+            ffi::SQLITE_BLOB => {
+                let pointer = source
+                    .connection
+                    .api
+                    .column_blob(source.statement, source_index);
+                let length = source
+                    .connection
+                    .api
+                    .column_bytes(source.statement, source_index);
+                if pointer.is_null() && length != 0 {
+                    return Err(adapter_error(
+                        AdapterErrorKind::Value,
+                        "SQLite returned a null blob pointer",
+                    ));
+                }
+                if length < 0 {
+                    return Err(adapter_error(
+                        AdapterErrorKind::Value,
+                        "SQLite returned a negative blob byte count",
+                    ));
+                }
+                if length == 0 {
+                    destination.connection.api.bind_blob(
+                        destination.statement,
+                        bind_index,
+                        b"".as_ptr().cast::<c_void>(),
+                        0,
+                    )
+                } else {
+                    destination.connection.api.bind_blob(
+                        destination.statement,
+                        bind_index,
+                        pointer,
+                        length,
+                    )
+                }
+            }
+            _ => {
+                return Err(adapter_error(
+                    AdapterErrorKind::Value,
+                    "SQLite returned an unknown value type",
+                ))
+            }
+        }
+    };
+    if code != ffi::SQLITE_OK {
+        return Err(destination
+            .connection
+            .error("bind recovered SQLite parameter", code));
     }
     Ok(())
 }
@@ -737,35 +915,6 @@ fn has_sqlite_sequence(source: &SqliteConnection) -> Result<bool, DactylError> {
         &[],
     )?
     .is_empty())
-}
-
-fn parameter_from_value(value: serde_json::Value) -> Result<Parameter, DactylError> {
-    match value {
-        serde_json::Value::Null => Ok(Parameter::Null),
-        serde_json::Value::Bool(value) => Ok(Parameter::Bool(value)),
-        serde_json::Value::Number(value) => value
-            .as_i64()
-            .map(Parameter::Integer)
-            .or_else(|| value.as_f64().map(Parameter::Real))
-            .ok_or_else(|| adapter_error(AdapterErrorKind::Value, "SQLite number is out of range")),
-        serde_json::Value::String(value) => Ok(Parameter::Text(value)),
-        serde_json::Value::Array(values) => values
-            .into_iter()
-            .map(|value| {
-                value
-                    .as_u64()
-                    .and_then(|byte| u8::try_from(byte).ok())
-                    .ok_or_else(|| {
-                        adapter_error(AdapterErrorKind::Value, "SQLite blob byte is out of range")
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()
-            .map(Parameter::Blob),
-        serde_json::Value::Object(_) => Err(adapter_error(
-            AdapterErrorKind::Value,
-            "SQLite row value cannot be restored as a parameter",
-        )),
-    }
 }
 
 fn validate_recovery_paths(source: &Path, archive: &Path) -> Result<(), DactylError> {
