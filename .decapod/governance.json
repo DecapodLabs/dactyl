@@ -118,6 +118,11 @@
       "id": "growth-101-05-sqlite-adapter",
       "summary": "Enforce resource budgets, streaming visits, and catalog predicates in SQLite",
       "input_digest": "sha256:df0663cf8233286c78e7f935a91c4430b9b7d0457ff0f37efc3cceacd9e59167"
+    },
+    {
+      "id": "growth-101-06-sqlite-recovery",
+      "summary": "Reuse prepared inserts and single transaction during SQLite recovery",
+      "input_digest": "sha256:c8c904b8a652e5f6ff639c805e927c2f44b781b210b34813d4891343a9313fd0"
     }
   ],
   "intents": {
