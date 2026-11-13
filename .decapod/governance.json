@@ -121,6 +121,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-14",
+      "summary": "docs(specs): reconcile issue 70 OPERATIONS.md",
+      "input_digest": "sha256:6b5e1e76203e92a07773177ac0fa47506a1486ff01a3e6861677cb8f86dee947",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
