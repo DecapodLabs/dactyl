@@ -97,6 +97,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-11-1215de0f6f",
+      "summary": "docs(specs): reconcile issue 79 INTERFACES.md",
+      "input_digest": "sha256:cf70c434967875ce2bb357a13da5e4f3d6b0adfdda52d9f936972eecd2d68ab8",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
