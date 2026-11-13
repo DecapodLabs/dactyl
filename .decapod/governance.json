@@ -169,6 +169,14 @@
       "proof_refs": [
         "source:README.md"
       ]
+    },
+    {
+      "id": "file-500-d457032d54",
+      "summary": "chore(proof): bound disposable build artifacts config.toml",
+      "input_digest": "sha256:3ac7ee875be041a5d3335e3db8ddec7c0c813547a1ea3f1a0d671b72060bf4ba",
+      "proof_refs": [
+        "source:.decapod/config.toml"
+      ]
     }
   ],
   "intents": {
@@ -209,21 +217,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue 94 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reason": "Reviewed native proof artifact bounds against official Cargo profile/environment documentation. Only debug information and incremental caches are disabled; all17 required commands, assertions, overflow checks, optimization, feature combinations, toolchain files and source behavior are preserved. Runtime architecture, APIs and credential custody are unchanged.",
           "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
           "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Issue 94 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reason": "Reviewed native proof artifact bounds against official Cargo profile/environment documentation. Only debug information and incremental caches are disabled; all17 required commands, assertions, overflow checks, optimization, feature combinations, toolchain files and source behavior are preserved. Runtime architecture, APIs and credential custody are unchanged.",
           "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
           "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Issue 94 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reason": "Reviewed native proof artifact bounds against official Cargo profile/environment documentation. Only debug information and incremental caches are disabled; all17 required commands, assertions, overflow checks, optimization, feature combinations, toolchain files and source behavior are preserved. Runtime architecture, APIs and credential custody are unchanged.",
           "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
@@ -236,14 +244,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794550451Z"
+      "updated_at": "1794552372Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Documentation and specifications only; no package release, deployment, merge or hosted data access"
       ],
-      "artifact_hash": "sha256:2fa01d3e35401fde090fcea84e5862b0539cb569870c00415867601b4699e3d8",
-      "checks": [],
+      "artifact_hash": "sha256:af244d77a18c28fde1441908490fd4cbfd878269542340f26a185609af04e90a",
+      "checks": [
+        {
+          "name": "prior_native_disk_run",
+          "status": "failed"
+        }
+      ],
       "custody": {
         "events": [
           {
@@ -264,10 +277,17 @@
             "intent_id": "intent:issue-94-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:issue-94-refinement",
+            "event_id": "event:5",
+            "intent_id": "intent:issue-94-refinement",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "issue-94-refinement": {
@@ -291,6 +311,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "ENOSPC on shared host storage caused private proof root to become read-only. Failed stderr retained privately. Reviewed Cargo debug-information and incremental-cache controls; preserve all17 checks, debug assertions, overflow checks, optimization, source and toolchain closure; rerun complete proof on repaired environment."
+                ],
+                "proof_refs": [
+                  "prior_native_disk_run"
+                ],
+                "scope": [
+                  "Dactyl issue refinement"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -298,6 +333,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "ENOSPC on shared host storage caused private proof root to become read-only. Failed stderr retained privately. Reviewed Cargo debug-information and incremental-cache controls; preserve all17 checks, debug assertions, overflow checks, optimization, source and toolchain closure; rerun complete proof on repaired environment.",
         "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
       ],
       "inspected_files": [

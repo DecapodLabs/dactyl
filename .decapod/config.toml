@@ -32,7 +32,7 @@ name = "rust-contract"
 required = true
 
 [proof.repository_contract]
-reviewed_commands_digest = "sha256:a6671cf7ff969daf9292fb19eca79eb1c92a072db60e18d8ac9902180999a3a3"
+reviewed_commands_digest = "sha256:17e776d1efd258822c76b0d908b27d4b0fc1a6b7d2097842a58205ae69f3d5a4"
 
 [proof.repository_contract.executions.rust-contract]
 directory = "."
@@ -42,6 +42,9 @@ timeout_seconds = 3600
 [proof.repository_contract.executions.rust-contract.environment]
 AR = "/usr/bin/aarch64-linux-gnu-ar"
 CARGO_BUILD_JOBS = "2"
+CARGO_INCREMENTAL = "0"
+CARGO_PROFILE_DEV_DEBUG = "0"
+CARGO_PROFILE_TEST_DEBUG = "0"
 CARGO_HOME = "/usr/local/cargo"
 CARGO_NET_OFFLINE = "true"
 CARGO_TARGET_DIR = "/opt/dactyl-contract-target"
