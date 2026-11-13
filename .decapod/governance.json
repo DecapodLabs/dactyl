@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "5513193a3bb37dcb1b2e01284d7cc781f16d97e5",
+    "accepted_commit": "ec96f44e51595f1f2e995de00a523b62215de603",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -65,76 +65,20 @@
     }
   },
   "change": {
-    "id": "issue91-refine-5513193a",
-    "base_commit": "5513193a3bb37dcb1b2e01284d7cc781f16d97e5",
+    "id": "issue85-refine-ec96f44e",
+    "base_commit": "ec96f44e51595f1f2e995de00a523b62215de603",
     "target_base": "origin/main"
-  },
-  "claims": {
-    "issue-91-contract": {
-      "statement": "Issue 91 documentation distinguishes current implemented surfaces from remaining external qualification",
-      "falsifier": "A documented API is absent from accepted source, or local/synthetic evidence is labeled as hosted execution",
-      "status": "supported",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs",
-        "source:src/connector.rs",
-        "source:src/lib.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "file-300-f82df1ba8c",
-      "summary": "docs: refine issue 91 on current accepted main",
-      "input_digest": "sha256:29735a792c6c1997295859c7bb0a4edf6e26e2dd45839ca84514381c856cd102",
+      "id": "file-300-91675e6526",
+      "summary": "docs: refine issue 85 on current accepted main",
+      "input_digest": "sha256:222b1478dc1755f4c8e36a9d7bca6478063af88baf400d1268dfd897623aca8d",
       "proof_refs": [
-        "source:docs/supabase-service.md"
-      ]
-    },
-    {
-      "id": "file-10-f4bab8cf00",
-      "summary": "docs(specs): reconcile issue 91 config.toml",
-      "input_digest": "sha256:683293b07ddd4e1ed9938c4df0deabeee81e16447889ce22fcb77c3957de69d6",
-      "proof_refs": [
-        "source:.decapod/config.toml"
-      ]
-    },
-    {
-      "id": "file-11-49a996391c",
-      "summary": "docs(specs): reconcile issue 91 .manifest.json",
-      "input_digest": "sha256:a6dc9e9e4a7d1bf419b2fcf16ff2766730cfea968cd81203a8c944838ce69fb9",
-      "proof_refs": [
-        "source:.decapod/managed/specs/.manifest.json"
-      ]
-    },
-    {
-      "id": "file-12-feb3977f6e",
-      "summary": "docs(specs): reconcile issue 91 INTENT.md",
-      "input_digest": "sha256:7223db3f7a91057d0a92b78486293b711e281a30a11ba8e4c34a0c1ae7aaafc3",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTENT.md"
+        "source:docs/cloud-failure-conformance.md"
       ]
     }
   ],
-  "intents": {
-    "intent:issue-91-refinement": {
-      "acceptance_criteria": [],
-      "assumptions": [],
-      "boundaries": [
-        "Documentation and specifications only; no package release, deployment, merge or hosted data access"
-      ],
-      "constraints": [
-        "Dactyl issue refinement"
-      ],
-      "created_sequence": 1,
-      "id": "intent:issue-91-refinement",
-      "out_of_scope": [],
-      "proof_requirements": [],
-      "raw_intent": "Refine the five open Dactyl issues against current Decapod and Propodus direction and create a PR for each",
-      "refined_intent": "Reconcile issue 91 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
-      "status": "refined",
-      "updated_sequence": 3
-    }
-  },
   "sections": {
     "plan": {
       "constraints": {
@@ -143,125 +87,21 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Rebase the existing issue 91 refinement onto current accepted main. Preserve merged provider/release context, proof resource settings and supported interfaces; push the updated existing PR with a lease and keep prior full-validation identities distinct from the rebased candidate.",
+      "intent": "Rebase the existing issue 85 refinement onto current accepted main. Preserve merged provider/release context, proof resource settings and supported interfaces; push the updated existing PR with a lease and keep prior full-validation identities distinct from the rebased candidate.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue 91 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
-          "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Issue 91 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
-          "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Issue 91 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
-          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Refine Dactyl issue 91 against current native cloud direction",
+      "title": "Refine Dactyl issue 85 against current native cloud direction",
       "todo_ids": [
-        "bugs_01m79p346cb27xtg"
+        "bugs_01m79p51g3tdbrnj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794554291Z"
-    },
-    "trajectory": {
-      "active_boundaries": [
-        "Documentation and specifications only; no package release, deployment, merge or hosted data access"
-      ],
-      "artifact_hash": "sha256:91d53c7bc15c15ee1ed119449b0f19f07e39f1035388e61d184c68ef31e15f1f",
-      "checks": [],
-      "custody": {
-        "events": [
-          {
-            "event_id": "event:2",
-            "intent_id": "intent:issue-91-refinement",
-            "kind": "created",
-            "sequence": 2
-          },
-          {
-            "event_id": "event:3",
-            "intent_id": "intent:issue-91-refinement",
-            "kind": "refined",
-            "sequence": 3
-          },
-          {
-            "detail": "trajectory:issue-91-refinement",
-            "event_id": "event:4",
-            "intent_id": "intent:issue-91-refinement",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          }
-        ],
-        "knowledge_candidates": [],
-        "next_sequence": 4,
-        "schema_version": "1.0.0",
-        "trajectories": {
-          "issue-91-refinement": {
-            "evidence_only": true,
-            "id": "issue-91-refinement",
-            "intent_id": "intent:issue-91-refinement",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/lib.rs",
-                  "src/adapter/mod.rs",
-                  "tests/native_service.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "Dactyl issue refinement"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
-      },
-      "declared_commands": [],
-      "evidence": [
-        "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
-      ],
-      "inspected_files": [
-        "src/adapter/mod.rs",
-        "src/lib.rs",
-        "tests/native_service.rs"
-      ],
-      "intent_id": "intent:issue-91-refinement",
-      "modified_files": [
-        ".decapod/managed/specs/INTENT.md"
-      ],
-      "repo_scope": [
-        "Dactyl issue refinement"
-      ],
-      "run_id": "issue-91-refinement",
-      "schema_version": "1.1.0",
-      "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79p346cb27xtg",
-      "tool_calls": [],
-      "unresolved_assumptions": []
+      "updated_at": "1794559984Z"
     }
   },
   "legacy_digests": {
