@@ -18,6 +18,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add per-workspace `LogicalTarget` and `LogicalConnector` (`src/connector.rs`)
+  plus feature-unconditional portable session/account types (`AccountOperation`,
+  `ScmProvider`, `ScmCredential`, `AuthenticationSecrets`, `AuthenticationStart`,
+  `UserSession`, `DEFAULT_CLOUD_ORIGIN`) so applications resolve local SQLite or
+  cloud native Supabase RPC, managed authentication, and account readiness
+  without ambient environment variables or feature-gate duplication ([#100](https://github.com/DecapodLabs/dactyl/issues/100)).
+- Add `AccountOperation::Manage` (`billing-manage`) and
+  `AccountOperation::Portal` (`billing-portal`), normalize allowlisted Propodus,
+  Supabase GoTrue v2 (`error_code`), and OAuth2 (`error`) error codes plus HTTP
+  `409` `Conflict` mapping, enforce bounded JSON nesting (`MAX_JSON_DEPTH = 64`),
+  and surface `outcome_unknown` on post-send ambiguous mutating/one-time
+  connector failures ([#100](https://github.com/DecapodLabs/dactyl/issues/100)).
+
 ### Breaking compatibility
 
 - The next release requires Rust and Cargo 1.85 or newer. Upgrade the consumer

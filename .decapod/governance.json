@@ -133,6 +133,11 @@
       "id": "conn-100-09-readme",
       "summary": "docs(readme): summarize per-workspace LogicalTarget and LogicalConnector (#100)",
       "input_digest": "sha256:a07997b3f2a60564fb70850b6524f70c53026a7038768e3796878043cd82cbaa"
+    },
+    {
+      "id": "conn-100-10-changelog",
+      "summary": "docs(changelog): record unreleased logical connector and session readiness additions (#100)",
+      "input_digest": "sha256:d4d27a18d175a004f047b6af94cc40628786e6f89e31e4cfd0f165188d441297"
     }
   ],
   "intents": {
