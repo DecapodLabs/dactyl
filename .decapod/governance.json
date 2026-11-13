@@ -123,6 +123,11 @@
       "id": "conn-100-07-test-disabled",
       "summary": "test(connector): verify LogicalConnector fails closed without supabase feature (#100)",
       "input_digest": "sha256:01cfb7264d5c272052f939b91018ab8f708c3dd192a7e199bc2be882219ca616"
+    },
+    {
+      "id": "conn-100-08-docs-cloud",
+      "summary": "docs(cloud): document LogicalConnector, Manage/Portal, and outcome_unknown (#100)",
+      "input_digest": "sha256:84b9338a229df545984c3dccd2261e9843414d457f28aaed77377a158853a389"
     }
   ],
   "intents": {

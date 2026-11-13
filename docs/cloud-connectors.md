@@ -1,18 +1,34 @@
 # Logical backend and managed authentication
 
-Applications select `Backend::Local` or `Backend::Cloud`. Dactyl resolves local
-storage to SQLite and cloud storage to native Supabase RPC. The default cloud
+Applications select `Backend::Local` or `Backend::Cloud` per workspace through
+`LogicalTarget` (`LogicalTarget::local(path)`, `LogicalTarget::cloud()`, or
+`LogicalTarget::cloud_with_origin(origin)`) and resolve a per-workspace
+`LogicalConnector` via `LogicalConnector::resolve`, `LogicalConnector::local`,
+`LogicalConnector::cloud`, `LogicalConnector::cloud_with_origin`, or
+`LogicalConnector::cloud_with_config`. `LogicalTarget`, `LogicalConnector`, and
+portable session/account types (`DEFAULT_CLOUD_ORIGIN`, `AccountOperation`,
+`ScmProvider`, `ScmCredential`, `AuthenticationSecrets`, `AuthenticationStart`,
+and `UserSession`) are exported unconditionally across all Cargo feature
+combinations so consumers never duplicate `#[cfg(feature = "supabase")]`
+glue. Dactyl resolves local storage to SQLite and cloud storage to native
+Supabase RPC without process-global state or ambient environment variables;
+multiple local and cloud workspaces coexist independently in one process. The default cloud
 origin is `DEFAULT_CLOUD_ORIGIN`; the Propodus IaC project provisions its schema,
 RLS, managed Auth integration and onboarding function. Propodus is the name of
 that infrastructure, not an additional application server in the request path.
 
-`DatastoreRoute::for_backend` takes the logical selection, target and optional
-current user bearer. A cloud route discovers version 1 of the public deployment
+`LogicalConnector::route` and `DatastoreRoute::for_backend` take the logical selection and optional
+current user bearer; `LogicalConnector::open(bearer, options, context)` opens the
+resolved datastore `Connection` directly. A cloud connector discovers version 1 of the public deployment
 profile at `/functions/v1/propodus-onboarding/config`. Discovery sends neither
 the bearer nor a project API key, follows no redirects, and rejects a profile
 whose origin differs from the selected origin. Its publishable key and API
 schema are validated before constructing the native RPC route. A secret key
-cannot substitute for the publishable key. Existing explicit SQLite, Neon and
+cannot substitute for the publishable key. Failed cloud discovery or disabled
+`supabase` compilation fails closed with a typed error and never falls back to
+local SQLite. Calling managed-auth or account-readiness methods on a local
+`LogicalConnector` fails closed with `AdapterErrorKind::Capability`
+(`cloud_connector_required`) without network I/O. Existing explicit SQLite, Neon and
 Supabase service constructors retain their contracts.
 
 `CloudConnector::default_origin` supplies the production origin; a controlled
@@ -52,16 +68,20 @@ remain backend-owned. A missing billing adapter returns `billing_not_configured`
 
 Its `AccountOperation` selects one fixed POST endpoint beneath
 `/functions/v1/propodus-onboarding`: `Register` uses `account-register`, `Status`
-uses `account-status`, `Quote` uses `billing-quote`, and `Checkout` uses
-`billing-checkout`. The JSON request and response remain opaque Propodus policy.
-Ordinary registration, status and paid-seat access use the current Supabase user
-bearer and `None` for the optional SCM credential. An explicit SCM-linking call
-may pass `Some(&ScmCredential::github(token)?)` or the corresponding `gitlab`
-constructor. Each validates an opaque header-safe token, keeps it private and
-redacts Debug. `ScmProvider::{GitHub,GitLab}` labels transport metadata; it does
-not establish authorization. The connector sends `X-SCM-Token` together with
-`X-SCM-Provider: github` and `X-SCM-Host: github.com`, or the fixed `gitlab` and
-`gitlab.com` pair. Caller-selected hosts are unsupported.
+uses `account-status`, `Quote` uses `billing-quote`, `Checkout` uses
+`billing-checkout`, `Manage` uses `billing-manage`, and `Portal` uses
+`billing-portal`. `AccountOperation::is_mutating` classifies `Register`,
+`Checkout`, `Manage`, and `Portal` as mutating/session-creating and `Status`
+and `Quote` as read-only calls. The JSON request and response remain opaque
+Propodus policy. Ordinary registration, status and paid-seat access use the
+current Supabase user bearer and `None` for the optional SCM credential. An
+explicit SCM-linking call may pass `Some(&ScmCredential::github(token)?)` or the
+corresponding `gitlab` constructor. Each validates an opaque header-safe token,
+keeps it private and redacts Debug. `ScmProvider::{GitHub,GitLab}` labels
+transport metadata; it does not establish authorization. The connector sends
+`X-SCM-Token` together with `X-SCM-Provider: github` and `X-SCM-Host: github.com`,
+or the fixed `gitlab` and `gitlab.com` pair. Caller-selected hosts are
+unsupported.
 
 These three headers are added only to the selected account request, never to
 managed Auth, discovery or native data requests. Dactyl does not persist SCM
@@ -69,12 +89,21 @@ credentials. Callers decide consent and handling of an unknown checkout outcome;
 Dactyl does not automatically replay account requests.
 
 Auth, account and discovery HTTP requests are bounded to a 5-second connect timeout,
-15-second request timeout and 16 KiB bodies. A joined worker owns the complete
-blocking HTTP lifecycle so synchronous callers can enter from an async runtime.
-No redirect or automatic request replay follows an error. A lost one-time
-exchange or refresh response has an unknown outcome; the caller must not replay
-it as though the server did nothing. Credential-bearing types redact Debug,
-and server error bodies are not exposed in diagnostics.
+15-second request timeout, 16 KiB bodies, and `MAX_JSON_DEPTH = 64` JSON nesting.
+A joined worker owns the complete blocking HTTP lifecycle so synchronous callers
+can enter from an async runtime. No redirect or automatic request replay follows
+an error. HTTP `409` maps to `AdapterErrorKind::Conflict`, and allowlisted public
+denial codes are extracted across Propodus (`error.code`), Supabase GoTrue v2
+(`error_code` when `code` is numeric), and OAuth2 (`error`) — including
+`organization_seat_required`, `payment_pending`, `repository_not_authorized`,
+`session_expired`, `session_revoked`, `session_not_found`, `bad_jwt`,
+`refresh_token_already_used`, `custody_conflict`, and `billing_not_configured` —
+while remote error messages and unknown codes are omitted. Post-send network or
+response truncation failures on one-time auth exchanges, token rotations,
+revocations, or mutating account operations attach `code = Some("outcome_unknown")`
+so callers reconcile status instead of blindly replaying ambiguous mutations.
+Credential-bearing types redact Debug, and server error bodies are not exposed in
+diagnostics.
 
 Person identity, tenant/project isolation, assigned-seat entitlement and
 revocation are backend policy enforced by the Propodus-managed infrastructure.
@@ -83,12 +112,18 @@ forwards opaque application context and credentials; neither a local agent label
 nor a caller-supplied role creates backend authority. Privileged governance
 operations remain separately controlled by the backend.
 
-`tests/cloud_connector.rs` proves discovery, account route and credential
-separation, optional provider-token preservation, managed Auth requests,
-handoff validation, redirect/replay behavior and async-runtime safety using local HTTP
+`tests/logical_connector.rs`, `tests/cloud_connector.rs`, and
+`tests/supabase_disabled.rs` prove per-workspace `LogicalTarget` /
+`LogicalConnector` isolation across concurrent local SQLite files and separate
+loopback cloud origins without ambient environment variables, portable redaction
+across feature combinations, discovery, account route and credential separation,
+optional provider-token preservation, managed Auth requests, handoff validation,
+redirect/replay/`outcome_unknown` behavior, allowlisted GoTrue/OAuth2/Propodus
+error codes, and async-runtime safety using `local_sqlite` and `synthetic_http`
 fixtures. `tests/supabase_rpc.rs` proves native request/result normalization.
-Those tests are not hosted OAuth, real PostgreSQL or deployment evidence. The
-profile endpoint must be deployed before rolling out discovery-based clients.
+Those tests are not `local_postgres`, `hosted_supabase` OAuth, or `live_propodus`
+deployment evidence (`unavailable` until exercised in deployment). The profile
+endpoint must be deployed before rolling out discovery-based clients.
 
 The native RPC foundation was reconciled from source commit `24c549c` on the
 prior `agent/codex-dactyl-rpc/code_01m71hjy2gceqhq0` branch. Its original worktree
