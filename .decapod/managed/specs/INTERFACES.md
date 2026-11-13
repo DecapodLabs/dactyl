@@ -26,24 +26,42 @@ process-wide RSS guarantee. Existing owned `Row`/`Rows` contracts are unchanged.
 
 ## Logical cloud connector and managed Auth
 
-`Backend::{Local,Cloud}` and `DatastoreRoute::for_backend` define application
-selection. `CloudConnector` discovers profile v1 (`version`, `project_origin`,
-`publishable_key`, `schema`) and exposes typed start/status/code/session exchange,
-completion, refresh and revocation methods. `AuthenticationSecrets` and
-`UserSession` serialize only for caller-controlled private custody and redact
-Debug. Data access uses the additive native Supabase RPC v1 route; existing
-service constructors preserve `/query` and `/batch`. See
-`docs/cloud-connectors.md` and `docs/supabase-rpc-v1.md` for bounded execution,
-unknown-outcome handling and the boundary between offline and hosted proof.
+`Backend::{Local,Cloud}`, `LogicalTarget`, `LogicalConnector`, and
+`DatastoreRoute::for_backend` define per-workspace application selection without
+process-global state or ambient environment variables. `LogicalTarget`,
+`LogicalConnector`, `DEFAULT_CLOUD_ORIGIN`, `AccountOperation`, `ScmProvider`,
+`ScmCredential`, `AuthenticationSecrets`, `AuthenticationStart`, and
+`UserSession` are exported unconditionally across Cargo feature combinations.
+`LogicalConnector` resolves either a local SQLite route or a discovered
+`CloudConnector`, opens `Connection` handles via `LogicalConnector::open`, and
+exposes unified start/status/code/session exchange, completion, refresh,
+revocation, and account readiness methods (`Capability` error on local handles;
+zero SQLite fallback on cloud failure). `CloudConnector` discovers profile v1
+(`version`, `project_origin`, `publishable_key`, `schema`).
+`AuthenticationSecrets` and `UserSession` serialize only for caller-controlled
+private custody and redact `Debug`. Data access uses the additive native
+Supabase RPC v1 route; existing service constructors preserve `/query` and
+`/batch`. See `docs/cloud-connectors.md` and `docs/supabase-rpc-v1.md` for
+bounded execution, `outcome_unknown` post-send write handling, and the boundary
+between offline and hosted proof.
 
-`CloudConnector::account_request(AccountOperation, &Value, bearer,
-Option<&ScmCredential>)` selects fixed account-register, account-status,
-billing-quote or billing-checkout POST paths. Ordinary account access passes no
+`LogicalConnector::account_request` and `CloudConnector::account_request(AccountOperation, &Value, bearer,
+Option<&ScmCredential>)` select fixed `account-register`, `account-status`,
+`billing-quote`, `billing-checkout`, `billing-manage` (`Manage`), or
+`billing-portal` (`Portal`) POST paths. Ordinary account access passes no
 SCM credential. Explicit linking accepts only validated `ScmCredential::github`
-or `::gitlab`, paired with github.com or gitlab.com respectively. These opaque
-credentials and optional `UserSession::provider_token` redact Debug; a provider
-token is never automatically forwarded. Public error-code allowlisting preserves
-actionable account denials while omitting remote messages and unknown codes.
+or `::gitlab`, paired with `github.com` or `gitlab.com` respectively. These opaque
+credentials and optional `UserSession::provider_token` redact `Debug`; a provider
+token is never automatically forwarded. HTTP `409` maps to
+`AdapterErrorKind::Conflict`, untrusted JSON responses enforce
+`MAX_JSON_DEPTH = 64`, and public error-code allowlisting across Propodus
+(`error.code`), Supabase GoTrue v2 (`error_code`), and OAuth2 (`error`)
+preserves actionable session/seat/billing/custody denials (including
+`organization_seat_required`, `payment_pending`, `repository_not_authorized`,
+`session_expired`, `session_revoked`, `session_not_found`, `bad_jwt`,
+`refresh_token_already_used`, `custody_conflict`, and `billing_not_configured`)
+while omitting remote messages and unknown codes. Post-send network or response
+truncation failures on mutating/one-time calls surface `code = Some("outcome_unknown")`.
 
 Auth completion confirms only session handoff, including an unpaid/unlinked
 session. The caller persists it before setup and uses the account result's
@@ -246,8 +264,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
+- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

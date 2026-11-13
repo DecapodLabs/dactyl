@@ -148,6 +148,11 @@
       "id": "conn-100-12-spec-architecture",
       "summary": "docs(specs): update ARCHITECTURE.md for src/connector.rs and outcome_unknown boundary (#100)",
       "input_digest": "sha256:d0c061c488a06c3b5116e28f6f22fe32a488098f3bdce3c9cd72a4d2b7902795"
+    },
+    {
+      "id": "conn-100-13-spec-interfaces",
+      "summary": "docs(specs): update INTERFACES.md for LogicalTarget, Manage/Portal, and GoTrue codes (#100)",
+      "input_digest": "sha256:a5542969d0275e6a153b76c2037d7cdbfe4528da1773437c89f491a273c315d1"
     }
   ],
   "intents": {
