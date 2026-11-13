@@ -204,6 +204,14 @@
       "proof_refs": [
         "source:tests/support/native_scenarios.rs"
       ]
+    },
+    {
+      "id": "native-scope-external-proof",
+      "summary": "Separate client harness validation from deferred external hosted qualification",
+      "input_digest": "sha256:0364fa57fb302317b15f4d825d0b23ea14e297d8caa7afce2b1c2744b83d126e",
+      "proof_refs": [
+        "source:docs/supabase-conformance.md"
+      ]
     }
   ],
   "intents": {
@@ -235,7 +243,9 @@
         "file_touch_budget": 16,
         "forbidden_paths": []
       },
-      "deferred_questions": [],
+      "deferred_questions": [
+        "Actual hosted qualification remains external to this client-harness PR: no authorized disposable hosted fixture supplied; keep issues 70 and 85 open. Private fixture path requested asynchronously."
+      ],
       "human_questions": [],
       "intent": "Extend native conformance without changing runtime policy: preserve the local v1 consumer; add protected local/hosted v2 service-owned scenarios with exact typed outcomes and sanitized receipts. Hosted and independent database proof remain unavailable until externally exercised.",
       "phases": [],
@@ -274,11 +284,9 @@
       "todo_ids": [
         "feat_01m7a4rq7vn3j1gz"
       ],
-      "unknowns": [
-        "Authorized disposable hosted fixture not yet supplied"
-      ],
+      "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794564762Z"
+      "updated_at": "1794564829Z"
     },
     "trajectory": {
       "active_boundaries": [
