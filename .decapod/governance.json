@@ -169,6 +169,14 @@
       "proof_refs": [
         "source:.decapod/config.toml"
       ]
+    },
+    {
+      "id": "file-102-3d2165f869",
+      "summary": "chore(proof): reconcile reviewed 0.16 inventory .manifest.json",
+      "input_digest": "sha256:3ae10a93922e91ad30a986156a6632a4290fcf7e4f97528fe4d826889486a31c",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
