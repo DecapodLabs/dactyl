@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a2fb58f1f04bfe061ada4b52731d76c413a6a107",
+    "accepted_commit": "dfbf5ffcece8114812835f9e9d6234dff9c1f974",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -65,13 +65,13 @@
     }
   },
   "change": {
-    "id": "dactyl117-rebase-a2fb58f",
-    "base_commit": "a2fb58f1f04bfe061ada4b52731d76c413a6a107",
+    "id": "issue94-refine-dfbf5ffc",
+    "base_commit": "dfbf5ffcece8114812835f9e9d6234dff9c1f974",
     "target_base": "origin/main"
   },
   "claims": {
-    "issue-79-contract": {
-      "statement": "Issue 79 documentation distinguishes current implemented surfaces from remaining external qualification",
+    "issue-94-contract": {
+      "statement": "Issue 94 documentation distinguishes current implemented surfaces from remaining external qualification",
       "falsifier": "A documented API is absent from accepted source, or local/synthetic evidence is labeled as hosted execution",
       "status": "supported",
       "proof_refs": [
@@ -83,32 +83,120 @@
   },
   "checkpoints": [
     {
-      "id": "file-200-5342a9a99a",
-      "summary": "docs: rebase backend capability matrix onto accepted PR116",
-      "input_digest": "sha256:78e0c8dde2e84236ee22e132e70187b7eb5ab88c0cadc9bfb1ba0ee65529f67f",
+      "id": "file-300-2f45f2bc2a",
+      "summary": "docs: refine issue 94 on current accepted main",
+      "input_digest": "sha256:bf020df8aa73bee0e2e7b6fb388ca020501681b06724f6c4e334676d0943c6d2",
       "proof_refs": [
-        "source:docs/backend-capabilities.md"
+        "source:docs/registry-handoff.md"
       ]
     },
     {
-      "id": "file-10-57bbe81f70",
-      "summary": "docs(specs): reconcile issue 79 .manifest.json",
-      "input_digest": "sha256:588b8c00ec06aebdb89ca29e1b4e097e8e74d809cebc0c368d40e5899f992107",
+      "id": "file-10-960e0de686",
+      "summary": "docs(specs): reconcile issue 94 .manifest.json",
+      "input_digest": "sha256:1669bcd0ea2ac43298433e817cd99611d234bdb9fe66b5dcfcdd3682235eaa05",
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
     },
     {
-      "id": "file-11-1215de0f6f",
-      "summary": "docs(specs): reconcile issue 79 INTERFACES.md",
-      "input_digest": "sha256:cf70c434967875ce2bb357a13da5e4f3d6b0adfdda52d9f936972eecd2d68ab8",
+      "id": "file-11-14319c08e4",
+      "summary": "docs(specs): reconcile issue 94 ARCHITECTURE.md",
+      "input_digest": "sha256:55e2dab2abe2ae694a1b6e1c997ac3deb524dd4cf82a589b675b80760d049856",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "file-12-675e5b33eb",
+      "summary": "docs(specs): reconcile issue 94 INTENT.md",
+      "input_digest": "sha256:41eff914e444b1ecefa41c4ace92b82e403c37f524a4794833c128b84fe9d485",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "file-13-715b25109b",
+      "summary": "docs(specs): reconcile issue 94 INTERFACES.md",
+      "input_digest": "sha256:ea3500257390934de2c69421da9ac6680fde2bb5d4d434f1b8b61783541ff2cb",
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "file-14-c01871c9c0",
+      "summary": "docs(specs): reconcile issue 94 OPERATIONS.md",
+      "input_digest": "sha256:21e70f0d83c8fba5f87508c8ab3c13c2f22110ad5bea04147e6eebeac5eacbfc",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "file-15-e5a8ca17cf",
+      "summary": "docs(specs): reconcile issue 94 README.md",
+      "input_digest": "sha256:8bb0fac6776dc937924c6ce07667b13fd71ff7311ee5a3f8a89009aa4302a282",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
+    },
+    {
+      "id": "file-16-df22c206cd",
+      "summary": "docs(specs): reconcile issue 94 SECURITY.md",
+      "input_digest": "sha256:69f092e1c3012a0b69ce780adeabfba41ce36eec8b7663f51f53a251d7128fc5",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "file-17-de9f69cc36",
+      "summary": "docs(specs): reconcile issue 94 SEMANTICS.md",
+      "input_digest": "sha256:2c85c05404958ef3dd3c2e5af46b46a0605cfe836ad972ecbbf308585a69ffee",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "file-18-e8c95b3b19",
+      "summary": "docs(specs): reconcile issue 94 VALIDATION.md",
+      "input_digest": "sha256:8637184dfd156c7292fbc5edd78272a67b6c49b84b358611b41d876631235418",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
+    },
+    {
+      "id": "file-19-241665f6e3",
+      "summary": "docs(specs): reconcile issue 94 README.md",
+      "input_digest": "sha256:f338d2a19d7dc3a78682f4a26af5d22e4199575a8b6ffcb3a3ba836cbac53e82",
+      "proof_refs": [
+        "source:README.md"
+      ]
+    },
+    {
+      "id": "file-500-d457032d54",
+      "summary": "chore(proof): bound disposable build artifacts config.toml",
+      "input_digest": "sha256:3ac7ee875be041a5d3335e3db8ddec7c0c813547a1ea3f1a0d671b72060bf4ba",
+      "proof_refs": [
+        "source:.decapod/config.toml"
+      ]
+    },
+    {
+      "id": "file-502-551eb06171",
+      "summary": "chore(proof): bound disposable build artifacts .manifest.json",
+      "input_digest": "sha256:3af52337b7936429063ff02b26f01ca2e29db95a26049d4fefb2b7614d7f1696",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
+    },
+    {
+      "id": "file-503-519c7290a7",
+      "summary": "chore(proof): bound disposable build artifacts OPERATIONS.md",
+      "input_digest": "sha256:9b011398ec145340fcbf10367203a1c2fdd4d4ead3df2c98c7fbd8eda360fca9",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
       ]
     }
   ],
   "intents": {
-    "intent:issue-79-refinement": {
+    "intent:issue-94-refinement": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -118,11 +206,11 @@
         "Dactyl issue refinement"
       ],
       "created_sequence": 1,
-      "id": "intent:issue-79-refinement",
+      "id": "intent:issue-94-refinement",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "Refine the five open Dactyl issues against current Decapod and Propodus direction and create a PR for each",
-      "refined_intent": "Reconcile issue 79 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
+      "refined_intent": "Reconcile issue 94 through source-backed documentation and living specs; preserve real hosted and registry proof limits",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -135,7 +223,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Rebase PR117 onto accepted PR116, preserve the capability matrix and issue79 interface spec, and rerun full validation on the new candidate without claiming old proof still applies",
+      "intent": "Reconcile issue 94 through source-backed documentation and living specs on merged PR116/117. Preserve current code, accepted governance and hosted/registry proof limits; create the requested reviewable PR after exact-candidate validation.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -145,66 +233,71 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue 79 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
+          "reason": "Reviewed native proof artifact bounds against official Cargo profile/environment documentation. Only debug information and incremental caches are disabled; all17 required commands, assertions, overflow checks, optimization, feature combinations, toolchain files and source behavior are preserved. Runtime architecture, APIs and credential custody are unchanged.",
+          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
           "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Issue 79 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. Authored current issue contract and external proof limits.",
-          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
+          "reason": "Reviewed native proof artifact bounds against official Cargo profile/environment documentation. Only debug information and incremental caches are disabled; all17 required commands, assertions, overflow checks, optimization, feature combinations, toolchain files and source behavior are preserved. Runtime architecture, APIs and credential custody are unchanged.",
+          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
           "spec_material_hash": "84d2e40066a48e9b1bcab222f09c73359546a873e79c8764d2103314dd90814b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Issue 79 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
-          "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
+          "reason": "Reviewed native proof artifact bounds against official Cargo profile/environment documentation. Only debug information and incremental caches are disabled; all17 required commands, assertions, overflow checks, optimization, feature combinations, toolchain files and source behavior are preserved. Runtime architecture, APIs and credential custody are unchanged.",
+          "reviewed_code_fingerprint": "146b80a18d98fa3c935c9e9a8858ea9746f6b1944f7c6dbe40bc2c3f354e1402",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Refine backend capability inventory (#79 / PR117)",
+      "title": "Refine Dactyl issue 94 against current native cloud direction",
       "todo_ids": [
-        "bugs_01m79p29754rgtk8"
+        "bugs_01m79p40xq0rfvfn"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794550138Z"
+      "updated_at": "1794552372Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Documentation and specifications only; no package release, deployment, merge or hosted data access"
       ],
-      "artifact_hash": "sha256:4e32ccb4957e7856130e0240315008a3d1789b9544e69e3fb62be59414536c15",
-      "checks": [],
+      "artifact_hash": "sha256:af244d77a18c28fde1441908490fd4cbfd878269542340f26a185609af04e90a",
+      "checks": [
+        {
+          "name": "prior_native_disk_run",
+          "status": "failed"
+        }
+      ],
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:issue-79-refinement",
+            "intent_id": "intent:issue-94-refinement",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:issue-79-refinement",
+            "intent_id": "intent:issue-94-refinement",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:issue-79-refinement",
+            "detail": "trajectory:issue-94-refinement",
             "event_id": "event:4",
-            "intent_id": "intent:issue-79-refinement",
+            "intent_id": "intent:issue-94-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:issue-79-refinement",
+            "detail": "trajectory:issue-94-refinement",
             "event_id": "event:5",
-            "intent_id": "intent:issue-79-refinement",
+            "intent_id": "intent:issue-94-refinement",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -213,10 +306,10 @@
         "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "issue-79-refinement": {
+          "issue-94-refinement": {
             "evidence_only": true,
-            "id": "issue-79-refinement",
-            "intent_id": "intent:issue-79-refinement",
+            "id": "issue-94-refinement",
+            "intent_id": "intent:issue-94-refinement",
             "steps": [
               {
                 "action": "trajectory.record",
@@ -225,7 +318,7 @@
                   "src/lib.rs",
                   "src/adapter/mod.rs",
                   "tests/native_service.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
                   "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
                 ],
                 "proof_refs": [],
@@ -239,13 +332,11 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/lib.rs",
-                  "src/adapter/mod.rs",
-                  "tests/native_service.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
+                  "ENOSPC on shared host storage caused private proof root to become read-only. Failed stderr retained privately. Reviewed Cargo debug-information and incremental-cache controls; preserve all17 checks, debug assertions, overflow checks, optimization, source and toolchain closure; rerun complete proof on repaired environment."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "prior_native_disk_run"
+                ],
                 "scope": [
                   "Dactyl issue refinement"
                 ],
@@ -258,6 +349,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "ENOSPC on shared host storage caused private proof root to become read-only. Failed stderr retained privately. Reviewed Cargo debug-information and incremental-cache controls; preserve all17 checks, debug assertions, overflow checks, optimization, source and toolchain closure; rerun complete proof on repaired environment.",
         "Reviewed accepted Dactyl 7d53973 and current upstream Decapod Cargo manifest plus Propodus README/proof ledger; external hosted proof remains unexecuted"
       ],
       "inspected_files": [
@@ -265,17 +357,17 @@
         "src/lib.rs",
         "tests/native_service.rs"
       ],
-      "intent_id": "intent:issue-79-refinement",
+      "intent_id": "intent:issue-94-refinement",
       "modified_files": [
-        ".decapod/managed/specs/INTERFACES.md"
+        ".decapod/managed/specs/OPERATIONS.md"
       ],
       "repo_scope": [
         "Dactyl issue refinement"
       ],
-      "run_id": "issue-79-refinement",
+      "run_id": "issue-94-refinement",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79p29754rgtk8",
+      "task_id": "bugs_01m79p40xq0rfvfn",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
