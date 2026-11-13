@@ -243,6 +243,11 @@
       "id": "growth-101-30-spec-security",
       "summary": "Update SECURITY.md with wire/JSON-depth bounds, pre-allocation BLOB charging, and fail-closed catalog predicates",
       "input_digest": "sha256:ce323c3af90bff87bd75ec4b85635e7794216fac6d696406799b145b75e1c4d6"
+    },
+    {
+      "id": "growth-101-31-spec-semantics",
+      "summary": "Update SEMANTICS.md with FailureOrigin, MutationOutcome, ScanOutcome, and catalog visibility invariants",
+      "input_digest": "sha256:eafd9f282b75393cbd7407348cdef06767af6caea4c8511cf3af5d11108b86cb"
     }
   ],
   "intents": {
