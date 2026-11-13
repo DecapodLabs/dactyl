@@ -108,6 +108,14 @@
       "proof_refs": [
         "source:tests/native_service.rs"
       ]
+    },
+    {
+      "id": "file-205-f4e36479dd",
+      "summary": "docs(native): describe protected service-owned scenario qualification",
+      "input_digest": "sha256:d511ed757098dba824a2f4f814fdb0e6f63054b3269c38d98dbd6e1d02ed2736",
+      "proof_refs": [
+        "source:docs/supabase-conformance.md"
+      ]
     }
   ],
   "intents": {
