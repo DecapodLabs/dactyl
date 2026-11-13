@@ -161,6 +161,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-100-d6ff9e6278",
+      "summary": "chore(proof): reconcile reviewed 0.16 inventory config.toml",
+      "input_digest": "sha256:05e03130053a1ddfb0a0a7658f4cfb35486e78b2ddcdc450ba3e2a7217dc150c",
+      "proof_refs": [
+        "source:.decapod/config.toml"
+      ]
     }
   ],
   "intents": {
@@ -203,21 +211,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue 70 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
           "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
           "spec_material_hash": "800eb3c4b2e11582c38d195a07ecee49e76a75a0401889741ac4b44529d4f23a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Issue 70 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
           "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
           "spec_material_hash": "9259e54a875c6918161927f6945a0bcd65be19e3253ac8fc0f91157b78c16aeb"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Issue 70 changes documentation/proof scope only; reviewed current source boundaries, preserve existing runtime, credential custody, budgets and feature contracts. No runtime or policy change requires an authored rewrite of this spec.",
+          "reason": "Reviewed complete workflow inventory, source adapters and 0.15 to 0.16 package-only metadata changes. Reconcile the accepted stale inventory pin; commands, coverage, environment, tool closure and 17 required Rust checks remain unchanged. Existing authored issue refinement preserves physical transport and caller/service policy boundaries.",
           "reviewed_code_fingerprint": "1058ad604c83021e74c7f62d177f90be7f808e6c46ff2e4b873f4a0dbe665bcb",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
@@ -230,7 +238,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794548305Z"
+      "updated_at": "1794548662Z"
     },
     "trajectory": {
       "active_boundaries": [
