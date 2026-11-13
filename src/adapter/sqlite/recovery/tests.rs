@@ -578,3 +578,57 @@ fn unrelated_user_attributes_do_not_block_shared_recovery() {
     assert_eq!(&value[..length], b"non-policy annotation");
     readable(&db);
 }
+
+#[test]
+fn multi_row_blob_recovery_streams_c_abi_values_without_result_budget_amplification() {
+    let directory = TempDir::new().unwrap();
+    let source = directory.path().join("blobs-source.db");
+    let archive = directory.path().join("blobs-archive.db");
+    let seed =
+        SqliteAdapter::open_with_options(source.to_str().unwrap(), OpenOptions::default()).unwrap();
+    {
+        let conn = seed.connection().unwrap();
+        exec_sql(
+            &conn,
+            "CREATE TABLE blobs(id INTEGER PRIMARY KEY, tag TEXT NOT NULL, score REAL, raw BLOB)",
+        )
+        .unwrap();
+        for idx in 1..=8_i64 {
+            let blob_hex = format!("{idx:02x}").repeat(16 * 1024);
+            let score = idx as f64 * 1.5;
+            exec_sql(
+                &conn,
+                &format!(
+                    "INSERT INTO blobs(id, tag, score, raw) VALUES ({idx}, 'blob-{idx}', {score}, X'{blob_hex}')"
+                ),
+            )
+            .unwrap();
+        }
+    }
+    drop(seed);
+
+    // 8 * 16 KiB = 128 KiB raw blobs (4 MiB if expanded 32x through serde_json::Value::Array).
+    // Recovery binds raw C-ABI columns directly and reuses one prepared INSERT per table,
+    // succeeding cleanly under a 32 KiB max_result_bytes budget.
+    let mut db = SqliteAdapter::open_with_options_and_budget(
+        source.to_str().unwrap(),
+        OpenOptions::default(),
+        ResourceBudget::v1()
+            .with_max_cell_bytes(32 * 1024)
+            .with_max_result_bytes(32 * 1024),
+    )
+    .unwrap();
+    run(&mut db, &archive).unwrap();
+    drop(db);
+
+    let reopened =
+        SqliteAdapter::open_with_options(source.to_str().unwrap(), OpenOptions::default()).unwrap();
+    let rows = query_rows(
+        &reopened.connection().unwrap(),
+        "SELECT id, tag, score, length(raw) FROM blobs ORDER BY id",
+        &[],
+    )
+    .unwrap();
+    assert_eq!(rows.len(), 8);
+    assert_eq!(row_string(&rows.as_slice()[7], 1).unwrap(), "blob-8");
+}

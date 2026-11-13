@@ -143,6 +143,11 @@
       "id": "growth-101-10-catalog-unit",
       "summary": "Add unit test verifying single-prepare SQLite catalog predicates",
       "input_digest": "sha256:2a66602df970cbe026eb3e45f0e907a3c1a839f763ebb4a16742f1dd59730236"
+    },
+    {
+      "id": "growth-101-11-recovery-blob-test",
+      "summary": "Add multi-row BLOB recovery streaming regression under tight result budget",
+      "input_digest": "sha256:0dfab6d0217fd2fe6a84b124383a8be4fe915f20f7d7a8e1410953781f6d5dbf"
     }
   ],
   "intents": {
