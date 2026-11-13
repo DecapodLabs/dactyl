@@ -133,6 +133,11 @@
       "id": "growth-101-08-supabase-adapter",
       "summary": "Wire ResourceBudget, bounded visits, and uncertain outcomes in Supabase",
       "input_digest": "sha256:53bac4605af5ac4a2c2e30bee4802ec4d9c2e3addde7269e3cf2e7d64ede10d7"
+    },
+    {
+      "id": "growth-101-09-facade",
+      "summary": "Expose open_with_budget, visit_rows, has_table, and has_column on Connection",
+      "input_digest": "sha256:f02de0b1a98b51d9a2919d68af8e166130b115b77e2ad16c43a83ab87694dfa0"
     }
   ],
   "intents": {
