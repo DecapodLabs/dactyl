@@ -177,6 +177,14 @@
       "proof_refs": [
         "source:.decapod/config.toml"
       ]
+    },
+    {
+      "id": "file-502-551eb06171",
+      "summary": "chore(proof): bound disposable build artifacts .manifest.json",
+      "input_digest": "sha256:3af52337b7936429063ff02b26f01ca2e29db95a26049d4fefb2b7614d7f1696",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
