@@ -158,6 +158,11 @@
       "id": "conn-100-14-spec-operations",
       "summary": "docs(specs): update OPERATIONS.md for outcome_unknown reconciliation and evidence classes (#100)",
       "input_digest": "sha256:b797b6519c3609293173e0417632ff0249114ba158fa3a29916e4779b8c819f1"
+    },
+    {
+      "id": "conn-100-15-spec-security",
+      "summary": "docs(specs): update SECURITY.md for portable credential redaction and MAX_JSON_DEPTH (#100)",
+      "input_digest": "sha256:78480d79202cf9e258b89305ee0ffff2449a1290fce6050ed9109ffef843efdb"
     }
   ],
   "intents": {

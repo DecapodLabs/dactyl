@@ -22,17 +22,24 @@ exposed.
 
 ## Cloud connector and managed-auth credentials
 
-`src/cloud.rs` discovers only public profile metadata before sending credentials.
-The selected HTTPS origin is trusted configuration; profile-origin mismatches,
-redirects, secret/service-role keys and invalid schemas fail before native RPC
-construction. Literal loopback HTTP exists only for disposable tests. Access
-bearers accompany data calls and authenticated completion; refresh tokens and
-PKCE verifiers are sent only to fixed managed Auth paths on that same origin.
-Dactyl stores no durable sessions and does not open the browser. The caller owns
-private pending-flow checkpoints and must not replay unknown one-time exchange
-or rotation outcomes. Credential types redact Debug and auth errors omit remote
-messages. Propodus-managed Auth/RLS/grants enforce identity and permissions;
-caller context and local agent labels cannot elevate cloud authority.
+`src/connector.rs` and `src/cloud.rs` keep credential-bearing types
+(`AuthenticationSecrets`, `UserSession`, `ScmCredential`) private-custody-only
+with redacted `Debug` implementations across every Cargo feature combination, and
+never fall back to local SQLite when cloud profile discovery or `supabase`
+feature compilation fails. `src/cloud.rs` discovers only public profile metadata
+before sending credentials. The selected HTTPS origin is trusted configuration;
+profile-origin mismatches, redirects, secret/service-role keys and invalid
+schemas fail before native RPC construction. Literal loopback HTTP exists only
+for disposable tests. Access bearers accompany data calls, account readiness
+requests (`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`), and
+authenticated completion; refresh tokens and PKCE verifiers are sent only to
+fixed managed Auth paths on that same origin. Dactyl stores no durable sessions
+and does not open the browser. Untrusted HTTP JSON bodies enforce bounded 16 KiB
+size and `MAX_JSON_DEPTH = 64` recursion limits, and post-send failures on
+one-time exchange, rotation, revocation, or mutating account calls return
+`outcome_unknown` so callers never replay ambiguous state transitions. Propodus-managed
+Auth/RLS/grants enforce identity and permissions; caller context and local agent
+labels cannot elevate cloud authority.
 
 Normal account and data access depend on the Supabase user session, paid-seat
 assignment and backend tenant/project isolation. Optional explicit SCM linking
@@ -40,7 +47,8 @@ adds X-SCM-Token, X-SCM-Provider and X-SCM-Host only to the account channel, wit
 fixed GitHub/GitLab hosts; it never supplies ordinary data authority. Dactyl does
 not infer this channel from a sign-in provider token. Redirects and automatic
 retries are disabled for auth, discovery and account requests. Only allowlisted
-public denial codes appear in errors; remote messages and credentials do not.
+public Propodus, GoTrue (`error_code`), and OAuth2 (`error`) denial codes appear
+in errors; remote messages and credentials do not.
 
 ## Secure shared-directory SQLite recovery
 
@@ -155,8 +163,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e1c3593722a0cb6f17e3f9a13607cea5447e478943456ae7961713b3f96fbf54`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (16 files), `tests/` (16 files), `tools/` (2 files)
+- Repository signal fingerprint: `f90ae1b129223e76e9f10f47d5d425676af0e7cc4ede2eb510ca3542d837a468`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (17 files), `tests/` (17 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
