@@ -446,6 +446,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-validation-refresh-4-2eb981f5ab",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/OPERATIONS.md",
+      "input_digest": "sha256:4804544a7a7620f33be74f2052f5973f51b5f916b17788e19406e9973c601d10",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
