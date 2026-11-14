@@ -221,6 +221,14 @@
       "proof_refs": [
         "source:src/cloud.rs"
       ]
+    },
+    {
+      "id": "file-control-tests-cc41a864fa",
+      "summary": "test: exercise public authenticated control RPC wire and failure contracts",
+      "input_digest": "sha256:efa367ff7763b7767a324e470a3712751828165a71c6f2dc20274a07acf8833e",
+      "proof_refs": [
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {
