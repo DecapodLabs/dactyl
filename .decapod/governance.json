@@ -470,6 +470,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-validation-refresh-7-2ab30b5a63",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:44ddd4016284587001eae23b9219a26a3644bb99b8e9d119918e829746dbf2e3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
