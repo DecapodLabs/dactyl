@@ -325,6 +325,14 @@
       "proof_refs": [
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-refresh-1-c887691d81",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:f2de0c17c269996a2d812e6001ff600cc8a1004f761b639ece8c63ab8914d7d6",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -362,7 +370,30 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Shared bounded native HTTP worker, trusted origin/schema and explicit mutation acknowledgement uncertainty are described without reproducing server policy.",
+          "reviewed_code_fingerprint": "a0ab534ff4335195581b65df70e6621aa6d72d6a1036addafec4e86b3b227678",
+          "spec_material_hash": "e65d4b732e01aa64bc6a477fa15262f3ba592f4c79fcddd57e3a9e8c7dc7e672"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Additive connector control methods, opaque argument/result, typed errors, budget and compatibility/release limits are explicitly specified.",
+          "reviewed_code_fingerprint": "a0ab534ff4335195581b65df70e6621aa6d72d6a1036addafec4e86b3b227678",
+          "spec_material_hash": "b9f9523e11237bd39393eae033ce418f67d912cbb7550d25166463e7c2f98b0c"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Existing managed bearer custody, trusted deployment routing, redacted diagnostics and server-owned authorization remain applicable. Control calls reuse the same native HTTP boundary and do not add credential persistence or grant authority from caller labels.",
+          "reviewed_code_fingerprint": "a0ab534ff4335195581b65df70e6621aa6d72d6a1036addafec4e86b3b227678",
+          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
+        }
+      ],
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Expose bounded authenticated control RPC transport for Dactyl #123",
       "todo_ids": [
@@ -370,7 +401,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794658345Z"
+      "updated_at": "1794659591Z"
     },
     "trajectory": {
       "active_boundaries": [
