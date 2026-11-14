@@ -357,6 +357,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-refresh-5-57f8776d0b",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/OPERATIONS.md",
+      "input_digest": "sha256:d248daa80a0ea03f0f721529b88b0e42aa45a9e32c8694a0a476704fed207a3d",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
