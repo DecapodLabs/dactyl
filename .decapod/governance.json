@@ -293,6 +293,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-spec-1-73cd61d247",
+      "summary": "docs: specify authenticated control transport in ARCHITECTURE.md",
+      "input_digest": "sha256:afc155e20c58461049f4cd8b1ee0d757c72306db4397de89c0995bf07ed9ee01",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {

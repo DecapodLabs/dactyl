@@ -248,3 +248,17 @@ proved separately from synthetic HTTP fixtures.
 ## Native read-only batch boundary
 
 Native read-only batches select dactyl_read_batch_v1; the service marks read query/batch wrappers STABLE and PostgREST owns the physical transaction. Dactyl owns no PostgreSQL pool and never retries an unknown mutation outcome.
+
+## Opaque control RPC seam (issue 123)
+
+`LogicalConnector::control_request` delegates cloud calls through
+`CloudConnector` to `adapter::supabase::control_request`. The native adapter
+shares `rpc_headers` and the bounded HTTP worker with datastore query/batch
+execution, bypassing datastore result-shape decoding only for opaque control
+JSON. A fixed validated origin/schema and one identifier select the native
+function; the request is one opaque JSON `request` argument. Managed bearer
+validation occurs before dispatch. ResourceBudget bounds wire bytes and
+deadlines; shared JSON depth, no-redirect/no-retry and redacted errors remain.
+Explicit OperationKind governs acknowledgement uncertainty only, not server
+permissions or transaction access mode. Mutations include audit writes and
+return outcome_unknown plus MutationOutcome::Uncertain after ambiguous loss.
