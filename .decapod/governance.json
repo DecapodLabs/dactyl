@@ -414,6 +414,14 @@
         "source:docs/control-rpc.md",
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-validation-refresh-0-1bdc43f3b2",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:f44457dcbc8b37eecc7330164fe45fe52c72b044b6faf8772b448b3fe9e3635f",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
