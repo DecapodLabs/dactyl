@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0](https://github.com/DecapodLabs/dactyl/compare/v0.16.1...v0.17.0) (2026-11-14)
+
+
+### Features
+
+* expose opaque control calls on logical cloud connectors ([6d620ab](https://github.com/DecapodLabs/dactyl/commit/6d620ab303613a62c3ba1d546bf6ba2237221ded))
+* reuse bounded native transport for opaque control RPC ([8923743](https://github.com/DecapodLabs/dactyl/commit/8923743a515dfc4851224eb161ac0daaa287e2d2))
+* support authenticated native control requests on CloudConnector ([0cd254a](https://github.com/DecapodLabs/dactyl/commit/0cd254aea97a7accb2245ba4475153cddea5e415))
+
+
+### Bug Fixes
+
+* classify locally rejected managed bearers as not attempted ([2876e50](https://github.com/DecapodLabs/dactyl/commit/2876e5070f406fb137fca86ae356def94260dacb))
+* preserve control uncertainty code if its transport worker fails ([765cd3c](https://github.com/DecapodLabs/dactyl/commit/765cd3c18de92da20fe14b601b7e096b51cd7431))
+* preserve uncertainty for redirected control mutation acknowledgements ([495ec77](https://github.com/DecapodLabs/dactyl/commit/495ec77fd07a40bc5ce1a9118e7a73ecbeb705aa))
+
 ## [0.16.1](https://github.com/DecapodLabs/dactyl/compare/v0.16.0...v0.16.1) (2026-11-13)
 
 
