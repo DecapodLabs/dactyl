@@ -519,6 +519,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-final-refresh-1-cd1dc398ac",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/ARCHITECTURE.md",
+      "input_digest": "sha256:24554e2d17ef774950bfb6d8ee15f140d945ff77e3b972c3472dabde5cf3c80f",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
