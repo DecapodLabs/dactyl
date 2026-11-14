@@ -277,6 +277,14 @@
       "proof_refs": [
         "source:tools/proof/check.py"
       ]
+    },
+    {
+      "id": "file-controller-pin-4fd24f75e2",
+      "summary": "chore: align CI proof controller with governed workspace version",
+      "input_digest": "sha256:86841f16864664a0d4d451bd5d5328eb5540a7c66c47494b66b1f2dc0f1011f6",
+      "proof_refs": [
+        "source:tools/proof/Containerfile"
+      ]
     }
   ],
   "intents": {
