@@ -189,6 +189,14 @@
       "proof_refs": [
         "source:tools/proof/prepare.py"
       ]
+    },
+    {
+      "id": "file-registry-container-ac7bc772ac",
+      "summary": "test: include registry qualification helper in CI dependency preparation",
+      "input_digest": "sha256:3d9acc6d166a83cacbdfe2b1254f81edc59e4b25b6b1ed4a31465f15832b66f4",
+      "proof_refs": [
+        "source:tools/proof/Containerfile"
+      ]
     }
   ],
   "intents": {
