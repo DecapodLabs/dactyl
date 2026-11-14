@@ -237,6 +237,14 @@
       "proof_refs": [
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-bearer-outcome-a9fd8d0f29",
+      "summary": "fix: classify locally rejected managed bearers as not attempted",
+      "input_digest": "sha256:843e4b4473b90928a373f819d9f0e7d0d1e84eed84b548a8137f362da0cfa3f3",
+      "proof_refs": [
+        "source:src/error.rs"
+      ]
     }
   ],
   "intents": {
