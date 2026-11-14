@@ -93,6 +93,12 @@ owns browser interaction and private session storage. Propodus is the IaC for
 the Supabase backend, where identity, repository roles and RLS are enforced.
 See [the connector and auth contract](docs/cloud-connectors.md).
 
+Opaque authenticated control functions use `LogicalConnector::control_request`
+(or `CloudConnector::control_request`) with the existing managed bearer and native
+RPC profile. Calls explicitly classify read-only versus mutating transport loss,
+including audit writes. See [control RPC and consumer migration](docs/control-rpc.md)
+for wire bounds, uncertainty, server-owned authority and release evidence.
+
 ## Supabase service route (opt-in)
 
 Enable the `supabase` feature and select `DATASTORE=supabase` with

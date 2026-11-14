@@ -261,6 +261,14 @@
       "proof_refs": [
         "source:docs/control-rpc.md"
       ]
+    },
+    {
+      "id": "file-readme-b870caeae4",
+      "summary": "docs: link the public authenticated control transport contract",
+      "input_digest": "sha256:cd7ebfa2a3f7a3044c130455f746924184d631a9f47e8d5daa1d46bcc2a21243",
+      "proof_refs": [
+        "source:README.md"
+      ]
     }
   ],
   "intents": {
