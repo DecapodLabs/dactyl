@@ -285,6 +285,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-8-82909d1bc2",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:4dbd8d539a58f666d072dad765828a2766e61b11234945cf9dffa75f31018ec3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
