@@ -341,6 +341,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-refresh-3-c8924cfcdf",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:942c0f9146e7fc16c0b716310abe3f75450f01e38eea30b2509e18ab1d1f73ea",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
