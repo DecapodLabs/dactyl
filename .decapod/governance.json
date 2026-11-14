@@ -349,6 +349,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-refresh-4-535ad7c2b3",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:0b154448e3080e80ae9ec0517edf0aad66339036d5a8070fb3220539d77d20f8",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
