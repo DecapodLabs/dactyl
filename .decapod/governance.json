@@ -213,6 +213,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-proof-bytecode-b56c2ac692",
+      "summary": "chore: keep proof-helper bytecode out of source and packages",
+      "input_digest": "sha256:2821c2c01ab510e09a15a165278ad8eca426410576466741216e6b54281c1b04",
+      "proof_refs": [
+        "source:.gitignore"
+      ]
     }
   ],
   "intents": {
