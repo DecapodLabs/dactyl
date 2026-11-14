@@ -503,6 +503,14 @@
       "proof_refs": [
         "source:src/adapter/supabase.rs"
       ]
+    },
+    {
+      "id": "file-redirect-contract-f1b3c8e9b8",
+      "summary": "test: reject redirected mutation acknowledgements without claiming rollback",
+      "input_digest": "sha256:f023444a678d9b0fdaf3676e937899b2359c9e7baefa5e64a48ff550ba1e9762",
+      "proof_refs": [
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {

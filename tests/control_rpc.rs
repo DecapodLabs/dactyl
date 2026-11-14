@@ -384,6 +384,8 @@ mod wire {
         )
         .unwrap_err();
         assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Protocol));
+        assert_eq!(error.adapter_code(), Some("outcome_unknown"));
+        assert_eq!(error.mutation_outcome(), MutationOutcome::Uncertain);
         redacted(&error, &origin);
         rx.recv().unwrap();
         server.join().unwrap();
