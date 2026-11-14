@@ -149,6 +149,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-9-98ae963ae1",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:f4cece4b36cd6e99ba895a58fe69330675dc561d975c358ddc63dfe5c86203c0",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
