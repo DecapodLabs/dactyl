@@ -462,6 +462,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "file-validation-refresh-6-282d8c6038",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:17ae352a30998a85c423079fc8b5dae0c59d66ea4a62990a1ee6e2734787359f",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
