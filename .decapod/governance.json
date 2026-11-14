@@ -205,6 +205,14 @@
       "proof_refs": [
         "source:docs/control-rpc.md"
       ]
+    },
+    {
+      "id": "file-registry-spec-f2edb76aa2",
+      "summary": "docs: specify registry consumer evidence separately from source and hosted proof",
+      "input_digest": "sha256:bd1d91bc9696f87ffa16f303bd6ed6cb0409dc2db87063c9f67650906f6101ad",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {

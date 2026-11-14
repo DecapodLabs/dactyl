@@ -310,3 +310,24 @@ Generated capability obligations: `public-api` is declared for this project. The
 ## Accepted 0.13.0 integration
 
 The read-only native batch extension retains the accepted snapshot inspection API from `src/inspection.rs` and `src/adapter/sqlite/inspection.rs`. Its renewed proof runs the complete feature matrix, native-fixture absence guard, MSRV consumer and package checks on the integrated 0.13.0 source. Earlier 0.12.0 evidence does not establish readiness after this target change.
+
+## Published control consumer qualification (issue 123)
+
+Dactyl 0.17.0 is published at release commit
+`a25796172ee300873c76ba27c1ccd4d022b544d0`, with crates.io archive SHA-256
+`15face02da6f675d5784497a7ddcb885de14c1d09e2173c14df83c0aadd74abd`.
+`tools/proof/registry_consumer.py` creates an independent temporary Cargo
+consumer with an exact registry dependency and no source override. It checks
+Cargo metadata, lock identity/checksum, the downloaded cached archive, and the
+SHA-256 of `tests/control_rpc.rs` shipped in that archive before copying those
+tests into the consumer. The test contract and library both come from the
+published package, rather than this checkout.
+
+`tools/proof/prepare.py` resolves this additional graph without compilation or
+test execution. `tools/proof/check.py` runs the registry control contract on
+Rust 1.85 during full validation, preserving the seventeen existing source
+checks and adding `registry-control-0.17.0`. CI includes the shared helper in
+its dependency-preparation image. This immutable historical registry profile
+proves public API compatibility and synthetic HTTP behavior; it does not adopt
+the SDK in Decapod, execute native PostgreSQL policy, or qualify hosted managed
+Auth/owner authority. Those outcomes retain separate evidence and owners.
