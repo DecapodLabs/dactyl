@@ -181,6 +181,14 @@
       "proof_refs": [
         "source:tools/proof/check.py"
       ]
+    },
+    {
+      "id": "file-registry-prepare-944761fb31",
+      "summary": "test: prepare published control-consumer dependencies before offline validation",
+      "input_digest": "sha256:6678f4799745408f05f55ac32c6a9758b820ec035546d4f6ea47b7efe01448b0",
+      "proof_refs": [
+        "source:tools/proof/prepare.py"
+      ]
     }
   ],
   "intents": {
