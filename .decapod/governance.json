@@ -181,6 +181,14 @@
       "proof_refs": [
         "source:CLAUDE.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-13-c559e96a1b",
+      "summary": "chore: refresh governed workspace CODEX.md",
+      "input_digest": "sha256:d6b70780e5eb2b6b63e02ed978e4002f17a19eb44832536bfca2c58418a26291",
+      "proof_refs": [
+        "source:CODEX.md"
+      ]
     }
   ],
   "intents": {
