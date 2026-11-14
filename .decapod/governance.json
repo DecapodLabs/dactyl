@@ -438,6 +438,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-validation-refresh-3-0a246bc036",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:458d8e5039b3355cabd1b6bd8b7f93d8ea74f49f026a24a307104e2942a8e5b3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
