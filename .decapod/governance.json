@@ -99,6 +99,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-3-d17e6aa209",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:4360e7e1eec3423d8242ff02355ac60aa74f719dc4fe7b1e24d9fdb3df21157d",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
