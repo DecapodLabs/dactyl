@@ -575,6 +575,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-8-27c3618170",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:16d30247cb7de8b85201b32785a9aeae8f2057b2cb417c186a74e641ee69dc98",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
