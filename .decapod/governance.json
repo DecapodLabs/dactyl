@@ -115,6 +115,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-5-d713eeec7f",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/OPERATIONS.md",
+      "input_digest": "sha256:f803bc833f89c619cb920db415a09a93d9fc890ae6ceeb8ffb597ac023fe9b0b",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
