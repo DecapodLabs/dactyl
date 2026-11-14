@@ -365,6 +365,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "file-refresh-6-f8c8120287",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/README.md",
+      "input_digest": "sha256:d117a5674b6a0a764dead05db2b27b80c3fafeb0b7a1e6c8b17af62b598ad4b1",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
