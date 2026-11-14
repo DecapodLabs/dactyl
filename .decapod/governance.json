@@ -221,6 +221,14 @@
       "proof_refs": [
         "source:.gitignore"
       ]
+    },
+    {
+      "id": "file-release-inventory-7faf42f15e",
+      "summary": "chore: reconcile the 0.17 registry-consumer proof inventory",
+      "input_digest": "sha256:1103c96c0121b1488a837f97ad4a7225e5fc155a5cae05f04049396d24ac6233",
+      "proof_refs": [
+        "source:.decapod/config.toml"
+      ]
     }
   ],
   "intents": {
