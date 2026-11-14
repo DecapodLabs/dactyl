@@ -245,6 +245,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-3-dfb5a4661d",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:79017e50e9948950cac11b8fe446b35fc7e167321a0cd1d2ec5dd8314730d78b",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
