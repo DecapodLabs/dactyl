@@ -125,6 +125,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-6-ffa8c5c136",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/OPERATIONS.md",
+      "input_digest": "sha256:93b0398aabdaa0c75883e2456d214daea8016467966196cdc9a4a1302217d119",
+      "proof_refs": [
+        "source:.decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
