@@ -141,6 +141,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-8-12af557696",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:558d9e1ae854cad5feb28e0b807e3d2912adbfed75345077c72c9f4860a670ed",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
