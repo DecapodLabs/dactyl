@@ -139,6 +139,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-8-989ec45ee4",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:98d686e29b1a63a57567ea7970700ef48a3cb630acd051d37406b5310f638cb4",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
