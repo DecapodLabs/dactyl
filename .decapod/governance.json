@@ -478,6 +478,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-validation-refresh-8-10189c440c",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:7a0a9f61ddab3b12aae090c2d17645e634c6455aebe7938562ba35472895e334",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
