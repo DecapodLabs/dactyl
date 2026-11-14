@@ -110,7 +110,7 @@ source = ".github/workflows/release.yml"
 
 [proof.required_profile]
 id = "repo.pr-readiness.v1"
-reviewed_sources_digest = "sha256:b38e07da85b1fbc611c49b441c8afcbb4203515cd0a6ca71d9034786d1185903"
+reviewed_sources_digest = "sha256:071330e0645405eec5642035bd3025cd3860f014c1543f23e8dd03e916d8129a"
 
 [repo]
 architecture_direction = "library"

@@ -309,6 +309,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "file-proof-inventory-69149eebc8",
+      "summary": "chore: reconcile reviewed proof inventory for control consumer and controller pin",
+      "input_digest": "sha256:6729146e7ef36af31d121d13d49b65f87699e72246407ff743fb66b3e3142a25",
+      "proof_refs": [
+        "source:.decapod/config.toml"
+      ]
     }
   ],
   "intents": {
