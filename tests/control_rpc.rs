@@ -429,6 +429,78 @@ mod wire {
         }
     }
 
+    #[test]
+    fn managed_session_tokens_feed_control_without_provider_credentials() {
+        let (origin, rx, server) = fixture(vec![
+            reply(
+                200,
+                json!({"access_token": BEARER, "refresh_token": "private-refresh", "expires_in":900, "provider_token":"scm-only"}),
+            ),
+            reply(200, json!({"status":"fixture-only"})),
+        ]);
+        let client = connector(&origin);
+        let session = client.refresh_session("previous-refresh").unwrap();
+        client
+            .control_request(
+                FUNCTION,
+                &json!({"action":"status"}),
+                Some(&session.access_token),
+                OperationKind::Read,
+                ResourceBudget::v1(),
+            )
+            .unwrap();
+        let (auth, _) = rx.recv().unwrap();
+        assert!(auth.starts_with("POST /auth/v1/token?grant_type=refresh_token HTTP/1.1"));
+        let (control, _) = rx.recv().unwrap();
+        assert_eq!(
+            header(&control, "authorization"),
+            Some("Bearer private-user-bearer")
+        );
+        assert!(!control.contains("scm-only"));
+        assert!(!control.contains("private-refresh"));
+        server.join().unwrap();
+    }
+
+    #[test]
+    fn wire_limits_include_the_argument_envelope_and_exact_response_boundary() {
+        let request = json!({"value":"x".repeat(100)});
+        let size = serde_json::to_vec(&json!({"request":request}))
+            .unwrap()
+            .len();
+        let mut response = vec![b' '; size - 1];
+        response.push(b'0');
+        let (origin, rx, server) = fixture(vec![Reply::Http(200, String::new(), response)]);
+        let client = connector(&origin);
+        assert_eq!(
+            client
+                .control_request(
+                    FUNCTION,
+                    &request,
+                    Some(BEARER),
+                    OperationKind::Read,
+                    ResourceBudget::v1().with_max_wire_bytes(size as u64)
+                )
+                .unwrap(),
+            json!(0)
+        );
+        assert_eq!(
+            serde_json::to_vec(&rx.recv().unwrap().1).unwrap().len(),
+            size
+        );
+        let error = client
+            .control_request(
+                FUNCTION,
+                &request,
+                Some(BEARER),
+                OperationKind::Write,
+                ResourceBudget::v1().with_max_wire_bytes(size as u64 - 1),
+            )
+            .unwrap_err();
+        assert_eq!(error.adapter_code(), Some("payload_too_large"));
+        assert_eq!(error.mutation_outcome(), MutationOutcome::NotAttempted);
+        server.join().unwrap();
+    }
+
     #[tokio::test]
     async fn control_is_safe_inside_an_async_consumer_runtime() {
         let (origin, rx, server) = fixture(vec![reply(200, json!({"opaque":true}))]);

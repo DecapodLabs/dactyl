@@ -317,6 +317,14 @@
       "proof_refs": [
         "source:.decapod/config.toml"
       ]
+    },
+    {
+      "id": "file-wire-boundaries-7ea94673f4",
+      "summary": "test: cover managed session reuse and exact control wire bounds",
+      "input_digest": "sha256:fd33d7394774df5d16ad66983fc60d544c73fc2027dbfff257d84b30657f63bb",
+      "proof_refs": [
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {
