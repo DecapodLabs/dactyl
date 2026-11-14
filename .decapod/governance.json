@@ -173,6 +173,14 @@
       "proof_refs": [
         "source:AGENTS.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-12-0729c185be",
+      "summary": "chore: refresh governed workspace CLAUDE.md",
+      "input_digest": "sha256:893c63e5b064b3708ddabec8a14a1af0015fd7fc53fa7f2649612e960b49ebf4",
+      "proof_refs": [
+        "source:CLAUDE.md"
+      ]
     }
   ],
   "intents": {
