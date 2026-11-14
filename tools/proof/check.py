@@ -11,6 +11,8 @@ import subprocess
 import tempfile
 import tomllib
 
+from registry_consumer import registry_control_consumer
+
 ROOT = Path.cwd()
 STABLE = Path(os.environ["DACTYL_STABLE_TOOLS"])
 MSRV = Path(os.environ["DACTYL_MSRV_TOOLS"])
@@ -32,12 +34,17 @@ def check_quic_lock(name, path):
     print(json.dumps(record), flush=True)
 
 
-def run(name, args, tools=STABLE, expected_missing=False):
+def rust_environment(tools):
     env = dict(os.environ, RUSTC=str(tools / "rustc"), RUSTDOC=str(tools / "rustdoc"),
                RUSTUP_TOOLCHAIN=tools.parent.name, CARGO_NET_OFFLINE="true")
     env["PATH"] = str(tools) + ":" + os.environ["DACTYL_PROOF_TOOLS"]
     for key in ("DACTYL_SUPABASE_FIXTURE", "DACTYL_SUPABASE_HOSTED_PROOF", "DACTYL_NATIVE_FIXTURE"):
         env.pop(key, None)
+    return env
+
+
+def run(name, args, tools=STABLE, expected_missing=False):
+    env = rust_environment(tools)
     result = subprocess.run([str(tools / "cargo"), *args], env=env, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=900)
     passed = result.returncode == 0
@@ -78,6 +85,10 @@ fn main() { let _ = dactyl_db::Backend::Cloud; let _ = control; }
                                    ',features=["sqlite","neon","supabase"]}\n')
     run("msrv-clean-consumer", ["check", "--manifest-path", str(root / "Cargo.toml")], tools=MSRV)
     check_quic_lock("clean-consumer-quic-security-floor", root / "Cargo.lock")
+with registry_control_consumer(MSRV, rust_environment(MSRV)) as (root, identity):
+    print(json.dumps(dict(name="registry-control-artifact", **identity)), flush=True)
+    run("registry-control-0.17.0", ["test", "--locked", "--manifest-path",
+                                str(root / "Cargo.toml"), "--test", "control_rpc"], tools=MSRV)
 run("package", ["package", "--locked", "--allow-dirty"])
 print(json.dumps(dict(scope="local_rust_contract", checks=checks, hosted="unexecuted", deployment="unexecuted")), flush=True)
 raise SystemExit(0 if all(check["passed"] for check in checks) else 1)

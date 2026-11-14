@@ -76,3 +76,6 @@ err.log
 
 # --- Bazel ---
 /bazel-*
+
+# Python bytecode from local proof helpers is machine state.
+tools/proof/__pycache__/

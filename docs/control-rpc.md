@@ -75,15 +75,49 @@ retain their contracts; do not replace that repair carrier with a second one.
 
 ## Release and consumer migration
 
-The accepted baseline is **dactyl-db 0.16.1**, which does not expose this API.
-This change prepares the next feature release under the existing release-please
-workflow; its final version and successful crates.io publication must be recorded
-from release evidence. Source/PR/package verification is not registry release
-proof. Consumers must wait for the published version containing `control_request`,
-pin that registry version with `supabase`, and compile/run their actual integration
-with its real managed session. A Git/path override is not published compatibility.
-No dependency upgrade in Decapod or policy deployment in Propodus is implied by
-this SDK PR. Coordinate Decapod issue 1590 and Propodus issue 89.
+The first published release with this API is **dactyl-db 0.17.0** (Rust/Cargo
+1.85 or newer). [Release v0.17.0](https://github.com/DecapodLabs/dactyl/releases/tag/v0.17.0)
+and [the crates.io package](https://crates.io/crates/dactyl-db/0.17.0) were
+published on 2026-11-14 after PRs #124 and #125 merged. The downloaded registry
+archive was independently hashed and its `.cargo_vcs_info.json` matches release
+commit `a25796172ee300873c76ba27c1ccd4d022b544d0`:
+
+```text
+SHA-256 15face02da6f675d5784497a7ddcb885de14c1d09e2173c14df83c0aadd74abd
+```
+
+Consumers migrating from 0.16.1 can select the supported registry interface:
+
+```toml
+[dependencies]
+dactyl-db = { version = "=0.17.0", features = ["supabase"] }
+serde_json = "1"
+```
+
+Reuse the current managed session's access token in the existing connector;
+status is a verified read, while delegation/revocation/evaluation audit writes
+must use `OperationKind::Write`. Reconcile an uncertain mutation through server
+state. Keep the existing owner-repair batch carrier. A Git/path override is not
+a substitute for this registry dependency.
+
+`tools/proof/registry_consumer.py` creates a fresh registry-only consumer, checks
+Cargo metadata and the lock checksum against the exact artifact above, hashes
+the cached archive, and copies the control wire tests shipped in that release.
+Their source digest is
+`35c7fddd2fce9204c0c15fd851f53bdb244a731b41c4e5c935b7fcb25f27b9c7`.
+`tools/proof/check.py` executes that published test contract with Rust 1.85 during
+full validation, alongside the current checkout's original seventeen checks.
+Neither the library nor this registry test contract is supplied by a source
+overlay. These tests still prove synthetic HTTP compatibility, not hosted
+identity or repository authority.
+
+As reviewed on 2026-11-14, accepted Decapod `master` still pins Dactyl 0.16.1.
+Its 0.17.0 dependency adoption, repository-access control wiring through its
+private managed-session custody, and real consumer qualification remain tracked
+in [Decapod #1590](https://github.com/DecapodLabs/decapod/issues/1590).
+[Propodus #89](https://github.com/DecapodLabs/propodus/issues/89) owns the service
+policy boundary. Registry publication does not imply that either consumer
+integration or deployed authorization acceptance has passed.
 
 `tests/control_rpc.rs` exercises the actual exported connector and native HTTP
 boundary, including discovery, headers, opaque JSON, rejection, bounds, redaction,

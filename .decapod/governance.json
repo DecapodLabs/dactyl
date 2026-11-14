@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "7e95a8f5d8eafa6482021ec9527e4c1b0411ee67",
+    "accepted_commit": "a25796172ee300873c76ba27c1ccd4d022b544d0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -19,6 +19,14 @@
           "tools/proof/check.py"
         ],
         "statement": "Integrated accepted0.13.1 source retains native physical-read-only route selection and explicit missing-fixture rejection; synthetic SDK checks do not attest live server enforcement.",
+        "status": "open"
+      },
+      "claim:authenticated-control-wire": {
+        "falsifier": "Public boundary tests observe wrong routes/headers, unsafe dispatch, missing bounds/redaction, replay, or certainty after mutation response loss.",
+        "proof_refs": [
+          "issue:https://github.com/DecapodLabs/dactyl/issues/123"
+        ],
+        "statement": "Opaque public connector control RPC reuses trusted native routing, managed bearer and budgets; no retries or local fallback; mutation acknowledgement loss reports outcome_unknown and Uncertain.",
         "status": "open"
       },
       "claim:bounded-snapshot": {
@@ -71,531 +79,241 @@
     }
   },
   "change": {
-    "id": "change_01M7CZEWPB3AVXG8W91Q6RZK2N",
-    "base_commit": "7e95a8f5d8eafa6482021ec9527e4c1b0411ee67",
+    "id": "change_01M7DTZ40M26B1G32TN5ZQH3HC",
+    "base_commit": "a25796172ee300873c76ba27c1ccd4d022b544d0",
     "target_base": "origin/main"
   },
   "claims": {
-    "authenticated-control-wire": {
-      "statement": "Opaque public connector control RPC reuses trusted native routing, managed bearer and budgets; no retries or local fallback; mutation acknowledgement loss reports outcome_unknown and Uncertain.",
-      "falsifier": "Public boundary tests observe wrong routes/headers, unsafe dispatch, missing bounds/redaction, replay, or certainty after mutation response loss.",
+    "released-control-consumer": {
+      "statement": "A fresh consumer resolves exact dactyl-db 0.17.0 from crates.io and executes the control wire tests shipped in that verified registry archive; no path or Git overlay supplies the library or test contract.",
+      "falsifier": "Package source/version/checksum or shipped test digest differs, the registry test fails, or registry/synthetic proof is described as managed-session owner authorization.",
       "status": "open",
       "proof_refs": [
-        "issue:https://github.com/DecapodLabs/dactyl/issues/123"
+        "https://crates.io/crates/dactyl-db/0.17.0"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "file-bootstrap-1-86eb818fd9",
-      "summary": "chore: refresh governed workspace .decapod/managed/Dockerfile.decapod",
-      "input_digest": "sha256:f627a1f02207b1cde5fa545711315b420bb6a846618541ecd2b3ccbd344e55f3",
-      "proof_refs": [
-        "source:.decapod/managed/Dockerfile.decapod"
-      ]
-    },
-    {
-      "id": "file-bootstrap-2-4e6103429d",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/.manifest.json",
-      "input_digest": "sha256:1c6fb1db510c5dbfbac03378843f349586074f4f35215e74ca8aa277ef4a12d7",
+      "id": "file-bootstrap-1-49c58fdc6b",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:8b80eec92c4475afbe31e8643bf1477d7ec85fca8637db663d2a652a641a4f5d",
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
     },
     {
-      "id": "file-bootstrap-3-8959c45035",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/ARCHITECTURE.md",
-      "input_digest": "sha256:8aa41ec1b38343e160728ddba3d8f414cf780a08300e4acba93ab0b889e441da",
+      "id": "file-bootstrap-2-ec8ec411b7",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/ARCHITECTURE.md",
+      "input_digest": "sha256:25b01d7787a71e0d26dd8623916c959687a79c3d05c27b4dd8012e0293fccfef",
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
     },
     {
-      "id": "file-bootstrap-4-213d5d56e7",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/INTENT.md",
-      "input_digest": "sha256:80b26561910422166920321937a8b74f72d3da529abb63d59b017b4889f8ac49",
+      "id": "file-bootstrap-3-d17e6aa209",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:4360e7e1eec3423d8242ff02355ac60aa74f719dc4fe7b1e24d9fdb3df21157d",
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
     },
     {
-      "id": "file-bootstrap-5-5a3603593c",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/INTERFACES.md",
-      "input_digest": "sha256:428d963fe9cb619b7e358f7c9235a700e1b7047622b8cdead0e1a6d864040a77",
+      "id": "file-bootstrap-4-a1067282ee",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:64c3a46a64c2264c8f6e6c50fd4fd2ed006730fdb0298fcdddb2a24747c4b873",
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
     },
     {
-      "id": "file-bootstrap-6-ffa8c5c136",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/OPERATIONS.md",
-      "input_digest": "sha256:93b0398aabdaa0c75883e2456d214daea8016467966196cdc9a4a1302217d119",
+      "id": "file-bootstrap-5-d713eeec7f",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/OPERATIONS.md",
+      "input_digest": "sha256:f803bc833f89c619cb920db415a09a93d9fc890ae6ceeb8ffb597ac023fe9b0b",
       "proof_refs": [
         "source:.decapod/managed/specs/OPERATIONS.md"
       ]
     },
     {
-      "id": "file-bootstrap-7-78685fab1a",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/README.md",
-      "input_digest": "sha256:bb7e607572d585cd03f537bacee8f3a28cedecbf1d951044f460c47cdbcfb953",
+      "id": "file-bootstrap-6-340bfc9d1d",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/README.md",
+      "input_digest": "sha256:e83d7b1b66cfa424a4e7d01afd481b711aa29313366115b72e8ca6717a4204e6",
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
     },
     {
-      "id": "file-bootstrap-8-12af557696",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/SECURITY.md",
-      "input_digest": "sha256:558d9e1ae854cad5feb28e0b807e3d2912adbfed75345077c72c9f4860a670ed",
+      "id": "file-bootstrap-7-73e181c8e2",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:67f7dcbfe7a8daee978fc953e6d0d04cf5e0536ba514f5414a842d2a9de8d3d9",
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
     },
     {
-      "id": "file-bootstrap-9-98ae963ae1",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/SEMANTICS.md",
-      "input_digest": "sha256:f4cece4b36cd6e99ba895a58fe69330675dc561d975c358ddc63dfe5c86203c0",
+      "id": "file-bootstrap-8-989ec45ee4",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:98d686e29b1a63a57567ea7970700ef48a3cb630acd051d37406b5310f638cb4",
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
     },
     {
-      "id": "file-bootstrap-10-f10395b14d",
-      "summary": "chore: refresh governed workspace .decapod/managed/specs/VALIDATION.md",
-      "input_digest": "sha256:07d0c9ed9d80682c46d3fedd4f346cc4c673a14200de71b627974b4a74220d83",
+      "id": "file-bootstrap-9-5dc3f738d0",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:370591fd5379df53fdce4d837495d59ffbd90573e449ec6d3d370458e5093b2b",
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
     },
     {
-      "id": "file-bootstrap-11-eb80b576c3",
-      "summary": "chore: refresh governed workspace AGENTS.md",
-      "input_digest": "sha256:90f096207372f94e5a4e2f4a0f65a83d9c318b225290ed24de2ae74585764b77",
+      "id": "file-registry-helper-1b93e7d76a",
+      "summary": "test: qualify the immutable registry control RPC consumer contract",
+      "input_digest": "sha256:9532099b5e3342008d9da64d7bec04a76aba5e76d58b976c159395155106e53c",
       "proof_refs": [
-        "source:AGENTS.md"
+        "source:tools/proof/registry_consumer.py"
       ]
     },
     {
-      "id": "file-bootstrap-12-0729c185be",
-      "summary": "chore: refresh governed workspace CLAUDE.md",
-      "input_digest": "sha256:893c63e5b064b3708ddabec8a14a1af0015fd7fc53fa7f2649612e960b49ebf4",
-      "proof_refs": [
-        "source:CLAUDE.md"
-      ]
-    },
-    {
-      "id": "file-bootstrap-13-c559e96a1b",
-      "summary": "chore: refresh governed workspace CODEX.md",
-      "input_digest": "sha256:d6b70780e5eb2b6b63e02ed978e4002f17a19eb44832536bfca2c58418a26291",
-      "proof_refs": [
-        "source:CODEX.md"
-      ]
-    },
-    {
-      "id": "file-bootstrap-14-b119644fe8",
-      "summary": "chore: refresh governed workspace GEMINI.md",
-      "input_digest": "sha256:1b7ecc4ccdca122160de477b45093119e6e1dbde9c53477f42b022034fa4d221",
-      "proof_refs": [
-        "source:GEMINI.md"
-      ]
-    },
-    {
-      "id": "file-adapter-a288f1bea1",
-      "summary": "feat: reuse bounded native transport for opaque control RPC",
-      "input_digest": "sha256:d9d5d4fb1becb27572aaf126de92c5466eb5b35091d3ec51d04ca741148d5d05",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs"
-      ]
-    },
-    {
-      "id": "file-connector-46795161ab",
-      "summary": "feat: expose opaque control calls on logical cloud connectors",
-      "input_digest": "sha256:ca94238bf455ae1304c531c6f676908ab33eb8c3f3896568a0e2c776cb4f5cc4",
-      "proof_refs": [
-        "source:src/connector.rs"
-      ]
-    },
-    {
-      "id": "file-cloud-887e9d0ae9",
-      "summary": "feat: support authenticated native control requests on CloudConnector",
-      "input_digest": "sha256:b28d3e174816c945f04f5744a54adb2255ff78a1a6a9826d603454bd71081517",
-      "proof_refs": [
-        "source:src/cloud.rs"
-      ]
-    },
-    {
-      "id": "file-control-tests-cc41a864fa",
-      "summary": "test: exercise public authenticated control RPC wire and failure contracts",
-      "input_digest": "sha256:efa367ff7763b7767a324e470a3712751828165a71c6f2dc20274a07acf8833e",
-      "proof_refs": [
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-profile-receiver-23cacb61d5",
-      "summary": "test: retain discovery capture until rejected profile is consumed",
-      "input_digest": "sha256:41beb174e1e393b65ab516008ad6b29924c77c3528198613c1685bcba9b426ad",
-      "proof_refs": [
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-bearer-outcome-a9fd8d0f29",
-      "summary": "fix: classify locally rejected managed bearers as not attempted",
-      "input_digest": "sha256:843e4b4473b90928a373f819d9f0e7d0d1e84eed84b548a8137f362da0cfa3f3",
-      "proof_refs": [
-        "source:src/error.rs"
-      ]
-    },
-    {
-      "id": "file-bearer-tests-fe9c309910",
-      "summary": "test: require non-dispatch outcomes for invalid managed bearers",
-      "input_digest": "sha256:644d36663bf242c2b02c460ca99536c4f729c7027e69815b84cfe24727ca6dd5",
-      "proof_refs": [
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-control-doc-d14b344526",
-      "summary": "docs: define control RPC semantics and published consumer migration",
-      "input_digest": "sha256:5db682a0dd80c53002e1ffa0ac6808c6fec154757c58fd7c81d8733d346fe7ce",
-      "proof_refs": [
-        "source:docs/control-rpc.md"
-      ]
-    },
-    {
-      "id": "file-readme-b870caeae4",
-      "summary": "docs: link the public authenticated control transport contract",
-      "input_digest": "sha256:cd7ebfa2a3f7a3044c130455f746924184d631a9f47e8d5daa1d46bcc2a21243",
-      "proof_refs": [
-        "source:README.md"
-      ]
-    },
-    {
-      "id": "file-msrv-consumer-fb9c44a7d9",
-      "summary": "test: compile managed control integration in clean MSRV consumer",
-      "input_digest": "sha256:a1d729a325fdca9bef08b9ded70f1e59373fc0c4713eb7cc70a8b96094ccfbd0",
+      "id": "file-registry-proof-ff3888ae61",
+      "summary": "test: execute the published control contract in a registry-only MSRV consumer",
+      "input_digest": "sha256:85bf14cde9c49e6532ec874b301b68d60238690980b6e6ceedd9e1f9919e3898",
       "proof_refs": [
         "source:tools/proof/check.py"
       ]
     },
     {
-      "id": "file-controller-pin-4fd24f75e2",
-      "summary": "chore: align CI proof controller with governed workspace version",
-      "input_digest": "sha256:86841f16864664a0d4d451bd5d5328eb5540a7c66c47494b66b1f2dc0f1011f6",
+      "id": "file-registry-prepare-944761fb31",
+      "summary": "test: prepare published control-consumer dependencies before offline validation",
+      "input_digest": "sha256:6678f4799745408f05f55ac32c6a9758b820ec035546d4f6ea47b7efe01448b0",
+      "proof_refs": [
+        "source:tools/proof/prepare.py"
+      ]
+    },
+    {
+      "id": "file-registry-container-ac7bc772ac",
+      "summary": "test: include registry qualification helper in CI dependency preparation",
+      "input_digest": "sha256:3d9acc6d166a83cacbdfe2b1254f81edc59e4b25b6b1ed4a31465f15832b66f4",
       "proof_refs": [
         "source:tools/proof/Containerfile"
       ]
     },
     {
-      "id": "file-spec-0-5708e7f306",
-      "summary": "docs: specify authenticated control transport in INTENT.md",
-      "input_digest": "sha256:b37155a921e4ce150024471761c8c140dd050ef5b6e8df45197a0e3406dec3fd",
+      "id": "file-published-migration-9b5d26a46e",
+      "summary": "docs: record verified 0.17.0 publication and concrete consumer migration",
+      "input_digest": "sha256:816c895a937fa954ca0d53d62866f7a7fcded3372f15c901e06f4c803e27c227",
       "proof_refs": [
-        "source:.decapod/managed/specs/INTENT.md"
+        "source:docs/control-rpc.md"
       ]
     },
     {
-      "id": "file-spec-1-73cd61d247",
-      "summary": "docs: specify authenticated control transport in ARCHITECTURE.md",
-      "input_digest": "sha256:afc155e20c58461049f4cd8b1ee0d757c72306db4397de89c0995bf07ed9ee01",
+      "id": "file-registry-spec-f2edb76aa2",
+      "summary": "docs: specify registry consumer evidence separately from source and hosted proof",
+      "input_digest": "sha256:bd1d91bc9696f87ffa16f303bd6ed6cb0409dc2db87063c9f67650906f6101ad",
       "proof_refs": [
-        "source:.decapod/managed/specs/ARCHITECTURE.md"
+        "source:.decapod/managed/specs/VALIDATION.md"
       ]
     },
     {
-      "id": "file-spec-2-1a28d3e11f",
-      "summary": "docs: specify authenticated control transport in INTERFACES.md",
-      "input_digest": "sha256:d01e2d3c39ac182aef8eb1522a626f67b30a4666bfa2dc56bd707a35e89ac4af",
+      "id": "file-proof-bytecode-b56c2ac692",
+      "summary": "chore: keep proof-helper bytecode out of source and packages",
+      "input_digest": "sha256:2821c2c01ab510e09a15a165278ad8eca426410576466741216e6b54281c1b04",
       "proof_refs": [
-        "source:.decapod/managed/specs/INTERFACES.md"
+        "source:.gitignore"
       ]
     },
     {
-      "id": "file-proof-inventory-69149eebc8",
-      "summary": "chore: reconcile reviewed proof inventory for control consumer and controller pin",
-      "input_digest": "sha256:6729146e7ef36af31d121d13d49b65f87699e72246407ff743fb66b3e3142a25",
+      "id": "file-release-inventory-7faf42f15e",
+      "summary": "chore: reconcile the 0.17 registry-consumer proof inventory",
+      "input_digest": "sha256:1103c96c0121b1488a837f97ad4a7225e5fc155a5cae05f04049396d24ac6233",
       "proof_refs": [
         "source:.decapod/config.toml"
       ]
     },
     {
-      "id": "file-wire-boundaries-7ea94673f4",
-      "summary": "test: cover managed session reuse and exact control wire bounds",
-      "input_digest": "sha256:fd33d7394774df5d16ad66983fc60d544c73fc2027dbfff257d84b30657f63bb",
-      "proof_refs": [
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-refresh-1-c887691d81",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/.manifest.json",
-      "input_digest": "sha256:f2de0c17c269996a2d812e6001ff600cc8a1004f761b639ece8c63ab8914d7d6",
+      "id": "file-final-refresh-1-85bf10aa6c",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:766dcb7e64a59f31c433bf723f870df52924f4523c95c6bb22cc068800a36209",
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
     },
     {
-      "id": "file-refresh-2-f7e2d893db",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/ARCHITECTURE.md",
-      "input_digest": "sha256:8425e68d2c9b304d24baed78684aa02549e83b34c852022d913cf74394651bad",
+      "id": "file-final-refresh-2-694dfcc3f1",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/ARCHITECTURE.md",
+      "input_digest": "sha256:ad1fba5471280a08147f8fa701863e3bca7d9f4fa60bc9fef7e36cfb9663d703",
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
     },
     {
-      "id": "file-refresh-3-c8924cfcdf",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/INTENT.md",
-      "input_digest": "sha256:942c0f9146e7fc16c0b716310abe3f75450f01e38eea30b2509e18ab1d1f73ea",
+      "id": "file-final-refresh-3-dfb5a4661d",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:79017e50e9948950cac11b8fe446b35fc7e167321a0cd1d2ec5dd8314730d78b",
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
     },
     {
-      "id": "file-refresh-4-535ad7c2b3",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/INTERFACES.md",
-      "input_digest": "sha256:0b154448e3080e80ae9ec0517edf0aad66339036d5a8070fb3220539d77d20f8",
+      "id": "file-final-refresh-4-8bb167fe8e",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:b546eb13dd256f2b0e5e6833d0bf08b9a3540f5b218093124884a4941688a06f",
       "proof_refs": [
         "source:.decapod/managed/specs/INTERFACES.md"
       ]
     },
     {
-      "id": "file-refresh-5-57f8776d0b",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/OPERATIONS.md",
-      "input_digest": "sha256:d248daa80a0ea03f0f721529b88b0e42aa45a9e32c8694a0a476704fed207a3d",
+      "id": "file-final-refresh-5-887b3c4c09",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/OPERATIONS.md",
+      "input_digest": "sha256:6f1b85d9e0612b3ea9f1db631523551ab83f29262dea6460ff72ef9d4d043e85",
       "proof_refs": [
         "source:.decapod/managed/specs/OPERATIONS.md"
       ]
     },
     {
-      "id": "file-refresh-6-f8c8120287",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/README.md",
-      "input_digest": "sha256:d117a5674b6a0a764dead05db2b27b80c3fafeb0b7a1e6c8b17af62b598ad4b1",
+      "id": "file-final-refresh-6-98ae534a94",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/README.md",
+      "input_digest": "sha256:65e1f97cb896e41cdeb65be4f5c335b6e2ec04549cf429b94ae8605089e6ef6d",
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
     },
     {
-      "id": "file-refresh-7-37b596bd09",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/SECURITY.md",
-      "input_digest": "sha256:22ae1b5eed305bc017ec50e1f537513abbbb5535855760a58a1b2419f9f627fe",
+      "id": "file-final-refresh-7-42f5742bd7",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:4918fe25a9788a8455c875be42ef6bc07904d6fb146736eff37d6e53fe9b40bb",
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
     },
     {
-      "id": "file-refresh-8-be20a0aee7",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/SEMANTICS.md",
-      "input_digest": "sha256:c2932f29c7af6790fdc04b4a615dd2b68772e4e550b5d2bc34b2ee06ca3d190f",
+      "id": "file-final-refresh-8-82909d1bc2",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:4dbd8d539a58f666d072dad765828a2766e61b11234945cf9dffa75f31018ec3",
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
     },
     {
-      "id": "file-refresh-9-22ae10b844",
-      "summary": "chore: refresh source-bound .decapod/managed/specs/VALIDATION.md",
-      "input_digest": "sha256:a5197615853e4b1bf8938c39a9f660bdba1713544178c4aedeba77354d6a0f44",
+      "id": "file-final-refresh-9-e513ca8ae2",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:e7fd0a85688cd422ab933e2d10d6fdbae303efa7411d5a70063dcdef8fcfff80",
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
     },
     {
-      "id": "file-worker-uncertainty-9645511b33",
-      "summary": "fix: preserve control uncertainty code if its transport worker fails",
-      "input_digest": "sha256:7732b883012d9b0b79cec1d4ff3fbb4bdd0de3041a64853b2120bcd042103392",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs"
-      ]
-    },
-    {
-      "id": "control-candidate-proof",
-      "summary": "Commit explicit contract review, full validation plan and separate hosted/release evidence limitations",
-      "input_digest": "sha256:32909702e2cb127284086ad8eebe85308b1557edeed0a2b891f5e442f03ed43a",
+      "id": "registry-control-ready",
+      "summary": "Checkpoint the released control consumer contract and source-bound reviews before full validation",
+      "input_digest": "sha256:1574f0c0ab3dcbf18a1cfd6bdf7f3fe7f84e04d56408fbcb13bd892346fdb9c0",
       "proof_refs": [
         "source:docs/control-rpc.md",
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-0-1bdc43f3b2",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/.manifest.json",
-      "input_digest": "sha256:f44457dcbc8b37eecc7330164fe45fe52c72b044b6faf8772b448b3fe9e3635f",
-      "proof_refs": [
-        "source:.decapod/managed/specs/.manifest.json"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-1-525f93271a",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/ARCHITECTURE.md",
-      "input_digest": "sha256:fc90f9f6271f161ab9ea98f4e1ae61a67b310da1c88149aa74f1131a63187088",
-      "proof_refs": [
-        "source:.decapod/managed/specs/ARCHITECTURE.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-2-46efe7f2aa",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/INTENT.md",
-      "input_digest": "sha256:856aadf7eb963409258a3b7652a5d7298338fc4b6a4fdda8212a4314744e570b",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTENT.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-3-0a246bc036",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/INTERFACES.md",
-      "input_digest": "sha256:458d8e5039b3355cabd1b6bd8b7f93d8ea74f49f026a24a307104e2942a8e5b3",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTERFACES.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-4-2eb981f5ab",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/OPERATIONS.md",
-      "input_digest": "sha256:4804544a7a7620f33be74f2052f5973f51b5f916b17788e19406e9973c601d10",
-      "proof_refs": [
-        "source:.decapod/managed/specs/OPERATIONS.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-5-5ca5399ab6",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/README.md",
-      "input_digest": "sha256:24836ad73da94f70a84d38a940ce4470abe4ec360f34360084a27f814d4f2488",
-      "proof_refs": [
-        "source:.decapod/managed/specs/README.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-6-282d8c6038",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/SECURITY.md",
-      "input_digest": "sha256:17ae352a30998a85c423079fc8b5dae0c59d66ea4a62990a1ee6e2734787359f",
-      "proof_refs": [
-        "source:.decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-7-2ab30b5a63",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/SEMANTICS.md",
-      "input_digest": "sha256:44ddd4016284587001eae23b9219a26a3644bb99b8e9d119918e829746dbf2e3",
-      "proof_refs": [
-        "source:.decapod/managed/specs/SEMANTICS.md"
-      ]
-    },
-    {
-      "id": "file-validation-refresh-8-10189c440c",
-      "summary": "chore: commit validation-refreshed .decapod/managed/specs/VALIDATION.md",
-      "input_digest": "sha256:7a0a9f61ddab3b12aae090c2d17645e634c6455aebe7938562ba35472895e334",
-      "proof_refs": [
-        "source:.decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "final-control-spec-review",
-      "summary": "Bind architecture, interface and security reviews to final control transport code fingerprint",
-      "input_digest": "sha256:43939c3765952c83961f62816db934918a130e616e908e7c1ee7c049eab736de",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs",
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-redirect-uncertainty-9c983d54ec",
-      "summary": "fix: preserve uncertainty for redirected control mutation acknowledgements",
-      "input_digest": "sha256:b184e77bae0c61f462cd788ebfbbfd7c1c4f70b67f5394beb73a93135c1e740f",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs"
-      ]
-    },
-    {
-      "id": "file-redirect-contract-f1b3c8e9b8",
-      "summary": "test: reject redirected mutation acknowledgements without claiming rollback",
-      "input_digest": "sha256:f023444a678d9b0fdaf3676e937899b2359c9e7baefa5e64a48ff550ba1e9762",
-      "proof_refs": [
-        "source:tests/control_rpc.rs"
-      ]
-    },
-    {
-      "id": "file-final-refresh-0-9115ace946",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/.manifest.json",
-      "input_digest": "sha256:2dd3ff483cd0ff4a2651e24614ec30b8e1fd9dc75df2eb3cd440c19287b487b6",
-      "proof_refs": [
-        "source:.decapod/managed/specs/.manifest.json"
-      ]
-    },
-    {
-      "id": "file-final-refresh-1-cd1dc398ac",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/ARCHITECTURE.md",
-      "input_digest": "sha256:24554e2d17ef774950bfb6d8ee15f140d945ff77e3b972c3472dabde5cf3c80f",
-      "proof_refs": [
-        "source:.decapod/managed/specs/ARCHITECTURE.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-2-59d2133563",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/INTENT.md",
-      "input_digest": "sha256:6d72c886d5e1dd576f333e02324dc8af8aaf97f0fda87ba84af5542d20acfc68",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTENT.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-3-446392cf74",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/INTERFACES.md",
-      "input_digest": "sha256:205ac2df338ad0f35ead3d54af4eaaaf2ce35eb24e349363d40b791b70235f28",
-      "proof_refs": [
-        "source:.decapod/managed/specs/INTERFACES.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-4-d550df37f2",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/OPERATIONS.md",
-      "input_digest": "sha256:e88b2565e766d3e1a985c600150cbe09790891dba3715fe1ad2ec40986449a4a",
-      "proof_refs": [
-        "source:.decapod/managed/specs/OPERATIONS.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-5-3921e31d0d",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/README.md",
-      "input_digest": "sha256:82998fcd8217cbc4bde9f50b5fd72314ecc1d4ca1cf87083f5d28df7a2dadef4",
-      "proof_refs": [
-        "source:.decapod/managed/specs/README.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-6-31fd4c0ef8",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/SECURITY.md",
-      "input_digest": "sha256:b61506f9f5ee181351fd6c4386526030365322dec8ac7d72665372ef5f63ff83",
-      "proof_refs": [
-        "source:.decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-7-e59919d4ed",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/SEMANTICS.md",
-      "input_digest": "sha256:7dd25a704d1a80b0dc18925ec42014fc0f0bd7ff0ba7a5fc9e3fb8ae4e1974d3",
-      "proof_refs": [
-        "source:.decapod/managed/specs/SEMANTICS.md"
-      ]
-    },
-    {
-      "id": "file-final-refresh-8-27c3618170",
-      "summary": "chore: refresh final control transport .decapod/managed/specs/VALIDATION.md",
-      "input_digest": "sha256:16d30247cb7de8b85201b32785a9aeae8f2057b2cb417c186a74e641ee69dc98",
-      "proof_refs": [
-        "source:.decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "final-control-publication-candidate",
-      "summary": "Final source-bound interface/architecture/security review; run complete native readiness before publication",
-      "input_digest": "sha256:6dc0fe7fd971cfb6019ec60028848d1dc4508a7141d2d2eb73bb82c9f91a35d1",
-      "proof_refs": [
-        "source:docs/control-rpc.md",
-        "source:tests/control_rpc.rs"
+        "source:tools/proof/registry_consumer.py"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N": {
+    "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -605,11 +323,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+      "id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Expose bounded authenticated control RPC transport for Dactyl #123\n\nImplement issue 123 with opaque server policy, managed bearer, bounded native RPC, explicit mutation uncertainty, public wire tests and consumer/release guidance. Commit every file edit separately and publish validated PR.",
-      "refined_intent": "Expose bounded authenticated control RPC transport for Dactyl #123\n\nImplement issue 123 with opaque server policy, managed bearer, bounded native RPC, explicit mutation uncertainty, public wire tests and consumer/release guidance. Commit every file edit separately and publish validated PR.",
+      "raw_intent": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence\n\nUse the released registry crate, record exact publication/consumer evidence, inspect actual managed-session/native authorization readiness without treating mocks as authority, update consumer/release guidance, and publish a validated follow-up PR. Each file edit must have a dedicated commit.",
+      "refined_intent": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence\n\nUse the released registry crate, record exact publication/consumer evidence, inspect actual managed-session/native authorization readiness without treating mocks as authority, update consumer/release guidance, and publish a validated follow-up PR. Each file edit must have a dedicated commit.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -622,59 +340,63 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Add LogicalConnector/CloudConnector control_request to native RPC with single identifier and opaque request argument. Reuse bounded native HTTP and headers; OperationKind governs transport uncertainty only, never server authority. Preserve account/query/batch compatibility. Consumer docs distinguish source from released package and native/hosted proof. Each file edit gets its own commit.",
+      "intent": "Verify crates.io dactyl-db 0.17.0 and its immutable checksum, add registry-only execution of its shipped public control transport tests to the existing full proof, and document the actual published migration plus remaining Decapod/native/hosted acceptance. Reuse existing managed-session sign-in only for authorized live proof; do not add a hosted runner, policy interpreter or source override. Commit each file edit separately and publish a validated follow-up PR.",
       "phases": [],
       "proof_hooks": [
-        "tests/control_rpc.rs",
-        "decapod validate"
+        "decapod validate",
+        "registry-control-0.17.0"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final review preserves opaque application policy, shared bounded native transport, trusted routing and uncertainty for unusable redirected mutation acknowledgements.",
-          "reviewed_code_fingerprint": "c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2",
+          "reason": "Product execution architecture is unchanged. The proof layer now independently resolves a registry consumer and verifies immutable artifact/test provenance; neither the SDK nor application policy changes.",
+          "reviewed_code_fingerprint": "2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228",
           "spec_material_hash": "e65d4b732e01aa64bc6a477fa15262f3ba592f4c79fcddd57e3a9e8c7dc7e672"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final public interface and executable wire contract preserve managed bearer, exact bounds, no redirects/replay, and outcome_unknown with Uncertain for redirected mutation acknowledgements. Existing datastore and billing methods retain compatibility.",
-          "reviewed_code_fingerprint": "c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2",
+          "reason": "The published control API is unchanged; the follow-up documents exact 0.17.0 registry migration and exercises its shipped public-boundary contract without a source override.",
+          "reviewed_code_fingerprint": "2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228",
           "spec_material_hash": "b9f9523e11237bd39393eae033ce418f67d912cbb7550d25166463e7c2f98b0c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final control channel retains existing trusted origin/schema, sensitive current user bearer and publishable-key handling, bounded redacted I/O and server-owned authorization. Redirects are rejected and cannot establish a rollback guarantee for a dispatched mutation; no policy, credential persistence or fallback is added.",
-          "reviewed_code_fingerprint": "c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2",
+          "reason": "Required validation receives no real managed-session credentials and executes only the released synthetic HTTP fixtures. Exact registry package/archive/test digests are checked; live identity and owner authority remain independent, unclaimed acceptance.",
+          "reviewed_code_fingerprint": "2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Expose bounded authenticated control RPC transport for Dactyl #123",
+      "title": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence",
       "todo_ids": [
-        "secu_01m7cze8sx03b2d1"
+        "code_01m7dtxmpatz55pd"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794662443Z"
+      "updated_at": "1794689926Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7d33cce4bbea658ac6fc7f9f586530c42881e46e6860747fe3f27c34b240c819",
+      "artifact_hash": "sha256:14b9350ba6efb2116787ccbe3edacdeb5e6a06bbbb21f0b4dab1ef295207ae19",
       "checks": [
         {
-          "name": "hosted_authorization",
+          "name": "hosted_discovery",
+          "status": "passed"
+        },
+        {
+          "name": "managed_signin",
           "status": "unavailable"
         },
         {
-          "name": "registry_release",
-          "status": "unavailable"
+          "name": "registry_archive",
+          "status": "passed"
         }
       ],
       "current_phase": "validation",
@@ -682,20 +404,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+            "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+            "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7CZEWSFEKWDBPWXN1Q019XR",
+            "detail": "trajectory:branch_01M7DTZ43TTN6Z4BAG6T0R9JB8",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+            "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -704,26 +426,26 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7CZEWSFEKWDBPWXN1Q019XR": {
+          "branch_01M7DTZ43TTN6Z4BAG6T0R9JB8": {
             "evidence_only": true,
-            "id": "branch_01M7CZEWSFEKWDBPWXN1Q019XR",
-            "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+            "id": "branch_01M7DTZ43TTN6Z4BAG6T0R9JB8",
+            "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
             "steps": [
               {
                 "action": "validation",
                 "command": "decapod validate",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/adapter/supabase.rs",
-                  "src/cloud.rs",
-                  "src/connector.rs",
-                  "tests/control_rpc.rs",
+                  "tools/proof/check.py",
+                  "tools/proof/prepare.py",
+                  "tools/proof/registry_consumer.py",
                   "docs/control-rpc.md",
                   "docs/control-rpc.md"
                 ],
                 "proof_refs": [
-                  "hosted_authorization",
-                  "registry_release"
+                  "registry_archive",
+                  "hosted_discovery",
+                  "managed_signin"
                 ],
                 "scope": [
                   "root"
@@ -743,26 +465,25 @@
         "docs/control-rpc.md"
       ],
       "inspected_files": [
-        "src/adapter/supabase.rs",
-        "src/cloud.rs",
-        "src/connector.rs"
+        "tools/proof/check.py",
+        "tools/proof/prepare.py"
       ],
-      "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+      "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
       "modified_files": [
         "docs/control-rpc.md",
-        "tests/control_rpc.rs"
+        "tools/proof/registry_consumer.py"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
-        "Run full configured Rust contract against committed candidate; fix reported failures before PR publication"
+        "Run full eighteen-check source/registry contract, publish validated follow-up, and retain independent consumer/hosted authorization gaps"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7CZEWSFEKWDBPWXN1Q019XR",
+      "run_id": "branch_01M7DTZ43TTN6Z4BAG6T0R9JB8",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m7cze8sx03b2d1",
+      "task_id": "code_01m7dtxmpatz55pd",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -10,6 +10,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+from registry_consumer import registry_control_consumer
+
 
 ROOT = Path.cwd()
 STABLE = Path(os.environ["DACTYL_STABLE_TOOLS"])
@@ -36,4 +38,8 @@ with tempfile.TemporaryDirectory(prefix="dactyl-consumer-prepare-") as directory
         ',features=["sqlite","neon","supabase"]}\n')
     fetch(consumer / "Cargo.toml")
 
-print("Prepared locked and clean-consumer dependencies for offline validation.", flush=True)
+# Resolve the independent registry consumer too; no tests/builds run here.
+with registry_control_consumer(STABLE, env) as (_, identity):
+    print(json.dumps(dict(prepared="registry-control-consumer", **identity)), flush=True)
+
+print("Prepared locked, clean-source and registry-consumer dependencies for offline validation.", flush=True)
