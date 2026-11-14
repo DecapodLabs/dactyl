@@ -165,6 +165,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-11-eb80b576c3",
+      "summary": "chore: refresh governed workspace AGENTS.md",
+      "input_digest": "sha256:90f096207372f94e5a4e2f4a0f65a83d9c318b225290ed24de2ae74585764b77",
+      "proof_refs": [
+        "source:AGENTS.md"
+      ]
     }
   ],
   "intents": {
