@@ -373,6 +373,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "file-refresh-7-37b596bd09",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:22ae1b5eed305bc017ec50e1f537513abbbb5535855760a58a1b2419f9f627fe",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
