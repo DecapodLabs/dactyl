@@ -147,6 +147,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-9-5dc3f738d0",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:370591fd5379df53fdce4d837495d59ffbd90573e449ec6d3d370458e5093b2b",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
