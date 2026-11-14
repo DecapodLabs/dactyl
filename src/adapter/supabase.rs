@@ -401,7 +401,7 @@ fn send_request<T: for<'de> Deserialize<'de>>(
         let error = remote_error(status, &bytes, rpc);
         return if mutates
             && (matches!(status, 408 | 502 | 504)
-                || (!validate_rows && (500..600).contains(&status)))
+                || (!validate_rows && matches!(status, 300..=399 | 500..=599)))
         {
             Err(mark_remote_uncertain(error))
         } else {

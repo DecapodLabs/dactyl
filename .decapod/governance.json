@@ -495,6 +495,14 @@
         "source:src/adapter/supabase.rs",
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-redirect-uncertainty-9c983d54ec",
+      "summary": "fix: preserve uncertainty for redirected control mutation acknowledgements",
+      "input_digest": "sha256:b184e77bae0c61f462cd788ebfbbfd7c1c4f70b67f5394beb73a93135c1e740f",
+      "proof_refs": [
+        "source:src/adapter/supabase.rs"
+      ]
     }
   ],
   "intents": {
