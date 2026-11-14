@@ -301,6 +301,15 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "registry-control-ready",
+      "summary": "Checkpoint the released control consumer contract and source-bound reviews before full validation",
+      "input_digest": "sha256:1574f0c0ab3dcbf18a1cfd6bdf7f3fe7f84e04d56408fbcb13bd892346fdb9c0",
+      "proof_refs": [
+        "source:docs/control-rpc.md",
+        "source:tools/proof/registry_consumer.py"
+      ]
     }
   ],
   "intents": {
@@ -338,6 +347,29 @@
         "registry-control-0.17.0"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Product execution architecture is unchanged. The proof layer now independently resolves a registry consumer and verifies immutable artifact/test provenance; neither the SDK nor application policy changes.",
+          "reviewed_code_fingerprint": "2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228",
+          "spec_material_hash": "e65d4b732e01aa64bc6a477fa15262f3ba592f4c79fcddd57e3a9e8c7dc7e672"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "The published control API is unchanged; the follow-up documents exact 0.17.0 registry migration and exercises its shipped public-boundary contract without a source override.",
+          "reviewed_code_fingerprint": "2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228",
+          "spec_material_hash": "b9f9523e11237bd39393eae033ce418f67d912cbb7550d25166463e7c2f98b0c"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Required validation receives no real managed-session credentials and executes only the released synthetic HTTP fixtures. Exact registry package/archive/test digests are checked; live identity and owner authority remain independent, unclaimed acceptance.",
+          "reviewed_code_fingerprint": "2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228",
+          "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence",
@@ -346,7 +378,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794689856Z"
+      "updated_at": "1794689926Z"
     },
     "trajectory": {
       "active_boundaries": [
