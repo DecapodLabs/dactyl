@@ -213,6 +213,14 @@
       "proof_refs": [
         "source:src/connector.rs"
       ]
+    },
+    {
+      "id": "file-cloud-887e9d0ae9",
+      "summary": "feat: support authenticated native control requests on CloudConnector",
+      "input_digest": "sha256:b28d3e174816c945f04f5744a54adb2255ff78a1a6a9826d603454bd71081517",
+      "proof_refs": [
+        "source:src/cloud.rs"
+      ]
     }
   ],
   "intents": {
