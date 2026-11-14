@@ -205,6 +205,14 @@
       "proof_refs": [
         "source:src/adapter/supabase.rs"
       ]
+    },
+    {
+      "id": "file-connector-46795161ab",
+      "summary": "feat: expose opaque control calls on logical cloud connectors",
+      "input_digest": "sha256:ca94238bf455ae1304c531c6f676908ab33eb8c3f3896568a0e2c776cb4f5cc4",
+      "proof_refs": [
+        "source:src/connector.rs"
+      ]
     }
   ],
   "intents": {

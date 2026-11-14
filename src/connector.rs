@@ -9,8 +9,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AdapterErrorKind, Backend, Connection, DactylError, DatastoreRoute, OpenOptions,
-    StorageContext, SupabaseRpcConfig,
+    AdapterErrorKind, Backend, Connection, DactylError, DatastoreRoute, OpenOptions, OperationKind,
+    ResourceBudget, StorageContext, SupabaseRpcConfig,
 };
 
 #[cfg(feature = "supabase")]
@@ -30,7 +30,7 @@ pub(crate) fn validate_opaque_credential(
 }
 
 #[cfg(feature = "supabase")]
-fn validate_bearer_token(value: &str) -> Result<(), DactylError> {
+pub(crate) fn validate_bearer_token(value: &str) -> Result<(), DactylError> {
     if value.is_empty() || value.len() > 16384 || !value.bytes().all(|b| b.is_ascii_graphic()) {
         return Err(DactylError::adapter_with_code(
             AdapterErrorKind::Authentication,
@@ -587,6 +587,44 @@ impl LogicalConnector {
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => connector.revoke_session(bearer),
+        }
+    }
+
+    /// Invoke a trusted native JSON control function on this cloud connector.
+    ///
+    /// The function is one SQL identifier in the discovered API schema, with a
+    /// single opaque `request` argument. No SQL, URL, caller identity label or
+    /// policy interpretation is added. `bearer` must be the current managed user
+    /// access token; `None` fails before dispatch. Local connectors return a
+    /// capability error, never substitute local authority.
+    ///
+    /// `kind` classifies acknowledgement loss, not authorization or physical
+    /// read-only enforcement. Use `Write` whenever the server might mutate,
+    /// including audit writes or unknown behavior. `Read` is only for a verified
+    /// side-effect-free operation. Dactyl never infers this from JSON actions.
+    /// A lost mutation acknowledgement returns `outcome_unknown` and
+    /// [`crate::MutationOutcome::Uncertain`]; reconcile rather than replay.
+    ///
+    /// The wire bytes and connect/total timeouts use `budget`; datastore row,
+    /// SQL and cell limits do not apply to opaque JSON. JSON nesting is bounded.
+    /// No automatic refresh, retry, redirect or durable session storage occurs.
+    pub fn control_request(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (function, request, bearer, kind, budget);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector.control_request(function, request, bearer, kind, budget)
+            }
         }
     }
 
