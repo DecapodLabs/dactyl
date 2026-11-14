@@ -157,6 +157,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-10-f10395b14d",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:07d0c9ed9d80682c46d3fedd4f346cc4c673a14200de71b627974b4a74220d83",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
