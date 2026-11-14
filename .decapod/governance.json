@@ -253,6 +253,14 @@
       "proof_refs": [
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-control-doc-d14b344526",
+      "summary": "docs: define control RPC semantics and published consumer migration",
+      "input_digest": "sha256:5db682a0dd80c53002e1ffa0ac6808c6fec154757c58fd7c81d8733d346fe7ce",
+      "proof_refs": [
+        "source:docs/control-rpc.md"
+      ]
     }
   ],
   "intents": {
