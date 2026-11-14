@@ -583,6 +583,15 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "final-control-publication-candidate",
+      "summary": "Final source-bound interface/architecture/security review; run complete native readiness before publication",
+      "input_digest": "sha256:6dc0fe7fd971cfb6019ec60028848d1dc4508a7141d2d2eb73bb82c9f91a35d1",
+      "proof_refs": [
+        "source:docs/control-rpc.md",
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {
@@ -624,22 +633,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final shared native worker and its worker-failure uncertainty flattening, bounded trusted routing and opaque application-policy boundary.",
-          "reviewed_code_fingerprint": "ca6fa2313486f4024f6685b908c0e8516fa9d3380df41c7e3384884222a2701e",
+          "reason": "Final review preserves opaque application policy, shared bounded native transport, trusted routing and uncertainty for unusable redirected mutation acknowledgements.",
+          "reviewed_code_fingerprint": "c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2",
           "spec_material_hash": "e65d4b732e01aa64bc6a477fa15262f3ba592f4c79fcddd57e3a9e8c7dc7e672"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final connector signatures and wire tests against current code: managed bearer forwarding, exact bounds, typed denials, mutation uncertainty, and unchanged datastore/account interfaces.",
-          "reviewed_code_fingerprint": "ca6fa2313486f4024f6685b908c0e8516fa9d3380df41c7e3384884222a2701e",
+          "reason": "Final public interface and executable wire contract preserve managed bearer, exact bounds, no redirects/replay, and outcome_unknown with Uncertain for redirected mutation acknowledgements. Existing datastore and billing methods retain compatibility.",
+          "reviewed_code_fingerprint": "c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2",
           "spec_material_hash": "b9f9523e11237bd39393eae033ce418f67d912cbb7550d25166463e7c2f98b0c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final code against existing bearer custody, origin validation, publishable-key restrictions, bounded redacted native transport and server-owned authorization. Worker failures retain mutation uncertainty; no policy or credential store is added.",
-          "reviewed_code_fingerprint": "ca6fa2313486f4024f6685b908c0e8516fa9d3380df41c7e3384884222a2701e",
+          "reason": "Final control channel retains existing trusted origin/schema, sensitive current user bearer and publishable-key handling, bounded redacted I/O and server-owned authorization. Redirects are rejected and cannot establish a rollback guarantee for a dispatched mutation; no policy, credential persistence or fallback is added.",
+          "reviewed_code_fingerprint": "c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2",
           "spec_material_hash": "6a7151ae8e9f73230fd76e9beb6ab09c39b833029c1ef839fbdb3e8472fc3de0"
         }
       ],
@@ -651,7 +660,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794660800Z"
+      "updated_at": "1794662443Z"
     },
     "trajectory": {
       "active_boundaries": [
