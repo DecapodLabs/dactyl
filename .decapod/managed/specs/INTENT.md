@@ -210,3 +210,14 @@ introduced by the client adapter.
 ## Native read-only batch boundary
 
 The generic native connector selects a separate physically read-only atomic batch boundary. Identity issuance and effective authorization remain service-owned; local and legacy transports retain their existing contracts.
+
+## Authenticated control transport (issue 123)
+
+The public connector also carries opaque single-argument native control RPCs for
+applications using their existing managed user session. Repository-access
+status/delegation/revocation/evaluation remain Propodus policy, independently
+enforced against verified identity and accepted policy. A transport success or
+caller owner label is never authority. No billing route, policy interpreter or
+local fallback is introduced; existing SQL and owner-repair batch consumers
+retain their contracts. Source readiness, registry release and deployed
+authorization acceptance are separate outcomes.

@@ -285,6 +285,14 @@
       "proof_refs": [
         "source:tools/proof/Containerfile"
       ]
+    },
+    {
+      "id": "file-spec-0-5708e7f306",
+      "summary": "docs: specify authenticated control transport in INTENT.md",
+      "input_digest": "sha256:b37155a921e4ce150024471761c8c140dd050ef5b6e8df45197a0e3406dec3fd",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
