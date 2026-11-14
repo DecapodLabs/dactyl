@@ -274,11 +274,12 @@ mod wire {
         ] {
             assert!(LogicalConnector::cloud_with_config(config).is_err());
         }
-        let (origin, _, server) = fixture(vec![reply(
+        let (origin, rx, server) = fixture(vec![reply(
             200,
             json!({"version":1,"project_origin":"https://different.example","publishable_key":KEY,"schema":"dactyl_api"}),
         )]);
         assert!(LogicalConnector::cloud_with_origin(origin).is_err());
+        rx.recv().unwrap();
         server.join().unwrap();
     }
 

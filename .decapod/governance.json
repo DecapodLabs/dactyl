@@ -229,6 +229,14 @@
       "proof_refs": [
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-profile-receiver-23cacb61d5",
+      "summary": "test: retain discovery capture until rejected profile is consumed",
+      "input_digest": "sha256:41beb174e1e393b65ab516008ad6b29924c77c3528198613c1685bcba9b426ad",
+      "proof_refs": [
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {
