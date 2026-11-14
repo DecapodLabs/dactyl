@@ -101,6 +101,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-bootstrap-3-8959c45035",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/ARCHITECTURE.md",
+      "input_digest": "sha256:8aa41ec1b38343e160728ddba3d8f414cf780a08300e4acba93ab0b889e441da",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
