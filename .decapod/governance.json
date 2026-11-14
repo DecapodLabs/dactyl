@@ -535,6 +535,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-3-446392cf74",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:205ac2df338ad0f35ead3d54af4eaaaf2ce35eb24e349363d40b791b70235f28",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
