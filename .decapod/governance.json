@@ -253,6 +253,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-4-8bb167fe8e",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:b546eb13dd256f2b0e5e6833d0bf08b9a3540f5b218093124884a4941688a06f",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
