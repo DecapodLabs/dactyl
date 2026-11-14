@@ -527,6 +527,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-2-59d2133563",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:6d72c886d5e1dd576f333e02324dc8af8aaf97f0fda87ba84af5542d20acfc68",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
