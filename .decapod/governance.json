@@ -567,6 +567,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-7-e59919d4ed",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/SEMANTICS.md",
+      "input_digest": "sha256:7dd25a704d1a80b0dc18925ec42014fc0f0bd7ff0ba7a5fc9e3fb8ae4e1974d3",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
