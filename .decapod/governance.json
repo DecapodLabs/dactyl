@@ -551,6 +551,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-5-3921e31d0d",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/README.md",
+      "input_digest": "sha256:82998fcd8217cbc4bde9f50b5fd72314ecc1d4ca1cf87083f5d28df7a2dadef4",
+      "proof_refs": [
+        "source:.decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
