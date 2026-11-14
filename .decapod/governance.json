@@ -189,6 +189,14 @@
       "proof_refs": [
         "source:CODEX.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-14-b119644fe8",
+      "summary": "chore: refresh governed workspace GEMINI.md",
+      "input_digest": "sha256:1b7ecc4ccdca122160de477b45093119e6e1dbde9c53477f42b022034fa4d221",
+      "proof_refs": [
+        "source:GEMINI.md"
+      ]
     }
   ],
   "intents": {
