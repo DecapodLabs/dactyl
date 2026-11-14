@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapter::Adapter;
 use crate::budget::{
-    ensure_json_depth, mark_remote_uncertain, preflight_batch, preflight_statement,
-    read_bounded_body, result_limit, serialize_bounded_json, BoundedReadError,
+    ensure_json_depth, mark_remote_uncertain, preflight_batch, preflight_limit,
+    preflight_statement, read_bounded_body, result_limit, serialize_bounded_json, BoundedReadError,
     DecodedResultTracker, ResourceBudget,
 };
 use crate::contract::{
@@ -120,6 +120,98 @@ pub(crate) fn validate_rpc(config: &SupabaseRpcConfig) -> Result<reqwest::Url, D
     Ok(url)
 }
 
+// One native header contract for datastore and opaque control calls.
+fn rpc_headers(config: &SupabaseRpcConfig) -> Result<reqwest::header::HeaderMap, DactylError> {
+    use reqwest::header::{HeaderMap, HeaderValue};
+    let mut headers = HeaderMap::new();
+    let mut key = HeaderValue::from_str(config.publishable_key())
+        .map_err(|_| DactylError::Config("invalid publishable key".into()))?;
+    key.set_sensitive(true);
+    let schema = HeaderValue::from_str(config.schema())
+        .map_err(|_| DactylError::Config("invalid API schema".into()))?;
+    headers.insert("apikey", key);
+    headers.insert("content-profile", schema.clone());
+    headers.insert("accept-profile", schema);
+    headers.insert("accept", HeaderValue::from_static("application/json"));
+    headers.insert("dactyl-contract-version", HeaderValue::from_static("1"));
+    Ok(headers)
+}
+
+/// The application supplies a trusted function identifier, never a URL or SQL.
+/// Policy and the JSON argument/result remain opaque to the driver.
+pub(crate) fn control_request(
+    config: &SupabaseRpcConfig,
+    function: &str,
+    request: &serde_json::Value,
+    bearer: Option<&str>,
+    kind: OperationKind,
+    budget: ResourceBudget,
+) -> Result<serde_json::Value, DactylError> {
+    let origin = validate_rpc(config)?;
+    budget.validate()?;
+    let name = function.as_bytes();
+    if name.is_empty()
+        || name.len() > 63
+        || !(name[0].is_ascii_alphabetic() || name[0] == b'_')
+        || !name.iter().all(|b| b.is_ascii_alphanumeric() || *b == b'_')
+    {
+        return Err(DactylError::Config(
+            "control RPC requires a function identifier".into(),
+        ));
+    }
+    let token = bearer.ok_or_else(|| {
+        DactylError::adapter_with_code(
+            AdapterErrorKind::Authentication,
+            "authentication_required",
+            "local preflight: control RPC requires a user bearer token",
+        )
+    })?;
+    crate::connector::validate_bearer_token(token)?;
+    let mut bearer = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
+        .map_err(|_| DactylError::Config("invalid managed session bearer".into()))?;
+    bearer.set_sensitive(true);
+    // Bound recursion before invoking serde's recursive serializer. Account for
+    // the native single-argument envelope without cloning application data.
+    ensure_json_depth(request).map_err(|_| {
+        preflight_limit(
+            "payload_too_deep",
+            "control request exceeds JSON nesting limit",
+        )
+    })?;
+    #[derive(Serialize)]
+    struct ControlRequest<'a> {
+        request: &'a serde_json::Value,
+    }
+    let body = serialize_bounded_json(&ControlRequest { request }, budget.max_wire_bytes())?;
+    let headers = Some(rpc_headers(config)?);
+    let endpoint = format!(
+        "{}/rest/v1/rpc/{function}",
+        origin.as_str().trim_end_matches('/')
+    );
+    let mutates = kind == OperationKind::Write;
+    std::thread::Builder::new()
+        .name("dactyl-control-rpc".into())
+        .spawn(move || send_request(endpoint, bearer, body, headers, budget, mutates, false))
+        .map_err(|_| transport_error(false))?
+        .join()
+        .map_err(|_| maybe_uncertain(transport_error(false), mutates))
+        .and_then(|result| result)
+        .map_err(|error| {
+            if error.mutation_outcome() == crate::MutationOutcome::Uncertain {
+                // Preserve the real transport category while exposing the
+                // stable no-replay code used by managed session consumers.
+                match error {
+                    DactylError::Adapter { kind, message, .. } => {
+                        DactylError::adapter_with_code(kind, "outcome_unknown", message)
+                    }
+                    other => other,
+                }
+            } else {
+                error
+            }
+        })
+}
+
 #[derive(Serialize)]
 struct RpcRequest<'a, T> {
     request: VersionedRequest<'a, T>,
@@ -165,28 +257,7 @@ impl SupabaseAdapter {
             )
         })?;
         context.validate()?;
-        let rpc_headers = rpc
-            .map(|config| {
-                let mut headers = reqwest::header::HeaderMap::new();
-                let mut key = reqwest::header::HeaderValue::from_str(config.publishable_key())
-                    .map_err(|_| DactylError::Config("invalid publishable key".into()))?;
-                key.set_sensitive(true);
-                let schema = reqwest::header::HeaderValue::from_str(config.schema())
-                    .map_err(|_| DactylError::Config("invalid API schema".into()))?;
-                headers.insert("apikey", key);
-                headers.insert("content-profile", schema.clone());
-                headers.insert("accept-profile", schema);
-                headers.insert(
-                    "accept",
-                    reqwest::header::HeaderValue::from_static("application/json"),
-                );
-                headers.insert(
-                    "dactyl-contract-version",
-                    reqwest::header::HeaderValue::from_static("1"),
-                );
-                Ok::<_, DactylError>(headers)
-            })
-            .transpose()?;
+        let rpc_headers = rpc.map(rpc_headers).transpose()?;
         Ok(Self {
             rpc_headers,
             endpoint: url.as_str().trim_end_matches('/').to_owned(),
@@ -238,7 +309,7 @@ impl SupabaseAdapter {
         // outside that runtime. Keep the entire bounded request on this worker.
         std::thread::Builder::new()
             .name("dactyl-supabase-http".into())
-            .spawn(move || send_request(endpoint, bearer, body, rpc_headers, budget, mutates))
+            .spawn(move || send_request(endpoint, bearer, body, rpc_headers, budget, mutates, true))
             .map_err(|_| transport_error(false))?
             .join()
             .map_err(|_| maybe_uncertain(transport_error(false), mutates))?
@@ -288,6 +359,7 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     rpc_headers: Option<reqwest::header::HeaderMap>,
     budget: ResourceBudget,
     mutates: bool,
+    validate_rows: bool,
 ) -> Result<T, DactylError> {
     let client = reqwest::blocking::Client::builder()
         .connect_timeout(budget.connect_timeout())
@@ -327,7 +399,10 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     };
     if !(200..300).contains(&status) {
         let error = remote_error(status, &bytes, rpc);
-        return if mutates && matches!(status, 408 | 502 | 504) {
+        return if mutates
+            && (matches!(status, 408 | 502 | 504)
+                || (!validate_rows && matches!(status, 300..=399 | 500..=599)))
+        {
             Err(mark_remote_uncertain(error))
         } else {
             Err(error)
@@ -344,7 +419,7 @@ fn send_request<T: for<'de> Deserialize<'de>>(
         )
     })?;
     ensure_json_depth(&value).map_err(|error| maybe_uncertain(error, mutates))?;
-    if rpc {
+    if rpc && validate_rows {
         if let Some(results) = value.get("results") {
             let mut tracker = DecodedResultTracker::new(budget);
             for result in results.as_array().ok_or_else(|| {
@@ -653,6 +728,9 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
     // Only fixed public codes leave the boundary. Remote messages and unknown
     // codes may echo tokens, SQL parameters or database connection strings.
     let known = match code {
+        Some("session_expired") => Some((AdapterErrorKind::Authentication, "session_expired")),
+        Some("session_revoked") => Some((AdapterErrorKind::Authentication, "session_revoked")),
+        Some("session_not_found") => Some((AdapterErrorKind::Authentication, "session_not_found")),
         Some("invalid_token") => Some((AdapterErrorKind::Authentication, "invalid_token")),
         Some("authorization_denied") => {
             Some((AdapterErrorKind::Authorization, "authorization_denied"))

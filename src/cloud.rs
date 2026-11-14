@@ -10,7 +10,9 @@ use crate::connector::{
     validate_opaque_credential, AccountOperation, AuthenticationSecrets, AuthenticationStart,
     ScmCredential, UserSession, DEFAULT_CLOUD_ORIGIN,
 };
-use crate::{AdapterErrorKind, DactylError, DatastoreRoute, SupabaseRpcConfig};
+use crate::{
+    AdapterErrorKind, DactylError, DatastoreRoute, OperationKind, ResourceBudget, SupabaseRpcConfig,
+};
 
 const ONBOARDING: &str = "/functions/v1/propodus-onboarding";
 const BODY_LIMIT: u64 = 16 * 1024;
@@ -105,6 +107,29 @@ impl CloudConnector {
 
     pub fn route(&self, bearer: Option<String>) -> DatastoreRoute {
         DatastoreRoute::supabase_rpc(self.config.clone(), bearer)
+    }
+
+    /// Invoke an opaque native control function using the trusted deployment
+    /// profile and the current managed user bearer. See
+    /// [`crate::LogicalConnector::control_request`] for bounds and loss semantics.
+    /// The caller selects a function identifier, never an origin or schema per
+    /// request; server policy independently decides access and effective identity.
+    pub fn control_request(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+    ) -> Result<serde_json::Value, DactylError> {
+        crate::adapter::supabase::control_request(
+            &self.config,
+            function,
+            request,
+            bearer,
+            kind,
+            budget,
+        )
     }
 
     /// Transport an opaque versioned account request using the current user

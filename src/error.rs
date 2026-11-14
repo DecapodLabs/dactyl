@@ -173,7 +173,9 @@ impl DactylError {
                     MutationOutcome::Uncertain
                 } else if message.starts_with(LOCAL_ROLLBACK_PREFIX) {
                     MutationOutcome::RolledBack
-                } else if message.starts_with(LOCAL_PREFLIGHT_PREFIX)
+                } else if (code.as_deref() == Some("invalid_token")
+                    && message == "invalid managed session bearer")
+                    || message.starts_with(LOCAL_PREFLIGHT_PREFIX)
                     || (matches!(
                         kind,
                         AdapterErrorKind::ReadOnly | AdapterErrorKind::Capability

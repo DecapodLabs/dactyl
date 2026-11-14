@@ -192,8 +192,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `64bcccd49307ce53271c2b52bc0273de87066edee14b4dc804facc45a1e561f4`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (23 files), `tools/` (2 files)
+- Repository signal fingerprint: `c31e1bc9ffdfc10d9a7d2f4116aa7fba2967366521a7cd58a84d4793310211e2`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (24 files), `tools/` (2 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -210,3 +210,14 @@ introduced by the client adapter.
 ## Native read-only batch boundary
 
 The generic native connector selects a separate physically read-only atomic batch boundary. Identity issuance and effective authorization remain service-owned; local and legacy transports retain their existing contracts.
+
+## Authenticated control transport (issue 123)
+
+The public connector also carries opaque single-argument native control RPCs for
+applications using their existing managed user session. Repository-access
+status/delegation/revocation/evaluation remain Propodus policy, independently
+enforced against verified identity and accepted policy. A transport success or
+caller owner label is never authority. No billing route, policy interpreter or
+local fallback is introduced; existing SQL and owner-repair batch consumers
+retain their contracts. Source readiness, registry release and deployed
+authorization acceptance are separate outcomes.
