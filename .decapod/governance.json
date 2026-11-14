@@ -93,6 +93,14 @@
       "proof_refs": [
         "source:.decapod/managed/Dockerfile.decapod"
       ]
+    },
+    {
+      "id": "file-bootstrap-2-4e6103429d",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:1c6fb1db510c5dbfbac03378843f349586074f4f35215e74ca8aa277ef4a12d7",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
