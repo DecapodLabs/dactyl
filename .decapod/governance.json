@@ -109,6 +109,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-4-213d5d56e7",
+      "summary": "chore: refresh governed workspace .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:80b26561910422166920321937a8b74f72d3da529abb63d59b017b4889f8ac49",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
