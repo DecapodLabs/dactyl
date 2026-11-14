@@ -269,6 +269,14 @@
       "proof_refs": [
         "source:README.md"
       ]
+    },
+    {
+      "id": "file-msrv-consumer-fb9c44a7d9",
+      "summary": "test: compile managed control integration in clean MSRV consumer",
+      "input_digest": "sha256:a1d729a325fdca9bef08b9ded70f1e59373fc0c4713eb7cc70a8b96094ccfbd0",
+      "proof_refs": [
+        "source:tools/proof/check.py"
+      ]
     }
   ],
   "intents": {

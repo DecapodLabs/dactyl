@@ -66,9 +66,15 @@ run("missing-native-fixture", ["test", "--locked", "--features", "supabase", "--
 with tempfile.TemporaryDirectory(prefix="dactyl-consumer-") as directory:
     root = Path(directory)
     (root / "src").mkdir()
-    (root / "src/main.rs").write_text('fn main() { let _ = dactyl_db::Backend::Cloud; }\n')
+    (root / "src/main.rs").write_text('''use dactyl_db::{DactylError, LogicalConnector, OperationKind, ResourceBudget, UserSession};
+fn control(c: &LogicalConnector, s: &UserSession) -> Result<serde_json::Value, DactylError> {
+    c.control_request("propodus_repository_access_v1", &serde_json::json!({"version":1}),
+        Some(&s.access_token), OperationKind::Write, ResourceBudget::v1())
+}
+fn main() { let _ = dactyl_db::Backend::Cloud; let _ = control; }
+''')
     (root / "Cargo.toml").write_text('[package]\nname="clean-consumer"\nversion="0.0.0"\nedition="2021"\nrust-version="1.85"\n'
-                                   '[dependencies]\ndactyl-db={path=' + json.dumps(str(ROOT)) +
+                                   '[dependencies]\nserde_json="1"\ndactyl-db={path=' + json.dumps(str(ROOT)) +
                                    ',features=["sqlite","neon","supabase"]}\n')
     run("msrv-clean-consumer", ["check", "--manifest-path", str(root / "Cargo.toml")], tools=MSRV)
     check_quic_lock("clean-consumer-quic-security-floor", root / "Cargo.lock")
