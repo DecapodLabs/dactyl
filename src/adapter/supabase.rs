@@ -194,7 +194,8 @@ pub(crate) fn control_request(
         .spawn(move || send_request(endpoint, bearer, body, headers, budget, mutates, false))
         .map_err(|_| transport_error(false))?
         .join()
-        .map_err(|_| maybe_uncertain(transport_error(false), mutates))?
+        .map_err(|_| maybe_uncertain(transport_error(false), mutates))
+        .and_then(|result| result)
         .map_err(|error| {
             if error.mutation_outcome() == crate::MutationOutcome::Uncertain {
                 // Preserve the real transport category while exposing the

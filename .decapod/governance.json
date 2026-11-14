@@ -397,6 +397,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-worker-uncertainty-9645511b33",
+      "summary": "fix: preserve control uncertainty code if its transport worker fails",
+      "input_digest": "sha256:7732b883012d9b0b79cec1d4ff3fbb4bdd0de3041a64853b2120bcd042103392",
+      "proof_refs": [
+        "source:src/adapter/supabase.rs"
+      ]
     }
   ],
   "intents": {
