@@ -245,6 +245,14 @@
       "proof_refs": [
         "source:src/error.rs"
       ]
+    },
+    {
+      "id": "file-bearer-tests-fe9c309910",
+      "summary": "test: require non-dispatch outcomes for invalid managed bearers",
+      "input_digest": "sha256:644d36663bf242c2b02c460ca99536c4f729c7027e69815b84cfe24727ca6dd5",
+      "proof_refs": [
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {

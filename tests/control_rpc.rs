@@ -209,6 +209,7 @@ mod wire {
                 )
                 .unwrap_err();
             assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Authentication));
+            assert_eq!(error.mutation_outcome(), MutationOutcome::NotAttempted);
             redacted(&error, &origin);
         }
         for function in [
