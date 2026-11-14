@@ -197,6 +197,14 @@
       "proof_refs": [
         "source:tools/proof/Containerfile"
       ]
+    },
+    {
+      "id": "file-published-migration-9b5d26a46e",
+      "summary": "docs: record verified 0.17.0 publication and concrete consumer migration",
+      "input_digest": "sha256:816c895a937fa954ca0d53d62866f7a7fcded3372f15c901e06f4c803e27c227",
+      "proof_refs": [
+        "source:docs/control-rpc.md"
+      ]
     }
   ],
   "intents": {
