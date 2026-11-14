@@ -277,6 +277,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "file-final-refresh-7-42f5742bd7",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:4918fe25a9788a8455c875be42ef6bc07904d6fb146736eff37d6e53fe9b40bb",
+      "proof_refs": [
+        "source:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
