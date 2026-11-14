@@ -301,6 +301,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-spec-2-1a28d3e11f",
+      "summary": "docs: specify authenticated control transport in INTERFACES.md",
+      "input_digest": "sha256:d01e2d3c39ac182aef8eb1522a626f67b30a4666bfa2dc56bd707a35e89ac4af",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {

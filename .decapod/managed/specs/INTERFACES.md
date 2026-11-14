@@ -295,3 +295,25 @@ PostgreSQL service evidence, not an HTTP mock executing SQLite.
 ## Native read-only batch boundary
 
 The additive native dactyl_read_batch_v1 endpoint preserves the version1 ordered batch envelope and explicit read_only mode. Write batches keep dactyl_batch_v1 and legacy routes are unchanged. No fallback is introduced for an unavailable receiver.
+
+## Authenticated opaque control calls (issue 123)
+
+`LogicalConnector::control_request(function, &Value, Option<&str>, OperationKind,
+ResourceBudget)` is available across feature combinations; a local connector
+returns Capability without opening a database. With `supabase`,
+`CloudConnector::control_request` exposes the same call. It POSTs a single
+`{request: value}` argument to `/rest/v1/rpc/<identifier>` using the trusted
+discovered profile, current managed bearer, native schema headers and contract
+version. There is no caller-supplied per-call origin/schema or StorageContext.
+
+The operation kind explicitly declares side effects for loss classification.
+Read does not enforce a PostgreSQL read-only transaction. Unknown effects and
+Propodus evaluation audit writes require Write. Returned application JSON is
+opaque, including successful HTTP responses carrying denial decisions.
+Missing/invalid bearers fail before dispatch; remote Auth/permission/schema/rate
+errors preserve typed semantics and known public codes. Unusable mutation
+acknowledgements preserve their error kind with outcome_unknown and Uncertain.
+Wire limits and deadlines apply; SQL and datastore-row budgets do not.
+`docs/control-rpc.md` specifies consumer migration from published 0.16.1, which
+lacks this seam. The eventual registry version and native/hosted authorization
+proof require independent release/deployment evidence.
