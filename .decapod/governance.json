@@ -229,6 +229,14 @@
       "proof_refs": [
         "source:.decapod/config.toml"
       ]
+    },
+    {
+      "id": "file-final-refresh-1-85bf10aa6c",
+      "summary": "chore: refresh registry-proof .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:766dcb7e64a59f31c433bf723f870df52924f4523c95c6bb22cc068800a36209",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -266,7 +274,7 @@
         "registry-control-0.17.0"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence",
       "todo_ids": [
@@ -274,15 +282,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794687424Z"
+      "updated_at": "1794689856Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d632770b8aff328e2b7c4fd515916eece60dc0161614e2d14bad1cb071fde686",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:14b9350ba6efb2116787ccbe3edacdeb5e6a06bbbb21f0b4dab1ef295207ae19",
+      "checks": [
+        {
+          "name": "hosted_discovery",
+          "status": "passed"
+        },
+        {
+          "name": "managed_signin",
+          "status": "unavailable"
+        },
+        {
+          "name": "registry_archive",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -296,21 +317,69 @@
             "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7DTZ43TTN6Z4BAG6T0R9JB8",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7DTZ43TTN6Z4BAG6T0R9JB8": {
+            "evidence_only": true,
+            "id": "branch_01M7DTZ43TTN6Z4BAG6T0R9JB8",
+            "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
+            "steps": [
+              {
+                "action": "validation",
+                "command": "decapod validate",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "tools/proof/check.py",
+                  "tools/proof/prepare.py",
+                  "tools/proof/registry_consumer.py",
+                  "docs/control-rpc.md",
+                  "docs/control-rpc.md"
+                ],
+                "proof_refs": [
+                  "registry_archive",
+                  "hosted_discovery",
+                  "managed_signin"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "docs/control-rpc.md"
+      ],
+      "inspected_files": [
+        "tools/proof/check.py",
+        "tools/proof/prepare.py"
+      ],
       "intent_id": "intent:change_01M7DTZ40M26B1G32TN5ZQH3HC",
-      "modified_files": [],
+      "modified_files": [
+        "docs/control-rpc.md",
+        "tools/proof/registry_consumer.py"
+      ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run full eighteen-check source/registry contract, publish validated follow-up, and retain independent consumer/hosted authorization gaps"
       ],
       "repo_scope": [
         "root"
