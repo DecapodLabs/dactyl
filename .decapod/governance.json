@@ -107,6 +107,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "file-bootstrap-4-a1067282ee",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:64c3a46a64c2264c8f6e6c50fd4fd2ed006730fdb0298fcdddb2a24747c4b873",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
