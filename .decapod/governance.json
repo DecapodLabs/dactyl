@@ -405,6 +405,15 @@
       "proof_refs": [
         "source:src/adapter/supabase.rs"
       ]
+    },
+    {
+      "id": "control-candidate-proof",
+      "summary": "Commit explicit contract review, full validation plan and separate hosted/release evidence limitations",
+      "input_digest": "sha256:32909702e2cb127284086ad8eebe85308b1557edeed0a2b891f5e442f03ed43a",
+      "proof_refs": [
+        "source:docs/control-rpc.md",
+        "source:tests/control_rpc.rs"
+      ]
     }
   ],
   "intents": {
@@ -479,9 +488,18 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a3c20a3e9936e284c226c3af89f807f6580044ce7b9cc0c9d89b89457afd1bc4",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:7d33cce4bbea658ac6fc7f9f586530c42881e46e6860747fe3f27c34b240c819",
+      "checks": [
+        {
+          "name": "hosted_authorization",
+          "status": "unavailable"
+        },
+        {
+          "name": "registry_release",
+          "status": "unavailable"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -495,21 +513,70 @@
             "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7CZEWSFEKWDBPWXN1Q019XR",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7CZEWSFEKWDBPWXN1Q019XR": {
+            "evidence_only": true,
+            "id": "branch_01M7CZEWSFEKWDBPWXN1Q019XR",
+            "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
+            "steps": [
+              {
+                "action": "validation",
+                "command": "decapod validate",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/adapter/supabase.rs",
+                  "src/cloud.rs",
+                  "src/connector.rs",
+                  "tests/control_rpc.rs",
+                  "docs/control-rpc.md",
+                  "docs/control-rpc.md"
+                ],
+                "proof_refs": [
+                  "hosted_authorization",
+                  "registry_release"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "docs/control-rpc.md"
+      ],
+      "inspected_files": [
+        "src/adapter/supabase.rs",
+        "src/cloud.rs",
+        "src/connector.rs"
+      ],
       "intent_id": "intent:change_01M7CZEWPB3AVXG8W91Q6RZK2N",
-      "modified_files": [],
+      "modified_files": [
+        "docs/control-rpc.md",
+        "tests/control_rpc.rs"
+      ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run full configured Rust contract against committed candidate; fix reported failures before PR publication"
       ],
       "repo_scope": [
         "root"
