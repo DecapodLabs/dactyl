@@ -91,6 +91,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "file-bootstrap-2-ec8ec411b7",
+      "summary": "chore: refresh 0.17 release-bound .decapod/managed/specs/ARCHITECTURE.md",
+      "input_digest": "sha256:25b01d7787a71e0d26dd8623916c959687a79c3d05c27b4dd8012e0293fccfef",
+      "proof_refs": [
+        "source:.decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
