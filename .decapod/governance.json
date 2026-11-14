@@ -173,6 +173,14 @@
       "proof_refs": [
         "source:tools/proof/registry_consumer.py"
       ]
+    },
+    {
+      "id": "file-registry-proof-ff3888ae61",
+      "summary": "test: execute the published control contract in a registry-only MSRV consumer",
+      "input_digest": "sha256:85bf14cde9c49e6532ec874b301b68d60238690980b6e6ceedd9e1f9919e3898",
+      "proof_refs": [
+        "source:tools/proof/check.py"
+      ]
     }
   ],
   "intents": {
