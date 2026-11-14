@@ -430,6 +430,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "file-validation-refresh-2-46efe7f2aa",
+      "summary": "chore: commit validation-refreshed .decapod/managed/specs/INTENT.md",
+      "input_digest": "sha256:856aadf7eb963409258a3b7652a5d7298338fc4b6a4fdda8212a4314744e570b",
+      "proof_refs": [
+        "source:.decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
