@@ -197,6 +197,14 @@
       "proof_refs": [
         "source:GEMINI.md"
       ]
+    },
+    {
+      "id": "file-adapter-a288f1bea1",
+      "summary": "feat: reuse bounded native transport for opaque control RPC",
+      "input_digest": "sha256:d9d5d4fb1becb27572aaf126de92c5466eb5b35091d3ec51d04ca741148d5d05",
+      "proof_refs": [
+        "source:src/adapter/supabase.rs"
+      ]
     }
   ],
   "intents": {
