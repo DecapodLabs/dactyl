@@ -511,6 +511,14 @@
       "proof_refs": [
         "source:tests/control_rpc.rs"
       ]
+    },
+    {
+      "id": "file-final-refresh-0-9115ace946",
+      "summary": "chore: refresh final control transport .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:2dd3ff483cd0ff4a2651e24614ec30b8e1fd9dc75df2eb3cd440c19287b487b6",
+      "proof_refs": [
+        "source:.decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
