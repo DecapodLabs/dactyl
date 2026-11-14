@@ -389,6 +389,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "file-refresh-9-22ae10b844",
+      "summary": "chore: refresh source-bound .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:a5197615853e4b1bf8938c39a9f660bdba1713544178c4aedeba77354d6a0f44",
+      "proof_refs": [
+        "source:.decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
