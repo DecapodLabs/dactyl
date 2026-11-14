@@ -83,6 +83,16 @@
     "base_commit": "a25796172ee300873c76ba27c1ccd4d022b544d0",
     "target_base": "origin/main"
   },
+  "claims": {
+    "released-control-consumer": {
+      "statement": "A fresh consumer resolves exact dactyl-db 0.17.0 from crates.io and executes the control wire tests shipped in that verified registry archive; no path or Git overlay supplies the library or test contract.",
+      "falsifier": "Package source/version/checksum or shipped test digest differs, the registry test fails, or registry/synthetic proof is described as managed-session owner authorization.",
+      "status": "open",
+      "proof_refs": [
+        "https://crates.io/crates/dactyl-db/0.17.0"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "file-bootstrap-1-49c58fdc6b",
@@ -155,6 +165,14 @@
       "proof_refs": [
         "source:.decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "file-registry-helper-1b93e7d76a",
+      "summary": "test: qualify the immutable registry control RPC consumer contract",
+      "input_digest": "sha256:9532099b5e3342008d9da64d7bec04a76aba5e76d58b976c159395155106e53c",
+      "proof_refs": [
+        "source:tools/proof/registry_consumer.py"
+      ]
     }
   ],
   "intents": {
@@ -179,18 +197,28 @@
   },
   "sections": {
     "plan": {
-      "constraints": {},
-      "intent": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence\n\nUse the released registry crate, record exact publication/consumer evidence, inspect actual managed-session/native authorization readiness without treating mocks as authority, update consumer/release guidance, and publish a validated follow-up PR. Each file edit must have a dedicated commit.",
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Verify crates.io dactyl-db 0.17.0 and its immutable checksum, add registry-only execution of its shipped public control transport tests to the existing full proof, and document the actual published migration plus remaining Decapod/native/hosted acceptance. Reuse existing managed-session sign-in only for authorized live proof; do not add a hosted runner, policy interpreter or source override. Commit each file edit separately and publish a validated follow-up PR.",
+      "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "decapod validate",
+        "registry-control-0.17.0"
       ],
       "schema_version": "1.1.0",
       "state": "DRAFT",
+      "stop_conditions": [],
       "title": "Verify released Dactyl 0.17.0 control RPC consumer and record #123 release evidence",
       "todo_ids": [
         "code_01m7dtxmpatz55pd"
       ],
-      "updated_at": "1794687078Z"
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794687424Z"
     },
     "trajectory": {
       "active_boundaries": [
