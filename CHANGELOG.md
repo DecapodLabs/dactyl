@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0](https://github.com/DecapodLabs/dactyl/compare/v0.17.0...v0.18.0) (2026-11-18)
+
+
+### Features
+
+* caller-supplied DPoP proofs, Decapod Cloud routing, and extended Supabase conformance ([1779d80](https://github.com/DecapodLabs/dactyl/commit/1779d8089c325a62bc6a8e2a41193ea348dc6ed6))
+* support caller-supplied DPoP proofs, Decapod Cloud routing, and extended conformance ([8da6b3a](https://github.com/DecapodLabs/dactyl/commit/8da6b3a5674d9d620d639b3c26a9e33351e14af8))
+
+
+### Bug Fixes
+
+* **http:** initialize blocking client off caller tokio runtime and bound burst concurrency ([d193677](https://github.com/DecapodLabs/dactyl/commit/d193677590d64a0766882761af143f9c0b9e478d))
+
 ## [0.17.0](https://github.com/DecapodLabs/dactyl/compare/v0.16.1...v0.17.0) (2026-11-14)
 
 
