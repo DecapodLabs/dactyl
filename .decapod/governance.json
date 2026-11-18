@@ -141,6 +141,11 @@
       "id": "chk-http-init",
       "summary": "fix(http): initialize blocking client off caller tokio runtime and bound burst concurrency",
       "input_digest": "sha256:18680fa3eedfb17272c2032434256354cf90b862a4f7382c6c95641977cf8292"
+    },
+    {
+      "id": "chk-spec-review",
+      "summary": "chore(governance): record refreshed spec reviews for final v0.18.0 candidate",
+      "input_digest": "sha256:c393b41040db319989543b7db8994f0f737630141b6b7bf587b32a1c980707ab"
     }
   ],
   "intents": {
@@ -181,22 +186,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated for #127 (DPoP signer & device operations), #128 (Decapod Cloud naming & fallback), and #129 (Supabase conformance & 250-way burst)",
-          "reviewed_code_fingerprint": "48ccd5cbfea1a735e7ee0927250044f483c3c3f8a56b288ab36ae121fd8117cc",
+          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
+          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
           "spec_material_hash": "eaad0f290af40606858a916969acb81641570ddc714dda74c03d69526295966a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated for #127 (DPoP signer & device operations), #128 (Decapod Cloud naming & fallback), and #129 (Supabase conformance & 250-way burst)",
-          "reviewed_code_fingerprint": "48ccd5cbfea1a735e7ee0927250044f483c3c3f8a56b288ab36ae121fd8117cc",
+          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
+          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
           "spec_material_hash": "a3061db602802a3c046a1bc56f5fc4f990a267581ef62dcc4d743cbe98926369"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated for #127 (DPoP signer & device operations), #128 (Decapod Cloud naming & fallback), and #129 (Supabase conformance & 250-way burst)",
-          "reviewed_code_fingerprint": "48ccd5cbfea1a735e7ee0927250044f483c3c3f8a56b288ab36ae121fd8117cc",
+          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
+          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
           "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
         }
       ],
@@ -208,7 +213,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795039495Z"
+      "updated_at": "1795043938Z"
     },
     "trajectory": {
       "active_boundaries": [
