@@ -136,6 +136,11 @@
       "id": "chk-containerfile-pin",
       "summary": "chore: align CI proof controller pin with decapod 0.148.11",
       "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
+    },
+    {
+      "id": "chk-http-init",
+      "summary": "fix(http): initialize blocking client off caller tokio runtime and bound burst concurrency",
+      "input_digest": "sha256:18680fa3eedfb17272c2032434256354cf90b862a4f7382c6c95641977cf8292"
     }
   ],
   "intents": {
@@ -209,8 +214,28 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:16803a9059491915368a58fc8819e9abf5ac93d9a08ad46431afc947cbd1c381",
+      "artifact_hash": "sha256:d1319f017bd96df3a548141813b8db8eeae94fda26da413c3ca69527eb0c3181",
       "checks": [
+        {
+          "name": "cargo-clippy-all-features",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-test-all-features-msrv-1.85",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-test-all-features-stable",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-test-neon-supabase-control-rpc",
+          "status": "passed"
+        },
         {
           "name": "cargo_clippy",
           "status": "passed"
@@ -249,10 +274,17 @@
             "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R9K34Q0CPH5ENR4N5DHW85": {
@@ -294,6 +326,27 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/http_pool.rs",
+                  "tests/supabase_rpc.rs",
+                  "tests/support/native_scenarios.rs"
+                ],
+                "proof_refs": [
+                  "cargo-fmt",
+                  "cargo-clippy-all-features",
+                  "cargo-test-all-features-stable",
+                  "cargo-test-all-features-msrv-1.85",
+                  "cargo-test-neon-supabase-control-rpc"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -323,6 +376,7 @@
         "tests/logical_connector.rs",
         "tests/resource_budgets.rs",
         "tests/supabase_rpc.rs",
+        "tests/support/native_scenarios.rs",
         "tools/proof/Containerfile"
       ],
       "next_transitions": [

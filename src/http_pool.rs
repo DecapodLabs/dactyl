@@ -17,7 +17,7 @@ use crate::connector::{
 };
 use crate::{AdapterErrorKind, DactylError};
 
-const MAX_CONCURRENT_REQUESTS: usize = 32;
+const MAX_CONCURRENT_REQUESTS: usize = 16;
 const POOL_MAX_IDLE_PER_HOST: usize = 32;
 const POOL_IDLE_TIMEOUT: Duration = Duration::from_secs(15);
 const MAX_CACHED_CLIENTS: usize = 8;
@@ -72,13 +72,33 @@ pub(crate) fn acquire_client(
             }
         }
     }
-    let client = reqwest::blocking::Client::builder()
-        .connect_timeout(connect_timeout)
-        .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
-        .pool_idle_timeout(POOL_IDLE_TIMEOUT)
-        .redirect(reqwest::redirect::Policy::none())
-        .retry(reqwest::retry::never())
-        .build()
+    // reqwest::blocking::Client must be constructed, executed, AND dropped
+    // outside any caller Tokio runtime so synchronous callers inside
+    // `#[tokio::test]` or async runtimes never panic.
+    let client = std::thread::Builder::new()
+        .name("dactyl-http-init".into())
+        .spawn(move || {
+            reqwest::blocking::Client::builder()
+                .connect_timeout(connect_timeout)
+                .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+                .pool_idle_timeout(POOL_IDLE_TIMEOUT)
+                .redirect(reqwest::redirect::Policy::none())
+                .retry(reqwest::retry::never())
+                .build()
+        })
+        .map_err(|_| {
+            DactylError::adapter(
+                AdapterErrorKind::Unavailable,
+                "cloud HTTP transport worker failed",
+            )
+        })?
+        .join()
+        .map_err(|_| {
+            DactylError::adapter(
+                AdapterErrorKind::Unavailable,
+                "cloud HTTP transport worker panicked",
+            )
+        })?
         .map_err(|_| {
             DactylError::adapter(
                 AdapterErrorKind::Unavailable,
