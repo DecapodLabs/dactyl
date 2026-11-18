@@ -1,22 +1,48 @@
-//! Logical cloud connector, public deployment discovery and stateless auth I/O.
-//! The application owns browser interaction and private session persistence.
+//! Logical Decapod Cloud connector, public deployment discovery and stateless auth I/O.
+//! The application owns browser interaction, key custody, and private session persistence.
 
 use std::io::Read;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde::Deserialize;
 
+use crate::budget::mark_remote_uncertain;
 use crate::connector::{
-    validate_opaque_credential, AccountOperation, AuthenticationSecrets, AuthenticationStart,
-    ScmCredential, UserSession, DEFAULT_CLOUD_ORIGIN,
+    validate_dpop_nonce, validate_opaque_credential, AccountOperation, AuthenticationSecrets,
+    AuthenticationStart, CloudResponseMetadata, RequestProofSigner, ScmCredential, UserSession,
+    DEFAULT_CLOUD_ORIGIN,
+};
+use crate::http_pool::{
+    acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
+    SharedHttpClient,
 };
 use crate::{
     AdapterErrorKind, DactylError, DatastoreRoute, OperationKind, ResourceBudget, SupabaseRpcConfig,
 };
 
-const ONBOARDING: &str = "/functions/v1/propodus-onboarding";
+const CANONICAL_ONBOARDING: &str = "/functions/v1/decapod-onboarding";
+const LEGACY_ONBOARDING: &str = "/functions/v1/propodus-onboarding";
 const BODY_LIMIT: u64 = 16 * 1024;
 const MAX_JSON_DEPTH: usize = 64;
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum OnboardingPrefix {
+    #[default]
+    Canonical,
+    Legacy,
+}
+
+impl OnboardingPrefix {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Canonical => CANONICAL_ONBOARDING,
+            Self::Legacy => LEGACY_ONBOARDING,
+        }
+    }
+}
 
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -30,12 +56,19 @@ struct DeploymentProfile {
 #[derive(Clone)]
 pub struct CloudConnector {
     config: SupabaseRpcConfig,
+    onboarding_prefix: OnboardingPrefix,
+    proof_signer: Option<Arc<dyn RequestProofSigner>>,
+    dpop_nonce: Option<String>,
+    http_client: Arc<SharedHttpClient>,
 }
 
 impl std::fmt::Debug for CloudConnector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CloudConnector")
             .field("config", &self.config)
+            .field("onboarding_prefix", &self.onboarding_prefix)
+            .field("has_proof_signer", &self.proof_signer.is_some())
+            .field("has_dpop_nonce", &self.dpop_nonce.is_some())
             .finish()
     }
 }
@@ -61,17 +94,56 @@ impl CloudConnector {
     }
 
     pub fn discover(origin: &str) -> Result<Self, DactylError> {
+        Self::discover_with_metadata(origin).map(|(connector, _)| connector)
+    }
+
+    /// Discover the version-1 Decapod Cloud deployment profile, returning bounded
+    /// diagnostic/sunset response headers (`Decapod-Cloud-*`, `Sunset`, etc.).
+    ///
+    /// Probes `/functions/v1/decapod-onboarding/config` first and falls back once
+    /// to `/functions/v1/propodus-onboarding/config` only on HTTP `404`.
+    pub fn discover_with_metadata(
+        origin: &str,
+    ) -> Result<(Self, CloudResponseMetadata), DactylError> {
         validate_origin(origin)?;
-        let profile: DeploymentProfile = request(
+        let http_client = acquire_client(CONNECT_TIMEOUT)?;
+        let mut metadata = CloudResponseMetadata::default();
+        let mut onboarding_prefix = OnboardingPrefix::Canonical;
+        let profile: DeploymentProfile = match request(
+            &http_client,
             origin,
             None,
             "GET",
-            &format!("{ONBOARDING}/config"),
+            &format!("{CANONICAL_ONBOARDING}/config"),
+            None,
+            None,
             None,
             None,
             None,
             false,
-        )?;
+            &mut metadata,
+        ) {
+            Ok(profile) => profile,
+            Err(error) if is_missing_onboarding_function(&error) => {
+                onboarding_prefix = OnboardingPrefix::Legacy;
+                metadata = CloudResponseMetadata::default();
+                request(
+                    &http_client,
+                    origin,
+                    None,
+                    "GET",
+                    &format!("{LEGACY_ONBOARDING}/config"),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    false,
+                    &mut metadata,
+                )?
+            }
+            Err(error) => return Err(error),
+        };
         if profile.version != 1
             || profile.project_origin.trim_end_matches('/') != origin.trim_end_matches('/')
         {
@@ -79,16 +151,45 @@ impl CloudConnector {
                 "cloud deployment profile version or origin mismatch",
             ));
         }
-        Self::with_config(
-            SupabaseRpcConfig::v1(profile.project_origin, profile.publishable_key)
-                .with_schema(profile.schema),
-        )
+        let config = SupabaseRpcConfig::v1(profile.project_origin, profile.publishable_key)
+            .with_schema(profile.schema);
+        crate::adapter::supabase::validate_rpc(&config)?;
+        Ok((
+            Self {
+                config,
+                onboarding_prefix,
+                proof_signer: None,
+                dpop_nonce: None,
+                http_client,
+            },
+            metadata,
+        ))
     }
 
     /// Explicit seam for a trusted deployment profile or a disposable fixture.
     pub fn with_config(config: SupabaseRpcConfig) -> Result<Self, DactylError> {
         crate::adapter::supabase::validate_rpc(&config)?;
-        Ok(Self { config })
+        let http_client = acquire_client(CONNECT_TIMEOUT)?;
+        Ok(Self {
+            config,
+            onboarding_prefix: OnboardingPrefix::Canonical,
+            proof_signer: None,
+            dpop_nonce: None,
+            http_client,
+        })
+    }
+
+    /// Attach a synchronous caller-supplied [`RequestProofSigner`] for Decapod
+    /// Cloud account, control RPC, and datastore requests.
+    pub fn with_proof_signer(mut self, signer: Arc<dyn RequestProofSigner>) -> Self {
+        self.proof_signer = Some(signer);
+        self
+    }
+
+    /// Supply an initial server `DPoP-Nonce` challenge value for this connector.
+    pub fn with_dpop_nonce(mut self, nonce: impl Into<String>) -> Self {
+        self.dpop_nonce = Some(nonce.into());
+        self
     }
 
     pub fn from_runtime(origin: &str) -> Result<Self, DactylError> {
@@ -106,7 +207,14 @@ impl CloudConnector {
     }
 
     pub fn route(&self, bearer: Option<String>) -> DatastoreRoute {
-        DatastoreRoute::supabase_rpc(self.config.clone(), bearer)
+        let mut route = DatastoreRoute::supabase_rpc(self.config.clone(), bearer);
+        if let Some(signer) = &self.proof_signer {
+            route = route.with_proof_signer(signer.clone());
+        }
+        if let Some(nonce) = &self.dpop_nonce {
+            route = route.with_dpop_nonce(nonce.clone());
+        }
+        route
     }
 
     /// Invoke an opaque native control function using the trusted deployment
@@ -122,24 +230,56 @@ impl CloudConnector {
         kind: OperationKind,
         budget: ResourceBudget,
     ) -> Result<serde_json::Value, DactylError> {
-        crate::adapter::supabase::control_request(
+        let mut metadata = CloudResponseMetadata::default();
+        self.control_request_with_metadata(
+            function,
+            request,
+            bearer,
+            None,
+            kind,
+            budget,
+            &mut metadata,
+        )
+    }
+
+    /// Invoke an opaque native control function while capturing bounded
+    /// response/challenge metadata (`DPoP-Nonce` and `Decapod-Cloud-*` headers).
+    #[allow(clippy::too_many_arguments)]
+    pub fn control_request_with_metadata(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        crate::adapter::supabase::control_request_with_auth(
             &self.config,
             function,
             request,
             bearer,
+            dpop_nonce.or(self.dpop_nonce.as_deref()),
             kind,
             budget,
+            self.proof_signer.clone(),
+            Some(self.http_client.clone()),
+            metadata_out,
         )
     }
 
-    /// Transport an opaque versioned account request using the current user
-    /// bearer. Optional SCM credentials are for explicit account linking only,
-    /// never data or Auth token requests. Dactyl does not infer identity, roles,
-    /// pricing or consent, including from a managed Auth provider token.
+    /// Transport an opaque versioned account, device-enrollment, or billing
+    /// request using the current user bearer. Optional SCM credentials are for
+    /// explicit account linking only, never data or Auth token requests. Dactyl
+    /// does not infer identity, roles, pricing or consent, including from a
+    /// managed Auth provider token.
     ///
-    /// Mutating operations (`Register`, `Checkout`, `Manage`, `Portal`) attach
-    /// error code `"outcome_unknown"` if transport fails after dispatch so
-    /// callers reconcile server state rather than blindly replaying a write.
+    /// Mutating operations (`Register`, `Checkout`, `Manage`, `Portal`,
+    /// `DeviceEnroll`, `DeviceStepUp`, `DeviceRevoke`) attach error code
+    /// `"outcome_unknown"` and [`crate::MutationOutcome::Uncertain`] if
+    /// transport fails after dispatch so callers reconcile server state rather
+    /// than blindly replaying a write.
     pub fn account_request(
         &self,
         operation: AccountOperation,
@@ -147,15 +287,30 @@ impl CloudConnector {
         bearer: &str,
         scm: Option<&ScmCredential>,
     ) -> Result<serde_json::Value, DactylError> {
-        request(
-            self.origin(),
-            Some(self.config.publishable_key()),
-            "POST",
-            &format!("{ONBOARDING}/{}", operation.action()),
+        let mut metadata = CloudResponseMetadata::default();
+        self.account_request_with_metadata(operation, body, bearer, scm, None, &mut metadata)
+    }
+
+    /// Transport an opaque versioned account, device-enrollment, or billing
+    /// request while capturing bounded response/challenge metadata (`DPoP-Nonce`
+    /// and `Decapod-Cloud-*` headers).
+    pub fn account_request_with_metadata(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        self.onboarding_request(
+            operation.action(),
             Some(body.clone()),
             Some(bearer),
             scm,
+            dpop_nonce,
             operation.is_mutating(),
+            metadata_out,
         )
     }
 
@@ -186,7 +341,8 @@ impl CloudConnector {
             .map_err(|_| protocol("invalid authentication handoff"))?;
         let origin = validate_origin(self.origin())?;
         if browser.origin() != origin.origin()
-            || browser.path() != format!("{ONBOARDING}/begin")
+            || !(browser.path() == format!("{CANONICAL_ONBOARDING}/begin")
+                || browser.path() == format!("{LEGACY_ONBOARDING}/begin"))
             || !browser.username().is_empty()
             || browser.password().is_some()
             || browser.fragment().is_some()
@@ -295,7 +451,9 @@ impl CloudConnector {
     }
 
     pub fn revoke_session(&self, bearer: &str) -> Result<(), DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
         let _: serde_json::Value = request(
+            &self.http_client,
             self.origin(),
             Some(self.config.publishable_key()),
             "POST",
@@ -303,7 +461,10 @@ impl CloudConnector {
             None,
             Some(bearer),
             None,
+            self.proof_signer.as_ref(),
+            self.dpop_nonce.as_deref(),
             true,
+            &mut metadata,
         )?;
         Ok(())
     }
@@ -321,7 +482,9 @@ impl CloudConnector {
             #[serde(default)]
             provider_token: Option<String>,
         }
+        let mut metadata = CloudResponseMetadata::default();
         let response: Response = request(
+            &self.http_client,
             self.origin(),
             Some(self.config.publishable_key()),
             "POST",
@@ -329,7 +492,10 @@ impl CloudConnector {
             Some(body),
             None,
             None,
+            None,
+            None,
             true,
+            &mut metadata,
         )?;
         opaque(&response.access_token)?;
         opaque(&response.refresh_token)?;
@@ -358,16 +524,68 @@ impl CloudConnector {
         bearer: Option<&str>,
         is_mutating: bool,
     ) -> Result<T, DactylError> {
-        request(
-            self.origin(),
-            Some(self.config.publishable_key()),
-            "POST",
-            &format!("{ONBOARDING}/{action}"),
+        let mut metadata = CloudResponseMetadata::default();
+        self.onboarding_request(
+            action,
             Some(body.clone()),
             bearer,
             None,
+            None,
             is_mutating,
+            &mut metadata,
         )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn onboarding_request<T: for<'de> Deserialize<'de> + Send + 'static>(
+        &self,
+        action: &str,
+        body: Option<serde_json::Value>,
+        bearer: Option<&str>,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        is_mutating: bool,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<T, DactylError> {
+        let primary_prefix = self.onboarding_prefix.as_str();
+        let nonce = dpop_nonce.or(self.dpop_nonce.as_deref());
+        match request(
+            &self.http_client,
+            self.origin(),
+            Some(self.config.publishable_key()),
+            "POST",
+            &format!("{primary_prefix}/{action}"),
+            body.clone(),
+            bearer,
+            scm,
+            self.proof_signer.as_ref(),
+            nonce,
+            is_mutating,
+            metadata_out,
+        ) {
+            Ok(value) => Ok(value),
+            Err(error)
+                if self.onboarding_prefix == OnboardingPrefix::Canonical
+                    && is_missing_onboarding_function(&error) =>
+            {
+                *metadata_out = CloudResponseMetadata::default();
+                request(
+                    &self.http_client,
+                    self.origin(),
+                    Some(self.config.publishable_key()),
+                    "POST",
+                    &format!("{LEGACY_ONBOARDING}/{action}"),
+                    body,
+                    bearer,
+                    scm,
+                    self.proof_signer.as_ref(),
+                    nonce,
+                    is_mutating,
+                    metadata_out,
+                )
+            }
+            Err(error) => Err(error),
+        }
     }
 }
 
@@ -411,13 +629,22 @@ fn protocol(message: &'static str) -> DactylError {
     DactylError::adapter(AdapterErrorKind::Protocol, message)
 }
 
+fn is_missing_onboarding_function(error: &DactylError) -> bool {
+    error.adapter_kind() == Some(AdapterErrorKind::NotFound)
+        && matches!(error.adapter_code(), None | Some("not_found"))
+}
+
 fn post_send_error(
     kind: AdapterErrorKind,
     is_mutating: bool,
     message: &'static str,
 ) -> DactylError {
     if is_mutating {
-        DactylError::adapter_with_code(kind, "outcome_unknown", message)
+        mark_remote_uncertain(DactylError::adapter_with_code(
+            kind,
+            "outcome_unknown",
+            message,
+        ))
     } else {
         DactylError::adapter(kind, message)
     }
@@ -474,6 +701,20 @@ fn public_error_code(envelope: &serde_json::Value) -> Option<&'static str> {
         "session_not_found" => Some("session_not_found"),
         "refresh_token_not_found" => Some("refresh_token_not_found"),
         "refresh_token_already_used" => Some("refresh_token_already_used"),
+        "use_dpop_nonce" => Some("use_dpop_nonce"),
+        "invalid_dpop_proof" => Some("invalid_dpop_proof"),
+        "dpop_proof_required" => Some("dpop_proof_required"),
+        "missing_dpop_proof" => Some("missing_dpop_proof"),
+        "dpop_replay" => Some("dpop_replay"),
+        "dpop_nonce_mismatch" => Some("dpop_nonce_mismatch"),
+        "dpop_clock_skew" => Some("dpop_clock_skew"),
+        "dpop_ath_mismatch" => Some("dpop_ath_mismatch"),
+        "dpop_htu_mismatch" => Some("dpop_htu_mismatch"),
+        "dpop_htm_mismatch" => Some("dpop_htm_mismatch"),
+        "dpop_jkt_mismatch" => Some("dpop_jkt_mismatch"),
+        "stolen_bearer" => Some("stolen_bearer"),
+        "device_revoked" => Some("device_revoked"),
+        "device_not_enrolled" => Some("device_not_enrolled"),
         "authorization_denied" => Some("authorization_denied"),
         "repository_not_authorized" => Some("repository_not_authorized"),
         "entitlement_required" => Some("entitlement_required"),
@@ -496,6 +737,7 @@ fn public_error_code(envelope: &serde_json::Value) -> Option<&'static str> {
         "billing_unavailable" => Some("billing_unavailable"),
         "provider_unavailable" => Some("provider_unavailable"),
         "invalid_request" => Some("invalid_request"),
+        "payload_too_large" => Some("payload_too_large"),
         "rate_limited" => Some("rate_limited"),
         "method_not_allowed" => Some("method_not_allowed"),
         "not_found" => Some("not_found"),
@@ -508,6 +750,7 @@ fn public_error_code(envelope: &serde_json::Value) -> Option<&'static str> {
 
 #[allow(clippy::too_many_arguments)]
 fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
+    http_client: &Arc<SharedHttpClient>,
     origin: &str,
     key: Option<&str>,
     method: &str,
@@ -515,10 +758,15 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     body: Option<serde_json::Value>,
     bearer: Option<&str>,
     scm: Option<&ScmCredential>,
+    proof_signer: Option<&Arc<dyn RequestProofSigner>>,
+    dpop_nonce: Option<&str>,
     is_mutating: bool,
+    metadata_out: &mut CloudResponseMetadata,
 ) -> Result<T, DactylError> {
     validate_origin(origin)?;
     let endpoint = format!("{}{path}", origin.trim_end_matches('/'));
+    let canonical = canonical_url(&endpoint)?;
+    let method_str = method.to_owned();
     let method = reqwest::Method::from_bytes(method.as_bytes())
         .map_err(|_| protocol("invalid auth request method"))?;
     let header = |value: &str| -> Result<reqwest::header::HeaderValue, DactylError> {
@@ -528,12 +776,18 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
         Ok(header)
     };
     let key = key.map(header).transpose()?;
-    let bearer = bearer
-        .map(|value| {
+    if let Some(nonce) = dpop_nonce {
+        validate_dpop_nonce(nonce)?;
+    }
+    let (auth_header, dpop_header) = match bearer {
+        Some(value) => {
             opaque(value)?;
-            header(&format!("Bearer {value}"))
-        })
-        .transpose()?;
+            let (auth, dpop) =
+                build_auth_headers(&method_str, &canonical, value, proof_signer, dpop_nonce)?;
+            (Some(auth), dpop)
+        }
+        None => (None, None),
+    };
     let scm = scm
         .map(|credential| {
             Ok::<_, DactylError>((
@@ -549,123 +803,177 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     if body.as_ref().is_some_and(|v| v.len() as u64 > BODY_LIMIT) {
         return Err(protocol("auth request exceeds body limit"));
     }
-    std::thread::Builder::new()
+    let http_client = http_client.clone();
+    let proof_signer = proof_signer.cloned();
+    let (outcome, captured_meta) = std::thread::Builder::new()
         .name("dactyl-cloud-auth".into())
-        .spawn(move || {
-            let client = reqwest::blocking::Client::builder()
-                .connect_timeout(Duration::from_secs(5))
-                .timeout(Duration::from_secs(15))
-                .redirect(reqwest::redirect::Policy::none())
-                .retry(reqwest::retry::never())
-                .build()
-                .map_err(|_| {
-                    DactylError::adapter(
-                        AdapterErrorKind::Unavailable,
-                        "cloud authentication transport failed",
-                    )
-                })?;
-            let mut request = client
-                .request(method, endpoint)
-                .header("Accept", "application/json");
-            if let Some(key) = key {
-                request = request.header("apikey", key);
-            }
-            if let Some(bearer) = bearer {
-                request = request.header(reqwest::header::AUTHORIZATION, bearer);
-            }
-            if let Some((provider, host, token)) = scm {
-                request = request
-                    .header("X-SCM-Provider", provider)
-                    .header("X-SCM-Host", host)
-                    .header("X-SCM-Token", token);
-            }
-            if let Some(body) = body {
-                request = request
-                    .header("Content-Type", "application/json")
-                    .body(body);
-            }
-            let response = request.send().map_err(|e| {
-                if e.is_timeout() {
-                    post_send_error(
-                        AdapterErrorKind::Timeout,
-                        is_mutating,
-                        "cloud authentication timed out",
-                    )
-                } else {
-                    post_send_error(
-                        AdapterErrorKind::Unavailable,
-                        is_mutating,
-                        "cloud authentication transport failed",
-                    )
-                }
-            })?;
-            let status = response.status();
-            let mut bytes = Vec::new();
-            response
-                .take(BODY_LIMIT + 1)
-                .read_to_end(&mut bytes)
-                .map_err(|error| {
-                    if crate::adapter::supabase::body_read_timed_out(&error) {
-                        post_send_error(
-                            AdapterErrorKind::Timeout,
-                            is_mutating,
-                            "cloud authentication timed out",
-                        )
-                    } else {
-                        post_send_error(
-                            AdapterErrorKind::Unavailable,
-                            is_mutating,
-                            "cloud authentication transport failed",
-                        )
-                    }
-                })?;
-            if bytes.len() as u64 > BODY_LIMIT {
-                return Err(post_send_error(
-                    AdapterErrorKind::Protocol,
-                    is_mutating,
-                    "auth response exceeds body limit",
-                ));
-            }
-            if !status.is_success() {
-                let kind = match status.as_u16() {
-                    400 | 401 => AdapterErrorKind::Authentication,
-                    403 => AdapterErrorKind::Authorization,
-                    409 => AdapterErrorKind::Conflict,
-                    429 => AdapterErrorKind::RateLimited,
-                    500..=599 => AdapterErrorKind::Unavailable,
-                    _ => AdapterErrorKind::Protocol,
+        .spawn(
+            move || -> (Result<T, DactylError>, Option<CloudResponseMetadata>) {
+                let deadline = Instant::now() + REQUEST_TIMEOUT;
+                let _permit = match acquire_permit(deadline) {
+                    Ok(permit) => permit,
+                    Err(error) => return (Err(error), None),
                 };
-                let envelope = check_json_depth(&bytes)
-                    .then(|| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-                    .flatten();
-                if let Some(code) = envelope.as_ref().and_then(public_error_code) {
-                    return Err(DactylError::adapter_with_code(
-                        kind,
-                        code,
-                        "cloud request was rejected",
-                    ));
+                let remaining = deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return (
+                        Err(DactylError::adapter(
+                            AdapterErrorKind::Timeout,
+                            "cloud authentication timed out",
+                        )),
+                        None,
+                    );
                 }
-                return Err(DactylError::adapter(
-                    kind,
-                    "cloud authentication request was rejected",
-                ));
-            }
-            if !check_json_depth(&bytes) {
-                return Err(post_send_error(
-                    AdapterErrorKind::Protocol,
-                    is_mutating,
-                    "cloud response exceeded JSON nesting limit",
-                ));
-            }
-            serde_json::from_slice(if bytes.is_empty() { b"null" } else { &bytes }).map_err(|_| {
-                post_send_error(
-                    AdapterErrorKind::Protocol,
-                    is_mutating,
-                    "invalid cloud authentication response",
-                )
-            })
-        })
+                let mut request = http_client
+                    .client()
+                    .request(method, endpoint)
+                    .timeout(remaining)
+                    .header("Accept", "application/json");
+                if let Some(key) = key {
+                    request = request.header("apikey", key);
+                }
+                if let Some(auth) = auth_header {
+                    request = request.header(reqwest::header::AUTHORIZATION, auth);
+                }
+                if let Some(dpop) = dpop_header {
+                    request = request.header("DPoP", dpop);
+                }
+                if let Some((provider, host, token)) = scm {
+                    request = request
+                        .header("X-SCM-Provider", provider)
+                        .header("X-SCM-Host", host)
+                        .header("X-SCM-Token", token);
+                }
+                if let Some(body) = body {
+                    request = request
+                        .header("Content-Type", "application/json")
+                        .body(body);
+                }
+                let response = match request.send() {
+                    Ok(response) => response,
+                    Err(e) => {
+                        return (
+                            Err(if e.is_timeout() {
+                                post_send_error(
+                                    AdapterErrorKind::Timeout,
+                                    is_mutating,
+                                    "cloud authentication timed out",
+                                )
+                            } else {
+                                post_send_error(
+                                    AdapterErrorKind::Unavailable,
+                                    is_mutating,
+                                    "cloud authentication transport failed",
+                                )
+                            }),
+                            None,
+                        );
+                    }
+                };
+                let status = response.status();
+                let metadata = extract_response_metadata(
+                    response.headers(),
+                    &canonical,
+                    proof_signer.as_ref(),
+                );
+                let mut bytes = Vec::new();
+                if let Err(error) = response.take(BODY_LIMIT + 1).read_to_end(&mut bytes) {
+                    return (
+                        Err(if crate::adapter::supabase::body_read_timed_out(&error) {
+                            post_send_error(
+                                AdapterErrorKind::Timeout,
+                                is_mutating,
+                                "cloud authentication timed out",
+                            )
+                        } else {
+                            post_send_error(
+                                AdapterErrorKind::Unavailable,
+                                is_mutating,
+                                "cloud authentication transport failed",
+                            )
+                        }),
+                        Some(metadata),
+                    );
+                }
+                if bytes.len() as u64 > BODY_LIMIT {
+                    return (
+                        Err(post_send_error(
+                            AdapterErrorKind::Protocol,
+                            is_mutating,
+                            "auth response exceeds body limit",
+                        )),
+                        Some(metadata),
+                    );
+                }
+                if !status.is_success() {
+                    let kind = match status.as_u16() {
+                        400 | 401 => AdapterErrorKind::Authentication,
+                        403 => AdapterErrorKind::Authorization,
+                        404 => AdapterErrorKind::NotFound,
+                        409 => AdapterErrorKind::Conflict,
+                        413 => AdapterErrorKind::Quota,
+                        429 => AdapterErrorKind::RateLimited,
+                        500..=599 => AdapterErrorKind::Unavailable,
+                        _ => AdapterErrorKind::Protocol,
+                    };
+                    if is_mutating && matches!(status.as_u16(), 300..=399 | 408 | 500..=599) {
+                        return (
+                            Err(post_send_error(
+                                kind,
+                                true,
+                                "cloud authentication request outcome uncertain",
+                            )),
+                            Some(metadata),
+                        );
+                    }
+                    let envelope = check_json_depth(&bytes)
+                        .then(|| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+                        .flatten();
+                    if let Some(code) = envelope.as_ref().and_then(public_error_code) {
+                        return (
+                            Err(DactylError::adapter_with_code(
+                                kind,
+                                code,
+                                "cloud request was rejected",
+                            )),
+                            Some(metadata),
+                        );
+                    }
+                    return (
+                        Err(DactylError::adapter(
+                            kind,
+                            "cloud authentication request was rejected",
+                        )),
+                        Some(metadata),
+                    );
+                }
+                if !check_json_depth(&bytes) {
+                    return (
+                        Err(post_send_error(
+                            AdapterErrorKind::Protocol,
+                            is_mutating,
+                            "cloud response exceeded JSON nesting limit",
+                        )),
+                        Some(metadata),
+                    );
+                }
+                let parsed =
+                    serde_json::from_slice(if bytes.is_empty() { b"null" } else { &bytes })
+                        .map_err(|_| {
+                            post_send_error(
+                                AdapterErrorKind::Protocol,
+                                is_mutating,
+                                "invalid cloud authentication response",
+                            )
+                        });
+                (parsed, Some(metadata))
+            },
+        )
         .map_err(|_| protocol("auth worker unavailable"))?
         .join()
-        .map_err(|_| protocol("auth worker failed"))?
+        .map_err(|_| protocol("auth worker failed"))?;
+    if let Some(captured) = captured_meta {
+        *metadata_out = captured;
+    }
+    outcome
 }

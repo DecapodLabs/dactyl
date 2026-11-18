@@ -403,3 +403,68 @@ fn storage_context_rejects_invalid_envelopes_as_protocol_errors() {
         assert_eq!(error.adapter_code(), Some("invalid_context"));
     }
 }
+
+#[test]
+fn neon_cursor_pagination_and_lease_cas_batch_conform() {
+    use dactyl_db::{ResourceBudget, ScanOutcome};
+
+    with_server(|endpoint, _requests| {
+        let db = Connection::open_with_budget(
+            DatastoreRoute::neon(endpoint, Some("lease-token".into())),
+            OpenOptions::default(),
+            Some(context()),
+            ResourceBudget::v1().with_max_rows(4),
+        )
+        .unwrap();
+
+        let batch = db
+            .atomic(&[
+                Operation::write(
+                    "UPDATE leases SET holder = $1 WHERE lease_id = $2 AND fence = $3",
+                    vec![
+                        Parameter::Text("agent-a".into()),
+                        Parameter::Text("l1".into()),
+                        Parameter::Integer(1),
+                    ],
+                ),
+                Operation::write(
+                    "INSERT INTO lease_events (lease_id, fence) VALUES ($1, $2)",
+                    vec![Parameter::Text("l1".into()), Parameter::Integer(2)],
+                ),
+                Operation::read(
+                    "SELECT id FROM leases WHERE lease_id = $1",
+                    vec![Parameter::Text("l1".into())],
+                ),
+            ])
+            .unwrap();
+        assert!(matches!(
+            &batch.results[0],
+            OperationResult::Write(w) if w.affected_rows == 0
+        ));
+        assert!(matches!(
+            &batch.results[1],
+            OperationResult::Write(w) if w.affected_rows == 1
+        ));
+        assert!(matches!(&batch.results[2], OperationResult::Rows(_)));
+
+        let mut seen = Vec::new();
+        let outcome = db
+            .visit_rows(
+                "select id, name from lease_events where id > $1 order by id limit $2",
+                &[Parameter::Integer(0), Parameter::Integer(10)],
+                |row| {
+                    seen.push(row.get_int("id")?);
+                    Ok(true)
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            outcome,
+            ScanOutcome {
+                rows: 1,
+                complete: true
+            }
+        );
+        assert_eq!(seen, vec![1]);
+    });
+}

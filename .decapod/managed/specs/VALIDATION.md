@@ -1,5 +1,10 @@
 # Validation
 
+## DPoP, Decapod Cloud routing, and high-concurrency conformance proof (issues #127, #128, #129)
+
+- `tests/cloud_connector.rs` and `tests/logical_connector.rs` verify canonical `/functions/v1/decapod-onboarding` discovery/handoff/account routes, bounded HTTP `404` fallback to `/functions/v1/propodus-onboarding`, redacted `Decapod-Cloud-*` / `Sunset` / `Deprecation` / `DPoP-Nonce` metadata capture, `RequestProofSigner` `DPoP` and `Bearer` modes across `account_request`, `control_request`, and `DatastoreRoute::supabase_rpc`, redirect refusal, typed `AdapterErrorKind::Authentication` mapping (`use_dpop_nonce`, `stolen_bearer`, `dpop_proof_required`, `missing_dpop_proof`, `dpop_replay`, `dpop_clock_skew`), and `DeviceChallenge`/`DeviceEnroll`/`DeviceStepUp`/`DeviceRevoke` mutation uncertainty.
+- `tests/supabase_rpc.rs`, `tests/control_rpc.rs`, `tests/conformance.rs`, and `tests/resource_budgets.rs` verify atomic lease-acquire/renew/fence CAS batches (preserving zero-row CAS), bounded cursor pagination over compact operational tables via `visit_rows` + `ResourceBudget`, opaque commit-bound proof-transition `control_request` envelopes (`Write` vs `Read`), deterministic `401`/`403`/`409`/`413`/`429`/`5xx` outcome classification, and a 250-way concurrent burst verifying bounded keep-alive connection reuse (`<= 32`), zero FD leaks, and strict `ResourceBudget` timeout enforcement. `local_postgres`, `hosted_supabase`, and live Decapod Cloud remain explicitly unexecuted (`unavailable`) until exercised against deployed infrastructure.
+
 ## Native hosted qualification (issue 70)
 
 docs/supabase-conformance.md separates real local SQLite, SQLite-backed Neon mocks, synthetic HTTP, generic service PostgreSQL and native hosted evidence. The v1 local_native_read_only_contract in tests/native_service.rs preserves Propodus's consumer interface; its rejected write remains client-side evidence. The additional local_native_scenarios and protected_hosted_native_scenarios accept bounded v2 fixtures with service-owned statements, explicit principals/contexts and exact ordered OperationResult or typed error/origin/mutation expectations. tests/support/protected_fixture.rs checks protected regular-file identity, permissions and size; exclusive private receipts prevent stale-output reuse. tests/support/native_scenarios.rs records progress without fixture values or remote errors, preserves incomplete receipts, exercises response loss without replay in synthetic tests, and leaves independent physical DB, authorization, pooler-mode and cleanup evidence pending even after matched client scenarios. Both v2 profiles explicitly fail without a fixture in the ordinary test suite. The runner is sequential and cannot establish concurrent CAS winners or full issue acceptance from a supplied subset of scenarios. No runtime provider, production SQL catalog or authorization policy changes. Issue 70 still requires released SDK/actual consumer execution and independent observations/cleanup on an authorized disposable hosted fixture; issue 85 still requires controlled native adversarial/concurrency execution. Missing hosted access remains unavailable.
@@ -302,8 +307,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `48ccd5cbfea1a735e7ee0927250044f483c3c3f8a56b288ab36ae121fd8117cc`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

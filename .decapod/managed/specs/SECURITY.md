@@ -1,5 +1,9 @@
 # Security
 
+## RFC 9449 DPoP transport and redaction boundary (issues #127, #128)
+
+`RequestProofSigner` keeps all private key generation, OS keystore custody, and signing operations outside Dactyl. Dactyl validates `RequestProof::dpop` tokens and `DPoP-Nonce` headers for ASCII-graphic safety and length bounds (`<= 16384` / `<= 1024` bytes) before dispatch (`MutationOutcome::NotAttempted`), sends proofs only over verified HTTPS or literal loopback HTTP origins with `redirect::Policy::none()` and `retry::never()`, and redacts tokens, proofs, nonces, origins, `Decapod-Cloud-*` values, and raw remote error messages from all `Debug` and `DactylError` outputs.
+
 ## Bounded resource envelopes and redacted remote transport (issue 101)
 
 `src/budget.rs` enforces preflight bounds on SQL, `StorageContext`, bound parameters, batch length, and serialized JSON request bytes (`BoundedVecWriter`) before local statement preparation or network transmission, preventing oversized outbound buffers. Inbound Neon and Supabase HTTP bodies are read in fixed chunks (`read_bounded_body`) up to `max_wire_bytes + 1` without trusting peer `Content-Length` headers, checked against `MAX_JSON_DEPTH = 64`, and charged against `DecodedResultTracker` (including `32x` BLOB array amplification with checked `u64` arithmetic) before `Row` materialization. Both Neon and Supabase disable HTTP redirects and automatic retries, redact transport/server error text, reject `has_table` / `has_column` locally without issuing ad-hoc catalog SQL, and surface post-send mutating failures as `MutationOutcome::Uncertain` so callers do not treat ambiguous remote writes as rolled back.
@@ -167,8 +171,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `48ccd5cbfea1a735e7ee0927250044f483c3c3f8a56b288ab36ae121fd8117cc`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

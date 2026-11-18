@@ -34,9 +34,10 @@ mod sqlite_budgets {
 
     use dactyl_db::{
         AccessMode, AdapterErrorKind, Connection, DatastoreRoute, FailureOrigin, MutationOutcome,
-        OpenOptions, Operation, Parameter, RecoveryJournalMode, RecoveryOptions, ResourceBudget,
-        ScanOutcome, StorageContext,
+        OpenOptions, Operation, Parameter, ResourceBudget, ScanOutcome, StorageContext,
     };
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    use dactyl_db::{RecoveryJournalMode, RecoveryOptions};
     use serde_json::json;
     use tempfile::TempDir;
 
@@ -298,6 +299,127 @@ mod sqlite_budgets {
             .get_int("n")
             .unwrap();
         assert_eq!(count, 0);
+    }
+
+    #[test]
+    fn sqlite_lease_cas_batches_and_compact_cursor_pagination_conform() {
+        use dactyl_db::OperationResult;
+
+        let db = Connection::open_with_budget(
+            DatastoreRoute::sqlite(":memory:"),
+            OpenOptions::default(),
+            None,
+            ResourceBudget::v1().with_max_rows(2),
+        )
+        .unwrap();
+        db.atomic(&[
+            Operation::schema(
+                "CREATE TABLE leases (lease_id TEXT PRIMARY KEY, holder TEXT NOT NULL, fence_epoch INTEGER NOT NULL)",
+                [],
+            ),
+            Operation::schema(
+                "CREATE TABLE lease_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, lease_id TEXT NOT NULL, fence_epoch INTEGER NOT NULL, kind TEXT NOT NULL)",
+                [],
+            ),
+            Operation::write(
+                "INSERT INTO leases (lease_id, holder, fence_epoch) VALUES ($1, $2, $3)",
+                [
+                    Parameter::Text("lease-1".into()),
+                    Parameter::Text("none".into()),
+                    Parameter::Integer(0),
+                ],
+            ),
+        ])
+        .unwrap();
+
+        // Winning CAS acquire (fence 0 -> 1) + event append + state read:
+        let win = db
+            .atomic(&[
+                Operation::write(
+                    "UPDATE leases SET holder = $1, fence_epoch = fence_epoch + 1 WHERE lease_id = $2 AND fence_epoch = $3",
+                    [
+                        Parameter::Text("worker-a".into()),
+                        Parameter::Text("lease-1".into()),
+                        Parameter::Integer(0),
+                    ],
+                ),
+                Operation::write(
+                    "INSERT INTO lease_events (lease_id, fence_epoch, kind) VALUES ($1, $2, $3)",
+                    [
+                        Parameter::Text("lease-1".into()),
+                        Parameter::Integer(1),
+                        Parameter::Text("acquired".into()),
+                    ],
+                ),
+                Operation::read(
+                    "SELECT holder, fence_epoch FROM leases WHERE lease_id = $1",
+                    [Parameter::Text("lease-1".into())],
+                ),
+            ])
+            .unwrap();
+        assert!(matches!(
+            &win.results[0],
+            OperationResult::Write(w) if w.affected_rows == 1
+        ));
+        match &win.results[2] {
+            OperationResult::Rows(rows) => {
+                assert_eq!(rows.as_slice()[0].get_str("holder").unwrap(), "worker-a");
+                assert_eq!(rows.as_slice()[0].get_int("fence_epoch").unwrap(), 1);
+            }
+            _ => panic!("expected read row"),
+        }
+
+        // Stale CAS attempt (fence 0) returns affected_rows = 0 cleanly:
+        let stale = db
+            .atomic(&[Operation::write(
+                "UPDATE leases SET holder = $1, fence_epoch = fence_epoch + 1 WHERE lease_id = $2 AND fence_epoch = $3",
+                [
+                    Parameter::Text("worker-b".into()),
+                    Parameter::Text("lease-1".into()),
+                    Parameter::Integer(0),
+                ],
+            )])
+            .unwrap();
+        assert!(matches!(
+            &stale.results[0],
+            OperationResult::Write(w) if w.affected_rows == 0
+        ));
+
+        // Seed additional compact operational events and paginate with keyset cursor + max_rows=2:
+        for epoch in 2..=4_i64 {
+            db.write(
+                "INSERT INTO lease_events (lease_id, fence_epoch, kind) VALUES ($1, $2, $3)",
+                &[
+                    Parameter::Text("lease-1".into()),
+                    Parameter::Integer(epoch),
+                    Parameter::Text("renewed".into()),
+                ],
+            )
+            .unwrap();
+        }
+        let mut collected = Vec::new();
+        let mut cursor = 0_i64;
+        loop {
+            let mut page_last = cursor;
+            let outcome = db
+                .visit_rows(
+                    "SELECT seq, fence_epoch FROM lease_events WHERE seq > $1 ORDER BY seq ASC LIMIT 2",
+                    &[Parameter::Integer(cursor)],
+                    |row| {
+                        let seq = row.get_int("seq")?;
+                        collected.push(seq);
+                        page_last = seq;
+                        Ok(true)
+                    },
+                )
+                .unwrap();
+            assert!(outcome.complete);
+            if outcome.rows < 2 {
+                break;
+            }
+            cursor = page_last;
+        }
+        assert_eq!(collected, vec![1, 2, 3, 4]);
     }
 
     #[test]

@@ -1,5 +1,9 @@
 # Architecture
 
+## Bounded HTTP connection pool and DPoP signing pipeline
+
+`src/http_pool.rs` provides a weak-cached, Tokio-safe `SharedHttpClient` (`reqwest::blocking::Client` with `pool_max_idle_per_host(32)`, `pool_idle_timeout(15s)`, `redirect::Policy::none()`, `retry::never()`, and a plain-thread `Drop` joiner so dropping inside Tokio runtimes never panics and zero daemon threads survive client drop) alongside a bounded 32-slot `RequestPermit` concurrency gate enforcing `ResourceBudget` `request_timeout` deadlines. Both `src/adapter/supabase.rs` and `src/cloud.rs` canonicalize target URLs (stripping query and fragment), compute RFC 9449 `ath` (`URL_SAFE_NO_PAD(Sha256(token))`), invoke `RequestProofSigner::sign_request` synchronously prior to dispatch, attach `Authorization: DPoP <token>` + `DPoP: <proof>` (or `Bearer` compatibility), capture bounded `DPoP-Nonce`, `Sunset`, `Deprecation`, and `Decapod-Cloud-*` headers into redacted `CloudResponseMetadata`, and notify `RequestProofSigner::observe_nonce` on any valid `DPoP-Nonce` response header.
+
 ## Resource budget and streaming execution boundary (issue 101)
 
 `src/budget.rs` centralizes `ResourceBudget` (`v1`), bounded JSON request serialization (`BoundedVecWriter`), chunked HTTP response reading (`read_bounded_body` without trusting `Content-Length`), recursive JSON nesting guards (`MAX_JSON_DEPTH = 64`), and `DecodedResultTracker` (charging column metadata, row overhead, and `32x` BLOB `serde_json::Value::Array` expansion with checked `u64` arithmetic before `Row` materialization). `src/adapter/sqlite/mod.rs` enforces preflight and pre-allocation result charges, implements `visit_rows_budgeted` with deterministic native `Statement` finalization on early stop or error, and answers `has_table` / `has_column` in one bound SQLite catalog query. `src/adapter/sqlite/recovery.rs` wraps staging table copies in one `BEGIN IMMEDIATE` ... `COMMIT` transaction and reuses a single prepared `INSERT` per table (`sqlite3_reset` + `sqlite3_clear_bindings`) via direct C-ABI column binds. `src/adapter/neon/mod.rs` and `src/adapter/supabase.rs` run bounded blocking HTTP on dedicated named worker threads (`dactyl-neon-http`, `dactyl-supabase-http`) safe inside Tokio runtimes, reject catalog predicates locally without network I/O, and mark post-send mutating failures as `MutationOutcome::Uncertain`.
@@ -229,8 +233,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `48ccd5cbfea1a735e7ee0927250044f483c3c3f8a56b288ab36ae121fd8117cc`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -3,13 +3,14 @@
 
 use dactyl_db::{
     AccountOperation, AdapterErrorKind, AuthenticationSecrets, AuthenticationStart, Backend,
-    CloudConnector, Connection, Datastore, DatastoreRoute, ScmCredential, ScmProvider,
+    CloudConnector, CloudResponseMetadata, Connection, Datastore, DatastoreRoute, MutationOutcome,
+    RequestProof, RequestProofInput, RequestProofSigner, ScmCredential, ScmProvider,
     StorageContext, SupabaseRpcConfig, UserSession,
 };
 use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::net::TcpListener;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -137,6 +138,10 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         (AccountOperation::Checkout, "billing-checkout"),
         (AccountOperation::Manage, "billing-manage"),
         (AccountOperation::Portal, "billing-portal"),
+        (AccountOperation::DeviceChallenge, "device-challenge"),
+        (AccountOperation::DeviceEnroll, "device-enroll"),
+        (AccountOperation::DeviceStepUp, "device-step-up"),
+        (AccountOperation::DeviceRevoke, "device-revoke"),
     ];
     let result =
         json!({"backend_authorized":false,"future":{"opaque":[1,false,"provider-policy"]}});
@@ -181,7 +186,7 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         .map(|_| rx.recv().unwrap())
         .collect();
     for (index, ((_, action), (headers, body))) in operations.iter().zip(&requests).enumerate() {
-        assert!(headers.starts_with(&format!("POST /functions/v1/propodus-onboarding/{action} ")));
+        assert!(headers.starts_with(&format!("POST /functions/v1/decapod-onboarding/{action} ")));
         assert_eq!(header(headers, "authorization"), Some("Bearer user-access"));
         assert_eq!(header(headers, "x-scm-token"), Some("scm-credential"));
         let (provider, host) = if index % 2 == 0 {
@@ -359,8 +364,25 @@ fn malformed_provider_token_is_rejected_without_echoing_it() {
 fn handoff_rejects_ambiguous_tickets_and_malformed_origin_metadata() {
     let connector = connector("https://project.example");
     let valid = format!(
+        "https://project.example/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket=one"
+    );
+    let legacy_valid = format!(
         "https://project.example/functions/v1/propodus-onboarding/begin?flow_id={FLOW}&ticket=one"
     );
+    connector
+        .validate_start(&AuthenticationStart {
+            flow_id: FLOW.into(),
+            browser_url: valid.clone(),
+            expires_at: "2099-01-01T00:00:00Z".into(),
+        })
+        .unwrap();
+    connector
+        .validate_start(&AuthenticationStart {
+            flow_id: FLOW.into(),
+            browser_url: legacy_valid,
+            expires_at: "2099-01-01T00:00:00Z".into(),
+        })
+        .unwrap();
     for browser_url in [
         format!("{valid}&ticket="),
         format!("{valid}&ticket=two"),
@@ -394,7 +416,7 @@ fn cloud_discovers_its_connector_without_sending_user_credentials() {
     assert!(route.supabase_rpc_config().is_some());
     assert_eq!(route.token(), Some("user-bearer"));
     let (headers, body) = rx.recv().unwrap();
-    assert!(headers.starts_with("GET /functions/v1/propodus-onboarding/config "));
+    assert!(headers.starts_with("GET /functions/v1/decapod-onboarding/config "));
     assert!(!headers.to_lowercase().contains("authorization:"));
     assert!(!headers.to_lowercase().contains("apikey:"));
     assert_eq!(body, Value::Null);
@@ -409,7 +431,7 @@ fn managed_auth_uses_one_origin_and_keeps_refresh_out_of_data_requests() {
     let (origin, rx, handle) = server(vec![
         (
             200,
-            json!({"flow_id":FLOW,"browser_url":format!("ORIGIN/functions/v1/propodus-onboarding/begin?flow_id={FLOW}&ticket=ticket"),"expires_at":"2099-01-01T00:00:00Z"}),
+            json!({"flow_id":FLOW,"browser_url":format!("ORIGIN/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket=ticket"),"expires_at":"2099-01-01T00:00:00Z"}),
         ),
         (200, json!({"status":"ready"})),
         (200, json!({"auth_code":"one-time-code"})),
@@ -502,4 +524,516 @@ async fn auth_worker_is_safe_inside_an_async_runtime() {
     connector(&origin).refresh_session("user-refresh").unwrap();
     rx.recv().unwrap();
     handle.join().unwrap();
+}
+
+fn server_with_headers(
+    responses: Vec<(u16, String, Value)>,
+) -> (
+    String,
+    mpsc::Receiver<(String, Value)>,
+    thread::JoinHandle<()>,
+) {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let origin = format!("http://{}", listener.local_addr().unwrap());
+    let (tx, rx) = mpsc::channel();
+    let address = origin.clone();
+    let handle = thread::spawn(move || {
+        for (status, extra_headers, response) in responses {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .unwrap();
+            let mut bytes = Vec::new();
+            let (headers, offset, length) = loop {
+                let mut buf = [0; 4096];
+                let n = stream.read(&mut buf).unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&buf[..n]);
+                if let Some(end) = bytes.windows(4).position(|b| b == b"\r\n\r\n") {
+                    let headers = String::from_utf8(bytes[..end].to_vec()).unwrap();
+                    let length = headers
+                        .lines()
+                        .find_map(|line| {
+                            let (k, v) = line.split_once(':')?;
+                            k.eq_ignore_ascii_case("content-length")
+                                .then(|| v.trim().parse::<usize>().unwrap())
+                        })
+                        .unwrap_or(0);
+                    break (headers, end + 4, length);
+                }
+            };
+            while bytes.len() - offset < length {
+                let mut buf = [0; 4096];
+                let n = stream.read(&mut buf).unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&buf[..n]);
+            }
+            let body = if length == 0 {
+                Value::Null
+            } else {
+                serde_json::from_slice(&bytes[offset..offset + length]).unwrap()
+            };
+            tx.send((headers, body)).unwrap();
+            if status == 0 {
+                continue;
+            }
+            let body = response.to_string().replace("ORIGIN", &address);
+            write!(
+                stream,
+                "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{extra_headers}\r\n{body}",
+                body.len()
+            )
+            .ok();
+        }
+        listener.set_nonblocking(true).unwrap();
+        thread::sleep(Duration::from_millis(100));
+        assert!(
+            listener.accept().is_err(),
+            "unexpected redirect or automatic replay"
+        );
+    });
+    (origin, rx, handle)
+}
+
+type RecordedProofCall = (String, String, Option<String>, Option<String>);
+
+#[derive(Default)]
+struct RecordingProofSigner {
+    calls: Mutex<Vec<RecordedProofCall>>,
+    observed_nonces: Mutex<Vec<(String, String)>>,
+    bearer_mode: bool,
+}
+
+impl RequestProofSigner for RecordingProofSigner {
+    fn sign_request(
+        &self,
+        input: &RequestProofInput<'_>,
+    ) -> Result<RequestProof, dactyl_db::DactylError> {
+        let debug_input = format!("{input:?}");
+        assert!(!debug_input.contains("http://"));
+        assert!(!debug_input.contains("https://"));
+        if let Some(ath) = input.access_token_sha256() {
+            assert!(!debug_input.contains(ath));
+        }
+        if let Some(nonce) = input.nonce() {
+            assert!(!debug_input.contains(nonce));
+        }
+        self.calls.lock().unwrap().push((
+            input.method().to_owned(),
+            input.canonical_url().to_owned(),
+            input.access_token_sha256().map(str::to_owned),
+            input.nonce().map(str::to_owned),
+        ));
+        if self.bearer_mode {
+            return Ok(RequestProof::bearer());
+        }
+        let observed = self
+            .observed_nonces
+            .lock()
+            .unwrap()
+            .last()
+            .map(|(_, n)| n.clone());
+        let nonce_part = input.nonce().or(observed.as_deref()).unwrap_or("none");
+        let proof = format!(
+            "dpop-proof.{}.{}.{}",
+            input.method(),
+            input.calls_len_tag(),
+            nonce_part
+        );
+        let built = RequestProof::dpop(proof)?;
+        assert!(!format!("{built:?}").contains("dpop-proof."));
+        Ok(built)
+    }
+
+    fn observe_nonce(&self, canonical_url: &str, nonce: &str) {
+        self.observed_nonces
+            .lock()
+            .unwrap()
+            .push((canonical_url.to_owned(), nonce.to_owned()));
+    }
+}
+
+trait InputTag {
+    fn calls_len_tag(&self) -> usize;
+}
+
+impl InputTag for RequestProofInput<'_> {
+    fn calls_len_tag(&self) -> usize {
+        self.canonical_url().len()
+    }
+}
+
+#[test]
+fn discovery_and_account_fall_back_on_404_and_capture_redacted_cloud_headers() {
+    let extra = "Decapod-Cloud-Region: us-west\r\nDecapod-Cloud-Release: 2026.11\r\nSunset: Wed, 31 Dec 2026 23:59:59 GMT\r\nDeprecation: true\r\n";
+    let (origin, rx, handle) = server_with_headers(vec![
+        (404, String::new(), json!({"error": "not_found"})),
+        (200, extra.into(), profile()),
+        (200, extra.into(), json!({"backend_authorized": true})),
+    ]);
+    let (connector, discovery_meta) = CloudConnector::discover_with_metadata(&origin).unwrap();
+    assert_eq!(
+        discovery_meta.sunset(),
+        Some("Wed, 31 Dec 2026 23:59:59 GMT")
+    );
+    assert_eq!(discovery_meta.deprecation(), Some("true"));
+    assert_eq!(
+        discovery_meta.cloud_header("Decapod-Cloud-Region"),
+        Some("us-west")
+    );
+    assert_eq!(
+        discovery_meta.cloud_header("decapod-cloud-release"),
+        Some("2026.11")
+    );
+    let meta_debug = format!("{discovery_meta:?}");
+    assert!(!meta_debug.contains("us-west"));
+    assert!(!meta_debug.contains("2026.11"));
+
+    let mut account_meta = CloudResponseMetadata::default();
+    let res = connector
+        .account_request_with_metadata(
+            AccountOperation::Status,
+            &json!({"version": 1}),
+            "user-bearer",
+            None,
+            None,
+            &mut account_meta,
+        )
+        .unwrap();
+    assert_eq!(res["backend_authorized"], true);
+    assert_eq!(
+        account_meta.cloud_header("decapod-cloud-region"),
+        Some("us-west")
+    );
+
+    let (first_disc, _) = rx.recv().unwrap();
+    let (second_disc, _) = rx.recv().unwrap();
+    let (account_req, _) = rx.recv().unwrap();
+    assert!(first_disc.starts_with("GET /functions/v1/decapod-onboarding/config "));
+    assert!(second_disc.starts_with("GET /functions/v1/propodus-onboarding/config "));
+    // Discovered legacy prefix is remembered for subsequent onboarding requests.
+    assert!(account_req.starts_with("POST /functions/v1/propodus-onboarding/account-status "));
+    handle.join().unwrap();
+
+    // Direct with_config falls back on generic 404 (and re-signs canonical_url),
+    // but never falls back on domain-coded 404 (e.g. project_not_found) or 403.
+    let signer = Arc::new(RecordingProofSigner::default());
+    let (origin, rx, handle) = server_with_headers(vec![
+        (
+            404,
+            String::new(),
+            json!({"message": "Requested function was not found"}),
+        ),
+        (200, String::new(), json!({"ok": true})),
+        (
+            404,
+            String::new(),
+            json!({"error": {"code": "project_not_found"}}),
+        ),
+    ]);
+    let direct = connector_with_signer(&origin, signer.clone());
+    assert_eq!(
+        direct
+            .account_request(
+                AccountOperation::Status,
+                &json!({"version": 1}),
+                "user-bearer",
+                None
+            )
+            .unwrap()["ok"],
+        true
+    );
+    let domain_err = direct
+        .account_request(
+            AccountOperation::Status,
+            &json!({"version": 1}),
+            "user-bearer",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(domain_err.adapter_kind(), Some(AdapterErrorKind::NotFound));
+    assert_eq!(domain_err.adapter_code(), Some("project_not_found"));
+
+    let (r1, _) = rx.recv().unwrap();
+    let (r2, _) = rx.recv().unwrap();
+    let (r3, _) = rx.recv().unwrap();
+    assert!(r1.starts_with("POST /functions/v1/decapod-onboarding/account-status "));
+    assert!(r2.starts_with("POST /functions/v1/propodus-onboarding/account-status "));
+    assert!(r3.starts_with("POST /functions/v1/decapod-onboarding/account-status "));
+    let calls = signer.calls.lock().unwrap();
+    assert!(calls[0]
+        .1
+        .ends_with("/functions/v1/decapod-onboarding/account-status"));
+    assert!(calls[1]
+        .1
+        .ends_with("/functions/v1/propodus-onboarding/account-status"));
+    handle.join().unwrap();
+}
+
+fn connector_with_signer(origin: &str, signer: Arc<dyn RequestProofSigner>) -> CloudConnector {
+    CloudConnector::with_config(SupabaseRpcConfig::v1(origin, KEY))
+        .unwrap()
+        .with_proof_signer(signer)
+}
+
+#[test]
+fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() {
+    let signer = Arc::new(RecordingProofSigner::default());
+    let sink = TcpListener::bind("127.0.0.1:0").unwrap();
+    let location = format!("Location: http://{}/stolen\r\n", sink.local_addr().unwrap());
+
+    let (origin, rx, handle) = server_with_headers(vec![
+        (
+            401,
+            "DPoP-Nonce: server-nonce-1\r\n".into(),
+            json!({"error": "use_dpop_nonce", "message": "secret-nonce-hint"}),
+        ),
+        (200, String::new(), json!({"enrolled": true})),
+        (200, String::new(), json!({"decision": "allow"})),
+        (
+            200,
+            String::new(),
+            json!({"columns": ["ok"], "rows": [{"ok": true}], "affected_rows": 0, "generated_keys": []}),
+        ),
+        (307, location, json!({})),
+    ]);
+    let client = connector_with_signer(&origin, signer.clone());
+
+    // 1. Account request hits 401 use_dpop_nonce, surfaces nonce to signer & metadata, then retries cleanly.
+    let mut challenge_meta = CloudResponseMetadata::default();
+    let err = client
+        .account_request_with_metadata(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1, "jwk_thumbprint": "thumb-1"}),
+            "dpop-access-token",
+            None,
+            None,
+            &mut challenge_meta,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Authentication));
+    assert_eq!(err.adapter_code(), Some("use_dpop_nonce"));
+    assert_eq!(challenge_meta.dpop_nonce(), Some("server-nonce-1"));
+    assert!(!format!("{err} {err:?}").contains("server-nonce-1"));
+    assert!(!format!("{err} {err:?}").contains("secret-nonce-hint"));
+    assert!(!format!("{challenge_meta:?}").contains("server-nonce-1"));
+
+    let enrolled = client
+        .account_request_with_metadata(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1, "jwk_thumbprint": "thumb-1"}),
+            "dpop-access-token",
+            None,
+            challenge_meta.dpop_nonce(),
+            &mut CloudResponseMetadata::default(),
+        )
+        .unwrap();
+    assert_eq!(enrolled["enrolled"], true);
+
+    // 2. control_request carries DPoP headers.
+    let ctrl = client
+        .control_request(
+            "propodus_repository_access_v1",
+            &json!({"version": 1}),
+            Some("dpop-access-token"),
+            dactyl_db::OperationKind::Read,
+            dactyl_db::ResourceBudget::v1(),
+        )
+        .unwrap();
+    assert_eq!(ctrl["decision"], "allow");
+
+    // 3. DatastoreRoute::supabase_rpc via CloudConnector::route inherits the proof signer!
+    let db = Connection::open_with_context(
+        client.route(Some("dpop-access-token".into())),
+        Some(StorageContext::new(1, json!({"opaque": true})).unwrap()),
+    )
+    .unwrap();
+    let rows = db.read("SELECT 1 AS ok", &[]).unwrap();
+    assert!(rows.as_slice()[0].get_bool("ok").unwrap());
+
+    // 4. Redirect never forwards DPoP proof or Authorization: DPoP!
+    let redirect_err = client
+        .account_request(
+            AccountOperation::DeviceRevoke,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(
+        redirect_err.adapter_kind(),
+        Some(AdapterErrorKind::Protocol)
+    );
+    assert_eq!(redirect_err.adapter_code(), Some("outcome_unknown"));
+    assert_eq!(redirect_err.mutation_outcome(), MutationOutcome::Uncertain);
+
+    for index in 0..5 {
+        let (headers, _) = rx.recv().unwrap();
+        assert_eq!(
+            header(&headers, "authorization"),
+            Some("DPoP dpop-access-token")
+        );
+        let dpop_hdr = header(&headers, "dpop").expect("DPoP header missing");
+        if index == 1 {
+            assert!(dpop_hdr.ends_with(".server-nonce-1"));
+        }
+    }
+    let calls = signer.calls.lock().unwrap();
+    assert_eq!(calls.len(), 5);
+    assert_eq!(calls[0].0, "POST");
+    assert!(calls[0]
+        .1
+        .ends_with("/functions/v1/decapod-onboarding/device-enroll"));
+    assert_eq!(calls[1].3.as_deref(), Some("server-nonce-1"));
+    assert!(calls[2]
+        .1
+        .ends_with("/rest/v1/rpc/propodus_repository_access_v1"));
+    assert!(calls[3].1.ends_with("/rest/v1/rpc/dactyl_query_v1"));
+    // All calls computed RFC 9449 ath SHA-256 digest of "dpop-access-token".
+    assert!(calls.iter().all(|c| c.2.is_some()));
+    sink.set_nonblocking(true).unwrap();
+    assert!(sink.accept().is_err());
+    handle.join().unwrap();
+
+    // 5. Explicit Bearer compatibility mode via RequestProof::bearer() sends Authorization: Bearer.
+    let bearer_signer = Arc::new(RecordingProofSigner {
+        bearer_mode: true,
+        ..Default::default()
+    });
+    let (origin, rx, handle) = server(vec![(200, json!({"ok": true}))]);
+    let bearer_client = connector_with_signer(&origin, bearer_signer);
+    bearer_client
+        .account_request(
+            AccountOperation::DeviceChallenge,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+        )
+        .unwrap();
+    let (headers, _) = rx.recv().unwrap();
+    assert_eq!(
+        header(&headers, "authorization"),
+        Some("Bearer dpop-access-token")
+    );
+    assert_eq!(header(&headers, "dpop"), None);
+    handle.join().unwrap();
+}
+
+#[test]
+fn dpop_rejections_and_http_error_matrix_map_deterministically_without_leaks() {
+    for code in [
+        "stolen_bearer",
+        "dpop_proof_required",
+        "missing_dpop_proof",
+        "dpop_replay",
+        "dpop_clock_skew",
+        "invalid_dpop_proof",
+    ] {
+        let (origin, rx, handle) = server(vec![(
+            401,
+            json!({"error": {"code": code, "message": "raw-dpop-secret"}}),
+        )]);
+        let err = connector(&origin)
+            .account_request(
+                AccountOperation::DeviceStepUp,
+                &json!({"version": 1}),
+                "user-bearer-secret",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Authentication));
+        assert_eq!(err.adapter_code(), Some(code));
+        assert_ne!(err.mutation_outcome(), MutationOutcome::Uncertain);
+        let rendered = format!("{err} {err:?}");
+        assert!(!rendered.contains("raw-dpop-secret"));
+        assert!(!rendered.contains("user-bearer-secret"));
+        rx.recv().unwrap();
+        handle.join().unwrap();
+    }
+
+    // Account HTTP 401/403/409/413/429/5xx outcome matrix:
+    for (op, status, code, expected_kind, expected_uncertain) in [
+        (
+            AccountOperation::DeviceEnroll,
+            401,
+            "invalid_token",
+            AdapterErrorKind::Authentication,
+            false,
+        ),
+        (
+            AccountOperation::DeviceEnroll,
+            403,
+            "authorization_denied",
+            AdapterErrorKind::Authorization,
+            false,
+        ),
+        (
+            AccountOperation::DeviceEnroll,
+            409,
+            "custody_conflict",
+            AdapterErrorKind::Conflict,
+            false,
+        ),
+        (
+            AccountOperation::DeviceEnroll,
+            413,
+            "payload_too_large",
+            AdapterErrorKind::Quota,
+            false,
+        ),
+        (
+            AccountOperation::DeviceEnroll,
+            429,
+            "rate_limited",
+            AdapterErrorKind::RateLimited,
+            false,
+        ),
+        (
+            AccountOperation::DeviceEnroll,
+            503,
+            "provider_unavailable",
+            AdapterErrorKind::Unavailable,
+            true,
+        ),
+        (
+            AccountOperation::DeviceChallenge,
+            503,
+            "provider_unavailable",
+            AdapterErrorKind::Unavailable,
+            false,
+        ),
+    ] {
+        let (origin, rx, handle) = server(vec![(
+            status,
+            json!({"error": {"code": code, "message": "secret-backend-info"}}),
+        )]);
+        let err = connector(&origin)
+            .account_request(op, &json!({"version": 1}), "user-bearer", None)
+            .unwrap_err();
+        assert_eq!(err.adapter_kind(), Some(expected_kind));
+        assert_eq!(
+            err.mutation_outcome() == MutationOutcome::Uncertain,
+            expected_uncertain
+        );
+        if expected_uncertain {
+            assert_eq!(err.adapter_code(), Some("outcome_unknown"));
+        } else {
+            assert_eq!(err.adapter_code(), Some(code));
+        }
+        assert!(!format!("{err} {err:?}").contains("secret-backend-info"));
+        rx.recv().unwrap();
+        handle.join().unwrap();
+    }
+
+    // Invalid proof string fails locally before dispatch (NotAttempted).
+    assert_eq!(
+        RequestProof::dpop("bad proof\nheader")
+            .unwrap_err()
+            .mutation_outcome(),
+        MutationOutcome::NotAttempted
+    );
+    assert_eq!(
+        RequestProof::dpop("").unwrap_err().mutation_outcome(),
+        MutationOutcome::NotAttempted
+    );
 }

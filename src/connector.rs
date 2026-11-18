@@ -1,10 +1,12 @@
 //! Logical local/cloud connector boundary and portable session/account types.
 //!
-//! Applications select [`LogicalTarget::local`] or [`LogicalTarget::cloud`]
-//! per workspace without mutating process-global environment variables. Dactyl
-//! resolves local targets to SQLite and cloud targets to the versioned public
-//! deployment profile, never falling back to SQLite when cloud resolution or
-//! authentication fails.
+//! Applications select local SQLite ([`LogicalTarget::local`]) or Decapod Cloud
+//! ([`LogicalTarget::cloud`]) per workspace without mutating process-global
+//! environment variables. Dactyl resolves local targets to SQLite and Decapod
+//! Cloud targets to the versioned public deployment profile, never falling back
+//! to SQLite when cloud resolution or authentication fails.
+
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +18,7 @@ use crate::{
 #[cfg(feature = "supabase")]
 use crate::CloudConnector;
 
-/// Public deployment origin provisioned by the Propodus infrastructure project.
+/// Public Decapod Cloud deployment origin.
 pub const DEFAULT_CLOUD_ORIGIN: &str = "https://goyxpcmxetztjlrrcwew.supabase.co";
 
 pub(crate) fn validate_opaque_credential(
@@ -25,6 +27,17 @@ pub(crate) fn validate_opaque_credential(
 ) -> Result<(), DactylError> {
     if value.is_empty() || value.len() > 16384 || !value.bytes().all(|b| b.is_ascii_graphic()) {
         return Err(DactylError::adapter(AdapterErrorKind::Protocol, message));
+    }
+    Ok(())
+}
+
+pub(crate) fn validate_dpop_nonce(value: &str) -> Result<(), DactylError> {
+    if value.is_empty() || value.len() > 1024 || !value.bytes().all(|b| b.is_ascii_graphic()) {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Authentication,
+            "invalid_dpop_nonce",
+            "local preflight: invalid DPoP nonce",
+        ));
     }
     Ok(())
 }
@@ -41,9 +54,213 @@ pub(crate) fn validate_bearer_token(value: &str) -> Result<(), DactylError> {
     Ok(())
 }
 
-/// Account and billing operations have fixed backend routes; their versioned
-/// payloads, membership, repository authority, seats, pricing, and entitlement
-/// decisions remain hosted-service policy.
+/// Authorization scheme selected for a managed Decapod Cloud or Supabase RPC request.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AuthScheme {
+    /// Explicit `Authorization: Bearer <token>` compatibility mode.
+    #[default]
+    Bearer,
+    /// Sender-constrained `Authorization: DPoP <token>` + `DPoP: <proof>` mode.
+    DPoP,
+}
+
+/// Canonical HTTP request metadata passed to a synchronous [`RequestProofSigner`].
+///
+/// `canonical_url` excludes query strings and fragments per RFC 9449 `htu`
+/// binding. `access_token_sha256` is the base64url-unpadded SHA-256 digest of
+/// the current access token (`ath`) when an access token is attached.
+#[derive(Clone)]
+pub struct RequestProofInput<'a> {
+    method: &'a str,
+    canonical_url: &'a str,
+    access_token_sha256: Option<&'a str>,
+    nonce: Option<&'a str>,
+}
+
+impl std::fmt::Debug for RequestProofInput<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RequestProofInput")
+            .field("method", &self.method)
+            .field("canonical_url", &"[redacted]")
+            .field(
+                "has_access_token_sha256",
+                &self.access_token_sha256.is_some(),
+            )
+            .field("has_nonce", &self.nonce.is_some())
+            .finish()
+    }
+}
+
+impl<'a> RequestProofInput<'a> {
+    pub fn new(
+        method: &'a str,
+        canonical_url: &'a str,
+        access_token_sha256: Option<&'a str>,
+        nonce: Option<&'a str>,
+    ) -> Self {
+        Self {
+            method,
+            canonical_url,
+            access_token_sha256,
+            nonce,
+        }
+    }
+
+    pub fn method(&self) -> &str {
+        self.method
+    }
+
+    pub fn canonical_url(&self) -> &str {
+        self.canonical_url
+    }
+
+    pub fn access_token_sha256(&self) -> Option<&str> {
+        self.access_token_sha256
+    }
+
+    pub fn nonce(&self) -> Option<&str> {
+        self.nonce
+    }
+}
+
+/// Authorization mode and optional RFC 9449 `DPoP` proof produced by a
+/// caller-supplied [`RequestProofSigner`].
+#[derive(Clone)]
+pub struct RequestProof {
+    scheme: AuthScheme,
+    #[cfg_attr(not(feature = "supabase"), allow(dead_code))]
+    proof: Option<String>,
+}
+
+impl std::fmt::Debug for RequestProof {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RequestProof")
+            .field("scheme", &self.scheme)
+            .field("has_proof", &self.proof.is_some())
+            .finish()
+    }
+}
+
+impl RequestProof {
+    /// Select explicit `Authorization: Bearer <token>` compatibility mode.
+    pub fn bearer() -> Self {
+        Self {
+            scheme: AuthScheme::Bearer,
+            proof: None,
+        }
+    }
+
+    /// Attach a fresh RFC 9449 `DPoP` proof (`Authorization: DPoP <token>` + `DPoP: <proof>`).
+    pub fn dpop(proof: impl Into<String>) -> Result<Self, DactylError> {
+        let proof = proof.into();
+        if proof.is_empty() || proof.len() > 16384 || !proof.bytes().all(|b| b.is_ascii_graphic()) {
+            return Err(DactylError::adapter_with_code(
+                AdapterErrorKind::Authentication,
+                "invalid_dpop_proof",
+                "local preflight: invalid DPoP proof",
+            ));
+        }
+        Ok(Self {
+            scheme: AuthScheme::DPoP,
+            proof: Some(proof),
+        })
+    }
+
+    pub fn scheme(&self) -> AuthScheme {
+        self.scheme
+    }
+
+    #[cfg(feature = "supabase")]
+    pub(crate) fn proof(&self) -> Option<&str> {
+        self.proof.as_deref()
+    }
+}
+
+/// Synchronous caller-supplied proof-signer hook for RFC 9449 `DPoP` proofs
+/// or explicit `Bearer` compatibility mode.
+///
+/// Dactyl never generates keys, accesses OS keystores, runs browser flows, or
+/// caches private key material. Callers retain key custody and supply fresh
+/// proofs per request.
+pub trait RequestProofSigner: Send + Sync {
+    fn sign_request(&self, input: &RequestProofInput<'_>) -> Result<RequestProof, DactylError>;
+
+    /// Observe a bounded, validated `DPoP-Nonce` response header returned for
+    /// `canonical_url` (on either a success response or a `401` replay/nonce challenge).
+    fn observe_nonce(&self, canonical_url: &str, nonce: &str) {
+        let _ = (canonical_url, nonce);
+    }
+}
+
+/// Bounded, redacted `DPoP-Nonce` and `Decapod-Cloud-*` diagnostic/sunset
+/// metadata captured from Decapod Cloud HTTP responses.
+#[derive(Clone, Default, PartialEq, Eq)]
+pub struct CloudResponseMetadata {
+    dpop_nonce: Option<String>,
+    sunset: Option<String>,
+    deprecation: Option<String>,
+    cloud_headers: Vec<(String, String)>,
+}
+
+impl std::fmt::Debug for CloudResponseMetadata {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CloudResponseMetadata")
+            .field("has_dpop_nonce", &self.dpop_nonce.is_some())
+            .field("has_sunset", &self.sunset.is_some())
+            .field("has_deprecation", &self.deprecation.is_some())
+            .field("cloud_header_count", &self.cloud_headers.len())
+            .finish()
+    }
+}
+
+impl CloudResponseMetadata {
+    pub fn dpop_nonce(&self) -> Option<&str> {
+        self.dpop_nonce.as_deref()
+    }
+
+    pub fn sunset(&self) -> Option<&str> {
+        self.sunset.as_deref()
+    }
+
+    pub fn deprecation(&self) -> Option<&str> {
+        self.deprecation.as_deref()
+    }
+
+    pub fn cloud_headers(&self) -> &[(String, String)] {
+        &self.cloud_headers
+    }
+
+    pub fn cloud_header(&self, name: &str) -> Option<&str> {
+        self.cloud_headers
+            .iter()
+            .find(|(header, _)| header.eq_ignore_ascii_case(name))
+            .map(|(_, value)| value.as_str())
+    }
+
+    #[cfg(feature = "supabase")]
+    pub(crate) fn set_dpop_nonce(&mut self, nonce: String) {
+        self.dpop_nonce = Some(nonce);
+    }
+
+    #[cfg(feature = "supabase")]
+    pub(crate) fn set_sunset(&mut self, sunset: String) {
+        self.sunset = Some(sunset);
+    }
+
+    #[cfg(feature = "supabase")]
+    pub(crate) fn set_deprecation(&mut self, deprecation: String) {
+        self.deprecation = Some(deprecation);
+    }
+
+    #[cfg(feature = "supabase")]
+    pub(crate) fn push_cloud_header(&mut self, name: String, value: String) {
+        self.cloud_headers.push((name, value));
+    }
+}
+
+/// Account, device-enrollment, and billing operations have fixed backend routes;
+/// their versioned payloads, membership, repository authority, seats, pricing,
+/// and entitlement decisions remain hosted-service policy.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AccountOperation {
     Register,
@@ -52,10 +269,15 @@ pub enum AccountOperation {
     Checkout,
     Manage,
     Portal,
+    DeviceChallenge,
+    DeviceEnroll,
+    DeviceStepUp,
+    DeviceRevoke,
 }
 
 impl AccountOperation {
-    /// Fixed onboarding function segment beneath `/functions/v1/propodus-onboarding/`.
+    /// Fixed onboarding function segment beneath `/functions/v1/decapod-onboarding/`
+    /// (with transitional fallback to `/functions/v1/propodus-onboarding/`).
     pub fn action(self) -> &'static str {
         match self {
             Self::Register => "account-register",
@@ -64,6 +286,10 @@ impl AccountOperation {
             Self::Checkout => "billing-checkout",
             Self::Manage => "billing-manage",
             Self::Portal => "billing-portal",
+            Self::DeviceChallenge => "device-challenge",
+            Self::DeviceEnroll => "device-enroll",
+            Self::DeviceStepUp => "device-step-up",
+            Self::DeviceRevoke => "device-revoke",
         }
     }
 
@@ -71,7 +297,13 @@ impl AccountOperation {
     pub fn is_mutating(self) -> bool {
         matches!(
             self,
-            Self::Register | Self::Checkout | Self::Manage | Self::Portal
+            Self::Register
+                | Self::Checkout
+                | Self::Manage
+                | Self::Portal
+                | Self::DeviceEnroll
+                | Self::DeviceStepUp
+                | Self::DeviceRevoke
         )
     }
 }
@@ -229,7 +461,7 @@ impl std::fmt::Debug for AuthenticationStart {
     }
 }
 
-/// A user session issued by managed Auth, never a separate Propodus session.
+/// A user session issued by managed Auth, never a separate Decapod Cloud session.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UserSession {
     pub access_token: String,
@@ -331,12 +563,10 @@ impl std::fmt::Debug for LogicalConnector {
 }
 
 impl LogicalConnector {
-    /// Resolve an explicit [`LogicalTarget`].
-    ///
-    /// Cloud resolution discovers and validates version 1 of the public
-    /// deployment profile without sending user credentials. A failed cloud
-    /// discovery or disabled `supabase` feature never falls back to SQLite.
-    pub fn resolve(target: LogicalTarget) -> Result<Self, DactylError> {
+    /// Resolve an explicit [`LogicalTarget`], returning bounded discovery metadata.
+    pub fn resolve_with_metadata(
+        target: LogicalTarget,
+    ) -> Result<(Self, CloudResponseMetadata), DactylError> {
         match target.inner {
             TargetKind::Local { path } => {
                 if path.trim().is_empty() {
@@ -344,16 +574,23 @@ impl LogicalConnector {
                         "local storage path must not be empty".into(),
                     ));
                 }
-                Ok(Self {
-                    inner: ConnectorKind::Local { path },
-                })
+                Ok((
+                    Self {
+                        inner: ConnectorKind::Local { path },
+                    },
+                    CloudResponseMetadata::default(),
+                ))
             }
             TargetKind::Cloud { origin } => {
                 #[cfg(feature = "supabase")]
                 {
-                    Ok(Self {
-                        inner: ConnectorKind::Cloud(CloudConnector::discover(&origin)?),
-                    })
+                    let (connector, metadata) = CloudConnector::discover_with_metadata(&origin)?;
+                    Ok((
+                        Self {
+                            inner: ConnectorKind::Cloud(connector),
+                        },
+                        metadata,
+                    ))
                 }
                 #[cfg(not(feature = "supabase"))]
                 {
@@ -364,6 +601,46 @@ impl LogicalConnector {
                 }
             }
         }
+    }
+
+    /// Resolve an explicit [`LogicalTarget`].
+    ///
+    /// Decapod Cloud resolution discovers and validates version 1 of the public
+    /// deployment profile without sending user credentials. A failed cloud
+    /// discovery or disabled `supabase` feature never falls back to local SQLite.
+    pub fn resolve(target: LogicalTarget) -> Result<Self, DactylError> {
+        Self::resolve_with_metadata(target).map(|(connector, _)| connector)
+    }
+
+    /// Attach a caller-supplied [`RequestProofSigner`] for Decapod Cloud and
+    /// Supabase RPC requests on this connector (no-op on local SQLite connectors).
+    pub fn with_proof_signer(mut self, signer: Arc<dyn RequestProofSigner>) -> Self {
+        match &mut self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = signer;
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                *connector = connector.clone().with_proof_signer(signer);
+            }
+        }
+        self
+    }
+
+    /// Supply an initial server `DPoP-Nonce` challenge value for this connector
+    /// (no-op on local SQLite connectors).
+    pub fn with_dpop_nonce(mut self, nonce: impl Into<String>) -> Self {
+        let nonce = nonce.into();
+        match &mut self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = nonce;
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                *connector = connector.clone().with_dpop_nonce(nonce);
+            }
+        }
+        self
     }
 
     pub fn local(path: impl Into<String>) -> Result<Self, DactylError> {
@@ -616,22 +893,63 @@ impl LogicalConnector {
         kind: OperationKind,
         budget: ResourceBudget,
     ) -> Result<serde_json::Value, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        self.control_request_with_metadata(
+            function,
+            request,
+            bearer,
+            None,
+            kind,
+            budget,
+            &mut metadata,
+        )
+    }
+
+    /// Invoke a trusted native JSON control function while capturing bounded
+    /// response/challenge metadata (`DPoP-Nonce` and `Decapod-Cloud-*` headers),
+    /// including when the server returns a `401` challenge or denial.
+    #[allow(clippy::too_many_arguments)]
+    pub fn control_request_with_metadata(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
         match &self.inner {
             ConnectorKind::Local { .. } => {
-                let _ = (function, request, bearer, kind, budget);
+                let _ = (
+                    function,
+                    request,
+                    bearer,
+                    dpop_nonce,
+                    kind,
+                    budget,
+                    metadata_out,
+                );
                 Err(local_cloud_capability_error())
             }
             #[cfg(feature = "supabase")]
-            ConnectorKind::Cloud(connector) => {
-                connector.control_request(function, request, bearer, kind, budget)
-            }
+            ConnectorKind::Cloud(connector) => connector.control_request_with_metadata(
+                function,
+                request,
+                bearer,
+                dpop_nonce,
+                kind,
+                budget,
+                metadata_out,
+            ),
         }
     }
 
-    /// Transport a hosted account or billing request using the current user
-    /// bearer. Customer membership, repository/project authority, seats,
-    /// pricing, and entitlements stay on the hosted service; its structured
-    /// readiness and denial responses are returned without policy reproduction.
+    /// Transport a hosted account, device-enrollment, or billing request using
+    /// the current user bearer. Customer membership, repository/project
+    /// authority, seats, pricing, and entitlements stay on Decapod Cloud; its
+    /// structured readiness and denial responses are returned without policy
+    /// reproduction.
     pub fn account_request(
         &self,
         operation: AccountOperation,
@@ -639,15 +957,36 @@ impl LogicalConnector {
         bearer: &str,
         scm: Option<&ScmCredential>,
     ) -> Result<serde_json::Value, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        self.account_request_with_metadata(operation, body, bearer, scm, None, &mut metadata)
+    }
+
+    /// Transport a hosted account, device-enrollment, or billing request while
+    /// capturing bounded response/challenge metadata (`DPoP-Nonce` and
+    /// `Decapod-Cloud-*` headers), including on `401` replay/nonce challenges.
+    pub fn account_request_with_metadata(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
         match &self.inner {
             ConnectorKind::Local { .. } => {
-                let _ = (operation, body, bearer, scm);
+                let _ = (operation, body, bearer, scm, dpop_nonce, metadata_out);
                 Err(local_cloud_capability_error())
             }
             #[cfg(feature = "supabase")]
-            ConnectorKind::Cloud(connector) => {
-                connector.account_request(operation, body, bearer, scm)
-            }
+            ConnectorKind::Cloud(connector) => connector.account_request_with_metadata(
+                operation,
+                body,
+                bearer,
+                scm,
+                dpop_nonce,
+                metadata_out,
+            ),
         }
     }
 }

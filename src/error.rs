@@ -175,6 +175,10 @@ impl DactylError {
                     MutationOutcome::RolledBack
                 } else if (code.as_deref() == Some("invalid_token")
                     && message == "invalid managed session bearer")
+                    || (matches!(
+                        code.as_deref(),
+                        Some("invalid_dpop_proof" | "invalid_dpop_nonce")
+                    ) && message.starts_with("local preflight:"))
                     || message.starts_with(LOCAL_PREFLIGHT_PREFIX)
                     || (matches!(
                         kind,
