@@ -168,7 +168,7 @@ mod wire {
             opaque
         );
         let (discovery, body) = rx.recv().unwrap();
-        assert!(discovery.starts_with("GET /functions/v1/propodus-onboarding/config HTTP/1.1"));
+        assert!(discovery.starts_with("GET /functions/v1/decapod-onboarding/config HTTP/1.1"));
         assert_eq!(body, Value::Null);
         assert_eq!(header(&discovery, "authorization"), None);
         let (headers, body) = rx.recv().unwrap();
@@ -521,5 +521,154 @@ mod wire {
         );
         rx.recv().unwrap();
         server.join().unwrap();
+    }
+
+    #[test]
+    fn commit_bound_proof_transition_envelopes_and_http_error_matrix() {
+        use dactyl_db::{
+            CloudResponseMetadata, RequestProof, RequestProofInput, RequestProofSigner,
+        };
+        use std::sync::Arc;
+
+        struct TransitionSigner;
+        impl RequestProofSigner for TransitionSigner {
+            fn sign_request(
+                &self,
+                input: &RequestProofInput<'_>,
+            ) -> Result<RequestProof, dactyl_db::DactylError> {
+                assert_eq!(input.method(), "POST");
+                assert!(input
+                    .canonical_url()
+                    .ends_with("/rest/v1/rpc/proof_transition_v1"));
+                RequestProof::dpop(format!("proof-{}", input.nonce().unwrap_or("initial")))
+            }
+        }
+
+        // 1. Opaque commit-bound proof-transition Write vs Read loss classification:
+        let envelope = json!({
+            "version": 1,
+            "action": "record_proof_transition",
+            "commit_sha": "96bc87e84676d477f19b4fcfad3127137c55012e",
+            "task_revision": 42,
+            "proof_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+            "state": "independently_verified"
+        });
+        for kind in [OperationKind::Write, OperationKind::Read] {
+            let (origin, rx, server) = fixture(vec![Reply::Truncated]);
+            let client = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY))
+                .unwrap()
+                .with_proof_signer(Arc::new(TransitionSigner));
+            let mut meta = CloudResponseMetadata::default();
+            let err = client
+                .control_request_with_metadata(
+                    "proof_transition_v1",
+                    &envelope,
+                    Some(BEARER),
+                    Some("nonce-42"),
+                    kind,
+                    ResourceBudget::v1(),
+                    &mut meta,
+                )
+                .unwrap_err();
+            if kind == OperationKind::Write {
+                assert_eq!(err.adapter_code(), Some("outcome_unknown"));
+                assert_eq!(err.mutation_outcome(), MutationOutcome::Uncertain);
+            } else {
+                assert_ne!(err.adapter_code(), Some("outcome_unknown"));
+                assert_ne!(err.mutation_outcome(), MutationOutcome::Uncertain);
+            }
+            let (headers, body) = rx.recv().unwrap();
+            assert_eq!(
+                header(&headers, "authorization"),
+                Some("DPoP private-user-bearer")
+            );
+            assert_eq!(header(&headers, "dpop"), Some("proof-nonce-42"));
+            assert_eq!(body["request"], envelope);
+            redacted(&err, &origin);
+            server.join().unwrap();
+        }
+
+        // 2. Deterministic 401/403/409/413/429/5xx HTTP classification on control_request:
+        for (status, code, expected_kind, expected_origin, expected_uncertain) in [
+            (
+                401,
+                "use_dpop_nonce",
+                AdapterErrorKind::Authentication,
+                FailureOrigin::Other,
+                false,
+            ),
+            (
+                403,
+                "authorization_denied",
+                AdapterErrorKind::Authorization,
+                FailureOrigin::RemotePolicy,
+                false,
+            ),
+            (
+                409,
+                "version_conflict",
+                AdapterErrorKind::VersionConflict,
+                FailureOrigin::Other,
+                false,
+            ),
+            (
+                413,
+                "payload_too_large",
+                AdapterErrorKind::Quota,
+                FailureOrigin::RemotePolicy,
+                false,
+            ),
+            (
+                429,
+                "rate_limited",
+                AdapterErrorKind::RateLimited,
+                FailureOrigin::RemotePolicy,
+                false,
+            ),
+            (
+                500,
+                "storage_failure",
+                AdapterErrorKind::Storage,
+                FailureOrigin::Other,
+                true,
+            ),
+        ] {
+            let (origin, rx, server) = fixture(vec![Reply::Http(
+                status,
+                "DPoP-Nonce: ctrl-nonce\r\nDecapod-Cloud-Stage: proof\r\n".into(),
+                json!({"code": code, "message": "provider-secret"})
+                    .to_string()
+                    .into_bytes(),
+            )]);
+            let client = connector(&origin);
+            let mut meta = CloudResponseMetadata::default();
+            let err = client
+                .control_request_with_metadata(
+                    FUNCTION,
+                    &envelope,
+                    Some(BEARER),
+                    None,
+                    OperationKind::Write,
+                    ResourceBudget::v1(),
+                    &mut meta,
+                )
+                .unwrap_err();
+            assert_eq!(err.adapter_kind(), Some(expected_kind));
+            assert_eq!(err.failure_origin(), expected_origin);
+            assert_eq!(
+                err.mutation_outcome() == MutationOutcome::Uncertain,
+                expected_uncertain
+            );
+            assert_eq!(meta.dpop_nonce(), Some("ctrl-nonce"));
+            assert_eq!(meta.cloud_header("decapod-cloud-stage"), Some("proof"));
+            if expected_uncertain {
+                assert_eq!(err.adapter_code(), Some("outcome_unknown"));
+            } else {
+                assert_eq!(err.adapter_code(), Some(code));
+            }
+            redacted(&err, &origin);
+            rx.recv().unwrap();
+            server.join().unwrap();
+        }
     }
 }

@@ -1,5 +1,12 @@
 # Interfaces
 
+## DPoP proof signer, Decapod Cloud onboarding, and metadata surfaces (issues #127, #128, #129)
+
+- `src/connector.rs` / `src/lib.rs` export `AuthScheme`, `RequestProofInput`, `RequestProof`, `RequestProofSigner`, and `CloudResponseMetadata` unconditionally across all Cargo feature combinations. `DatastoreRoute`, `CloudConnector`, and `LogicalConnector` accept `.with_proof_signer(Arc<dyn RequestProofSigner>)` and `.with_dpop_nonce(...)`, and `LogicalConnector` / `CloudConnector` expose `resolve_with_metadata`, `discover_with_metadata`, `control_request_with_metadata`, and `account_request_with_metadata` so callers observe `DPoP-Nonce` and `Decapod-Cloud-*` headers even on `401` challenges while keeping `Debug` and `DactylError` formatting strictly redacted.
+- `AccountOperation` adds `DeviceChallenge` (`"device-challenge"`, `is_mutating() == false`), `DeviceEnroll` (`"device-enroll"`, `is_mutating() == true`), `DeviceStepUp` (`"device-step-up"`, `is_mutating() == true`), and `DeviceRevoke` (`"device-revoke"`, `is_mutating() == true`).
+- `src/cloud.rs` uses `/functions/v1/decapod-onboarding` as the canonical discovery, handoff, auth, and account path with a single bounded HTTP `404` fallback (absent domain error codes) to `/functions/v1/propodus-onboarding`, maps HTTP `413` to `AdapterErrorKind::Quota`, `404` to `AdapterErrorKind::NotFound`, and marks post-dispatch `5xx` / redirect / truncated failures on mutating operations with `code = Some("outcome_unknown")` and `MutationOutcome::Uncertain`.
+- `src/adapter/supabase.rs` and `src/cloud.rs` allowlist RFC 9449 / DPoP and device error codes (`use_dpop_nonce`, `invalid_dpop_proof`, `dpop_proof_required`, `missing_dpop_proof`, `dpop_replay`, `dpop_nonce_mismatch`, `dpop_clock_skew`, `dpop_ath_mismatch`, `dpop_htu_mismatch`, `dpop_htm_mismatch`, `dpop_jkt_mismatch`, `stolen_bearer`, `device_revoked`, `device_not_enrolled`) under `AdapterErrorKind::Authentication`.
+
 ## Backend capability inventory (issue 79)
 
 docs/backend-capabilities.md maps the accepted SQLite, Neon HTTP, Supabase service HTTP and native RPC surfaces to source and test obligations. Connection::from_env / DatastoreRoute::from_env remain explicit ambient compatibility APIs; logical per-workspace connectors do not mutate that environment. DATASTORE=supabase retains service HTTP meaning. Remote catalog predicates, snapshots and maintenance return capability errors without network I/O; bounded remote visit_rows decodes a materialized response rather than providing server streaming. The private SQLite FFI loads the host runtime. Arbitrary SQL, domain migrations, retry/idempotency and effective grants remain caller/service-owned; unavailable service proof is distinct from an unsupported capability.
@@ -272,8 +279,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2dfad0cf79b1c0426d3318670e7b41f9efebf9bfb4622f34ef1a0db8e49c5228`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (18 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

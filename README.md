@@ -75,23 +75,32 @@ and does not duplicate SQLite's file format, parser, pager, journal, or query
 planner. The route name and `DATASTORE=sqlite` setting therefore mean what
 they say: the requested path is an ordinary SQLite database.
 
-## Logical local/cloud connectors
+## Logical local SQLite and Decapod Cloud connectors
 
-Applications can select `Backend::Local` or `Backend::Cloud` per workspace
-through `LogicalTarget` and `LogicalConnector` (or `DatastoreRoute::for_backend`)
-without process-global state or ambient environment variables. Portable
-connector, session, and account types (`LogicalTarget`, `LogicalConnector`,
-`AuthenticationSecrets`, `AuthenticationStart`, `UserSession`,
-`AccountOperation`, `ScmProvider`, `ScmCredential`) compile across all feature
-combinations. Dactyl resolves SQLite or native Supabase RPC, never falls back to
-SQLite on cloud discovery/capability errors, and surfaces `outcome_unknown` on
-post-send ambiguous one-time/mutating calls so callers never blindly replay
-them. `LogicalConnector` and `CloudConnector` discover the public deployment
-profile and provide managed authentication and account readiness transport
-(`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`). The application
-owns browser interaction and private session storage. Propodus is the IaC for
-the Supabase backend, where identity, repository roles and RLS are enforced.
-See [the connector and auth contract](docs/cloud-connectors.md).
+Applications select local SQLite (`LogicalTarget::local`) or Decapod Cloud
+(`LogicalTarget::cloud`) per workspace through `LogicalTarget` and
+`LogicalConnector` (or `DatastoreRoute::for_backend`) without process-global
+state or ambient environment variables. Portable connector, session, proof, and
+account types (`LogicalTarget`, `LogicalConnector`, `AuthenticationSecrets`,
+`AuthenticationStart`, `UserSession`, `AccountOperation`, `AuthScheme`,
+`RequestProof`, `RequestProofInput`, `RequestProofSigner`,
+`CloudResponseMetadata`, `ScmProvider`, `ScmCredential`) compile across all
+feature combinations. Dactyl resolves local targets to SQLite and Decapod Cloud
+targets to native Supabase RPC, never falls back to SQLite on cloud discovery
+or capability errors, and surfaces `outcome_unknown` /
+`MutationOutcome::Uncertain` on post-send ambiguous one-time or mutating calls
+so callers never blindly replay them. `LogicalConnector` and `CloudConnector`
+discover the public deployment profile at `/functions/v1/decapod-onboarding`
+(with bounded HTTP `404` fallback to legacy `/functions/v1/propodus-onboarding`
+during cutover), support caller-supplied RFC 9449 `DPoP` proofs via
+`RequestProofSigner` alongside explicit `Bearer` compatibility mode, capture
+redacted `Decapod-Cloud-*` / `DPoP-Nonce` response metadata, and transport
+managed authentication, device enrollment, and account readiness operations
+(`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`,
+`DeviceChallenge`, `DeviceEnroll`, `DeviceStepUp`, `DeviceRevoke`). The
+application owns browser interaction, key generation/keystore custody, and
+private session storage, while Decapod Cloud enforces identity, repository
+roles, and RLS. See [the connector and auth contract](docs/cloud-connectors.md).
 
 Opaque authenticated control functions use `LogicalConnector::control_request`
 (or `CloudConnector::control_request`) with the existing managed bearer and native
@@ -254,13 +263,16 @@ does not invent a version-conflict policy for the local store.
 
 ```toml
 [dependencies]
-dactyl-db = { version = "0.16.0", features = ["sqlite", "neon", "supabase"] }
+dactyl-db = { version = "0.18.0", features = ["sqlite", "neon", "supabase"] }
 ```
 
-For independent per-workspace selection, use `LogicalTarget` and
-`LogicalConnector` as described in [logical connectors](docs/cloud-connectors.md).
-Local resolves to SQLite; cloud discovers the native Supabase profile and uses
-the current managed user bearer. The caller retains private session custody.
+For independent per-workspace selection, use `LogicalTarget::local` (local
+SQLite) and `LogicalTarget::cloud` (Decapod Cloud) with `LogicalConnector` as
+described in [logical connectors](docs/cloud-connectors.md).
+Local resolves to SQLite; Decapod Cloud discovers the native Supabase RPC
+profile and uses the current managed user access token (with optional
+caller-supplied `DPoP` proofs via `RequestProofSigner`). The caller retains
+private session and key custody.
 
 The explicit ambient compatibility API instead selects these file/service routes:
 
@@ -365,8 +377,8 @@ supply a database password or service-role key to a client route.
 
 ## Release and consumer verification
 
-Rust and Cargo 1.85 are required. The manifest and this example describe 0.16.0;
-verify the exact registry artifact and lockfile when adopting a release. A clean
+Rust and Cargo 1.85 are required. The manifest and this example describe the 0.18.x
+series; verify the exact registry artifact and lockfile when adopting a release. A clean
 consumer must resolve `dactyl-db` from crates.io without a Git dependency or path
 patch and enable its intended features. The repository's path-based package/MSRV
 proof is preparation evidence; it cannot establish registry availability or

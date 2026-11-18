@@ -13,14 +13,17 @@ and [RPC v1](supabase-rpc-v1.md). Both paths remain public, explicit APIs:
 | --- | --- | --- |
 | `DatastoreRoute::supabase` / `DATASTORE=supabase` | Service `/query`, `/batch` | Service user bearer and opaque context |
 | `DatastoreRoute::supabase_rpc` | Native `/rest/v1/rpc/` | Publishable key, current managed user bearer and opaque context |
-| Cloud `LogicalConnector` | Discover public profile, then native RPC | Selected origin and current managed user bearer |
+| `Cloud` `LogicalConnector` (`LogicalTarget::cloud`) | Discover Decapod Cloud public profile, then native RPC | Selected origin, current user access token, and optional `RequestProofSigner` (DPoP/Bearer) |
 
-Propodus is the IaC and private SQL/Auth/onboarding boundary for the native
-backend. A separate generic Go application server is not a prerequisite for
-native RPC. Decapod owns its local/cloud setting, browser interaction and durable
-private user-session custody; Dactyl transports generic authentication and
-account operations without parsing Decapod configuration or retaining secrets.
-Effective identity, account/project grants and SQL policy remain server-owned.
+Decapod Cloud's hosted infrastructure (provisioned by legacy Propodus IaC)
+provides the private SQL/Auth/onboarding boundary for the native backend. A
+separate generic Go application server is not a prerequisite for native RPC.
+Decapod owns its local/cloud setting (`LogicalTarget::local` vs
+`LogicalTarget::cloud`), browser interaction, key custody, and durable private
+user-session custody; Dactyl transports generic authentication, device
+enrollment, and account operations without parsing Decapod configuration or
+retaining secrets. Effective identity, account/project grants and SQL policy
+remain server-owned.
 
 Issue 91 therefore tracks qualification of these existing capabilities, rather
 than adding the third provider again. Current source includes separate native

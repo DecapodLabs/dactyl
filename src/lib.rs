@@ -1,8 +1,11 @@
-//! Dactyl — a lightweight Rust storage driver for local, Neon, and Supabase service routes.
+//! Dactyl — a lightweight Rust storage driver for local SQLite, Decapod Cloud
+//! (native Supabase RPC), and explicit Neon/Supabase service routes.
 //!
-//! Dactyl owns backend selection, parameter binding, response normalization,
-//! physical atomic batches, access mode, and local durability. It does not own
-//! schema policy, migration ids/order, retries, analytics, or business logic.
+//! Applications select local SQLite ([`LogicalTarget::local`]) or Decapod Cloud
+//! ([`LogicalTarget::cloud`]) per workspace. Dactyl owns backend selection,
+//! parameter binding, response normalization, physical atomic batches, access
+//! mode, and local durability. It does not own schema policy, migration
+//! ids/order, retries, analytics, or business logic.
 
 mod adapter;
 mod budget;
@@ -10,6 +13,8 @@ mod budget;
 mod cloud;
 mod connector;
 mod contract;
+#[cfg(feature = "supabase")]
+mod http_pool;
 mod inspection;
 mod rows;
 mod schema;
@@ -19,8 +24,9 @@ pub mod error;
 
 pub use crate::budget::{FailureOrigin, MutationOutcome, ResourceBudget, RESOURCE_BUDGET_VERSION};
 pub use crate::connector::{
-    AccountOperation, AuthenticationSecrets, AuthenticationStart, LogicalConnector, LogicalTarget,
-    ScmCredential, ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
+    AccountOperation, AuthScheme, AuthenticationSecrets, AuthenticationStart,
+    CloudResponseMetadata, LogicalConnector, LogicalTarget, RequestProof, RequestProofInput,
+    RequestProofSigner, ScmCredential, ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
 };
 pub use crate::contract::{
     AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,
@@ -63,13 +69,33 @@ pub enum DatastoreTransport {
 }
 
 /// The route needed to send an application read or write.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct DatastoreRoute {
     datastore: Datastore,
     route: String,
     token: Option<String>,
     rpc: Option<SupabaseRpcConfig>,
+    proof_signer: Option<std::sync::Arc<dyn RequestProofSigner>>,
+    dpop_nonce: Option<String>,
 }
+
+impl PartialEq for DatastoreRoute {
+    fn eq(&self, other: &Self) -> bool {
+        let same_signer = match (&self.proof_signer, &other.proof_signer) {
+            (None, None) => true,
+            (Some(left), Some(right)) => std::sync::Arc::ptr_eq(left, right),
+            _ => false,
+        };
+        self.datastore == other.datastore
+            && self.route == other.route
+            && self.token == other.token
+            && self.rpc == other.rpc
+            && self.dpop_nonce == other.dpop_nonce
+            && same_signer
+    }
+}
+
+impl Eq for DatastoreRoute {}
 
 impl std::fmt::Debug for DatastoreRoute {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -78,6 +104,8 @@ impl std::fmt::Debug for DatastoreRoute {
             .field("transport", &self.transport())
             .field("route", &"[redacted]")
             .field("token", &self.token.as_ref().map(|_| "[redacted]"))
+            .field("has_proof_signer", &self.proof_signer.is_some())
+            .field("has_dpop_nonce", &self.dpop_nonce.is_some())
             .finish()
     }
 }
@@ -124,6 +152,8 @@ impl DatastoreRoute {
             route: path.into(),
             token: None,
             rpc: None,
+            proof_signer: None,
+            dpop_nonce: None,
         }
     }
 
@@ -133,6 +163,8 @@ impl DatastoreRoute {
             route: endpoint.into(),
             token,
             rpc: None,
+            proof_signer: None,
+            dpop_nonce: None,
         }
     }
 
@@ -148,18 +180,46 @@ impl DatastoreRoute {
             route: endpoint.into(),
             token,
             rpc: None,
+            proof_signer: None,
+            dpop_nonce: None,
         }
     }
 
-    /// Explicit native RPC; existing Supabase service routes retain their meaning.
+    /// Explicit native Decapod Cloud (Supabase RPC) route; existing Supabase
+    /// service routes retain their meaning.
     pub fn supabase_rpc(config: SupabaseRpcConfig, token: Option<String>) -> Self {
         Self {
             datastore: Datastore::Supabase,
             route: config.project_origin().to_owned(),
             token,
             rpc: Some(config),
+            proof_signer: None,
+            dpop_nonce: None,
         }
     }
+
+    /// Attach a synchronous caller-supplied [`RequestProofSigner`] so remote
+    /// requests on this route carry fresh RFC 9449 `DPoP` proofs (or explicit
+    /// `Bearer` mode).
+    pub fn with_proof_signer(mut self, signer: std::sync::Arc<dyn RequestProofSigner>) -> Self {
+        self.proof_signer = Some(signer);
+        self
+    }
+
+    /// Supply an initial server `DPoP-Nonce` challenge value for this route.
+    pub fn with_dpop_nonce(mut self, nonce: impl Into<String>) -> Self {
+        self.dpop_nonce = Some(nonce.into());
+        self
+    }
+
+    pub fn proof_signer(&self) -> Option<&std::sync::Arc<dyn RequestProofSigner>> {
+        self.proof_signer.as_ref()
+    }
+
+    pub fn dpop_nonce(&self) -> Option<&str> {
+        self.dpop_nonce.as_deref()
+    }
+
     pub fn supabase_rpc_config(&self) -> Option<&SupabaseRpcConfig> {
         self.rpc.as_ref()
     }
@@ -171,6 +231,9 @@ impl DatastoreRoute {
     /// This does not authenticate, check context, or verify service capabilities.
     /// Existing SQLite and Neon endpoint acceptance remains unchanged.
     pub fn validate(&self) -> Result<(), DactylError> {
+        if let Some(nonce) = &self.dpop_nonce {
+            crate::connector::validate_dpop_nonce(nonce)?;
+        }
         if self.datastore == Datastore::Supabase {
             #[cfg(feature = "supabase")]
             {
@@ -532,6 +595,8 @@ fn build_adapter(
                     _context,
                     route.rpc.as_ref(),
                     _budget,
+                    route.proof_signer.clone(),
+                    route.dpop_nonce.as_deref(),
                 )?))
             }
             #[cfg(not(feature = "supabase"))]

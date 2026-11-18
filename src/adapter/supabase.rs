@@ -1,6 +1,10 @@
-//! Authenticated HTTP transport for a Supabase-backed storage service.
+//! Authenticated HTTP transport for Decapod Cloud (native Supabase RPC)
+//! and explicit Supabase-backed storage service routes.
 //!
-//! This adapter never connects to PostgreSQL or interprets tenant policy.
+//! This adapter never connects directly to PostgreSQL or interprets tenant policy.
+
+use std::sync::Arc;
+use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
 
@@ -10,22 +14,30 @@ use crate::budget::{
     preflight_statement, read_bounded_body, result_limit, serialize_bounded_json, BoundedReadError,
     DecodedResultTracker, ResourceBudget,
 };
+use crate::connector::{validate_dpop_nonce, CloudResponseMetadata, RequestProofSigner};
 use crate::contract::{
     AccessMode, AtomicResult, GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult,
     StorageContext, WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
+use crate::http_pool::{
+    acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
+    SharedHttpClient,
+};
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
 use crate::{SupabaseRpcConfig, SUPABASE_RPC_CONTRACT_VERSION};
 
 pub(crate) struct SupabaseAdapter {
     endpoint: String,
-    bearer: reqwest::header::HeaderValue,
+    token: String,
     access_mode: AccessMode,
     context: StorageContext,
     rpc_headers: Option<reqwest::header::HeaderMap>,
     budget: ResourceBudget,
+    proof_signer: Option<Arc<dyn RequestProofSigner>>,
+    dpop_nonce: Option<String>,
+    http_client: Arc<SharedHttpClient>,
 }
 
 #[derive(Serialize)]
@@ -139,13 +151,18 @@ fn rpc_headers(config: &SupabaseRpcConfig) -> Result<reqwest::header::HeaderMap,
 
 /// The application supplies a trusted function identifier, never a URL or SQL.
 /// Policy and the JSON argument/result remain opaque to the driver.
-pub(crate) fn control_request(
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn control_request_with_auth(
     config: &SupabaseRpcConfig,
     function: &str,
     request: &serde_json::Value,
     bearer: Option<&str>,
+    dpop_nonce: Option<&str>,
     kind: OperationKind,
     budget: ResourceBudget,
+    proof_signer: Option<Arc<dyn RequestProofSigner>>,
+    http_client: Option<Arc<SharedHttpClient>>,
+    metadata_out: &mut CloudResponseMetadata,
 ) -> Result<serde_json::Value, DactylError> {
     let origin = validate_rpc(config)?;
     budget.validate()?;
@@ -167,9 +184,9 @@ pub(crate) fn control_request(
         )
     })?;
     crate::connector::validate_bearer_token(token)?;
-    let mut bearer = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
-        .map_err(|_| DactylError::Config("invalid managed session bearer".into()))?;
-    bearer.set_sensitive(true);
+    if let Some(nonce) = dpop_nonce {
+        validate_dpop_nonce(nonce)?;
+    }
     // Bound recursion before invoking serde's recursive serializer. Account for
     // the native single-argument envelope without cloning application data.
     ensure_json_depth(request).map_err(|_| {
@@ -188,28 +205,51 @@ pub(crate) fn control_request(
         "{}/rest/v1/rpc/{function}",
         origin.as_str().trim_end_matches('/')
     );
+    let canonical = canonical_url(&endpoint)?;
+    let (auth_header, dpop_header) =
+        build_auth_headers("POST", &canonical, token, proof_signer.as_ref(), dpop_nonce)?;
+    let client = match http_client {
+        Some(client) if budget.connect_timeout() == std::time::Duration::from_secs(5) => client,
+        _ => acquire_client(budget.connect_timeout())?,
+    };
     let mutates = kind == OperationKind::Write;
-    std::thread::Builder::new()
+    let (outcome, captured_meta) = std::thread::Builder::new()
         .name("dactyl-control-rpc".into())
-        .spawn(move || send_request(endpoint, bearer, body, headers, budget, mutates, false))
+        .spawn(move || {
+            send_request(
+                client,
+                endpoint,
+                canonical,
+                auth_header,
+                dpop_header,
+                body,
+                headers,
+                budget,
+                mutates,
+                false,
+                proof_signer,
+            )
+        })
         .map_err(|_| transport_error(false))?
         .join()
-        .map_err(|_| maybe_uncertain(transport_error(false), mutates))
-        .and_then(|result| result)
-        .map_err(|error| {
-            if error.mutation_outcome() == crate::MutationOutcome::Uncertain {
-                // Preserve the real transport category while exposing the
-                // stable no-replay code used by managed session consumers.
-                match error {
-                    DactylError::Adapter { kind, message, .. } => {
-                        DactylError::adapter_with_code(kind, "outcome_unknown", message)
-                    }
-                    other => other,
+        .map_err(|_| maybe_uncertain(transport_error(false), mutates))?;
+    if let Some(captured) = captured_meta {
+        *metadata_out = captured;
+    }
+    outcome.map_err(|error| {
+        if error.mutation_outcome() == crate::MutationOutcome::Uncertain {
+            // Preserve the real transport category while exposing the
+            // stable no-replay code used by managed session consumers.
+            match error {
+                DactylError::Adapter { kind, message, .. } => {
+                    DactylError::adapter_with_code(kind, "outcome_unknown", message)
                 }
-            } else {
-                error
+                other => other,
             }
-        })
+        } else {
+            error
+        }
+    })
 }
 
 #[derive(Serialize)]
@@ -224,6 +264,7 @@ struct VersionedRequest<'a, T> {
 }
 
 impl SupabaseAdapter {
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         endpoint: &str,
         bearer: Option<String>,
@@ -231,13 +272,15 @@ impl SupabaseAdapter {
         context: Option<StorageContext>,
         rpc: Option<&SupabaseRpcConfig>,
         budget: ResourceBudget,
+        proof_signer: Option<Arc<dyn RequestProofSigner>>,
+        dpop_nonce: Option<&str>,
     ) -> Result<Self, DactylError> {
         budget.validate()?;
         let url = match rpc {
             Some(config) => validate_rpc(config)?,
             None => validate_endpoint(endpoint)?,
         };
-        let bearer = bearer
+        let token = bearer
             .filter(|value| !value.trim().is_empty())
             .ok_or_else(|| {
                 DactylError::adapter_with_code(
@@ -246,9 +289,12 @@ impl SupabaseAdapter {
                     "Supabase service requires a user bearer token",
                 )
             })?;
-        let mut bearer = reqwest::header::HeaderValue::from_str(&format!("Bearer {bearer}"))
+        let header_check = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
             .map_err(|_| DactylError::Config("invalid Supabase bearer token".into()))?;
-        bearer.set_sensitive(true);
+        drop(header_check);
+        if let Some(nonce) = dpop_nonce {
+            validate_dpop_nonce(nonce)?;
+        }
         let context = context.ok_or_else(|| {
             DactylError::adapter_with_code(
                 AdapterErrorKind::Authentication,
@@ -258,13 +304,17 @@ impl SupabaseAdapter {
         })?;
         context.validate()?;
         let rpc_headers = rpc.map(rpc_headers).transpose()?;
+        let http_client = acquire_client(budget.connect_timeout())?;
         Ok(Self {
             rpc_headers,
             endpoint: url.as_str().trim_end_matches('/').to_owned(),
-            bearer,
+            token,
             access_mode: options.access_mode,
             context,
             budget,
+            proof_signer,
+            dpop_nonce: dpop_nonce.map(str::to_owned),
+            http_client,
         })
     }
 
@@ -301,18 +351,42 @@ impl SupabaseAdapter {
             path
         };
         let endpoint = format!("{}{path}", self.endpoint);
+        let canonical = canonical_url(&endpoint)?;
+        let (auth_header, dpop_header) = build_auth_headers(
+            "POST",
+            &canonical,
+            &self.token,
+            self.proof_signer.as_ref(),
+            self.dpop_nonce.as_deref(),
+        )?;
         let rpc_headers = self.rpc_headers.clone();
-        let bearer = self.bearer.clone();
         let budget = self.budget;
+        let client = self.http_client.clone();
+        let proof_signer = self.proof_signer.clone();
         // The facade is synchronous, but callers may enter from an async
-        // runtime. reqwest::blocking must be constructed, used AND dropped
-        // outside that runtime. Keep the entire bounded request on this worker.
-        std::thread::Builder::new()
+        // runtime. reqwest::blocking must be executed and dropped
+        // outside that runtime. Keep the bounded request on this worker.
+        let (outcome, _) = std::thread::Builder::new()
             .name("dactyl-supabase-http".into())
-            .spawn(move || send_request(endpoint, bearer, body, rpc_headers, budget, mutates, true))
+            .spawn(move || {
+                send_request(
+                    client,
+                    endpoint,
+                    canonical,
+                    auth_header,
+                    dpop_header,
+                    body,
+                    rpc_headers,
+                    budget,
+                    mutates,
+                    true,
+                    proof_signer,
+                )
+            })
             .map_err(|_| transport_error(false))?
             .join()
-            .map_err(|_| maybe_uncertain(transport_error(false), mutates))?
+            .map_err(|_| maybe_uncertain(transport_error(false), mutates))?;
+        outcome
     }
 
     fn request(
@@ -352,92 +426,145 @@ fn maybe_uncertain(error: DactylError, mutates: bool) -> DactylError {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn send_request<T: for<'de> Deserialize<'de>>(
+    http_client: Arc<SharedHttpClient>,
     endpoint: String,
-    bearer: reqwest::header::HeaderValue,
+    canonical: String,
+    auth_header: reqwest::header::HeaderValue,
+    dpop_header: Option<reqwest::header::HeaderValue>,
     body: Vec<u8>,
     rpc_headers: Option<reqwest::header::HeaderMap>,
     budget: ResourceBudget,
     mutates: bool,
     validate_rows: bool,
-) -> Result<T, DactylError> {
-    let client = reqwest::blocking::Client::builder()
-        .connect_timeout(budget.connect_timeout())
-        .timeout(budget.request_timeout())
-        .redirect(reqwest::redirect::Policy::none())
-        .retry(reqwest::retry::never())
-        .build()
-        .map_err(|_| transport_error(false))?;
+    proof_signer: Option<Arc<dyn RequestProofSigner>>,
+) -> (Result<T, DactylError>, Option<CloudResponseMetadata>) {
+    let deadline = Instant::now() + budget.request_timeout();
+    let _permit = match acquire_permit(deadline) {
+        Ok(permit) => permit,
+        Err(error) => return (Err(error), None),
+    };
+    let remaining = deadline.saturating_duration_since(Instant::now());
+    if remaining.is_zero() {
+        return (Err(transport_error(true)), None);
+    }
     let rpc = rpc_headers.is_some();
-    let response = client
+    let mut request = http_client
+        .client()
         .post(endpoint)
+        .timeout(remaining)
         .headers(rpc_headers.unwrap_or_default())
-        .header(reqwest::header::AUTHORIZATION, bearer)
-        .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .body(body)
-        .send()
-        .map_err(|error| maybe_uncertain(transport_error(error.is_timeout()), mutates))?;
+        .header(reqwest::header::AUTHORIZATION, auth_header)
+        .header(reqwest::header::CONTENT_TYPE, "application/json");
+    if let Some(dpop) = dpop_header {
+        request = request.header("DPoP", dpop);
+    }
+    let response = match request.body(body).send() {
+        Ok(response) => response,
+        Err(error) => {
+            return (
+                Err(maybe_uncertain(
+                    transport_error(error.is_timeout()),
+                    mutates,
+                )),
+                None,
+            )
+        }
+    };
     let status = response.status().as_u16();
+    let metadata = extract_response_metadata(response.headers(), &canonical, proof_signer.as_ref());
     let bytes = match read_bounded_body(response, budget.max_wire_bytes()) {
         Ok(bytes) => bytes,
         Err(BoundedReadError::TooLarge) => {
-            return Err(maybe_uncertain(
-                DactylError::adapter_with_code(
-                    AdapterErrorKind::Protocol,
-                    "response_too_large",
-                    "Supabase response exceeds max_wire_bytes",
-                ),
-                mutates,
-            ))
+            return (
+                Err(maybe_uncertain(
+                    DactylError::adapter_with_code(
+                        AdapterErrorKind::Protocol,
+                        "response_too_large",
+                        "Supabase response exceeds max_wire_bytes",
+                    ),
+                    mutates,
+                )),
+                Some(metadata),
+            )
         }
         Err(BoundedReadError::Io(error)) => {
-            return Err(maybe_uncertain(
-                transport_error(body_read_timed_out(&error)),
-                mutates,
-            ))
+            return (
+                Err(maybe_uncertain(
+                    transport_error(body_read_timed_out(&error)),
+                    mutates,
+                )),
+                Some(metadata),
+            )
         }
     };
     if !(200..300).contains(&status) {
-        let error = remote_error(status, &bytes, rpc);
-        return if mutates
-            && (matches!(status, 408 | 502 | 504)
-                || (!validate_rows && matches!(status, 300..=399 | 500..=599)))
-        {
+        let mut error = remote_error(status, &bytes, rpc);
+        let res = if mutates && matches!(status, 300..=399 | 408 | 500..=599) {
+            if matches!(status, 500..=599) && error.adapter_code().is_none() {
+                if let DactylError::Adapter { kind, message, .. } = error {
+                    error = DactylError::adapter_with_code(kind, "outcome_unknown", message);
+                }
+            }
             Err(mark_remote_uncertain(error))
         } else {
             Err(error)
         };
+        return (res, Some(metadata));
     }
-    let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
-        maybe_uncertain(
-            protocol_error(if rpc {
-                "invalid RPC response"
-            } else {
-                "invalid Supabase service response"
-            }),
-            mutates,
-        )
-    })?;
-    ensure_json_depth(&value).map_err(|error| maybe_uncertain(error, mutates))?;
+    let value: serde_json::Value = match serde_json::from_slice(&bytes) {
+        Ok(value) => value,
+        Err(_) => {
+            return (
+                Err(maybe_uncertain(
+                    protocol_error(if rpc {
+                        "invalid RPC response"
+                    } else {
+                        "invalid Supabase service response"
+                    }),
+                    mutates,
+                )),
+                Some(metadata),
+            )
+        }
+    };
+    if let Err(error) = ensure_json_depth(&value) {
+        return (Err(maybe_uncertain(error, mutates)), Some(metadata));
+    }
     if rpc && validate_rows {
         if let Some(results) = value.get("results") {
             let mut tracker = DecodedResultTracker::new(budget);
-            for result in results.as_array().ok_or_else(|| {
-                maybe_uncertain(protocol_error("invalid RPC batch response"), mutates)
-            })? {
-                validate_rpc_result(result, budget, &mut tracker)
-                    .map_err(|error| maybe_uncertain(error, mutates))?;
+            let array = match results.as_array() {
+                Some(array) => array,
+                None => {
+                    return (
+                        Err(maybe_uncertain(
+                            protocol_error("invalid RPC batch response"),
+                            mutates,
+                        )),
+                        Some(metadata),
+                    )
+                }
+            };
+            for result in array {
+                if let Err(error) = validate_rpc_result(result, budget, &mut tracker) {
+                    return (Err(maybe_uncertain(error, mutates)), Some(metadata));
+                }
             }
         } else {
             let mut tracker = DecodedResultTracker::new(budget);
-            validate_rpc_result(&value, budget, &mut tracker)
-                .map_err(|error| maybe_uncertain(error, mutates))?;
+            if let Err(error) = validate_rpc_result(&value, budget, &mut tracker) {
+                return (Err(maybe_uncertain(error, mutates)), Some(metadata));
+            }
         }
-        return serde_json::from_value(value)
+        let parsed = serde_json::from_value(value)
             .map_err(|_| maybe_uncertain(protocol_error("invalid RPC response"), mutates));
+        return (parsed, Some(metadata));
     }
-    serde_json::from_value(value)
-        .map_err(|_| maybe_uncertain(protocol_error("invalid Supabase service response"), mutates))
+    let parsed = serde_json::from_value(value)
+        .map_err(|_| maybe_uncertain(protocol_error("invalid Supabase service response"), mutates));
+    (parsed, Some(metadata))
 }
 
 // Strict native results include keys and validate auxiliary write rows too.
@@ -692,9 +819,25 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
     let envelope = serde_json::from_slice::<serde_json::Value>(body).ok();
     let code = envelope.as_ref().and_then(|value| {
         if rpc {
-            value.get("code")?.as_str()
+            value
+                .get("code")
+                .and_then(|v| v.as_str())
+                .or_else(|| {
+                    value
+                        .get("error")
+                        .and_then(|v| v.get("code"))
+                        .and_then(|v| v.as_str())
+                })
+                .or_else(|| value.get("error_code").and_then(|v| v.as_str()))
+                .or_else(|| value.get("error").and_then(|v| v.as_str()))
         } else {
-            value.get("error")?.get("code")?.as_str()
+            value
+                .get("error")
+                .and_then(|v| v.get("code"))
+                .and_then(|v| v.as_str())
+                .or_else(|| value.get("error_code").and_then(|v| v.as_str()))
+                .or_else(|| value.get("code").and_then(|v| v.as_str()))
+                .or_else(|| value.get("error").and_then(|v| v.as_str()))
         }
     });
     if rpc {
@@ -732,6 +875,30 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
         Some("session_revoked") => Some((AdapterErrorKind::Authentication, "session_revoked")),
         Some("session_not_found") => Some((AdapterErrorKind::Authentication, "session_not_found")),
         Some("invalid_token") => Some((AdapterErrorKind::Authentication, "invalid_token")),
+        Some("use_dpop_nonce") => Some((AdapterErrorKind::Authentication, "use_dpop_nonce")),
+        Some("invalid_dpop_proof") => {
+            Some((AdapterErrorKind::Authentication, "invalid_dpop_proof"))
+        }
+        Some("dpop_proof_required") => {
+            Some((AdapterErrorKind::Authentication, "dpop_proof_required"))
+        }
+        Some("missing_dpop_proof") => {
+            Some((AdapterErrorKind::Authentication, "missing_dpop_proof"))
+        }
+        Some("dpop_replay") => Some((AdapterErrorKind::Authentication, "dpop_replay")),
+        Some("dpop_nonce_mismatch") => {
+            Some((AdapterErrorKind::Authentication, "dpop_nonce_mismatch"))
+        }
+        Some("dpop_clock_skew") => Some((AdapterErrorKind::Authentication, "dpop_clock_skew")),
+        Some("dpop_ath_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_ath_mismatch")),
+        Some("dpop_htu_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_htu_mismatch")),
+        Some("dpop_htm_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_htm_mismatch")),
+        Some("dpop_jkt_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_jkt_mismatch")),
+        Some("stolen_bearer") => Some((AdapterErrorKind::Authentication, "stolen_bearer")),
+        Some("device_revoked") => Some((AdapterErrorKind::Authentication, "device_revoked")),
+        Some("device_not_enrolled") => {
+            Some((AdapterErrorKind::Authentication, "device_not_enrolled"))
+        }
         Some("authorization_denied") => {
             Some((AdapterErrorKind::Authorization, "authorization_denied"))
         }

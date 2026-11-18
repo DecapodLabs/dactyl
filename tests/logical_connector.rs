@@ -34,6 +34,10 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     assert!(AccountOperation::Checkout.is_mutating());
     assert!(AccountOperation::Manage.is_mutating());
     assert!(AccountOperation::Portal.is_mutating());
+    assert!(!AccountOperation::DeviceChallenge.is_mutating());
+    assert!(AccountOperation::DeviceEnroll.is_mutating());
+    assert!(AccountOperation::DeviceStepUp.is_mutating());
+    assert!(AccountOperation::DeviceRevoke.is_mutating());
 
     let scm = ScmCredential::github("gho_secret_linking_token").unwrap();
     assert_eq!(scm.provider(), ScmProvider::GitHub);
@@ -283,7 +287,7 @@ mod cloud_and_multi_workspace {
                 200,
                 json!({
                     "flow_id": FLOW,
-                    "browser_url": format!("ORIGIN/functions/v1/propodus-onboarding/begin?flow_id={FLOW}&ticket=t1"),
+                    "browser_url": format!("ORIGIN/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket=t1"),
                     "expires_at": "2099-01-01T00:00:00Z"
                 })
                 .to_string(),
@@ -330,8 +334,8 @@ mod cloud_and_multi_workspace {
         // Verify discovery on both origins sent zero user credentials or API keys.
         let disc_b = rx_b.recv().unwrap();
         let disc_c = rx_c.recv().unwrap();
-        assert!(disc_b.starts_with("GET /functions/v1/propodus-onboarding/config "));
-        assert!(disc_c.starts_with("GET /functions/v1/propodus-onboarding/config "));
+        assert!(disc_b.starts_with("GET /functions/v1/decapod-onboarding/config "));
+        assert!(disc_c.starts_with("GET /functions/v1/decapod-onboarding/config "));
         assert!(!disc_b.to_lowercase().contains("authorization:"));
         assert!(!disc_b.to_lowercase().contains("apikey:"));
         assert!(!disc_c.to_lowercase().contains("authorization:"));
@@ -670,5 +674,106 @@ mod cloud_and_multi_workspace {
             .unwrap_err();
         assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Protocol));
         assert_eq!(err.adapter_code(), None);
+
+        // 6. DeviceEnroll / DeviceStepUp / DeviceRevoke post-send loss -> outcome_unknown + Uncertain,
+        //    while DeviceChallenge post-send loss is NOT outcome_unknown.
+        for op in [
+            AccountOperation::DeviceEnroll,
+            AccountOperation::DeviceStepUp,
+            AccountOperation::DeviceRevoke,
+        ] {
+            let (origin, rx, srv) = mock_server(vec![(0, String::new())]);
+            let conn =
+                LogicalConnector::cloud_with_config(SupabaseRpcConfig::v1(&origin, KEY_B)).unwrap();
+            let err = conn
+                .account_request(op, &json!({"version": 1}), "user-bearer", None)
+                .unwrap_err();
+            assert_eq!(err.adapter_code(), Some("outcome_unknown"));
+            assert_eq!(
+                err.mutation_outcome(),
+                dactyl_db::MutationOutcome::Uncertain
+            );
+            rx.recv().unwrap();
+            srv.join().unwrap();
+        }
+        let (origin, rx, srv) = mock_server(vec![(0, String::new())]);
+        let conn =
+            LogicalConnector::cloud_with_config(SupabaseRpcConfig::v1(&origin, KEY_B)).unwrap();
+        let err = conn
+            .account_request(
+                AccountOperation::DeviceChallenge,
+                &json!({"version": 1}),
+                "user-bearer",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(err.adapter_code(), None);
+        assert_ne!(
+            err.mutation_outcome(),
+            dactyl_db::MutationOutcome::Uncertain
+        );
+        rx.recv().unwrap();
+        srv.join().unwrap();
+    }
+
+    #[test]
+    fn logical_connector_proof_signer_and_metadata_propagate_and_redact() {
+        use dactyl_db::{
+            CloudResponseMetadata, OperationKind, RequestProof, RequestProofInput,
+            RequestProofSigner, ResourceBudget,
+        };
+        use std::sync::Arc;
+
+        struct StaticDpopSigner;
+        impl RequestProofSigner for StaticDpopSigner {
+            fn sign_request(
+                &self,
+                input: &RequestProofInput<'_>,
+            ) -> Result<RequestProof, dactyl_db::DactylError> {
+                assert_eq!(input.method(), "POST");
+                assert!(input.access_token_sha256().is_some());
+                RequestProof::dpop(format!("logical-dpop-{}", input.nonce().unwrap_or("none")))
+            }
+        }
+
+        let (origin, rx, srv) = mock_server(vec![
+            (
+                200,
+                json!({
+                    "version": 1,
+                    "project_origin": "ORIGIN",
+                    "publishable_key": KEY_B,
+                    "schema": "dactyl_b"
+                })
+                .to_string(),
+            ),
+            (200, json!({"decision": "allow"}).to_string()),
+        ]);
+        let (connector, disc_meta) =
+            LogicalConnector::resolve_with_metadata(LogicalTarget::cloud_with_origin(&origin))
+                .unwrap();
+        assert!(disc_meta.cloud_headers().is_empty());
+
+        let connector = connector
+            .with_proof_signer(Arc::new(StaticDpopSigner))
+            .with_dpop_nonce("init-nonce");
+        let mut ctrl_meta = CloudResponseMetadata::default();
+        let out = connector
+            .control_request_with_metadata(
+                "propodus_repository_access_v1",
+                &json!({"version": 1}),
+                Some("bearer-token"),
+                None,
+                OperationKind::Read,
+                ResourceBudget::v1(),
+                &mut ctrl_meta,
+            )
+            .unwrap();
+        assert_eq!(out["decision"], "allow");
+        let _ = rx.recv().unwrap();
+        let ctrl_req = rx.recv().unwrap();
+        assert!(ctrl_req.contains("authorization: DPoP bearer-token"));
+        assert!(ctrl_req.contains("dpop: logical-dpop-init-nonce"));
+        srv.join().unwrap();
     }
 }
