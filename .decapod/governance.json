@@ -131,6 +131,11 @@
       "id": "chk-cloud-dpop-v18",
       "summary": "feat: support caller-supplied DPoP proofs, Decapod Cloud onboarding routes, and extended Supabase conformance",
       "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
+    },
+    {
+      "id": "chk-containerfile-pin",
+      "summary": "chore: align CI proof controller pin with decapod 0.148.11",
+      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
     }
   ],
   "intents": {
