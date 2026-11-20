@@ -96,7 +96,10 @@
     "cloud-followups": {
       "statement": "Both transports preserve typed errors and retry only explicit pre-execution DPoP challenges.",
       "falsifier": "A fixture sends an unexpected request, loses a public code, or retries an ambiguous mutation.",
-      "status": "open"
+      "status": "supported",
+      "proof_refs": [
+        "Cargo 1.96.1 all-features cloud connector and native RPC fixtures: 28 passed. Targeted Clippy passed."
+      ]
     }
   },
   "checkpoints": [
@@ -104,6 +107,14 @@
       "id": "cloud-followups-initial",
       "summary": "Cloud account overage policy and one DPoP nonce retry",
       "input_digest": "sha256:0d21d0500d0281b6abfffc5bedc629801035d7d5dc7a1a9964a7210c8f5aae63"
+    },
+    {
+      "id": "local-contract-evidence",
+      "summary": "chore: record local Dactyl transport evidence",
+      "input_digest": "sha256:8a5f79c308c994e6732a8ba0b468da56b6293cf7fc5cb7d46839007ede045670",
+      "proof_refs": [
+        "Cargo 1.96.1 all-features cloud connector and native RPC fixtures: 28 passed. Targeted Clippy passed."
+      ]
     }
   ],
   "intents": {
@@ -142,11 +153,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "The shared blocking pool still owns permits and the existing deadline covers both dispatches.",
+          "reviewed_code_fingerprint": "46258d78316fcb4b23526d3768b8840b19689bf50b3a686b9b9d400e1b592feb",
+          "spec_material_hash": "eaad0f290af40606858a916969acb81641570ddc714dda74c03d69526295966a"
+        },
+        {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Both transports preserve typed errors and retry only explicit pre-execution DPoP challenges.",
+          "reason": "Documents the existing overage-policy route, retry contract and bounded response diagnostics.",
           "reviewed_code_fingerprint": "46258d78316fcb4b23526d3768b8840b19689bf50b3a686b9b9d400e1b592feb",
           "spec_material_hash": "be8c3429236a128821bb2466c508f9cb06afc37d4275876250de1fb7cdb7bc65"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "The client requires an explicit challenge and bounded nonce, retains caller-owned keys, and redacts proof and nonce values.",
+          "reviewed_code_fingerprint": "46258d78316fcb4b23526d3768b8840b19689bf50b3a686b9b9d400e1b592feb",
+          "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
         }
       ],
       "state": "APPROVED",
@@ -157,14 +182,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795210795Z"
+      "updated_at": "1795213340Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a6e395767919f484634cc0749c6f698b525575368a485c9ccc0ca39cf920fa8f",
+      "artifact_hash": "sha256:765ad3cdb5ff2e117a2f9fd3e8a434b61026b25d6572f1e9494dcdee6a364b42",
       "checks": [
+        {
+          "name": "dactyl-cloud-contract",
+          "status": "passed"
+        },
         {
           "name": "diff-check",
           "status": "passed"
@@ -191,10 +220,17 @@
             "intent_id": "intent:change_01M7XDX6Z5QWXGRMT7BQNDNNE2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7XDX722J0AGYPW7SKXCWRX4",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7XDX6Z5QWXGRMT7BQNDNNE2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XDX722J0AGYPW7SKXCWRX4": {
@@ -217,6 +253,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Cargo 1.96.1 all-features cloud connector and native RPC fixtures: 28 passed. Targeted Clippy passed."
+                ],
+                "proof_refs": [
+                  "dactyl-cloud-contract"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -225,6 +276,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Cargo 1.96.1 all-features cloud connector and native RPC fixtures: 28 passed. Targeted Clippy passed.",
         "git diff --check passed for the isolated workspace"
       ],
       "inspected_files": [],
