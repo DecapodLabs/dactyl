@@ -63,7 +63,18 @@ between offline and hosted proof.
 `LogicalConnector::account_request` and `CloudConnector::account_request(AccountOperation, &Value, bearer,
 Option<&ScmCredential>)` select fixed `account-register`, `account-status`,
 `billing-quote`, `billing-checkout`, `billing-manage` (`Manage`), or
-`billing-portal` (`Portal`) POST paths. Ordinary account access passes no
+`billing-portal` (`Portal`) POST paths. `BillingOveragePolicy` selects
+`billing-overage-policy` and reports uncertain outcomes when a dispatched
+mutation loses its response. Cloud account and Supabase channels retain
+`quota_exceeded` and `overage_cap_exhausted` as quota denials, `rate_limited`
+as throttling, and `provider_disabled` as an authorization denial. Callers of
+the metadata APIs can inspect a bounded `Retry-After` header.
+An explicit HTTP 401 nonce challenge to a DPoP request can trigger one
+retry to the same route within the original deadline. The transport asks
+the caller's signer for a new DPoP proof carrying the bounded server nonce,
+and returns the final response metadata. A second challenge, a Bearer
+proof, or a transport failure ends the operation without further dispatch.
+Ordinary account access passes no
 SCM credential. Explicit linking accepts only validated `ScmCredential::github`
 or `::gitlab`, paired with `github.com` or `gitlab.com` respectively. These opaque
 credentials and optional `UserSession::provider_token` redact `Debug`; a provider
@@ -279,7 +290,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `46258d78316fcb4b23526d3768b8840b19689bf50b3a686b9b9d400e1b592feb`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

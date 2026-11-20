@@ -50,54 +50,129 @@ fn fixture_raw(
     mpsc::Receiver<(String, Value)>,
     thread::JoinHandle<()>,
 ) {
+    fixture_sequence(vec![(status, body, extra_headers)])
+}
+
+fn fixture_sequence(
+    responses: Vec<(u16, String, &str)>,
+) -> (
+    String,
+    mpsc::Receiver<(String, Value)>,
+    thread::JoinHandle<()>,
+) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let endpoint = format!("http://{}", listener.local_addr().unwrap());
     let (sender, receiver) = mpsc::channel();
-    let extra_headers = extra_headers.to_owned();
+    let responses = responses
+        .into_iter()
+        .map(|(status, body, headers)| (status, body, headers.to_owned()))
+        .collect::<Vec<_>>();
     let handle = thread::spawn(move || {
-        let (mut stream, _) = listener.accept().unwrap();
-        stream
-            .set_read_timeout(Some(Duration::from_secs(5)))
-            .unwrap();
-        let mut bytes = Vec::new();
-        let mut chunk = [0; 4096];
-        let (headers, body_start, length) = loop {
-            let n = stream.read(&mut chunk).unwrap();
-            assert!(n > 0);
-            bytes.extend_from_slice(&chunk[..n]);
-            if let Some(end) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
-                let headers = String::from_utf8(bytes[..end].to_vec()).unwrap();
-                let length = headers
-                    .lines()
-                    .find_map(|line| {
-                        let (name, value) = line.split_once(':')?;
-                        name.eq_ignore_ascii_case("content-length")
-                            .then(|| value.trim().parse::<usize>().unwrap())
-                    })
-                    .unwrap();
-                break (headers, end + 4, length);
+        for (status, body, extra_headers) in responses {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .unwrap();
+            let mut bytes = Vec::new();
+            let mut chunk = [0; 4096];
+            let (headers, body_start, length) = loop {
+                let n = stream.read(&mut chunk).unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&chunk[..n]);
+                if let Some(end) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
+                    let headers = String::from_utf8(bytes[..end].to_vec()).unwrap();
+                    let length = headers
+                        .lines()
+                        .find_map(|line| {
+                            let (name, value) = line.split_once(':')?;
+                            name.eq_ignore_ascii_case("content-length")
+                                .then(|| value.trim().parse::<usize>().unwrap())
+                        })
+                        .unwrap();
+                    break (headers, end + 4, length);
+                }
+            };
+            while bytes.len() - body_start < length {
+                let n = stream.read(&mut chunk).unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&chunk[..n]);
             }
-        };
-        while bytes.len() - body_start < length {
-            let n = stream.read(&mut chunk).unwrap();
-            assert!(n > 0);
-            bytes.extend_from_slice(&chunk[..n]);
+            let payload = serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
+            sender.send((headers, payload)).unwrap();
+            if status == 0 {
+                drop(stream);
+                listener.set_nonblocking(true).unwrap();
+                thread::sleep(Duration::from_millis(150));
+                assert!(
+                    listener.accept().is_err(),
+                    "mutation was replayed after response loss"
+                );
+                return;
+            }
+            write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{extra_headers}\r\n{body}", body.len()).ok();
         }
-        let payload = serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
-        sender.send((headers, payload)).unwrap();
-        if status == 0 {
-            drop(stream);
-            listener.set_nonblocking(true).unwrap();
-            thread::sleep(Duration::from_millis(150));
-            assert!(
-                listener.accept().is_err(),
-                "mutation was replayed after response loss"
-            );
-            return;
-        }
-        write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{extra_headers}\r\n{body}", body.len()).ok();
     });
     (endpoint, receiver, handle)
+}
+
+#[test]
+fn native_control_rpc_retries_one_nonce_challenge_and_exposes_a_final_response() {
+    use dactyl_db::{
+        CloudConnector, CloudResponseMetadata, DactylError, MutationOutcome, OperationKind,
+        RequestProof, RequestProofInput, RequestProofSigner, ResourceBudget,
+    };
+    use std::sync::Arc;
+
+    struct Signer;
+    impl RequestProofSigner for Signer {
+        fn sign_request(&self, input: &RequestProofInput<'_>) -> Result<RequestProof, DactylError> {
+            RequestProof::dpop(format!("proof.{}", input.nonce().unwrap_or("initial")))
+        }
+    }
+
+    for status in [200, 401] {
+        let (origin, received, server) = fixture_sequence(vec![
+            (401, "{}".into(), "WWW-Authenticate: DPoP realm=\"cloud\", error=\"use_dpop_nonce\"\r\nDPoP-Nonce: first\r\n"),
+            (status, json!({"code":"use_dpop_nonce"}).to_string(),
+                "DPoP-Nonce: final\r\nDecapod-Cloud-Region: final-region\r\nRetry-After: 45\r\n"),
+        ]);
+        let client = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY))
+            .unwrap()
+            .with_proof_signer(Arc::new(Signer));
+        let mut metadata = CloudResponseMetadata::default();
+        let result = client.control_request_with_metadata(
+            "billing_control_v1",
+            &json!({"action":"update"}),
+            Some(BEARER),
+            None,
+            OperationKind::Write,
+            ResourceBudget::v1(),
+            &mut metadata,
+        );
+        if status == 200 {
+            assert!(result.is_ok());
+        } else {
+            let error = result.unwrap_err();
+            assert_eq!(error.adapter_code(), Some("use_dpop_nonce"));
+            assert_ne!(error.mutation_outcome(), MutationOutcome::Uncertain);
+        }
+        let (first_headers, first_body) = received.recv().unwrap();
+        let (retry_headers, retry_body) = received.recv().unwrap();
+        assert_eq!(first_body, retry_body);
+        assert!(first_headers
+            .to_ascii_lowercase()
+            .contains("dpop: proof.initial"));
+        assert!(retry_headers
+            .to_ascii_lowercase()
+            .contains("dpop: proof.first"));
+        assert_eq!(metadata.dpop_nonce(), Some("final"));
+        assert_eq!(
+            metadata.cloud_header("Decapod-Cloud-Region"),
+            Some("final-region")
+        );
+        assert_eq!(metadata.retry_after(), Some("45"));
+        server.join().unwrap();
+    }
 }
 
 fn empty_result(affected: u64) -> Value {
@@ -603,6 +678,27 @@ fn lease_fencing_cas_batches_and_compact_cursor_pagination_conform() {
             false,
         ),
         (
+            429,
+            "quota_exceeded",
+            AdapterErrorKind::Quota,
+            FailureOrigin::RemotePolicy,
+            false,
+        ),
+        (
+            429,
+            "overage_cap_exhausted",
+            AdapterErrorKind::Quota,
+            FailureOrigin::RemotePolicy,
+            false,
+        ),
+        (
+            403,
+            "provider_disabled",
+            AdapterErrorKind::Authorization,
+            FailureOrigin::RemotePolicy,
+            false,
+        ),
+        (
             503,
             "storage_unavailable",
             AdapterErrorKind::Unavailable,
@@ -621,6 +717,7 @@ fn lease_fencing_cas_batches_and_compact_cursor_pagination_conform() {
             )
             .unwrap_err();
         assert_eq!(err.adapter_kind(), Some(expected_kind));
+        assert_eq!(err.adapter_code(), Some(code));
         assert_eq!(err.failure_origin(), expected_origin);
         assert_eq!(
             err.mutation_outcome() == MutationOutcome::Uncertain,

@@ -32,7 +32,12 @@ pub(crate) fn validate_opaque_credential(
 }
 
 pub(crate) fn validate_dpop_nonce(value: &str) -> Result<(), DactylError> {
-    if value.is_empty() || value.len() > 1024 || !value.bytes().all(|b| b.is_ascii_graphic()) {
+    if value.is_empty()
+        || value.len() > 1024
+        || !value
+            .bytes()
+            .all(|b| b.is_ascii_graphic() && !matches!(b, b'"' | b'\\'))
+    {
         return Err(DactylError::adapter_with_code(
             AdapterErrorKind::Authentication,
             "invalid_dpop_nonce",
@@ -199,6 +204,7 @@ pub struct CloudResponseMetadata {
     dpop_nonce: Option<String>,
     sunset: Option<String>,
     deprecation: Option<String>,
+    retry_after: Option<String>,
     cloud_headers: Vec<(String, String)>,
 }
 
@@ -208,6 +214,7 @@ impl std::fmt::Debug for CloudResponseMetadata {
             .field("has_dpop_nonce", &self.dpop_nonce.is_some())
             .field("has_sunset", &self.sunset.is_some())
             .field("has_deprecation", &self.deprecation.is_some())
+            .field("has_retry_after", &self.retry_after.is_some())
             .field("cloud_header_count", &self.cloud_headers.len())
             .finish()
     }
@@ -224,6 +231,11 @@ impl CloudResponseMetadata {
 
     pub fn deprecation(&self) -> Option<&str> {
         self.deprecation.as_deref()
+    }
+
+    /// Bounded `Retry-After` header as sent by the service, when present.
+    pub fn retry_after(&self) -> Option<&str> {
+        self.retry_after.as_deref()
     }
 
     pub fn cloud_headers(&self) -> &[(String, String)] {
@@ -253,6 +265,11 @@ impl CloudResponseMetadata {
     }
 
     #[cfg(feature = "supabase")]
+    pub(crate) fn set_retry_after(&mut self, retry_after: String) {
+        self.retry_after = Some(retry_after);
+    }
+
+    #[cfg(feature = "supabase")]
     pub(crate) fn push_cloud_header(&mut self, name: String, value: String) {
         self.cloud_headers.push((name, value));
     }
@@ -269,6 +286,7 @@ pub enum AccountOperation {
     Checkout,
     Manage,
     Portal,
+    BillingOveragePolicy,
     DeviceChallenge,
     DeviceEnroll,
     DeviceStepUp,
@@ -286,6 +304,7 @@ impl AccountOperation {
             Self::Checkout => "billing-checkout",
             Self::Manage => "billing-manage",
             Self::Portal => "billing-portal",
+            Self::BillingOveragePolicy => "billing-overage-policy",
             Self::DeviceChallenge => "device-challenge",
             Self::DeviceEnroll => "device-enroll",
             Self::DeviceStepUp => "device-step-up",
@@ -301,6 +320,7 @@ impl AccountOperation {
                 | Self::Checkout
                 | Self::Manage
                 | Self::Portal
+                | Self::BillingOveragePolicy
                 | Self::DeviceEnroll
                 | Self::DeviceStepUp
                 | Self::DeviceRevoke

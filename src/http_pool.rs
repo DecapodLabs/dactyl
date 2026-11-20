@@ -216,6 +216,93 @@ pub(crate) fn build_auth_headers(
     }
 }
 
+pub(crate) type AuthHeaders = (Option<HeaderValue>, Option<HeaderValue>);
+pub(crate) type HttpOutcome<T> = (Result<T, DactylError>, Option<CloudResponseMetadata>);
+
+pub(crate) fn has_dpop_nonce_challenge(headers: &HeaderMap) -> bool {
+    headers
+        .get_all(reqwest::header::WWW_AUTHENTICATE)
+        .iter()
+        .filter_map(|value| bounded_printable_ascii(value, 1024))
+        .any(|value| {
+            let Some((scheme, mut params)) = value.split_once(' ') else {
+                return false;
+            };
+            if !scheme.eq_ignore_ascii_case("dpop") {
+                return false;
+            }
+            while let Some((name, rest)) = params.trim_start().split_once('=') {
+                let name = name.trim_end();
+                if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+                {
+                    return false;
+                }
+                let rest = rest.trim_start();
+                let (value, tail) = if let Some(quoted) = rest.strip_prefix('"') {
+                    let mut escaped = false;
+                    let Some(end) = quoted.bytes().position(|byte| {
+                        if escaped {
+                            escaped = false;
+                            return false;
+                        }
+                        escaped = byte == b'\\';
+                        byte == b'"'
+                    }) else {
+                        return false;
+                    };
+                    (&quoted[..end], &quoted[end + 1..])
+                } else {
+                    let end = rest.find(',').unwrap_or(rest.len());
+                    (rest[..end].trim_end(), &rest[end..])
+                };
+                if name.eq_ignore_ascii_case("error") {
+                    return value == "use_dpop_nonce"
+                        && (tail.trim_start().is_empty() || tail.trim_start().starts_with(','));
+                }
+                let Some(tail) = tail.trim_start().strip_prefix(',') else {
+                    return false;
+                };
+                params = tail;
+            }
+            false
+        })
+}
+
+/// Retry only a server's explicit pre-execution challenge to a DPoP request.
+/// Both attempts share the caller's deadline and use the same target and body.
+pub(crate) fn with_dpop_nonce_retry<T>(
+    method: &str,
+    canonical_url: &str,
+    signer: Option<&Arc<dyn RequestProofSigner>>,
+    auth: AuthHeaders,
+    mut send: impl FnMut(&AuthHeaders, &mut bool) -> HttpOutcome<T>,
+) -> (HttpOutcome<T>, bool) {
+    let mut unauthorized = false;
+    let first = send(&auth, &mut unauthorized);
+    let Some(nonce) = first.1.as_ref().and_then(CloudResponseMetadata::dpop_nonce) else {
+        return (first, false);
+    };
+    if !unauthorized
+        || first.0.as_ref().err().and_then(DactylError::adapter_code) != Some("use_dpop_nonce")
+        || auth.1.is_none()
+    {
+        return (first, false);
+    }
+    let Some(token) = auth
+        .0
+        .as_ref()
+        .and_then(|header| header.to_str().ok())
+        .and_then(|value| value.strip_prefix("DPoP "))
+    else {
+        return (first, false);
+    };
+    match build_auth_headers(method, canonical_url, token, signer, Some(nonce)) {
+        Ok((auth, Some(proof))) => (send(&(Some(auth), Some(proof)), &mut unauthorized), true),
+        Ok((_, None)) => (first, false),
+        Err(error) => ((Err(error), first.1), false),
+    }
+}
+
 fn bounded_printable_ascii(value: &HeaderValue, max_len: usize) -> Option<String> {
     let text = value.to_str().ok()?.trim();
     if text.is_empty() || text.len() > max_len || !text.bytes().all(|b| (0x20..=0x7E).contains(&b))
@@ -231,7 +318,9 @@ pub(crate) fn extract_response_metadata(
     signer: Option<&Arc<dyn RequestProofSigner>>,
 ) -> CloudResponseMetadata {
     let mut metadata = CloudResponseMetadata::default();
-    if let Some(raw_nonce) = headers.get("dpop-nonce") {
+    let nonce_values = headers.get_all("dpop-nonce");
+    let mut nonces = nonce_values.iter();
+    if let Some(raw_nonce) = nonces.next().filter(|_| nonces.next().is_none()) {
         if let Ok(nonce) = raw_nonce.to_str() {
             let trimmed = nonce.trim();
             if validate_dpop_nonce(trimmed).is_ok() {
@@ -253,6 +342,12 @@ pub(crate) fn extract_response_metadata(
         .and_then(|value| bounded_printable_ascii(value, MAX_HEADER_VALUE_BYTES))
     {
         metadata.set_deprecation(deprecation);
+    }
+    if let Some(retry_after) = headers
+        .get(reqwest::header::RETRY_AFTER)
+        .and_then(|value| bounded_printable_ascii(value, MAX_HEADER_VALUE_BYTES))
+    {
+        metadata.set_retry_after(retry_after);
     }
     let mut total_bytes = 0usize;
     for (name, value) in headers.iter() {

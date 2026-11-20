@@ -22,7 +22,7 @@ use crate::contract::{
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::http_pool::{
     acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
-    SharedHttpClient,
+    has_dpop_nonce_challenge, with_dpop_nonce_retry, HttpOutcome, SharedHttpClient,
 };
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
@@ -233,9 +233,7 @@ pub(crate) fn control_request_with_auth(
         .map_err(|_| transport_error(false))?
         .join()
         .map_err(|_| maybe_uncertain(transport_error(false), mutates))?;
-    if let Some(captured) = captured_meta {
-        *metadata_out = captured;
-    }
+    *metadata_out = captured_meta.unwrap_or_default();
     outcome.map_err(|error| {
         if error.mutation_outcome() == crate::MutationOutcome::Uncertain {
             // Preserve the real transport category while exposing the
@@ -439,41 +437,75 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     mutates: bool,
     validate_rows: bool,
     proof_signer: Option<Arc<dyn RequestProofSigner>>,
-) -> (Result<T, DactylError>, Option<CloudResponseMetadata>) {
+) -> HttpOutcome<T> {
     let deadline = Instant::now() + budget.request_timeout();
     let _permit = match acquire_permit(deadline) {
         Ok(permit) => permit,
         Err(error) => return (Err(error), None),
     };
-    let remaining = deadline.saturating_duration_since(Instant::now());
-    if remaining.is_zero() {
-        return (Err(transport_error(true)), None);
-    }
     let rpc = rpc_headers.is_some();
-    let mut request = http_client
+    let request = http_client
         .client()
         .post(endpoint)
-        .timeout(remaining)
         .headers(rpc_headers.unwrap_or_default())
-        .header(reqwest::header::AUTHORIZATION, auth_header)
-        .header(reqwest::header::CONTENT_TYPE, "application/json");
-    if let Some(dpop) = dpop_header {
-        request = request.header("DPoP", dpop);
-    }
-    let response = match request.body(body).send() {
-        Ok(response) => response,
-        Err(error) => {
-            return (
-                Err(maybe_uncertain(
-                    transport_error(error.is_timeout()),
-                    mutates,
-                )),
-                None,
-            )
-        }
-    };
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .body(body);
+    with_dpop_nonce_retry(
+        "POST",
+        &canonical,
+        proof_signer.as_ref(),
+        (Some(auth_header), dpop_header),
+        |(auth, dpop), unauthorized| {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                return (Err(transport_error(true)), None);
+            }
+            // The request body is fully serialized, so it is safe to clone for
+            // the initial attempt and an explicit pre-execution challenge.
+            let Some(mut attempt) = request.try_clone() else {
+                return (
+                    Err(protocol_error("could not build Supabase request")),
+                    None,
+                );
+            };
+            attempt = attempt.timeout(remaining);
+            if let Some(auth) = auth {
+                attempt = attempt.header(reqwest::header::AUTHORIZATION, auth.clone());
+            }
+            if let Some(dpop) = dpop {
+                attempt = attempt.header("DPoP", dpop.clone());
+            }
+            let response = match attempt.send() {
+                Ok(response) => response,
+                Err(error) => {
+                    return (
+                        Err(maybe_uncertain(
+                            transport_error(error.is_timeout()),
+                            mutates,
+                        )),
+                        None,
+                    );
+                }
+            };
+            *unauthorized = response.status() == reqwest::StatusCode::UNAUTHORIZED;
+            let metadata =
+                extract_response_metadata(response.headers(), &canonical, proof_signer.as_ref());
+            decode_response(response, metadata, budget, mutates, rpc, validate_rows)
+        },
+    )
+    .0
+}
+
+fn decode_response<T: for<'de> Deserialize<'de>>(
+    response: reqwest::blocking::Response,
+    metadata: CloudResponseMetadata,
+    budget: ResourceBudget,
+    mutates: bool,
+    rpc: bool,
+    validate_rows: bool,
+) -> HttpOutcome<T> {
     let status = response.status().as_u16();
-    let metadata = extract_response_metadata(response.headers(), &canonical, proof_signer.as_ref());
+    let nonce_challenge = status == 401 && has_dpop_nonce_challenge(response.headers());
     let bytes = match read_bounded_body(response, budget.max_wire_bytes()) {
         Ok(bytes) => bytes,
         Err(BoundedReadError::TooLarge) => {
@@ -501,6 +533,13 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     };
     if !(200..300).contains(&status) {
         let mut error = remote_error(status, &bytes, rpc);
+        if nonce_challenge && error.adapter_code().is_none() {
+            error = DactylError::adapter_with_code(
+                AdapterErrorKind::Authentication,
+                "use_dpop_nonce",
+                "Supabase requires a DPoP nonce",
+            );
+        }
         let res = if mutates && matches!(status, 300..=399 | 408 | 500..=599) {
             if matches!(status, 500..=599) && error.adapter_code().is_none() {
                 if let DactylError::Adapter { kind, message, .. } = error {
@@ -902,6 +941,7 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
         Some("authorization_denied") => {
             Some((AdapterErrorKind::Authorization, "authorization_denied"))
         }
+        Some("provider_disabled") => Some((AdapterErrorKind::Authorization, "provider_disabled")),
         Some("invalid_request") => Some((AdapterErrorKind::InvalidOperation, "invalid_request")),
         Some("unsupported_query") => Some((AdapterErrorKind::Capability, "unsupported_query")),
         Some("unsupported_type") => Some((AdapterErrorKind::Capability, "unsupported_type")),
@@ -943,6 +983,7 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
             Some((AdapterErrorKind::TransactionAborted, "transaction_aborted"))
         }
         Some("quota_exceeded") => Some((AdapterErrorKind::Quota, "quota_exceeded")),
+        Some("overage_cap_exhausted") => Some((AdapterErrorKind::Quota, "overage_cap_exhausted")),
         Some("payload_too_large") => Some((AdapterErrorKind::Quota, "payload_too_large")),
         Some("rate_limited") => Some((AdapterErrorKind::RateLimited, "rate_limited")),
         Some("storage_failure") => Some((AdapterErrorKind::Storage, "storage_failure")),

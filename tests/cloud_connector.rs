@@ -665,7 +665,7 @@ impl InputTag for RequestProofInput<'_> {
 
 #[test]
 fn discovery_and_account_fall_back_on_404_and_capture_redacted_cloud_headers() {
-    let extra = "Decapod-Cloud-Region: us-west\r\nDecapod-Cloud-Release: 2026.11\r\nSunset: Wed, 31 Dec 2026 23:59:59 GMT\r\nDeprecation: true\r\n";
+    let extra = "Decapod-Cloud-Region: us-west\r\nDecapod-Cloud-Release: 2026.11\r\nSunset: Wed, 31 Dec 2026 23:59:59 GMT\r\nDeprecation: true\r\nRetry-After: 30\r\n";
     let (origin, rx, handle) = server_with_headers(vec![
         (404, String::new(), json!({"error": "not_found"})),
         (200, extra.into(), profile()),
@@ -692,7 +692,7 @@ fn discovery_and_account_fall_back_on_404_and_capture_redacted_cloud_headers() {
     let mut account_meta = CloudResponseMetadata::default();
     let res = connector
         .account_request_with_metadata(
-            AccountOperation::Status,
+            AccountOperation::BillingOveragePolicy,
             &json!({"version": 1}),
             "user-bearer",
             None,
@@ -701,6 +701,7 @@ fn discovery_and_account_fall_back_on_404_and_capture_redacted_cloud_headers() {
         )
         .unwrap();
     assert_eq!(res["backend_authorized"], true);
+    assert_eq!(account_meta.retry_after(), Some("30"));
     assert_eq!(
         account_meta.cloud_header("decapod-cloud-region"),
         Some("us-west")
@@ -712,7 +713,9 @@ fn discovery_and_account_fall_back_on_404_and_capture_redacted_cloud_headers() {
     assert!(first_disc.starts_with("GET /functions/v1/decapod-onboarding/config "));
     assert!(second_disc.starts_with("GET /functions/v1/propodus-onboarding/config "));
     // Discovered legacy prefix is remembered for subsequent onboarding requests.
-    assert!(account_req.starts_with("POST /functions/v1/propodus-onboarding/account-status "));
+    assert!(
+        account_req.starts_with("POST /functions/v1/propodus-onboarding/billing-overage-policy ")
+    );
     handle.join().unwrap();
 
     // Direct with_config falls back on generic 404 (and re-signs canonical_url),
@@ -788,7 +791,11 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
             "DPoP-Nonce: server-nonce-1\r\n".into(),
             json!({"error": "use_dpop_nonce", "message": "secret-nonce-hint"}),
         ),
-        (200, String::new(), json!({"enrolled": true})),
+        (
+            200,
+            "DPoP-Nonce: server-nonce-2\r\n".into(),
+            json!({"enrolled": true}),
+        ),
         (200, String::new(), json!({"decision": "allow"})),
         (
             200,
@@ -799,36 +806,30 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
     ]);
     let client = connector_with_signer(&origin, signer.clone());
 
-    // 1. Account request hits 401 use_dpop_nonce, surfaces nonce to signer & metadata, then retries cleanly.
-    let mut challenge_meta = CloudResponseMetadata::default();
-    let err = client
-        .account_request_with_metadata(
-            AccountOperation::DeviceEnroll,
-            &json!({"version": 1, "jwk_thumbprint": "thumb-1"}),
-            "dpop-access-token",
-            None,
-            None,
-            &mut challenge_meta,
-        )
-        .unwrap_err();
-    assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Authentication));
-    assert_eq!(err.adapter_code(), Some("use_dpop_nonce"));
-    assert_eq!(challenge_meta.dpop_nonce(), Some("server-nonce-1"));
-    assert!(!format!("{err} {err:?}").contains("server-nonce-1"));
-    assert!(!format!("{err} {err:?}").contains("secret-nonce-hint"));
-    assert!(!format!("{challenge_meta:?}").contains("server-nonce-1"));
-
+    let mut final_meta = CloudResponseMetadata::default();
     let enrolled = client
         .account_request_with_metadata(
             AccountOperation::DeviceEnroll,
             &json!({"version": 1, "jwk_thumbprint": "thumb-1"}),
             "dpop-access-token",
             None,
-            challenge_meta.dpop_nonce(),
-            &mut CloudResponseMetadata::default(),
+            None,
+            &mut final_meta,
         )
         .unwrap();
     assert_eq!(enrolled["enrolled"], true);
+    assert_eq!(final_meta.dpop_nonce(), Some("server-nonce-2"));
+    assert!(!format!("{final_meta:?}").contains("server-nonce-2"));
+    assert_eq!(
+        signer
+            .observed_nonces
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(_, nonce)| nonce.as_str())
+            .collect::<Vec<_>>(),
+        ["server-nonce-1", "server-nonce-2"]
+    );
 
     // 2. control_request carries DPoP headers.
     let ctrl = client
@@ -900,7 +901,11 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
         bearer_mode: true,
         ..Default::default()
     });
-    let (origin, rx, handle) = server(vec![(200, json!({"ok": true}))]);
+    let (origin, rx, handle) = server_with_headers(vec![(
+        401,
+        "DPoP-Nonce: unexpected-nonce\r\n".into(),
+        json!({"error":"use_dpop_nonce"}),
+    )]);
     let bearer_client = connector_with_signer(&origin, bearer_signer);
     bearer_client
         .account_request(
@@ -909,7 +914,7 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
             "dpop-access-token",
             None,
         )
-        .unwrap();
+        .unwrap_err();
     let (headers, _) = rx.recv().unwrap();
     assert_eq!(
         header(&headers, "authorization"),
@@ -917,6 +922,51 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
     );
     assert_eq!(header(&headers, "dpop"), None);
     handle.join().unwrap();
+}
+
+#[test]
+fn account_nonce_retry_stops_on_second_challenge_or_ambiguous_dispatch() {
+    for (last_status, expected_code) in [(401, "use_dpop_nonce"), (0, "outcome_unknown")] {
+        let (origin, rx, handle) = server_with_headers(vec![
+            (
+                401,
+                "DPoP-Nonce: first\r\n".into(),
+                json!({"error":"use_dpop_nonce"}),
+            ),
+            (
+                last_status,
+                "DPoP-Nonce: second\r\n".into(),
+                json!({"error":"use_dpop_nonce", "message":"secret-nonce-hint"}),
+            ),
+        ]);
+        let client = connector_with_signer(&origin, Arc::new(RecordingProofSigner::default()));
+        let mut metadata = CloudResponseMetadata::default();
+        let err = client
+            .account_request_with_metadata(
+                AccountOperation::BillingOveragePolicy,
+                &json!({"version":1,"action":"enable"}),
+                "dpop-access-token",
+                None,
+                None,
+                &mut metadata,
+            )
+            .unwrap_err();
+        assert_eq!(err.adapter_code(), Some(expected_code));
+        assert_eq!(
+            err.mutation_outcome() == MutationOutcome::Uncertain,
+            last_status == 0
+        );
+        assert_eq!(
+            metadata.dpop_nonce(),
+            (last_status == 401).then_some("second")
+        );
+        assert!(!format!("{err} {err:?}").contains("secret-nonce-hint"));
+        let (_, first) = rx.recv().unwrap();
+        let (headers, second) = rx.recv().unwrap();
+        assert_eq!(first, second);
+        assert!(header(&headers, "dpop").unwrap().ends_with(".first"));
+        handle.join().unwrap();
+    }
 }
 
 #[test]
@@ -989,7 +1039,28 @@ fn dpop_rejections_and_http_error_matrix_map_deterministically_without_leaks() {
             false,
         ),
         (
-            AccountOperation::DeviceEnroll,
+            AccountOperation::BillingOveragePolicy,
+            429,
+            "quota_exceeded",
+            AdapterErrorKind::Quota,
+            false,
+        ),
+        (
+            AccountOperation::BillingOveragePolicy,
+            429,
+            "overage_cap_exhausted",
+            AdapterErrorKind::Quota,
+            false,
+        ),
+        (
+            AccountOperation::BillingOveragePolicy,
+            403,
+            "provider_disabled",
+            AdapterErrorKind::Authorization,
+            false,
+        ),
+        (
+            AccountOperation::BillingOveragePolicy,
             503,
             "provider_unavailable",
             AdapterErrorKind::Unavailable,
