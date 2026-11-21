@@ -14,8 +14,7 @@ use crate::connector::{
     DEFAULT_CLOUD_ORIGIN,
 };
 use crate::http_pool::{
-    acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
-    SharedHttpClient,
+    acquire_client, build_auth_headers, canonical_url, extract_response_metadata, SharedHttpClient,
 };
 use crate::{
     AdapterErrorKind, DactylError, DatastoreRoute, OperationKind, ResourceBudget, SupabaseRpcConfig,
@@ -25,7 +24,6 @@ const CANONICAL_ONBOARDING: &str = "/functions/v1/decapod-onboarding";
 const LEGACY_ONBOARDING: &str = "/functions/v1/propodus-onboarding";
 const BODY_LIMIT: u64 = 16 * 1024;
 const MAX_JSON_DEPTH: usize = 64;
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -106,7 +104,7 @@ impl CloudConnector {
         origin: &str,
     ) -> Result<(Self, CloudResponseMetadata), DactylError> {
         validate_origin(origin)?;
-        let http_client = acquire_client(CONNECT_TIMEOUT)?;
+        let http_client = acquire_client(ResourceBudget::v1())?;
         let mut metadata = CloudResponseMetadata::default();
         let mut onboarding_prefix = OnboardingPrefix::Canonical;
         let profile: DeploymentProfile = match request(
@@ -169,7 +167,7 @@ impl CloudConnector {
     /// Explicit seam for a trusted deployment profile or a disposable fixture.
     pub fn with_config(config: SupabaseRpcConfig) -> Result<Self, DactylError> {
         crate::adapter::supabase::validate_rpc(&config)?;
-        let http_client = acquire_client(CONNECT_TIMEOUT)?;
+        let http_client = acquire_client(ResourceBudget::v1())?;
         Ok(Self {
             config,
             onboarding_prefix: OnboardingPrefix::Canonical,
@@ -810,7 +808,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
         .spawn(
             move || -> (Result<T, DactylError>, Option<CloudResponseMetadata>) {
                 let deadline = Instant::now() + REQUEST_TIMEOUT;
-                let _permit = match acquire_permit(deadline) {
+                let _permit = match http_client.acquire_permit(deadline) {
                     Ok(permit) => permit,
                     Err(error) => return (Err(error), None),
                 };

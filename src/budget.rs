@@ -78,6 +78,9 @@ pub struct ResourceBudget {
     max_batch_operations: usize,
     connect_timeout: Duration,
     request_timeout: Duration,
+    http_max_in_flight: usize,
+    http_max_idle_per_host: usize,
+    http_idle_timeout: Duration,
 }
 
 impl Default for ResourceBudget {
@@ -102,6 +105,9 @@ impl ResourceBudget {
             max_batch_operations: DEFAULT_MAX_BATCH_OPERATIONS,
             connect_timeout: DEFAULT_CONNECT_TIMEOUT,
             request_timeout: DEFAULT_REQUEST_TIMEOUT,
+            http_max_in_flight: 16,
+            http_max_idle_per_host: 32,
+            http_idle_timeout: Duration::from_secs(15),
         }
     }
 
@@ -208,6 +214,32 @@ impl ResourceBudget {
         self
     }
 
+    pub const fn http_max_in_flight(&self) -> usize {
+        self.http_max_in_flight
+    }
+
+    pub const fn http_max_idle_per_host(&self) -> usize {
+        self.http_max_idle_per_host
+    }
+
+    pub const fn http_idle_timeout(&self) -> Duration {
+        self.http_idle_timeout
+    }
+
+    /// Limit the shared Supabase HTTP pool for this budget. Zero idle
+    /// connections disables keep-alive pooling.
+    pub const fn with_http_pool_limits(
+        mut self,
+        max_in_flight: usize,
+        max_idle_per_host: usize,
+        idle_timeout: Duration,
+    ) -> Self {
+        self.http_max_in_flight = max_in_flight;
+        self.http_max_idle_per_host = max_idle_per_host;
+        self.http_idle_timeout = idle_timeout;
+        self
+    }
+
     /// Validate version and timeout invariants before opening a connection.
     pub fn validate(&self) -> Result<(), DactylError> {
         if self.version != RESOURCE_BUDGET_VERSION {
@@ -219,6 +251,14 @@ impl ResourceBudget {
         if self.connect_timeout.is_zero() || self.request_timeout.is_zero() {
             return Err(DactylError::Config(
                 "resource budget timeouts must be non-zero".into(),
+            ));
+        }
+        if !(1..=64).contains(&self.http_max_in_flight)
+            || self.http_max_idle_per_host > 64
+            || self.http_idle_timeout.is_zero()
+        {
+            return Err(DactylError::Config(
+                "resource budget HTTP pool requires 1–64 requests, 0–64 idle connections, and a non-zero idle timeout".into(),
             ));
         }
         Ok(())

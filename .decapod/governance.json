@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "96bc87e84676d477f19b4fcfad3127137c55012e",
+    "accepted_commit": "b2607c0d105a58156704d076319e4dca6e9e4d65",
+    "release": "v0.18.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -87,69 +88,22 @@
     }
   },
   "change": {
-    "id": "change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-    "base_commit": "96bc87e84676d477f19b4fcfad3127137c55012e",
+    "id": "change_01M7XP2QXBXCBGFTXZJMDD0JJM",
+    "base_commit": "b2607c0d105a58156704d076319e4dca6e9e4d65",
     "target_base": "origin/main"
-  },
-  "claims": {
-    "claim-cloud-naming-fallback": {
-      "statement": "Decapod Cloud discovery/handoff/account routes default to /functions/v1/decapod-onboarding with bounded 404 fallback to /functions/v1/propodus-onboarding and redacted Decapod-Cloud-* metadata capture",
-      "falsifier": "Discovery or onboarding fallback fails on 404 or falls back on domain-coded 404/403 or leaks Decapod-Cloud-* values in Debug",
-      "status": "supported",
-      "proof_refs": [
-        "source:docs/cloud-connectors.md",
-        "source:src/cloud.rs",
-        "test:tests/cloud_connector.rs"
-      ]
-    },
-    "claim-dpop-transport": {
-      "statement": "Synchronous RequestProofSigner attaches RFC 9449 DPoP or explicit Bearer headers across supabase_rpc, control_request, and account_request, surfaces redacted DPoP-Nonce challenges, and classifies DeviceChallenge/DeviceEnroll/DeviceStepUp/DeviceRevoke mutation loss accurately",
-      "falsifier": "Any test in tests/cloud_connector.rs, tests/logical_connector.rs, or tests/control_rpc.rs fails or leaks secrets/tokens/proofs in Debug/Display",
-      "status": "supported",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs",
-        "source:src/cloud.rs",
-        "source:src/connector.rs",
-        "source:src/http_pool.rs",
-        "test:tests/cloud_connector.rs"
-      ]
-    },
-    "claim-supabase-conformance": {
-      "statement": "Conformance suites qualify atomic lease-fencing CAS batches, bounded cursor pagination, commit-bound proof control_request envelopes, deterministic 401/403/409/413/429/5xx outcomes, and 250-way concurrent connection reuse with zero FD leaks and ResourceBudget timeout enforcement",
-      "falsifier": "Any conformance test or 250-way burst regression fails or leaks file descriptors or exceeds bounded connection pool limits",
-      "status": "supported",
-      "proof_refs": [
-        "source:src/http_pool.rs",
-        "test:tests/conformance.rs",
-        "test:tests/resource_budgets.rs",
-        "test:tests/supabase_rpc.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "chk-cloud-dpop-v18",
-      "summary": "feat: support caller-supplied DPoP proofs, Decapod Cloud onboarding routes, and extended Supabase conformance",
-      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
-    },
-    {
-      "id": "chk-containerfile-pin",
-      "summary": "chore: align CI proof controller pin with decapod 0.148.11",
-      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
-    },
-    {
-      "id": "chk-http-init",
-      "summary": "fix(http): initialize blocking client off caller tokio runtime and bound burst concurrency",
-      "input_digest": "sha256:18680fa3eedfb17272c2032434256354cf90b862a4f7382c6c95641977cf8292"
-    },
-    {
-      "id": "chk-spec-review",
-      "summary": "chore(governance): record refreshed spec reviews for final v0.18.0 candidate",
-      "input_digest": "sha256:c393b41040db319989543b7db8994f0f737630141b6b7bf587b32a1c980707ab"
+      "id": "http-budget-tested",
+      "summary": "Configure safe shared HTTP pool limits through ResourceBudget",
+      "input_digest": "sha256:dbe961e36157a20e30ea056f2c7b6da894abec547fa3fd49378ee9459ca48bd0",
+      "proof_refs": [
+        "cargo test --offline --locked --all-features"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8": {
+    "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -159,11 +113,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+      "id": "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
-      "refined_intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "raw_intent": "Dactyl #134: make Supabase transport pool concurrency and keep-alive configurable per resource budget",
+      "refined_intent": "Dactyl #134: make Supabase transport pool concurrency and keep-alive configurable per resource budget",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -176,224 +130,88 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "intent": "Let callers choose Supabase transport parallelism and idle connections while keeping a process-wide request ceiling.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Test per-budget admission isolation, timeout and current 250-client conformance."
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "eaad0f290af40606858a916969acb81641570ddc714dda74c03d69526295966a"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "a3061db602802a3c046a1bc56f5fc4f990a267581ef62dcc4d743cbe98926369"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "title": "Bound HTTP pooling per transport budget",
       "todo_ids": [
-        "feat_01m7r9g1z168bt2h"
+        "code_01m7xp1f0j7nf8k9"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795043938Z"
+      "updated_at": "1795218872Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d1319f017bd96df3a548141813b8db8eeae94fda26da413c3ca69527eb0c3181",
-      "checks": [
-        {
-          "name": "cargo-clippy-all-features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-test-all-features-msrv-1.85",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-test-all-features-stable",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-test-neon-supabase-control-rpc",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_test_all_features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_test_feature_matrix",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "verification",
+      "artifact_hash": "sha256:4078b4ce39b1b410b4564944e8a994b657a1ebc2cbba55545a3a508f4e214ad7",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 3,
         "schema_version": "1.0.0",
-        "trajectories": {
-          "branch_01M7R9K34Q0CPH5ENR4N5DHW85": {
-            "evidence_only": true,
-            "id": "branch_01M7R9K34Q0CPH5ENR4N5DHW85",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-            "steps": [
-              {
-                "action": "verification",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/http_pool.rs",
-                  "src/connector.rs",
-                  "src/lib.rs",
-                  "src/adapter/supabase.rs",
-                  "src/cloud.rs",
-                  "src/error.rs",
-                  "README.md",
-                  "docs/cloud-connectors.md",
-                  "docs/supabase-service.md",
-                  "tools/proof/Containerfile",
-                  "tests/cloud_connector.rs",
-                  "tests/logical_connector.rs",
-                  "tests/control_rpc.rs",
-                  "tests/supabase_rpc.rs",
-                  "tests/conformance.rs",
-                  "tests/resource_budgets.rs",
-                  "task-281: cargo clippy and cargo test --locked --all-features passed",
-                  "task-285: all 7 optional feature combinations passed"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_test_all_features",
-                  "cargo_test_feature_matrix"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/http_pool.rs",
-                  "tests/supabase_rpc.rs",
-                  "tests/support/native_scenarios.rs"
-                ],
-                "proof_refs": [
-                  "cargo-fmt",
-                  "cargo-clippy-all-features",
-                  "cargo-test-all-features-stable",
-                  "cargo-test-all-features-msrv-1.85",
-                  "cargo-test-neon-supabase-control-rpc"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "task-281: cargo clippy and cargo test --locked --all-features passed",
-        "task-285: all 7 optional feature combinations passed"
+      "evidence": [],
+      "execution_checkpoints": [
+        {
+          "binding": {
+            "governance_digest": "sha256:9ce08b7a9e3c4606e229cb69ac1276543f6d8cf9e12aa02e8504492ac6d40603",
+            "head_revision": "b2607c0d105a58156704d076319e4dca6e9e4d65",
+            "intent_id": "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM",
+            "material_digest": "sha256:65c1b8ea87e86a229fdd35bebefd7161e57e9bc7aaa3cb9cc32254ed23d03e42",
+            "plan_digest": "sha256:e3f3b7140ed1699a424d1e5bf2eb039e8bd48bd113aed527f3d7a11e75fd5241",
+            "policy_digest": "sha256:2b63185017e2b8fcb9d37732671081b1ca397ed192e8fdd5dfd93e681a021ea6",
+            "required_approvals": [],
+            "run_id": "branch_01M7XP2R092BCEJ80V06WDV5M1",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:fda8ecabe71582099122c2aa5b4777dd101c7c629fed4367248a10a78fd94cfa",
+            "task_id": "code_01m7xp1f0j7nf8k9",
+            "trajectory_digest": "sha256:a0626b97abfbfbb13a0dd6b59268dc5bdda23cec4a2fd8aeae82e53e7960552d",
+            "validation_epoch_digest": "sha256:048620173d0a038d6343dc6a11cc656b3546fdaa407e533f5b74ef30b4122314",
+            "work_branch": "agent/codex-cloud-followups/code_01m7xp1f0j7nf8k9-http-budget"
+          },
+          "binding_digest": "sha256:67784e3a05915949a08232ddf03eae3d8f42209e0778fb5e479454c66bd12c41",
+          "checkpoint_id": "http-budget-tested",
+          "sequence": 1
+        }
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-      "modified_files": [
-        "README.md",
-        "docs/cloud-connectors.md",
-        "docs/supabase-service.md",
-        "src/adapter/supabase.rs",
-        "src/cloud.rs",
-        "src/connector.rs",
-        "src/error.rs",
-        "src/http_pool.rs",
-        "src/lib.rs",
-        "tests/cloud_connector.rs",
-        "tests/conformance.rs",
-        "tests/control_rpc.rs",
-        "tests/logical_connector.rs",
-        "tests/resource_budgets.rs",
-        "tests/supabase_rpc.rs",
-        "tests/support/native_scenarios.rs",
-        "tools/proof/Containerfile"
-      ],
+      "intent_id": "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM",
+      "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+      "run_id": "branch_01M7XP2R092BCEJ80V06WDV5M1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7r9g1z168bt2h",
+      "task_id": "code_01m7xp1f0j7nf8k9",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

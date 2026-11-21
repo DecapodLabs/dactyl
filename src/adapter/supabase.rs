@@ -21,8 +21,7 @@ use crate::contract::{
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::http_pool::{
-    acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
-    SharedHttpClient,
+    acquire_client, build_auth_headers, canonical_url, extract_response_metadata, SharedHttpClient,
 };
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
@@ -209,8 +208,8 @@ pub(crate) fn control_request_with_auth(
     let (auth_header, dpop_header) =
         build_auth_headers("POST", &canonical, token, proof_signer.as_ref(), dpop_nonce)?;
     let client = match http_client {
-        Some(client) if budget.connect_timeout() == std::time::Duration::from_secs(5) => client,
-        _ => acquire_client(budget.connect_timeout())?,
+        Some(client) if client.matches(budget) => client,
+        _ => acquire_client(budget)?,
     };
     let mutates = kind == OperationKind::Write;
     let (outcome, captured_meta) = std::thread::Builder::new()
@@ -304,7 +303,7 @@ impl SupabaseAdapter {
         })?;
         context.validate()?;
         let rpc_headers = rpc.map(rpc_headers).transpose()?;
-        let http_client = acquire_client(budget.connect_timeout())?;
+        let http_client = acquire_client(budget)?;
         Ok(Self {
             rpc_headers,
             endpoint: url.as_str().trim_end_matches('/').to_owned(),
@@ -441,7 +440,7 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     proof_signer: Option<Arc<dyn RequestProofSigner>>,
 ) -> (Result<T, DactylError>, Option<CloudResponseMetadata>) {
     let deadline = Instant::now() + budget.request_timeout();
-    let _permit = match acquire_permit(deadline) {
+    let _permit = match http_client.acquire_permit(deadline) {
         Ok(permit) => permit,
         Err(error) => return (Err(error), None),
     };

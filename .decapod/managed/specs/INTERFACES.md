@@ -1,5 +1,12 @@
 # Interfaces
 
+`ResourceBudget::with_http_pool_limits` sets concurrent requests, idle
+connections per host, and the idle timeout for native and compatibility
+Supabase transport. Connections with the same pool settings share admission
+slots. Distinct pools also share the process request ceiling. A queued request
+uses its original operation deadline, and zero idle connections disables
+keep-alive pooling.
+
 ## DPoP proof signer, Decapod Cloud onboarding, and metadata surfaces (issues #127, #128, #129)
 
 - `src/connector.rs` / `src/lib.rs` export `AuthScheme`, `RequestProofInput`, `RequestProof`, `RequestProofSigner`, and `CloudResponseMetadata` unconditionally across all Cargo feature combinations. `DatastoreRoute`, `CloudConnector`, and `LogicalConnector` accept `.with_proof_signer(Arc<dyn RequestProofSigner>)` and `.with_dpop_nonce(...)`, and `LogicalConnector` / `CloudConnector` expose `resolve_with_metadata`, `discover_with_metadata`, `control_request_with_metadata`, and `account_request_with_metadata` so callers observe `DPoP-Nonce` and `Decapod-Cloud-*` headers even on `401` challenges while keeping `Debug` and `DactylError` formatting strictly redacted.
@@ -279,7 +286,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `b982b5395457b6ae899ea98416b31f91c6a48a8796e4eac6a3f4b2f24a284159`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
