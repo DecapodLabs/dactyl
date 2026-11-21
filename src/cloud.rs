@@ -186,6 +186,12 @@ impl CloudConnector {
         self
     }
 
+    /// Select the Cloud Edge data gateway for an already issued device session.
+    pub fn with_device_gateway(mut self) -> Self {
+        self.config = self.config.with_device_gateway();
+        self
+    }
+
     /// Supply an initial server `DPoP-Nonce` challenge value for this connector.
     pub fn with_dpop_nonce(mut self, nonce: impl Into<String>) -> Self {
         self.dpop_nonce = Some(nonce.into());

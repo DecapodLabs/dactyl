@@ -8,6 +8,10 @@ Dactyl exposes two primary logical workspace targets: local SQLite (`LogicalTarg
 - Canonical `/functions/v1/decapod-onboarding` discovery/handoff/account routes with bounded HTTP `404` fallback to legacy `/functions/v1/propodus-onboarding` during cutover, plus redacted bounded `Decapod-Cloud-*`, `Sunset`, `Deprecation`, and `DPoP-Nonce` header capture in `CloudResponseMetadata`.
 - Extended native/backend-neutral conformance (`tests/conformance.rs`, `tests/supabase_rpc.rs`, `tests/control_rpc.rs`, `tests/cloud_connector.rs`, `tests/resource_budgets.rs`) covering atomic lease-fencing CAS batches, bounded cursor pagination over compact operational stores, opaque commit-bound proof-transition `control_request` envelopes, deterministic `401`/`403`/`409`/`413`/`429`/`5xx` outcome classification, and a 250-way concurrent burst verifying bounded connection reuse (`<= 32` active slots), zero FD leaks, and strict `ResourceBudget` timeout enforcement.
 
+Applications with an issued device session can select the Cloud Edge data
+gateway for the same native query and batch operations. Applications continue
+to own session issuance, proof signing, and credential storage.
+
 ## Existing Supabase provider qualification (issue 91)
 
 Dactyl provides a small generic Rust datastore and managed-auth transport over SQLite, explicit Neon/Supabase HTTP services and native Supabase RPC. The third provider is implemented in accepted source; issue 91 now aggregates remaining qualification rather than recreating it. docs/supabase-service.md separates the compatibility /query and /batch route from logical Backend::Cloud discovery and native RPC. Propodus is the private SQL/Auth/onboarding infrastructure boundary; no generic Go task server is required. Decapod owns local/cloud UX and durable private user-session custody. Issues 70, 79, 85 and 94 respectively own hosted execution, capability inventory, adversarial proof and registry handoff. Published source and synthetic tests never imply managed OAuth, pooler-mode or deployment acceptance.
@@ -200,7 +204,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `8c55f399194083c8e86bae3348426a5f756cd7a8d8158d510fe8a970a1e9f4b4`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

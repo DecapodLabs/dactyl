@@ -34,6 +34,7 @@ pub(crate) struct SupabaseAdapter {
     access_mode: AccessMode,
     context: StorageContext,
     rpc_headers: Option<reqwest::header::HeaderMap>,
+    device_gateway: bool,
     budget: ResourceBudget,
     proof_signer: Option<Arc<dyn RequestProofSigner>>,
     dpop_nonce: Option<String>,
@@ -166,6 +167,13 @@ pub(crate) fn control_request_with_auth(
 ) -> Result<serde_json::Value, DactylError> {
     let origin = validate_rpc(config)?;
     budget.validate()?;
+    if config.uses_device_gateway() {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Capability,
+            "device_control_gateway_unavailable",
+            "local preflight: native control is unavailable for this device gateway",
+        ));
+    }
     let name = function.as_bytes();
     if name.is_empty()
         || name.len() > 63
@@ -304,9 +312,11 @@ impl SupabaseAdapter {
         })?;
         context.validate()?;
         let rpc_headers = rpc.map(rpc_headers).transpose()?;
+        let device_gateway = rpc.is_some_and(SupabaseRpcConfig::uses_device_gateway);
         let http_client = acquire_client(budget.connect_timeout())?;
         Ok(Self {
             rpc_headers,
+            device_gateway,
             endpoint: url.as_str().trim_end_matches('/').to_owned(),
             token,
             access_mode: options.access_mode,
@@ -325,20 +335,24 @@ impl SupabaseAdapter {
         mutates: bool,
     ) -> Result<T, DactylError> {
         let max_wire_bytes = self.budget.max_wire_bytes();
-        let body = if self.rpc_headers.is_some() {
-            serialize_bounded_json(
-                &RpcRequest {
-                    request: VersionedRequest {
-                        version: SUPABASE_RPC_CONTRACT_VERSION,
-                        body: request,
-                    },
-                },
-                max_wire_bytes,
-            )?
+        let versioned = VersionedRequest {
+            version: SUPABASE_RPC_CONTRACT_VERSION,
+            body: request,
+        };
+        let body = if self.device_gateway {
+            serialize_bounded_json(&versioned, max_wire_bytes)?
+        } else if self.rpc_headers.is_some() {
+            serialize_bounded_json(&RpcRequest { request: versioned }, max_wire_bytes)?
         } else {
             serialize_bounded_json(request, max_wire_bytes)?
         };
-        let path = if self.rpc_headers.is_some() {
+        let path = if self.device_gateway {
+            match path {
+                "/query" => "/functions/v1/decapod-onboarding/cloud-query",
+                "/batch" => "/functions/v1/decapod-onboarding/cloud-batch",
+                _ => return Err(protocol_error("unsupported device gateway operation")),
+            }
+        } else if self.rpc_headers.is_some() {
             match path {
                 "/query" => "/rest/v1/rpc/dactyl_query_v1",
                 "/batch" if self.access_mode == AccessMode::ReadOnly => {
@@ -359,6 +373,13 @@ impl SupabaseAdapter {
             self.proof_signer.as_ref(),
             self.dpop_nonce.as_deref(),
         )?;
+        if self.device_gateway && dpop_header.is_none() {
+            return Err(DactylError::adapter_with_code(
+                AdapterErrorKind::Authentication,
+                "device_proof_required",
+                "local preflight: this device gateway requires a DPoP proof",
+            ));
+        }
         let rpc_headers = self.rpc_headers.clone();
         let budget = self.budget;
         let client = self.http_client.clone();

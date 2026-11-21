@@ -7,6 +7,18 @@
 - `src/cloud.rs` uses `/functions/v1/decapod-onboarding` as the canonical discovery, handoff, auth, and account path with a single bounded HTTP `404` fallback (absent domain error codes) to `/functions/v1/propodus-onboarding`, maps HTTP `413` to `AdapterErrorKind::Quota`, `404` to `AdapterErrorKind::NotFound`, and marks post-dispatch `5xx` / redirect / truncated failures on mutating operations with `code = Some("outcome_unknown")` and `MutationOutcome::Uncertain`.
 - `src/adapter/supabase.rs` and `src/cloud.rs` allowlist RFC 9449 / DPoP and device error codes (`use_dpop_nonce`, `invalid_dpop_proof`, `dpop_proof_required`, `missing_dpop_proof`, `dpop_replay`, `dpop_nonce_mismatch`, `dpop_clock_skew`, `dpop_ath_mismatch`, `dpop_htu_mismatch`, `dpop_htm_mismatch`, `dpop_jkt_mismatch`, `stolen_bearer`, `device_revoked`, `device_not_enrolled`) under `AdapterErrorKind::Authentication`.
 
+## Device data gateway (issue #136)
+
+`CloudConnector::with_device_gateway` and
+`SupabaseRpcConfig::with_device_gateway` select the canonical Edge data
+routes for a sender-constrained device session. The caller's proof signer
+receives the final query or batch URI, as required by
+[RFC 9449](https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2).
+The Edge request is a top-level v1 payload. The legacy native RPC
+configuration retains its named PostgREST envelope. Device-gateway
+control calls return a local capability diagnostic until the service
+publishes its control contract.
+
 ## Backend capability inventory (issue 79)
 
 docs/backend-capabilities.md maps the accepted SQLite, Neon HTTP, Supabase service HTTP and native RPC surfaces to source and test obligations. Connection::from_env / DatastoreRoute::from_env remain explicit ambient compatibility APIs; logical per-workspace connectors do not mutate that environment. DATASTORE=supabase retains service HTTP meaning. Remote catalog predicates, snapshots and maintenance return capability errors without network I/O; bounded remote visit_rows decodes a materialized response rather than providing server streaming. The private SQLite FFI loads the host runtime. Arbitrary SQL, domain migrations, retry/idempotency and effective grants remain caller/service-owned; unavailable service proof is distinct from an unsupported capability.
@@ -279,7 +291,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `8c55f399194083c8e86bae3348426a5f756cd7a8d8158d510fe8a970a1e9f4b4`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,13 +1,14 @@
 //! Synthetic native RPC evidence only; no PostgreSQL or hosted proof is implied.
 #![cfg(feature = "supabase")]
 use dactyl_db::{
-    AccessMode, AdapterErrorKind, Connection, DatastoreRoute, GeneratedKey, OpenOptions, Operation,
-    OperationResult, Parameter, StorageContext, SupabaseRpcConfig,
+    AccessMode, AdapterErrorKind, CloudConnector, Connection, DactylError, DatastoreRoute,
+    GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult, Parameter, RequestProof,
+    RequestProofInput, RequestProofSigner, ResourceBudget, StorageContext, SupabaseRpcConfig,
 };
 use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::net::TcpListener;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc};
 use std::thread;
 use std::time::Duration;
 const KEY: &str = "sb_publishable_fixture";
@@ -102,6 +103,88 @@ fn fixture_raw(
 
 fn empty_result(affected: u64) -> Value {
     json!({"columns":[],"rows":[],"affected_rows":affected,"generated_keys":[]})
+}
+
+#[test]
+fn device_gateway_signs_the_final_edge_route_and_sends_a_versioned_body() {
+    struct GatewaySigner(String);
+    impl RequestProofSigner for GatewaySigner {
+        fn sign_request(&self, input: &RequestProofInput<'_>) -> Result<RequestProof, DactylError> {
+            assert_eq!(input.method(), "POST");
+            assert_eq!(input.canonical_url(), self.0);
+            assert!(input.access_token_sha256().is_some());
+            RequestProof::dpop("opaque-fixture-proof")
+        }
+    }
+
+    for (action, batched) in [("cloud-query", false), ("cloud-batch", true)] {
+        let response = if batched {
+            json!({"results":[empty_result(1)]})
+        } else {
+            empty_result(0)
+        };
+        let (origin, received, server) = fixture(200, response);
+        let path = format!("/functions/v1/decapod-onboarding/{action}");
+        let connector = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY))
+            .unwrap()
+            .with_device_gateway()
+            .with_proof_signer(Arc::new(GatewaySigner(format!("{origin}{path}"))));
+        let db = Connection::open_with_options_and_context(
+            connector.route(Some(BEARER.into())),
+            OpenOptions {
+                access_mode: AccessMode::ReadWrite,
+                ..OpenOptions::default()
+            },
+            Some(context()),
+        )
+        .unwrap();
+        if batched {
+            db.atomic(&[Operation::write("mutation", vec![])]).unwrap();
+        } else {
+            db.read("fixture", &[]).unwrap();
+        }
+        let (headers, request) = received.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert!(headers.starts_with(&format!("POST {path} ")));
+        assert!(headers.contains("authorization: DPoP synthetic-user"));
+        assert!(headers.contains("dpop: opaque-fixture-proof"));
+        assert_eq!(request["version"], 1);
+        assert!(request.get("request").is_none());
+        assert_eq!(request["context"], json!(context()));
+        assert_eq!(request["operations"].is_array(), batched);
+        server.join().unwrap();
+    }
+}
+
+#[test]
+fn device_gateway_requires_proof_and_refuses_unsupported_control_before_dispatch() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let origin = format!("http://{}", listener.local_addr().unwrap());
+    let connector = CloudConnector::with_config(SupabaseRpcConfig::v1(origin, KEY))
+        .unwrap()
+        .with_device_gateway();
+    let db = Connection::open_with_options_and_context(
+        connector.route(Some(BEARER.into())),
+        OpenOptions::default(),
+        Some(context()),
+    )
+    .unwrap();
+    let proof_error = db.read("fixture", &[]).unwrap_err();
+    assert_eq!(proof_error.adapter_code(), Some("device_proof_required"));
+    let control_error = connector
+        .control_request(
+            "fixture",
+            &json!({"version":1}),
+            Some(BEARER),
+            OperationKind::Read,
+            ResourceBudget::v1(),
+        )
+        .unwrap_err();
+    assert_eq!(
+        control_error.adapter_code(),
+        Some("device_control_gateway_unavailable")
+    );
+    assert!(listener.accept().is_err());
 }
 
 #[test]
