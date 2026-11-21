@@ -1,5 +1,13 @@
 # Architecture
 
+## Wave 2 gateway auth policy, bounded nonce retry, runtime selector, and error classification (issues #132, #133, #136, #137, #138, #139)
+
+- `src/lib.rs` defines `Backend::datastore(self) -> Datastore` and `Datastore::as_str(self) -> &'static str`, grounding `DatastoreRoute::sqlite` and `DatastoreRoute::supabase_rpc` in the logical backend without consulting ambient `DATASTORE`.
+- `src/http_pool.rs` centralizes RFC 9449 challenge detection (`has_dpop_nonce_challenge`), bounded single-retry execution (`with_dpop_nonce_retry`), strict single-value `DPoP-Nonce` extraction (`validate_dpop_nonce` also rejects `"` and `\`), and `Retry-After` header capture alongside existing `DPoP-Nonce`, `Sunset`, `Deprecation`, and `Decapod-Cloud-*` metadata. Both normal `DPoP <token>` headers and managed `Bearer <user-jwt>` + `DPoP <proof>` (`managed_bearer_proof = true`) flows reuse this single helper without duplicating retry state machines.
+- `src/cloud.rs` and `src/connector.rs` add `.with_device_gateway()` / `.uses_device_gateway()` propagating through `LogicalConnector`, `CloudConnector`, `CloudConnector::route`, and `SupabaseRpcConfig`. When `device_gateway` is enabled, `CloudConnector::account_auth_policy` routes account/billing/`DeviceChallenge`/`DeviceKeys`/`DeviceSessions`/`DeviceStepUp` with `Bearer`-only auth, enforces `Bearer` + `DPoP` on `DeviceEnroll`/`DeviceSession` (retrying `use_dpop_nonce` while keeping `Bearer`), requires `DPoP` on `DeviceRefresh`, allows caller-selected `Bearer` or `DPoP` on `DeviceRevoke`, and falls back from `decapod-onboarding/cloud-control` to `propodus-onboarding/cloud-control` only on missing-function `404` (`None | Some("not_found")`).
+- `src/adapter/supabase.rs` routes `device_gateway` data calls to `/functions/v1/decapod-onboarding/cloud-query` and `/cloud-batch` using flat `VersionedRequest` bodies and control calls to `{gateway_prefix}/cloud-control` using `{"version":1,"function":...,"request":...}`, requires `dpop_header.is_some()` preflight (`device_proof_required`, `MutationOutcome::NotAttempted` via `src/error.rs`), and executes requests inside `with_dpop_nonce_retry`.
+- Error mapping in both `src/cloud.rs` and `src/adapter/supabase.rs` preserves HTTP `429` `quota_exceeded`/`overage_cap_exhausted` as `AdapterErrorKind::Quota`, maps `provider_disabled`/`mfa_step_up_required`/`repo_access_denied` to `Authorization` and `device_key_expired`/`refresh_reuse_detected` to `Authentication`, and maps `project_not_found`/`member_not_found`/`invitation_not_found`/`flow_not_found` (`NotFound`) so domain `404`s never trigger legacy function fallback.
+
 ## Bounded HTTP connection pool and DPoP signing pipeline
 
 `src/http_pool.rs` provides a weak-cached, Tokio-safe `SharedHttpClient` (`reqwest::blocking::Client` with `pool_max_idle_per_host(32)`, `pool_idle_timeout(15s)`, `redirect::Policy::none()`, `retry::never()`, and a plain-thread `Drop` joiner so dropping inside Tokio runtimes never panics and zero daemon threads survive client drop) alongside a bounded 32-slot `RequestPermit` concurrency gate enforcing `ResourceBudget` `request_timeout` deadlines. Both `src/adapter/supabase.rs` and `src/cloud.rs` canonicalize target URLs (stripping query and fragment), compute RFC 9449 `ath` (`URL_SAFE_NO_PAD(Sha256(token))`), invoke `RequestProofSigner::sign_request` synchronously prior to dispatch, attach `Authorization: DPoP <token>` + `DPoP: <proof>` (or `Bearer` compatibility), capture bounded `DPoP-Nonce`, `Sunset`, `Deprecation`, and `Decapod-Cloud-*` headers into redacted `CloudResponseMetadata`, and notify `RequestProofSigner::observe_nonce` on any valid `DPoP-Nonce` response header.
@@ -233,7 +241,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "96bc87e84676d477f19b4fcfad3127137c55012e",
+    "accepted_commit": "b2607c0d105a58156704d076319e4dca6e9e4d65",
+    "release": "v0.18.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -87,69 +88,36 @@
     }
   },
   "change": {
-    "id": "change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-    "base_commit": "96bc87e84676d477f19b4fcfad3127137c55012e",
+    "id": "change_01M7ZY767DC97XK6P78828SPKN",
+    "base_commit": "b2607c0d105a58156704d076319e4dca6e9e4d65",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim-cloud-naming-fallback": {
-      "statement": "Decapod Cloud discovery/handoff/account routes default to /functions/v1/decapod-onboarding with bounded 404 fallback to /functions/v1/propodus-onboarding and redacted Decapod-Cloud-* metadata capture",
-      "falsifier": "Discovery or onboarding fallback fails on 404 or falls back on domain-coded 404/403 or leaks Decapod-Cloud-* values in Debug",
-      "status": "supported",
+    "dactyl-wave2-gateway-nonce-overage-selector": {
+      "statement": "Dactyl Wave 2 implements Edge gateway routing, bounded single-retry use_dpop_nonce, BillingOveragePolicy & 429 Quota mapping, Backend::datastore().as_str(), and decapod 0.160.0 Containerfile alignment; non-recovery dactyl-proof checks, MSRV 1.85.0 Wave 2 suites, clippy, fmt, registry consumer, and host sqlite_maintenance/resource_budgets passed while 14 Linux-only recovery::tests hit Fedora CoreOS SELinux security.selinux xattrs",
+      "falsifier": "Any failure in Wave 2 tests, MSRV 1.85.0 compilation/execution, clippy/fmt, CI unlabelled-Linux recovery tests, or decapod-validate drift check",
+      "status": "open",
       "proof_refs": [
-        "source:docs/cloud-connectors.md",
-        "source:src/cloud.rs",
-        "test:tests/cloud_connector.rs"
-      ]
-    },
-    "claim-dpop-transport": {
-      "statement": "Synchronous RequestProofSigner attaches RFC 9449 DPoP or explicit Bearer headers across supabase_rpc, control_request, and account_request, surfaces redacted DPoP-Nonce challenges, and classifies DeviceChallenge/DeviceEnroll/DeviceStepUp/DeviceRevoke mutation loss accurately",
-      "falsifier": "Any test in tests/cloud_connector.rs, tests/logical_connector.rs, or tests/control_rpc.rs fails or leaks secrets/tokens/proofs in Debug/Display",
-      "status": "supported",
-      "proof_refs": [
-        "source:src/adapter/supabase.rs",
-        "source:src/cloud.rs",
-        "source:src/connector.rs",
-        "source:src/http_pool.rs",
-        "test:tests/cloud_connector.rs"
-      ]
-    },
-    "claim-supabase-conformance": {
-      "statement": "Conformance suites qualify atomic lease-fencing CAS batches, bounded cursor pagination, commit-bound proof control_request envelopes, deterministic 401/403/409/413/429/5xx outcomes, and 250-way concurrent connection reuse with zero FD leaks and ResourceBudget timeout enforcement",
-      "falsifier": "Any conformance test or 250-way burst regression fails or leaks file descriptors or exceeds bounded connection pool limits",
-      "status": "supported",
-      "proof_refs": [
-        "source:src/http_pool.rs",
-        "test:tests/conformance.rs",
-        "test:tests/resource_budgets.rs",
-        "test:tests/supabase_rpc.rs"
+        "dactyl-proof-msrv-1.85.0",
+        "host-sqlite-maintenance",
+        "rust-contract"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-cloud-dpop-v18",
-      "summary": "feat: support caller-supplied DPoP proofs, Decapod Cloud onboarding routes, and extended Supabase conformance",
-      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
-    },
-    {
-      "id": "chk-containerfile-pin",
-      "summary": "chore: align CI proof controller pin with decapod 0.148.11",
-      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
-    },
-    {
-      "id": "chk-http-init",
-      "summary": "fix(http): initialize blocking client off caller tokio runtime and bound burst concurrency",
-      "input_digest": "sha256:18680fa3eedfb17272c2032434256354cf90b862a4f7382c6c95641977cf8292"
-    },
-    {
-      "id": "chk-spec-review",
-      "summary": "chore(governance): record refreshed spec reviews for final v0.18.0 candidate",
-      "input_digest": "sha256:c393b41040db319989543b7db8994f0f737630141b6b7bf587b32a1c980707ab"
+      "id": "dactyl-wave2-v0160",
+      "summary": "Wave 2 Cloud gateway, DPoP nonce retry, overage policy, runtime selector, invalid_binding, and v0.160.0 Containerfile alignment",
+      "input_digest": "sha256:c3e39230daafba419e1b811543f00f36b05ec1278e17653073ec1f53b3c37739",
+      "proof_refs": [
+        "dactyl-proof-msrv-1.85.0",
+        "host-sqlite-maintenance",
+        "rust-contract"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8": {
+    "intent:change_01M7ZY767DC97XK6P78828SPKN": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -159,11 +127,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+      "id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
-      "refined_intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "raw_intent": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
+      "refined_intent": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -176,7 +147,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "intent": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -186,146 +157,143 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "eaad0f290af40606858a916969acb81641570ddc714dda74c03d69526295966a"
+          "reason": "Updated Architecture spec for Wave 2 Edge gateway routing, bounded single-retry use_dpop_nonce, Backend::datastore/Datastore::as_str, and invalid_binding/Quota classification",
+          "reviewed_code_fingerprint": "c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c",
+          "spec_material_hash": "2aea136bf24f11717d8515bcc754263c908274bf6c15d50645105ef84b0fd19c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "a3061db602802a3c046a1bc56f5fc4f990a267581ef62dcc4d743cbe98926369"
+          "reason": "Updated Interfaces spec for LogicalConnector::with_device_gateway/uses_device_gateway, AccountOperation additions, CloudResponseMetadata::retry_after, Backend::datastore/Datastore::as_str, and error codes",
+          "reviewed_code_fingerprint": "c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c",
+          "spec_material_hash": "58d29d3bb6ba7cff60b3288ccb92c9f36ac76efdbab20dcf77fad20b3e90e45b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
+          "reason": "Updated Security spec for DPoP auth separation, bounded nonce retry invariants, and invalid_binding/redaction boundaries",
+          "reviewed_code_fingerprint": "c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c",
+          "spec_material_hash": "b1089766a60d23ad60d85cb12ff9de3716ff013a478705d753aa459aefd5f444"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "title": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
       "todo_ids": [
-        "feat_01m7r9g1z168bt2h"
+        "code_01m7zy6knr4jk864"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795043938Z"
+      "updated_at": "1795295059Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d1319f017bd96df3a548141813b8db8eeae94fda26da413c3ca69527eb0c3181",
+      "artifact_hash": "sha256:3408012b83fae22698f22699e8cdaa8f2d0390e2fe876c770ebf59b4978e5fb6",
       "checks": [
         {
-          "name": "cargo-clippy-all-features",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "cargo-fmt",
+          "name": "format",
           "status": "passed"
         },
         {
-          "name": "cargo-test-all-features-msrv-1.85",
+          "name": "host-resource-budgets-and-sqlite-maintenance",
           "status": "passed"
         },
         {
-          "name": "cargo-test-all-features-stable",
+          "name": "hosted_supabase",
+          "status": "unavailable"
+        },
+        {
+          "name": "local_postgres",
+          "status": "unavailable"
+        },
+        {
+          "name": "msrv-clean-consumer",
           "status": "passed"
         },
         {
-          "name": "cargo-test-neon-supabase-control-rpc",
+          "name": "msrv-wave2-integration",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy",
+          "name": "package",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "registry-control-0.17.0",
           "status": "passed"
         },
         {
-          "name": "cargo_test_all_features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_test_feature_matrix",
-          "status": "passed"
+          "name": "rust-contract",
+          "status": "partial"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "implemented",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
         ],
         "knowledge_candidates": [],
         "next_sequence": 5,
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7R9K34Q0CPH5ENR4N5DHW85": {
+          "branch_01M7ZY76A10FWHK1HPB7CNNMKX": {
             "evidence_only": true,
-            "id": "branch_01M7R9K34Q0CPH5ENR4N5DHW85",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "id": "branch_01M7ZY76A10FWHK1HPB7CNNMKX",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "steps": [
               {
-                "action": "verification",
+                "action": "implemented",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/http_pool.rs",
-                  "src/connector.rs",
+                  ".decapod/config.toml",
+                  "tools/proof/Containerfile",
                   "src/lib.rs",
-                  "src/adapter/supabase.rs",
+                  "src/connector.rs",
                   "src/cloud.rs",
                   "src/error.rs",
-                  "README.md",
+                  "src/http_pool.rs",
+                  "src/supabase_rpc.rs",
+                  "src/adapter/supabase.rs",
                   "docs/cloud-connectors.md",
-                  "docs/supabase-service.md",
-                  "tools/proof/Containerfile",
+                  "docs/supabase-conformance.md",
                   "tests/cloud_connector.rs",
                   "tests/logical_connector.rs",
-                  "tests/control_rpc.rs",
                   "tests/supabase_rpc.rs",
-                  "tests/conformance.rs",
-                  "tests/resource_budgets.rs",
-                  "task-281: cargo clippy and cargo test --locked --all-features passed",
-                  "task-285: all 7 optional feature combinations passed"
+                  "tests/supabase_service.rs",
+                  "tests/fixtures/supabase-service-schema.sql"
                 ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_test_all_features",
-                  "cargo_test_feature_matrix"
-                ],
+                "proof_refs": [],
                 "scope": [
                   "root"
                 ],
@@ -333,55 +301,67 @@
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "implemented",
+                "command": "podman run dactyl-proof /usr/bin/python3.11 tools/proof/check.py",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/http_pool.rs",
-                  "tests/supabase_rpc.rs",
-                  "tests/support/native_scenarios.rs"
+                  "tools/proof/Containerfile",
+                  "src/cloud.rs",
+                  "src/connector.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/logical_connector.rs"
                 ],
                 "proof_refs": [
-                  "cargo-fmt",
-                  "cargo-clippy-all-features",
-                  "cargo-test-all-features-stable",
-                  "cargo-test-all-features-msrv-1.85",
-                  "cargo-test-neon-supabase-control-rpc"
+                  "rust-contract",
+                  "format",
+                  "clippy",
+                  "msrv-wave2-integration",
+                  "msrv-clean-consumer",
+                  "package",
+                  "registry-control-0.17.0",
+                  "host-resource-budgets-and-sqlite-maintenance",
+                  "local_postgres",
+                  "hosted_supabase"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp"
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [
-        "task-281: cargo clippy and cargo test --locked --all-features passed",
-        "task-285: all 7 optional feature combinations passed"
+      "declared_commands": [
+        "cargo test --locked --all-features --test resource_budgets --test sqlite_maintenance",
+        "podman run dactyl-proof /usr/bin/python3.11 tools/proof/check.py",
+        "podman run dactyl-proof MSRV 1.85.0 cloud_connector/logical_connector/supabase_rpc/supabase_service/control_rpc"
       ],
+      "destination": "pull request",
+      "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+      "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
       "modified_files": [
-        "README.md",
+        ".decapod/config.toml",
         "docs/cloud-connectors.md",
-        "docs/supabase-service.md",
+        "docs/supabase-conformance.md",
         "src/adapter/supabase.rs",
         "src/cloud.rs",
         "src/connector.rs",
         "src/error.rs",
         "src/http_pool.rs",
         "src/lib.rs",
+        "src/supabase_rpc.rs",
         "tests/cloud_connector.rs",
-        "tests/conformance.rs",
-        "tests/control_rpc.rs",
+        "tests/fixtures/supabase-service-schema.sql",
         "tests/logical_connector.rs",
-        "tests/resource_budgets.rs",
         "tests/supabase_rpc.rs",
-        "tests/support/native_scenarios.rs",
+        "tests/supabase_service.rs",
         "tools/proof/Containerfile"
       ],
       "next_transitions": [
@@ -390,12 +370,14 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+      "run_id": "branch_01M7ZY76A10FWHK1HPB7CNNMKX",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7r9g1z168bt2h",
+      "task_id": "code_01m7zy6knr4jk864",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp"
+      ]
     }
   },
   "legacy_digests": {

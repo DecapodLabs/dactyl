@@ -1,5 +1,13 @@
 # Validation
 
+## Wave 2 protocol, gateway, runtime-selector, and event-conformance proof (issues #132, #133, #136, #137, #138, #139)
+
+- `tools/proof/Containerfile` pins `decapod =0.160.0`, matching the host/release-bound entrypoints, `.decapod/managed/Dockerfile.decapod`, and `.decapod/managed/specs/.manifest.json` evaluated by `.github/workflows/decapod-validate.yml`.
+- `tests/cloud_connector.rs` verifies `BillingOveragePolicy` (`billing-overage-policy`, post-send `outcome_unknown`), `DeviceKeys`/`DeviceSessions`/`DeviceSession`/`DeviceRefresh`, `429` `quota_exceeded` & `overage_cap_exhausted` (`AdapterErrorKind::Quota`) vs `rate_limited` (`RateLimited`), bounded `Retry-After` metadata, `provider_disabled`/`device_key_expired`/`refresh_reuse_detected`/`mfa_step_up_required`/`repo_access_denied` classification, `DEFAULT_CLOUD_ORIGIN` retention, bounded single-retry `use_dpop_nonce` across body & `WWW-Authenticate` challenges, double-challenge stop, `Bearer`-switch non-retry, post-send `outcome_unknown` non-retry, and `CloudConnector::with_device_gateway()` Bearer/DPoP auth separation plus `cloud-control` `404` fallback and unsigned preflight `device_proof_required`.
+- `tests/supabase_rpc.rs` verifies `SupabaseRpcConfig::with_device_gateway()` routing (`/functions/v1/decapod-onboarding/cloud-query`, `cloud-batch`, and `cloud-control`), single `use_dpop_nonce` retry with `observe_nonce` & final metadata capture, double-challenge termination, unsigned/`Bearer` `device_proof_required` (`NotAttempted`), mutating `outcome_unknown` non-retry, atomic `WITH event_params(...)` batch framing, and `overage_cap_exhausted`/`quota_exceeded`/`provider_disabled`/`device_key_expired` error preservation.
+- `tests/logical_connector.rs` verifies `Backend::datastore().as_str()` (`sqlite`/`supabase`), concurrent multi-org (`org-alpha/repo-one`, `org-beta/repo-two`) isolation through a single trusted origin, legacy `/rest/v1/rpc/*` backward compatibility, and fail-closed cross-org/entitlement/stale-session/unknown-project/redirect refusal without SQLite fallback or credential leakage.
+- `tests/supabase_service.rs` updates schema conformance checks (`CREATE TABLE` count `3`, `tasks` + `events` columns, `UNIQUE (stream, seq)`), exercises `WITH event_params(...)` (`task.add`, `task.claim`, stale zero-row `task.claim`, `task.release`, `task.done`) against real local SQLite (`#[cfg(feature = "sqlite")]`), and adds `#[ignore]` `local_postgres_event_conformance` / `protected_hosted_supabase_event_conformance` (refusing missing `DACTYL_SUPABASE_FIXTURE`). Live hosted Supabase/Edge deployment, `local_postgres`, and `hosted_supabase` profiles remain explicitly `unavailable` until exercised against provisioned infrastructure.
+
 ## DPoP, Decapod Cloud routing, and high-concurrency conformance proof (issues #127, #128, #129)
 
 - `tests/cloud_connector.rs` and `tests/logical_connector.rs` verify canonical `/functions/v1/decapod-onboarding` discovery/handoff/account routes, bounded HTTP `404` fallback to `/functions/v1/propodus-onboarding`, redacted `Decapod-Cloud-*` / `Sunset` / `Deprecation` / `DPoP-Nonce` metadata capture, `RequestProofSigner` `DPoP` and `Bearer` modes across `account_request`, `control_request`, and `DatastoreRoute::supabase_rpc`, redirect refusal, typed `AdapterErrorKind::Authentication` mapping (`use_dpop_nonce`, `stolen_bearer`, `dpop_proof_required`, `missing_dpop_proof`, `dpop_replay`, `dpop_clock_skew`), and `DeviceChallenge`/`DeviceEnroll`/`DeviceStepUp`/`DeviceRevoke` mutation uncertainty.
@@ -307,7 +315,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

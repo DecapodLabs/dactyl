@@ -1,5 +1,11 @@
 # Security
 
+## Wave 2 gateway auth isolation, bounded nonce retry, and injection hardening (issues #132, #133, #136, #138, #139)
+
+- **Endpoint auth separation**: Under `.with_device_gateway()`, user-JWT management endpoints (`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`, `BillingOveragePolicy`, `DeviceChallenge`, `DeviceKeys`, `DeviceSessions`, `DeviceStepUp`) strip `proof_signer` so they never transmit `Authorization: DPoP`; `DeviceEnroll` and `DeviceSession` require both `Authorization: Bearer <user-jwt>` and `DPoP: <proof>` (`managed_bearer_proof = true`); `DeviceRefresh`, `cloud-control`, `cloud-query`, and `cloud-batch` fail closed preflight (`device_proof_required`, `MutationOutcome::NotAttempted`) when no `DPoP` proof is supplied.
+- **Bounded challenge retry and header hardening**: `validate_dpop_nonce` rejects `"` and `\` alongside whitespace/control bytes, and `extract_response_metadata` rejects multiple `DPoP-Nonce` headers. `with_dpop_nonce_retry` retries pre-execution HTTP `401` `use_dpop_nonce` challenges at most once per logical call, never retries if `RequestProofSigner` switches to `AuthScheme::Bearer`, never follows `3xx` redirects, and never retries post-dispatch `outcome_unknown` failures on mutating calls.
+- **Tenant boundary and redaction**: Multiple organizations and repositories sharing a single origin keep opaque `StorageContext`, tokens, proofs, nonces, `Retry-After` (redacted in `CloudResponseMetadata` `Debug` via `has_retry_after`), and remote messages isolated and scrubbed across pooled requests and error surfaces; `404` `project_not_found` fails closed without legacy function fallback.
+
 ## RFC 9449 DPoP transport and redaction boundary (issues #127, #128)
 
 `RequestProofSigner` keeps all private key generation, OS keystore custody, and signing operations outside Dactyl. Dactyl validates `RequestProof::dpop` tokens and `DPoP-Nonce` headers for ASCII-graphic safety and length bounds (`<= 16384` / `<= 1024` bytes) before dispatch (`MutationOutcome::NotAttempted`), sends proofs only over verified HTTPS or literal loopback HTTP origins with `redirect::Policy::none()` and `retry::never()`, and redacts tokens, proofs, nonces, origins, `Decapod-Cloud-*` values, and raw remote error messages from all `Debug` and `DactylError` outputs.
@@ -171,7 +177,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

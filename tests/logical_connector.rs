@@ -22,7 +22,13 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     assert_eq!(local_target.backend(), Backend::Local);
     assert_eq!(cloud_target.backend(), Backend::Cloud);
     assert_eq!(custom_cloud.backend(), Backend::Cloud);
+    assert_eq!(local_target.backend().datastore().as_str(), "sqlite");
+    assert_eq!(cloud_target.backend().datastore().as_str(), "supabase");
     assert!(DEFAULT_CLOUD_ORIGIN.starts_with("https://"));
+    assert_eq!(
+        DEFAULT_CLOUD_ORIGIN,
+        "https://goyxpcmxetztjlrrcwew.supabase.co"
+    );
 
     let debug_targets = format!("{local_target:?} {cloud_target:?} {custom_cloud:?}");
     assert!(!debug_targets.contains("private-workspace"));
@@ -34,8 +40,13 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     assert!(AccountOperation::Checkout.is_mutating());
     assert!(AccountOperation::Manage.is_mutating());
     assert!(AccountOperation::Portal.is_mutating());
+    assert!(AccountOperation::BillingOveragePolicy.is_mutating());
     assert!(!AccountOperation::DeviceChallenge.is_mutating());
     assert!(AccountOperation::DeviceEnroll.is_mutating());
+    assert!(!AccountOperation::DeviceKeys.is_mutating());
+    assert!(!AccountOperation::DeviceSessions.is_mutating());
+    assert!(AccountOperation::DeviceSession.is_mutating());
+    assert!(AccountOperation::DeviceRefresh.is_mutating());
     assert!(AccountOperation::DeviceStepUp.is_mutating());
     assert!(AccountOperation::DeviceRevoke.is_mutating());
 
@@ -128,6 +139,8 @@ mod local_workspaces {
 
         let conn_a = ws_a.open(OpenOptions::default(), None, None).unwrap();
         let conn_b = ws_b.open(OpenOptions::default(), None, None).unwrap();
+        assert_eq!(conn_a.datastore().as_str(), "sqlite");
+        assert_eq!(conn_b.datastore().as_str(), "sqlite");
 
         conn_a
             .write("CREATE TABLE items (id TEXT PRIMARY KEY)", &[])
@@ -347,6 +360,7 @@ mod cloud_and_multi_workspace {
             .open(OpenOptions::default(), Some(ctx_b), Some("bearer-b".into()))
             .unwrap();
         assert_eq!(conn_b.datastore(), Datastore::Supabase);
+        assert_eq!(conn_b.datastore().as_str(), "supabase");
         let rows_b = conn_b.read("SELECT workspace", &[]).unwrap();
         assert_eq!(rows_b.as_slice()[0].get_str("workspace").unwrap(), "b");
 
@@ -774,6 +788,330 @@ mod cloud_and_multi_workspace {
         let ctrl_req = rx.recv().unwrap();
         assert!(ctrl_req.contains("authorization: DPoP bearer-token"));
         assert!(ctrl_req.contains("dpop: logical-dpop-init-nonce"));
+        srv.join().unwrap();
+    }
+
+    #[test]
+    fn single_origin_serves_multiple_orgs_and_repos_without_cross_contamination_or_redirects() {
+        use dactyl_db::{
+            CloudResponseMetadata, OperationKind, RequestProof, RequestProofInput,
+            RequestProofSigner, ResourceBudget,
+        };
+        use std::sync::{Arc, Barrier};
+
+        struct MultiOrgSigner(&'static str);
+        impl RequestProofSigner for MultiOrgSigner {
+            fn sign_request(
+                &self,
+                input: &RequestProofInput<'_>,
+            ) -> Result<RequestProof, dactyl_db::DactylError> {
+                assert!(input.access_token_sha256().is_some());
+                RequestProof::dpop(format!("sig-{}-{}", self.0, input.nonce().unwrap_or("0")))
+            }
+        }
+
+        // Single-origin mock that inspects each request's bearer + opaque payload
+        // and enforces multi-org routing isolation without any fallback or redirects.
+        let sink = TcpListener::bind("127.0.0.1:0").unwrap();
+        let sink_location = format!("http://{}/pricing-redirect", sink.local_addr().unwrap());
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let origin = format!("http://{}", listener.local_addr().unwrap());
+        let origin_srv = origin.clone();
+        let srv = thread::spawn(move || {
+            // Expect: 2x discovery, 8x concurrent org/repo ops, 1x legacy rpc,
+            // 4x denial/stale/not_found cases, 1x redirect refusal = 16 requests.
+            for _ in 0..16 {
+                let (mut stream, _) = listener.accept().unwrap();
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                let mut bytes = Vec::new();
+                let (headers, offset, len) = loop {
+                    let mut buf = [0_u8; 4096];
+                    let n = stream.read(&mut buf).unwrap();
+                    assert!(n > 0);
+                    bytes.extend_from_slice(&buf[..n]);
+                    if let Some(pos) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
+                        let hdr = String::from_utf8(bytes[..pos].to_vec()).unwrap();
+                        let content_len = hdr
+                            .lines()
+                            .find_map(|line| {
+                                let (k, v) = line.split_once(':')?;
+                                k.eq_ignore_ascii_case("content-length")
+                                    .then(|| v.trim().parse::<usize>().unwrap())
+                            })
+                            .unwrap_or(0);
+                        break (hdr, pos + 4, content_len);
+                    }
+                };
+                while bytes.len() - offset < len {
+                    let mut buf = [0_u8; 4096];
+                    let n = stream.read(&mut buf).unwrap();
+                    assert!(n > 0);
+                    bytes.extend_from_slice(&buf[..n]);
+                }
+                let body: Value = if len == 0 {
+                    Value::Null
+                } else {
+                    serde_json::from_slice(&bytes[offset..offset + len]).unwrap()
+                };
+                let first_line = headers.lines().next().unwrap();
+                let lower_hdr = headers.to_ascii_lowercase();
+                let (status, extra, resp_body) = if first_line
+                    .contains("/functions/v1/decapod-onboarding/config")
+                {
+                    (
+                        200,
+                        String::new(),
+                        json!({
+                            "version": 1,
+                            "project_origin": origin_srv,
+                            "publishable_key": KEY_B,
+                            "schema": "dactyl_api"
+                        })
+                        .to_string(),
+                    )
+                } else if first_line.contains("/functions/v1/decapod-onboarding/cloud-control") {
+                    if lower_hdr.contains("authorization: dpop tok-cross-org") {
+                        (
+                            403,
+                            String::new(),
+                            json!({"error":{"code":"repo_access_denied","message":"dsn-secret-alpha"}}).to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-revoked-seat") {
+                        (
+                            403,
+                            String::new(),
+                            json!({"error":{"code":"entitlement_required","message":"seat-secret"}}).to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-stale-device") {
+                        (
+                            401,
+                            String::new(),
+                            json!({"error":{"code":"device_key_expired","message":"key-secret"}})
+                                .to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-unknown-project") {
+                        (
+                            404,
+                            String::new(),
+                            json!({"error":{"code":"project_not_found","message":"proj-secret"}})
+                                .to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-redirect") {
+                        (
+                            302,
+                            format!("Location: {sink_location}\r\n"),
+                            json!({}).to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-alpha") {
+                        assert_eq!(body["request"]["project_id"], "org-alpha/repo-one");
+                        assert!(lower_hdr.contains("dpop: sig-alpha-"));
+                        (
+                            200,
+                            String::new(),
+                            json!({"org": "org-alpha", "allowed": true}).to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-beta") {
+                        assert_eq!(body["request"]["project_id"], "org-beta/repo-two");
+                        assert!(lower_hdr.contains("dpop: sig-beta-"));
+                        (
+                            200,
+                            String::new(),
+                            json!({"org": "org-beta", "allowed": true}).to_string(),
+                        )
+                    } else {
+                        panic!("unexpected control auth header: {headers}");
+                    }
+                } else if first_line.contains("/functions/v1/decapod-onboarding/cloud-query") {
+                    if lower_hdr.contains("authorization: dpop tok-alpha") {
+                        assert_eq!(body["context"]["payload"]["repo"], "org-alpha/repo-one");
+                        assert!(!body.to_string().contains("org-beta"));
+                        (
+                            200,
+                            String::new(),
+                            json!({"columns":["tenant"],"rows":[{"tenant":"alpha"}],"affected_rows":0,"generated_keys":[]}).to_string(),
+                        )
+                    } else if lower_hdr.contains("authorization: dpop tok-beta") {
+                        assert_eq!(body["context"]["payload"]["repo"], "org-beta/repo-two");
+                        assert!(!body.to_string().contains("org-alpha"));
+                        (
+                            200,
+                            String::new(),
+                            json!({"columns":["tenant"],"rows":[{"tenant":"beta"}],"affected_rows":0,"generated_keys":[]}).to_string(),
+                        )
+                    } else {
+                        panic!("unexpected query auth header: {headers}");
+                    }
+                } else if first_line.contains("/rest/v1/rpc/dactyl_query_v1") {
+                    assert!(lower_hdr.contains("authorization: bearer tok-legacy"));
+                    (
+                        200,
+                        String::new(),
+                        json!({"columns":["tenant"],"rows":[{"tenant":"legacy"}],"affected_rows":0,"generated_keys":[]}).to_string(),
+                    )
+                } else {
+                    panic!("unexpected path: {first_line}");
+                };
+                write!(
+                    stream,
+                    "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{extra}\r\n{resp_body}",
+                    resp_body.len()
+                )
+                .ok();
+            }
+            listener.set_nonblocking(true).unwrap();
+            thread::sleep(Duration::from_millis(80));
+            assert!(listener.accept().is_err());
+        });
+
+        let conn_alpha = Arc::new(
+            LogicalConnector::resolve(LogicalTarget::cloud_with_origin(&origin))
+                .unwrap()
+                .with_device_gateway()
+                .with_proof_signer(Arc::new(MultiOrgSigner("alpha"))),
+        );
+        let conn_beta = Arc::new(
+            LogicalConnector::resolve(LogicalTarget::cloud_with_origin(&origin))
+                .unwrap()
+                .with_device_gateway()
+                .with_proof_signer(Arc::new(MultiOrgSigner("beta"))),
+        );
+
+        // Concurrent pooled requests for two orgs/repos over ONE shared origin stay isolated.
+        let barrier = Arc::new(Barrier::new(2));
+        let a_handle = {
+            let conn = conn_alpha.clone();
+            let barrier = barrier.clone();
+            thread::spawn(move || {
+                barrier.wait();
+                for _ in 0..2 {
+                    let out = conn
+                        .control_request(
+                            "propodus_repository_access_v1",
+                            &json!({"version": 1, "project_id": "org-alpha/repo-one"}),
+                            Some("tok-alpha"),
+                            OperationKind::Read,
+                            ResourceBudget::v1(),
+                        )
+                        .unwrap();
+                    assert_eq!(out["org"], "org-alpha");
+                    let ctx =
+                        StorageContext::new(1, json!({"repo": "org-alpha/repo-one"})).unwrap();
+                    let db = conn
+                        .open(OpenOptions::default(), Some(ctx), Some("tok-alpha".into()))
+                        .unwrap();
+                    assert_eq!(db.datastore(), Datastore::Supabase);
+                    let rows = db.read("SELECT 'alpha' AS tenant", &[]).unwrap();
+                    assert_eq!(rows.as_slice()[0].get_str("tenant").unwrap(), "alpha");
+                }
+            })
+        };
+        let b_handle = {
+            let conn = conn_beta.clone();
+            thread::spawn(move || {
+                barrier.wait();
+                for _ in 0..2 {
+                    let out = conn
+                        .control_request(
+                            "propodus_repository_access_v1",
+                            &json!({"version": 1, "project_id": "org-beta/repo-two"}),
+                            Some("tok-beta"),
+                            OperationKind::Read,
+                            ResourceBudget::v1(),
+                        )
+                        .unwrap();
+                    assert_eq!(out["org"], "org-beta");
+                    let ctx = StorageContext::new(1, json!({"repo": "org-beta/repo-two"})).unwrap();
+                    let db = conn
+                        .open(OpenOptions::default(), Some(ctx), Some("tok-beta".into()))
+                        .unwrap();
+                    let rows = db.read("SELECT 'beta' AS tenant", &[]).unwrap();
+                    assert_eq!(rows.as_slice()[0].get_str("tenant").unwrap(), "beta");
+                }
+            })
+        };
+        a_handle.join().unwrap();
+        b_handle.join().unwrap();
+
+        // Backwards compatibility: legacy connector without device_gateway keeps /rest/v1/rpc/*.
+        let legacy_conn =
+            LogicalConnector::cloud_with_config(SupabaseRpcConfig::v1(&origin, KEY_B)).unwrap();
+        let legacy_db = legacy_conn
+            .open(
+                OpenOptions::default(),
+                Some(StorageContext::new(1, json!({"legacy": true})).unwrap()),
+                Some("tok-legacy".into()),
+            )
+            .unwrap();
+        assert_eq!(
+            legacy_db
+                .read("SELECT 'legacy' AS tenant", &[])
+                .unwrap()
+                .as_slice()[0]
+                .get_str("tenant")
+                .unwrap(),
+            "legacy"
+        );
+
+        // Multi-org refusal matrix through the single origin fails closed without redirects/leaks.
+        for (token, expected_kind, expected_code, hidden) in [
+            (
+                "tok-cross-org",
+                AdapterErrorKind::Authorization,
+                Some("repo_access_denied"),
+                "dsn-secret-alpha",
+            ),
+            (
+                "tok-revoked-seat",
+                AdapterErrorKind::Authorization,
+                Some("entitlement_required"),
+                "seat-secret",
+            ),
+            (
+                "tok-stale-device",
+                AdapterErrorKind::Authentication,
+                Some("device_key_expired"),
+                "key-secret",
+            ),
+            (
+                "tok-unknown-project",
+                AdapterErrorKind::NotFound,
+                Some("project_not_found"),
+                "proj-secret",
+            ),
+            (
+                "tok-redirect",
+                AdapterErrorKind::Protocol,
+                Some("outcome_unknown"),
+                "pricing-redirect",
+            ),
+        ] {
+            let mut meta = CloudResponseMetadata::default();
+            let err = conn_alpha
+                .control_request_with_metadata(
+                    "propodus_repository_access_v1",
+                    &json!({"version": 1, "project_id": "org-beta/repo-two"}),
+                    Some(token),
+                    None,
+                    OperationKind::Write,
+                    ResourceBudget::v1(),
+                    &mut meta,
+                )
+                .unwrap_err();
+            assert_eq!(err.adapter_kind(), Some(expected_kind));
+            assert_eq!(err.adapter_code(), expected_code);
+            let rendered = format!("{err} {err:?} {meta:?}");
+            assert!(!rendered.contains(hidden));
+            assert!(!rendered.contains(token));
+        }
+
+        sink.set_nonblocking(true).unwrap();
+        assert!(
+            sink.accept().is_err(),
+            "redirect target must never be contacted"
+        );
         srv.join().unwrap();
     }
 }

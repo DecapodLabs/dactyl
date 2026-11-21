@@ -32,7 +32,12 @@ pub(crate) fn validate_opaque_credential(
 }
 
 pub(crate) fn validate_dpop_nonce(value: &str) -> Result<(), DactylError> {
-    if value.is_empty() || value.len() > 1024 || !value.bytes().all(|b| b.is_ascii_graphic()) {
+    if value.is_empty()
+        || value.len() > 1024
+        || !value
+            .bytes()
+            .all(|b| b.is_ascii_graphic() && !matches!(b, b'"' | b'\\'))
+    {
         return Err(DactylError::adapter_with_code(
             AdapterErrorKind::Authentication,
             "invalid_dpop_nonce",
@@ -199,6 +204,7 @@ pub struct CloudResponseMetadata {
     dpop_nonce: Option<String>,
     sunset: Option<String>,
     deprecation: Option<String>,
+    retry_after: Option<String>,
     cloud_headers: Vec<(String, String)>,
 }
 
@@ -208,6 +214,7 @@ impl std::fmt::Debug for CloudResponseMetadata {
             .field("has_dpop_nonce", &self.dpop_nonce.is_some())
             .field("has_sunset", &self.sunset.is_some())
             .field("has_deprecation", &self.deprecation.is_some())
+            .field("has_retry_after", &self.retry_after.is_some())
             .field("cloud_header_count", &self.cloud_headers.len())
             .finish()
     }
@@ -224,6 +231,11 @@ impl CloudResponseMetadata {
 
     pub fn deprecation(&self) -> Option<&str> {
         self.deprecation.as_deref()
+    }
+
+    /// Bounded `Retry-After` header as sent by the service, when present.
+    pub fn retry_after(&self) -> Option<&str> {
+        self.retry_after.as_deref()
     }
 
     pub fn cloud_headers(&self) -> &[(String, String)] {
@@ -253,6 +265,11 @@ impl CloudResponseMetadata {
     }
 
     #[cfg(feature = "supabase")]
+    pub(crate) fn set_retry_after(&mut self, retry_after: String) {
+        self.retry_after = Some(retry_after);
+    }
+
+    #[cfg(feature = "supabase")]
     pub(crate) fn push_cloud_header(&mut self, name: String, value: String) {
         self.cloud_headers.push((name, value));
     }
@@ -269,8 +286,15 @@ pub enum AccountOperation {
     Checkout,
     Manage,
     Portal,
+    BillingOveragePolicy,
     DeviceChallenge,
     DeviceEnroll,
+    DeviceKeys,
+    DeviceSessions,
+    /// Issue a project-scoped device session. Keep the returned credentials private.
+    DeviceSession,
+    /// Rotate a DPoP-bound device session. Keep the returned credentials private.
+    DeviceRefresh,
     DeviceStepUp,
     DeviceRevoke,
 }
@@ -286,8 +310,13 @@ impl AccountOperation {
             Self::Checkout => "billing-checkout",
             Self::Manage => "billing-manage",
             Self::Portal => "billing-portal",
+            Self::BillingOveragePolicy => "billing-overage-policy",
             Self::DeviceChallenge => "device-challenge",
             Self::DeviceEnroll => "device-enroll",
+            Self::DeviceKeys => "device-keys",
+            Self::DeviceSessions => "device-sessions",
+            Self::DeviceSession => "device-session",
+            Self::DeviceRefresh => "device-refresh",
             Self::DeviceStepUp => "device-step-up",
             Self::DeviceRevoke => "device-revoke",
         }
@@ -301,7 +330,10 @@ impl AccountOperation {
                 | Self::Checkout
                 | Self::Manage
                 | Self::Portal
+                | Self::BillingOveragePolicy
                 | Self::DeviceEnroll
+                | Self::DeviceSession
+                | Self::DeviceRefresh
                 | Self::DeviceStepUp
                 | Self::DeviceRevoke
         )
@@ -641,6 +673,31 @@ impl LogicalConnector {
             }
         }
         self
+    }
+
+    /// Route authenticated Decapod Cloud control and datastore RPCs through the
+    /// Edge gateway endpoints (`/functions/v1/decapod-onboarding/cloud-*`) on
+    /// this connector (no-op on local SQLite connectors).
+    pub fn with_device_gateway(mut self) -> Self {
+        match &mut self.inner {
+            ConnectorKind::Local { .. } => {}
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                *connector = connector.clone().with_device_gateway();
+            }
+        }
+        self
+    }
+
+    /// Whether Cloud requests on this connector route through the Edge gateway
+    /// (`/functions/v1/decapod-onboarding/cloud-*`). Always `false` for local
+    /// SQLite connectors.
+    pub fn uses_device_gateway(&self) -> bool {
+        match &self.inner {
+            ConnectorKind::Local { .. } => false,
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.uses_device_gateway(),
+        }
     }
 
     pub fn local(path: impl Into<String>) -> Result<Self, DactylError> {
