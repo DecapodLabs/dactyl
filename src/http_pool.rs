@@ -210,34 +210,6 @@ impl Drop for RequestSlot<'_> {
     }
 }
 
-#[cfg(test)]
-mod pool_tests {
-    use super::*;
-
-    #[test]
-    fn equal_budgets_share_slots_and_other_budgets_keep_independent_capacity() {
-        let budget = ResourceBudget::v1().with_http_pool_limits(1, 0, Duration::from_secs(1));
-        let first = acquire_client(budget).unwrap();
-        let same = acquire_client(budget.with_request_timeout(Duration::from_secs(2))).unwrap();
-        assert!(Arc::ptr_eq(&first, &same));
-        let different =
-            acquire_client(budget.with_http_pool_limits(2, 1, Duration::from_secs(1))).unwrap();
-        assert!(!Arc::ptr_eq(&first, &different));
-        let held = first.acquire_permit(Instant::now()).unwrap();
-        let error = same
-            .acquire_permit(Instant::now())
-            .err()
-            .expect("same pool is full");
-        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Timeout));
-        let one = different.acquire_permit(Instant::now()).unwrap();
-        let two = different.acquire_permit(Instant::now()).unwrap();
-        assert!(different.acquire_permit(Instant::now()).is_err());
-        drop((held, one, two));
-        assert!(first.acquire_permit(Instant::now()).is_ok());
-        assert!(different.acquire_permit(Instant::now()).is_ok());
-    }
-}
-
 pub(crate) fn canonical_url(endpoint: &str) -> Result<String, DactylError> {
     let mut url = reqwest::Url::parse(endpoint)
         .map_err(|_| DactylError::adapter(AdapterErrorKind::Protocol, "invalid request URL"))?;
@@ -365,4 +337,32 @@ pub(crate) fn extract_response_metadata(
         }
     }
     metadata
+}
+
+#[cfg(test)]
+mod pool_tests {
+    use super::*;
+
+    #[test]
+    fn equal_budgets_share_slots_and_other_budgets_keep_independent_capacity() {
+        let budget = ResourceBudget::v1().with_http_pool_limits(1, 0, Duration::from_secs(1));
+        let first = acquire_client(budget).unwrap();
+        let same = acquire_client(budget.with_request_timeout(Duration::from_secs(2))).unwrap();
+        assert!(Arc::ptr_eq(&first, &same));
+        let different =
+            acquire_client(budget.with_http_pool_limits(2, 1, Duration::from_secs(1))).unwrap();
+        assert!(!Arc::ptr_eq(&first, &different));
+        let held = first.acquire_permit(Instant::now()).unwrap();
+        let error = same
+            .acquire_permit(Instant::now())
+            .err()
+            .expect("same pool is full");
+        assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Timeout));
+        let one = different.acquire_permit(Instant::now()).unwrap();
+        let two = different.acquire_permit(Instant::now()).unwrap();
+        assert!(different.acquire_permit(Instant::now()).is_err());
+        drop((held, one, two));
+        assert!(first.acquire_permit(Instant::now()).is_ok());
+        assert!(different.acquire_permit(Instant::now()).is_ok());
+    }
 }

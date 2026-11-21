@@ -108,6 +108,14 @@
       "proof_refs": [
         "15 all-feature cloud_connector tests"
       ]
+    },
+    {
+      "id": "pool-tests-clippy-clean",
+      "summary": "Keep the HTTP pool regression in the conventional end-of-module test position",
+      "input_digest": "sha256:dd83a348151b818984cb3bf947d92c5e89976d30cc275959910f0d135c1965b7",
+      "proof_refs": [
+        "153 all-feature tests and all-target Clippy with warnings denied"
+      ]
     }
   ],
   "intents": {
@@ -148,22 +156,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The connector selects the existing bounded pool from supplied settings without changing authentication or request semantics.",
-          "reviewed_code_fingerprint": "7528fafbc2f09081569e16ea68d3ebb80a9e51fabcd614352c80ff0c39eda70b",
+          "reason": "Move the existing budget regression after production items to satisfy Clippy and describe the test evidence.",
+          "reviewed_code_fingerprint": "aea8f945f415a2a87fbc1406d99fadbd1dbd21085549ae79dfa83de9c61c7fe7",
           "spec_material_hash": "eaad0f290af40606858a916969acb81641570ddc714dda74c03d69526295966a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document explicit pool selection for the cloud authentication and account surfaces.",
-          "reviewed_code_fingerprint": "7528fafbc2f09081569e16ea68d3ebb80a9e51fabcd614352c80ff0c39eda70b",
+          "reason": "Move the existing budget regression after production items to satisfy Clippy and describe the test evidence.",
+          "reviewed_code_fingerprint": "aea8f945f415a2a87fbc1406d99fadbd1dbd21085549ae79dfa83de9c61c7fe7",
           "spec_material_hash": "4367aa4e63ca68c5876939bca32806d48fd8b1afaf2536707b7661573f900e1a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The connector selects the existing bounded pool from supplied settings without changing authentication or request semantics.",
-          "reviewed_code_fingerprint": "7528fafbc2f09081569e16ea68d3ebb80a9e51fabcd614352c80ff0c39eda70b",
+          "reason": "Move the existing budget regression after production items to satisfy Clippy and describe the test evidence.",
+          "reviewed_code_fingerprint": "aea8f945f415a2a87fbc1406d99fadbd1dbd21085549ae79dfa83de9c61c7fe7",
           "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
         }
       ],
@@ -175,13 +183,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795221879Z"
+      "updated_at": "1795223449Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e3a7ca8f3603842bb2eef1f5504ae1e466e8a36e30bf2864618f4a60dae89bcc",
+      "artifact_hash": "sha256:338d1314c3676eb3b036020b41bd1cd31b35f90ce5eb82b348bb80123ec10485",
       "checks": [],
       "current_phase": "intent",
       "custody": {
@@ -249,6 +257,27 @@
           "binding_digest": "sha256:020dbdfc8876fb8cf472dbe4851494a6e983c54460d2964ab9e0023744cace67",
           "checkpoint_id": "cloud-connector-budget-tested",
           "sequence": 2
+        },
+        {
+          "binding": {
+            "governance_digest": "sha256:9ce08b7a9e3c4606e229cb69ac1276543f6d8cf9e12aa02e8504492ac6d40603",
+            "head_revision": "91c1ac24b1af8067f7d74d72b1488fd323f00d44",
+            "intent_id": "intent:change_01M7XP2QXBXCBGFTXZJMDD0JJM",
+            "material_digest": "sha256:f16c9e3b287c44e236d1c983b6789b41dd75c9671263e6e5641bd740bd601954",
+            "plan_digest": "sha256:8f61a829d82143c81552fbb1c615d86c92e2eb4e95a0918bc45ec5526c07e304",
+            "policy_digest": "sha256:2b63185017e2b8fcb9d37732671081b1ca397ed192e8fdd5dfd93e681a021ea6",
+            "required_approvals": [],
+            "run_id": "branch_01M7XP2R092BCEJ80V06WDV5M1",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:fda8ecabe71582099122c2aa5b4777dd101c7c629fed4367248a10a78fd94cfa",
+            "task_id": "code_01m7xp1f0j7nf8k9",
+            "trajectory_digest": "sha256:a0626b97abfbfbb13a0dd6b59268dc5bdda23cec4a2fd8aeae82e53e7960552d",
+            "validation_epoch_digest": "sha256:dd28260c5dded628ecb68ab846b379c59f4e7c57b91c257aa0c442bab79c9739",
+            "work_branch": "agent/codex-cloud-followups/code_01m7xp1f0j7nf8k9-http-budget"
+          },
+          "binding_digest": "sha256:fcb464b1862edc46f634520cba6119446828dcbd2848af4ab327a45c3933a1e4",
+          "checkpoint_id": "pool-tests-clippy-clean",
+          "sequence": 3
         }
       ],
       "inspected_files": [],

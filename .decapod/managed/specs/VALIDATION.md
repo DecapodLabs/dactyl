@@ -1,5 +1,9 @@
 # Validation
 
+The HTTP pool regression fills two scopes with different limits. It checks
+that equal settings share a deadline-bound admission slot and that capacity
+returns when each request permit is released.
+
 ## DPoP, Decapod Cloud routing, and high-concurrency conformance proof (issues #127, #128, #129)
 
 - `tests/cloud_connector.rs` and `tests/logical_connector.rs` verify canonical `/functions/v1/decapod-onboarding` discovery/handoff/account routes, bounded HTTP `404` fallback to `/functions/v1/propodus-onboarding`, redacted `Decapod-Cloud-*` / `Sunset` / `Deprecation` / `DPoP-Nonce` metadata capture, `RequestProofSigner` `DPoP` and `Bearer` modes across `account_request`, `control_request`, and `DatastoreRoute::supabase_rpc`, redirect refusal, typed `AdapterErrorKind::Authentication` mapping (`use_dpop_nonce`, `stolen_bearer`, `dpop_proof_required`, `missing_dpop_proof`, `dpop_replay`, `dpop_clock_skew`), and `DeviceChallenge`/`DeviceEnroll`/`DeviceStepUp`/`DeviceRevoke` mutation uncertainty.
@@ -307,7 +311,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7528fafbc2f09081569e16ea68d3ebb80a9e51fabcd614352c80ff0c39eda70b`
+- Repository signal fingerprint: `aea8f945f415a2a87fbc1406d99fadbd1dbd21085549ae79dfa83de9c61c7fe7`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
