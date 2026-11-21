@@ -4,8 +4,8 @@
 use dactyl_db::{
     AccountOperation, AdapterErrorKind, AuthenticationSecrets, AuthenticationStart, Backend,
     CloudConnector, CloudResponseMetadata, Connection, Datastore, DatastoreRoute, MutationOutcome,
-    RequestProof, RequestProofInput, RequestProofSigner, ScmCredential, ScmProvider,
-    StorageContext, SupabaseRpcConfig, UserSession,
+    RequestProof, RequestProofInput, RequestProofSigner, ResourceBudget, ScmCredential,
+    ScmProvider, StorageContext, SupabaseRpcConfig, UserSession,
 };
 use serde_json::{json, Value};
 use std::io::{Read, Write};
@@ -772,6 +772,8 @@ fn discovery_and_account_fall_back_on_404_and_capture_redacted_cloud_headers() {
 
 fn connector_with_signer(origin: &str, signer: Arc<dyn RequestProofSigner>) -> CloudConnector {
     CloudConnector::with_config(SupabaseRpcConfig::v1(origin, KEY))
+        .unwrap()
+        .with_http_budget(ResourceBudget::v1().with_http_pool_limits(2, 1, Duration::from_secs(1)))
         .unwrap()
         .with_proof_signer(signer)
 }

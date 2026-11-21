@@ -177,6 +177,14 @@ impl CloudConnector {
         })
     }
 
+    /// Select the connection timeout, concurrency and keep-alive settings for
+    /// this connector's authentication and account requests. Control and
+    /// datastore requests use their explicit per-call resource budgets.
+    pub fn with_http_budget(mut self, budget: ResourceBudget) -> Result<Self, DactylError> {
+        self.http_client = acquire_client(budget)?;
+        Ok(self)
+    }
+
     /// Attach a synchronous caller-supplied [`RequestProofSigner`] for Decapod
     /// Cloud account, control RPC, and datastore requests.
     pub fn with_proof_signer(mut self, signer: Arc<dyn RequestProofSigner>) -> Self {
