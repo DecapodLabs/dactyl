@@ -777,6 +777,62 @@ fn connector_with_signer(origin: &str, signer: Arc<dyn RequestProofSigner>) -> C
 }
 
 #[test]
+fn device_gateway_bootstraps_with_managed_bearer_and_separate_key_proof() {
+    let signer = Arc::new(RecordingProofSigner::default());
+    let operations = [
+        (AccountOperation::DeviceChallenge, false),
+        (AccountOperation::DeviceStepUp, false),
+        (AccountOperation::DeviceEnroll, true),
+        (AccountOperation::DeviceSession, true),
+    ];
+    let (origin, received, handle) = server(vec![(200, json!({"version": 1})); operations.len()]);
+    let client = connector_with_signer(&origin, signer.clone()).with_device_gateway();
+    let body = json!({"version": 1, "project_id": "fixture-project"});
+    for (operation, has_proof) in operations {
+        client
+            .account_request_with_metadata(
+                operation,
+                &body,
+                "fixture-user-bearer",
+                None,
+                (operation == AccountOperation::DeviceEnroll).then_some("fixture-enrollment-nonce"),
+                &mut CloudResponseMetadata::default(),
+            )
+            .unwrap();
+        let (headers, actual) = received.recv().unwrap();
+        assert!(headers.starts_with(&format!(
+            "POST /functions/v1/decapod-onboarding/{} ",
+            operation.action()
+        )));
+        assert_eq!(
+            header(&headers, "authorization"),
+            Some("Bearer fixture-user-bearer")
+        );
+        assert_eq!(header(&headers, "dpop").is_some(), has_proof);
+        assert_eq!(actual, body);
+    }
+    handle.join().unwrap();
+    let calls = signer.calls.lock().unwrap();
+    assert_eq!(calls.len(), 2);
+    assert!(calls[0].1.ends_with("/device-enroll"));
+    assert!(calls[1].1.ends_with("/device-session"));
+    assert_eq!(calls[0].3.as_deref(), Some("fixture-enrollment-nonce"));
+    assert_eq!(calls[1].3, None);
+    assert_eq!(calls[0].2, calls[1].2);
+
+    let unsigned = connector(&origin).with_device_gateway();
+    for operation in [
+        AccountOperation::DeviceEnroll,
+        AccountOperation::DeviceSession,
+    ] {
+        let error = unsigned
+            .account_request(operation, &body, "fixture-user-bearer", None)
+            .unwrap_err();
+        assert_eq!(error.adapter_code(), Some("device_proof_required"));
+    }
+}
+
+#[test]
 fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() {
     let signer = Arc::new(RecordingProofSigner::default());
     let sink = TcpListener::bind("127.0.0.1:0").unwrap();

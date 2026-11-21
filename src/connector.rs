@@ -271,6 +271,8 @@ pub enum AccountOperation {
     Portal,
     DeviceChallenge,
     DeviceEnroll,
+    /// Issue a project-scoped device session. Keep the returned credentials private.
+    DeviceSession,
     DeviceStepUp,
     DeviceRevoke,
 }
@@ -288,6 +290,7 @@ impl AccountOperation {
             Self::Portal => "billing-portal",
             Self::DeviceChallenge => "device-challenge",
             Self::DeviceEnroll => "device-enroll",
+            Self::DeviceSession => "device-session",
             Self::DeviceStepUp => "device-step-up",
             Self::DeviceRevoke => "device-revoke",
         }
@@ -302,6 +305,7 @@ impl AccountOperation {
                 | Self::Manage
                 | Self::Portal
                 | Self::DeviceEnroll
+                | Self::DeviceSession
                 | Self::DeviceStepUp
                 | Self::DeviceRevoke
         )

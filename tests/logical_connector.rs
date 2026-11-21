@@ -36,6 +36,7 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     assert!(AccountOperation::Portal.is_mutating());
     assert!(!AccountOperation::DeviceChallenge.is_mutating());
     assert!(AccountOperation::DeviceEnroll.is_mutating());
+    assert!(AccountOperation::DeviceSession.is_mutating());
     assert!(AccountOperation::DeviceStepUp.is_mutating());
     assert!(AccountOperation::DeviceRevoke.is_mutating());
 

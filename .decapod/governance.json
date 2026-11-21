@@ -100,6 +100,14 @@
       "proof_refs": [
         "edge-data-loopback"
       ]
+    },
+    {
+      "id": "dactyl-device-issuance",
+      "summary": "Verify managed bearer plus request proof for device enrollment and issuance",
+      "input_digest": "sha256:a36922290ca8f48425224f7f483d13ee912896a01bab2d4cf689bf1c542b3a56",
+      "proof_refs": [
+        "device-bootstrap-transport"
+      ]
     }
   ],
   "intents": {
@@ -149,22 +157,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Specifies the final route selection before signing and the division of client and Edge authorization.",
-          "reviewed_code_fingerprint": "8c55f399194083c8e86bae3348426a5f756cd7a8d8158d510fe8a970a1e9f4b4",
-          "spec_material_hash": "5463f5d272dc76d1fa06af1155afc7b9e4b7496e667fa5769ca4cf73b6d29549"
+          "reason": "Documents managed bearer bootstrap and scoped post-issuance data transport.",
+          "reviewed_code_fingerprint": "2aa632c52a47cbe9fa6a64bb341aac12a5699c285dcd06c966602ab6e451241d",
+          "spec_material_hash": "35ed8cddf22e30c1c5ee339d11f46de46c919672e299aad8246c8cab0b101443"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents opt-in final DPoP route selection, supported data operations, and the explicit control gateway constraint.",
-          "reviewed_code_fingerprint": "8c55f399194083c8e86bae3348426a5f756cd7a8d8158d510fe8a970a1e9f4b4",
-          "spec_material_hash": "a5f4b052c77f7bcb53b3ad8474bdb8b172bbb0d62824c49b7649ee281cb94075"
+          "reason": "Documents the fixed device issuance route, mixed bearer and proof header contract, and caller custody.",
+          "reviewed_code_fingerprint": "2aa632c52a47cbe9fa6a64bb341aac12a5699c285dcd06c966602ab6e451241d",
+          "spec_material_hash": "3284e6deb7c1b81ad4e2b93ea8dc2a61f365f3b7ef1b49aad3246609f38a6f98"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The transport chooses the trusted Edge URI before signing, retains secret redaction and redirect denial, and keeps control gated under existing sender constraint.",
-          "reviewed_code_fingerprint": "8c55f399194083c8e86bae3348426a5f756cd7a8d8158d510fe8a970a1e9f4b4",
+          "reason": "Managed AAL2 and key proof remain verified at Edge and the client keeps HTTP credentials redacted.",
+          "reviewed_code_fingerprint": "2aa632c52a47cbe9fa6a64bb341aac12a5699c285dcd06c966602ab6e451241d",
           "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
         }
       ],
@@ -176,14 +184,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795231531Z"
+      "updated_at": "1795234500Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a79af465e4146be83e5c62c11e55fa94874e700f52618ba8819aaa87f547f98b",
+      "artifact_hash": "sha256:456b0d074dd76c078bffd55114743f30f792c4603e252de6c9a871908fbedb8e",
       "checks": [
+        {
+          "name": "device-bootstrap-transport",
+          "status": "passed"
+        },
         {
           "name": "edge-data-loopback",
           "status": "passed"
@@ -210,10 +222,17 @@
             "intent_id": "intent:change_01M7Y1GFNP54ZMC7DFD7JQEBEV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Y1GFRT7FCDESPSS9BVV21M",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Y1GFNP54ZMC7DFD7JQEBEV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y1GFRT7FCDESPSS9BVV21M": {
@@ -245,6 +264,36 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/logical_connector.rs",
+                  "Pinned Linux arm64 proof image: 35 connector, logical connector and native Supabase transport tests passed."
+                ],
+                "proof_refs": [
+                  "device-bootstrap-transport"
+                ],
+                "scope": [
+                  "\".decapod/governance.json\"]}",
+                  "\".decapod/managed/specs\"",
+                  "\"src/cloud.rs\"",
+                  "\"src/connector.rs\"",
+                  "\"src/supabase_rpc.rs\"",
+                  "\"tests/supabase_service.rs\"",
+                  ".decapod/managed/specs",
+                  "src/adapter/supabase.rs",
+                  "src/cloud.rs",
+                  "src/supabase_rpc.rs",
+                  "tests/supabase_rpc.rs",
+                  "{\"paths\":[\"src/adapter/supabase.rs\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -253,14 +302,18 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Pinned Linux arm64 proof image, cargo test --offline --locked --features supabase --test supabase_rpc, 13 passed"
+        "Pinned Linux arm64 proof image, cargo test --offline --locked --features supabase --test supabase_rpc, 13 passed",
+        "Pinned Linux arm64 proof image: 35 connector, logical connector and native Supabase transport tests passed."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7Y1GFNP54ZMC7DFD7JQEBEV",
       "modified_files": [
         "src/adapter/supabase.rs",
         "src/cloud.rs",
+        "src/connector.rs",
         "src/supabase_rpc.rs",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs",
         "tests/supabase_rpc.rs"
       ],
       "next_transitions": [
@@ -276,7 +329,10 @@
         ".decapod/managed/specs",
         "src/adapter/supabase.rs",
         "src/cloud.rs",
+        "src/connector.rs",
         "src/supabase_rpc.rs",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs",
         "tests/supabase_rpc.rs",
         "{\"paths\":[\"src/adapter/supabase.rs\""
       ],

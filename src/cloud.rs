@@ -121,6 +121,7 @@ impl CloudConnector {
             None,
             None,
             false,
+            false,
             &mut metadata,
         ) {
             Ok(profile) => profile,
@@ -138,6 +139,7 @@ impl CloudConnector {
                     None,
                     None,
                     None,
+                    false,
                     false,
                     &mut metadata,
                 )?
@@ -186,7 +188,7 @@ impl CloudConnector {
         self
     }
 
-    /// Select the Cloud Edge data gateway for an already issued device session.
+    /// Select the Cloud Edge gateway for device enrollment and device-session data.
     pub fn with_device_gateway(mut self) -> Self {
         self.config = self.config.with_device_gateway();
         self
@@ -469,6 +471,7 @@ impl CloudConnector {
             None,
             self.proof_signer.as_ref(),
             self.dpop_nonce.as_deref(),
+            false,
             true,
             &mut metadata,
         )?;
@@ -500,6 +503,7 @@ impl CloudConnector {
             None,
             None,
             None,
+            false,
             true,
             &mut metadata,
         )?;
@@ -555,6 +559,15 @@ impl CloudConnector {
     ) -> Result<T, DactylError> {
         let primary_prefix = self.onboarding_prefix.as_str();
         let nonce = dpop_nonce.or(self.dpop_nonce.as_deref());
+        let device_gateway = self.config.uses_device_gateway();
+        let managed_bearer_proof =
+            action == "device-session" || (device_gateway && action == "device-enroll");
+        let proof_signer =
+            if device_gateway && matches!(action, "device-challenge" | "device-step-up") {
+                None
+            } else {
+                self.proof_signer.as_ref()
+            };
         match request(
             &self.http_client,
             self.origin(),
@@ -564,8 +577,9 @@ impl CloudConnector {
             body.clone(),
             bearer,
             scm,
-            self.proof_signer.as_ref(),
+            proof_signer,
             nonce,
+            managed_bearer_proof,
             is_mutating,
             metadata_out,
         ) {
@@ -584,8 +598,9 @@ impl CloudConnector {
                     body,
                     bearer,
                     scm,
-                    self.proof_signer.as_ref(),
+                    proof_signer,
                     nonce,
+                    managed_bearer_proof,
                     is_mutating,
                     metadata_out,
                 )
@@ -766,6 +781,7 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     scm: Option<&ScmCredential>,
     proof_signer: Option<&Arc<dyn RequestProofSigner>>,
     dpop_nonce: Option<&str>,
+    managed_bearer_proof: bool,
     is_mutating: bool,
     metadata_out: &mut CloudResponseMetadata,
 ) -> Result<T, DactylError> {
@@ -790,7 +806,20 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
             opaque(value)?;
             let (auth, dpop) =
                 build_auth_headers(&method_str, &canonical, value, proof_signer, dpop_nonce)?;
-            (Some(auth), dpop)
+            if managed_bearer_proof {
+                if dpop.is_none() {
+                    return Err(DactylError::adapter_with_code(
+                        AdapterErrorKind::Authentication,
+                        "device_proof_required",
+                        "local preflight: device onboarding requires a DPoP proof",
+                    ));
+                }
+                // The service authenticates the human bearer and binds the
+                // enrolled key with the separate proof over that same token.
+                (Some(header(&format!("Bearer {value}"))?), dpop)
+            } else {
+                (Some(auth), dpop)
+            }
         }
         None => (None, None),
     };

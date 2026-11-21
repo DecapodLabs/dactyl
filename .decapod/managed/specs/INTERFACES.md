@@ -19,6 +19,11 @@ configuration retains its named PostgREST envelope. Device-gateway
 control calls return a local capability diagnostic until the service
 publishes its control contract.
 
+With the device gateway configured, `DeviceChallenge` and `DeviceStepUp`
+send the managed bearer. `DeviceEnroll` and `AccountOperation::DeviceSession`
+send the same bearer plus a required separate DPoP proof, signed over the
+actual account route. Callers keep the issued credentials private.
+
 ## Backend capability inventory (issue 79)
 
 docs/backend-capabilities.md maps the accepted SQLite, Neon HTTP, Supabase service HTTP and native RPC surfaces to source and test obligations. Connection::from_env / DatastoreRoute::from_env remain explicit ambient compatibility APIs; logical per-workspace connectors do not mutate that environment. DATASTORE=supabase retains service HTTP meaning. Remote catalog predicates, snapshots and maintenance return capability errors without network I/O; bounded remote visit_rows decodes a materialized response rather than providing server streaming. The private SQLite FFI loads the host runtime. Arbitrary SQL, domain migrations, retry/idempotency and effective grants remain caller/service-owned; unavailable service proof is distinct from an unsupported capability.
@@ -291,7 +296,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8c55f399194083c8e86bae3348426a5f756cd7a8d8158d510fe8a970a1e9f4b4`
+- Repository signal fingerprint: `2aa632c52a47cbe9fa6a64bb341aac12a5699c285dcd06c966602ab6e451241d`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
