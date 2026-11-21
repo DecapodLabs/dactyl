@@ -21,6 +21,12 @@ schema, RLS, managed Auth integration, and onboarding functions. Internal
 infrastructure codenames remain strictly for backward-compatible wire routing
 during cutover, not as user- or SDK-facing terminology.
 
+Decapod reads the project's `[repo].backend` and supplies the corresponding
+logical target to Dactyl. The default target uses `.decapod/data/decapod.db`.
+An opened connection exposes its runtime `DATASTORE` value through
+`Connection::datastore().as_str()`: `sqlite` for local or `supabase` for Cloud.
+An inherited `DATASTORE` does not participate in logical connector selection.
+
 `LogicalConnector::route` and `DatastoreRoute::for_backend` take the logical selection and optional
 current user bearer; `LogicalConnector::open(options, context, bearer)` opens the
 resolved datastore `Connection` directly. A Decapod Cloud connector discovers

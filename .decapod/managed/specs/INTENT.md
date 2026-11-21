@@ -1,5 +1,9 @@
 # Intent
 
+Decapod reads the per-project backend setting and passes the logical choice to
+Dactyl, which owns the physical runtime datastore. The local default uses
+`.decapod/data/decapod.db`; a Cloud choice selects Supabase RPC.
+
 ## Decapod Cloud transport, caller-supplied DPoP, and extended conformance (issues #127, #128, #129)
 
 Dactyl exposes two primary logical workspace targets: local SQLite (`LogicalTarget::local`) and Decapod Cloud (`LogicalTarget::cloud`, backed by native Supabase RPC). For `dactyl-db 0.18.0`, Dactyl adds:
@@ -200,7 +204,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `84e2a76acfbac2709d75ef23ecfd392f52bba674143c14a6806695cd773d3e5c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

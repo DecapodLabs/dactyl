@@ -1,5 +1,12 @@
 # Architecture
 
+## Project runtime datastore selection
+
+Dactyl maps the supplied logical backend to the physical datastore stored on
+each route and connection. Local selects SQLite and Cloud selects native
+Supabase RPC. Each connection exposes the canonical runtime selector value,
+so multiple projects can use different datastores in the same process.
+
 ## Bounded HTTP connection pool and DPoP signing pipeline
 
 `src/http_pool.rs` provides a weak-cached, Tokio-safe `SharedHttpClient` (`reqwest::blocking::Client` with `pool_max_idle_per_host(32)`, `pool_idle_timeout(15s)`, `redirect::Policy::none()`, `retry::never()`, and a plain-thread `Drop` joiner so dropping inside Tokio runtimes never panics and zero daemon threads survive client drop) alongside a bounded 32-slot `RequestPermit` concurrency gate enforcing `ResourceBudget` `request_timeout` deadlines. Both `src/adapter/supabase.rs` and `src/cloud.rs` canonicalize target URLs (stripping query and fragment), compute RFC 9449 `ath` (`URL_SAFE_NO_PAD(Sha256(token))`), invoke `RequestProofSigner::sign_request` synchronously prior to dispatch, attach `Authorization: DPoP <token>` + `DPoP: <proof>` (or `Bearer` compatibility), capture bounded `DPoP-Nonce`, `Sunset`, `Deprecation`, and `Decapod-Cloud-*` headers into redacted `CloudResponseMetadata`, and notify `RequestProofSigner::observe_nonce` on any valid `DPoP-Nonce` response header.
@@ -233,7 +240,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `84e2a76acfbac2709d75ef23ecfd392f52bba674143c14a6806695cd773d3e5c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -51,6 +51,16 @@ pub enum Backend {
     Cloud,
 }
 
+impl Backend {
+    /// The datastore selected by a project's logical backend.
+    pub const fn datastore(self) -> Datastore {
+        match self {
+            Self::Local => Datastore::Sqlite,
+            Self::Cloud => Datastore::Supabase,
+        }
+    }
+}
+
 use crate::adapter::Adapter;
 
 /// A supported application datastore.
@@ -59,6 +69,18 @@ pub enum Datastore {
     Sqlite,
     Neon,
     Supabase,
+}
+
+impl Datastore {
+    /// Return the canonical `DATASTORE` value for this runtime datastore.
+    /// Resolution and inspection leave the process environment alone.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Sqlite => "sqlite",
+            Self::Neon => "neon",
+            Self::Supabase => "supabase",
+        }
+    }
 }
 
 /// Physical connection transport, independent of the database provider.
@@ -148,7 +170,7 @@ impl DatastoreRoute {
     }
     pub fn sqlite(path: impl Into<String>) -> Self {
         Self {
-            datastore: Datastore::Sqlite,
+            datastore: Backend::Local.datastore(),
             route: path.into(),
             token: None,
             rpc: None,
@@ -189,7 +211,7 @@ impl DatastoreRoute {
     /// service routes retain their meaning.
     pub fn supabase_rpc(config: SupabaseRpcConfig, token: Option<String>) -> Self {
         Self {
-            datastore: Datastore::Supabase,
+            datastore: Backend::Cloud.datastore(),
             route: config.project_origin().to_owned(),
             token,
             rpc: Some(config),

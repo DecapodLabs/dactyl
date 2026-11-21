@@ -22,6 +22,8 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     assert_eq!(local_target.backend(), Backend::Local);
     assert_eq!(cloud_target.backend(), Backend::Cloud);
     assert_eq!(custom_cloud.backend(), Backend::Cloud);
+    assert_eq!(local_target.backend().datastore().as_str(), "sqlite");
+    assert_eq!(cloud_target.backend().datastore().as_str(), "supabase");
     assert!(DEFAULT_CLOUD_ORIGIN.starts_with("https://"));
 
     let debug_targets = format!("{local_target:?} {cloud_target:?} {custom_cloud:?}");
@@ -128,6 +130,8 @@ mod local_workspaces {
 
         let conn_a = ws_a.open(OpenOptions::default(), None, None).unwrap();
         let conn_b = ws_b.open(OpenOptions::default(), None, None).unwrap();
+        assert_eq!(conn_a.datastore().as_str(), "sqlite");
+        assert_eq!(conn_b.datastore().as_str(), "sqlite");
 
         conn_a
             .write("CREATE TABLE items (id TEXT PRIMARY KEY)", &[])
@@ -347,6 +351,7 @@ mod cloud_and_multi_workspace {
             .open(OpenOptions::default(), Some(ctx_b), Some("bearer-b".into()))
             .unwrap();
         assert_eq!(conn_b.datastore(), Datastore::Supabase);
+        assert_eq!(conn_b.datastore().as_str(), "supabase");
         let rows_b = conn_b.read("SELECT workspace", &[]).unwrap();
         assert_eq!(rows_b.as_slice()[0].get_str("workspace").unwrap(), "b");
 

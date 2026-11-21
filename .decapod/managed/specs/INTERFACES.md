@@ -1,5 +1,10 @@
 # Interfaces
 
+`Backend::datastore()` maps the project’s logical backend to the Dactyl adapter.
+`Connection::datastore().as_str()` reports the canonical `DATASTORE` value for
+the opened connection. The logical path uses the backend supplied by Decapod
+and leaves process-wide environment configuration untouched.
+
 ## DPoP proof signer, Decapod Cloud onboarding, and metadata surfaces (issues #127, #128, #129)
 
 - `src/connector.rs` / `src/lib.rs` export `AuthScheme`, `RequestProofInput`, `RequestProof`, `RequestProofSigner`, and `CloudResponseMetadata` unconditionally across all Cargo feature combinations. `DatastoreRoute`, `CloudConnector`, and `LogicalConnector` accept `.with_proof_signer(Arc<dyn RequestProofSigner>)` and `.with_dpop_nonce(...)`, and `LogicalConnector` / `CloudConnector` expose `resolve_with_metadata`, `discover_with_metadata`, `control_request_with_metadata`, and `account_request_with_metadata` so callers observe `DPoP-Nonce` and `Decapod-Cloud-*` headers even on `401` challenges while keeping `Debug` and `DactylError` formatting strictly redacted.
@@ -279,7 +284,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `84e2a76acfbac2709d75ef23ecfd392f52bba674143c14a6806695cd773d3e5c`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
