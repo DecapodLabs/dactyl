@@ -110,6 +110,11 @@
       "proof_refs": [
         "Seven logical connector tests passed despite conflicting inherited DATASTORE"
       ]
+    },
+    {
+      "id": "dactyl-runtime-proof-inventory",
+      "summary": "Propose reconciliation of the reviewed source inventory to the accepted Dactyl 0.18.0 Cargo version.",
+      "input_digest": "sha256:1a7396bed907ec63ee2a131dcecaf789c38d8d5fcee94736aa98adf07ff7ec61"
     }
   ],
   "intents": {
@@ -153,21 +158,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Define per-connection physical datastore derived from the project logical backend.",
+          "reason": "Document logical-to-physical mapping; the inventory proposal accounts for the released Cargo version only.",
           "reviewed_code_fingerprint": "84e2a76acfbac2709d75ef23ecfd392f52bba674143c14a6806695cd773d3e5c",
           "spec_material_hash": "acf1d4061229c24112929255019ddf8c217f7332ee1d18e9735523bed9ece838"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Expose the canonical runtime DATASTORE value and retain distinct standalone routing.",
+          "reason": "Expose scoped datastore values and retain explicit standalone routing.",
           "reviewed_code_fingerprint": "84e2a76acfbac2709d75ef23ecfd392f52bba674143c14a6806695cd773d3e5c",
           "spec_material_hash": "08d247b124d59ca851bb2b70f888659334f63dd055999ce7507fbd0e5901a6cc"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No new credentials, fallback, or ambient authority enter logical datastore selection.",
+          "reason": "The proof declaration changes only its source inventory digest. Required commands, authority, and provider checks stay in place.",
           "reviewed_code_fingerprint": "84e2a76acfbac2709d75ef23ecfd392f52bba674143c14a6806695cd773d3e5c",
           "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
         }
@@ -180,13 +185,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795247906Z"
+      "updated_at": "1795248242Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c4e27402cc26dbf217e72d047607cc375f5e300097570897bf245e0126bb153b",
+      "artifact_hash": "sha256:59389e6bd29a0ea2d8b9d700e0e46d7956fce781b4c8dc22b8030fcd00af7af7",
       "checks": [
         {
           "name": "formatting",
@@ -225,10 +230,17 @@
             "intent_id": "intent:change_01M7YHM994FV0CFS3HTFWVZHP2",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7YHM9DAZM80MBJKCRPVBXQ4",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7YHM994FV0CFS3HTFWVZHP2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7YHM9DAZM80MBJKCRPVBXQ4": {
@@ -271,6 +283,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Recomputed all seven accepted source files before and after Dactyl v0.18.0. Only Cargo.toml and Cargo.lock changed. The original digest matches the pre-release tree; the proposed digest matches current accepted main; the reviewed command digest is unchanged."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs/cloud-connectors.md",
+                  "root",
+                  "src/lib.rs",
+                  "tests/logical_connector.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -280,7 +309,8 @@
       "destination": "pull request",
       "evidence": [
         "Actual SQLite and synthetic managed Supabase connections report the expected datastore values with DATASTORE=neon inherited.",
-        "Decapod supplies a scoped route and managed session. Standalone from_env intentionally has distinct service semantics. Adapter mapping belongs to the Dactyl runtime."
+        "Decapod supplies a scoped route and managed session. Standalone from_env intentionally has distinct service semantics. Adapter mapping belongs to the Dactyl runtime.",
+        "Recomputed all seven accepted source files before and after Dactyl v0.18.0. Only Cargo.toml and Cargo.lock changed. The original digest matches the pre-release tree; the proposed digest matches current accepted main; the reviewed command digest is unchanged."
       ],
       "inspected_files": [
         "src/connector.rs"
@@ -294,6 +324,7 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        ".decapod/config.toml",
         ".decapod/managed/specs",
         "docs/cloud-connectors.md",
         "root",

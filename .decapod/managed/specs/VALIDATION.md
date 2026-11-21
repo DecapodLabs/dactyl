@@ -1,5 +1,9 @@
 # Validation
 
+The reviewed local proof source inventory accounts for the accepted Dactyl
+0.18.0 version change in `Cargo.toml` and `Cargo.lock`. The independently
+reviewed command contract and workflow sources are unchanged.
+
 ## DPoP, Decapod Cloud routing, and high-concurrency conformance proof (issues #127, #128, #129)
 
 - `tests/cloud_connector.rs` and `tests/logical_connector.rs` verify canonical `/functions/v1/decapod-onboarding` discovery/handoff/account routes, bounded HTTP `404` fallback to `/functions/v1/propodus-onboarding`, redacted `Decapod-Cloud-*` / `Sunset` / `Deprecation` / `DPoP-Nonce` metadata capture, `RequestProofSigner` `DPoP` and `Bearer` modes across `account_request`, `control_request`, and `DatastoreRoute::supabase_rpc`, redirect refusal, typed `AdapterErrorKind::Authentication` mapping (`use_dpop_nonce`, `stolen_bearer`, `dpop_proof_required`, `missing_dpop_proof`, `dpop_replay`, `dpop_clock_skew`), and `DeviceChallenge`/`DeviceEnroll`/`DeviceStepUp`/`DeviceRevoke` mutation uncertainty.
