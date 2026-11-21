@@ -22,7 +22,7 @@ use crate::contract::{
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::http_pool::{
     acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
-    SharedHttpClient,
+    has_dpop_nonce_challenge, with_dpop_nonce_retry, AuthHeaders, HttpOutcome, SharedHttpClient,
 };
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
@@ -34,6 +34,7 @@ pub(crate) struct SupabaseAdapter {
     access_mode: AccessMode,
     context: StorageContext,
     rpc_headers: Option<reqwest::header::HeaderMap>,
+    device_gateway: bool,
     budget: ResourceBudget,
     proof_signer: Option<Arc<dyn RequestProofSigner>>,
     dpop_nonce: Option<String>,
@@ -154,6 +155,7 @@ fn rpc_headers(config: &SupabaseRpcConfig) -> Result<reqwest::header::HeaderMap,
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn control_request_with_auth(
     config: &SupabaseRpcConfig,
+    gateway_prefix: &str,
     function: &str,
     request: &serde_json::Value,
     bearer: Option<&str>,
@@ -188,26 +190,60 @@ pub(crate) fn control_request_with_auth(
         validate_dpop_nonce(nonce)?;
     }
     // Bound recursion before invoking serde's recursive serializer. Account for
-    // the native single-argument envelope without cloning application data.
+    // the envelope without cloning application data.
     ensure_json_depth(request).map_err(|_| {
         preflight_limit(
             "payload_too_deep",
             "control request exceeds JSON nesting limit",
         )
     })?;
-    #[derive(Serialize)]
-    struct ControlRequest<'a> {
-        request: &'a serde_json::Value,
-    }
-    let body = serialize_bounded_json(&ControlRequest { request }, budget.max_wire_bytes())?;
+    let (body, endpoint, require_dpop_proof) = if config.uses_device_gateway() {
+        #[derive(Serialize)]
+        struct GatewayControlRequest<'a> {
+            version: u16,
+            function: &'a str,
+            request: &'a serde_json::Value,
+        }
+        (
+            serialize_bounded_json(
+                &GatewayControlRequest {
+                    version: SUPABASE_RPC_CONTRACT_VERSION,
+                    function,
+                    request,
+                },
+                budget.max_wire_bytes(),
+            )?,
+            format!(
+                "{}{gateway_prefix}/cloud-control",
+                origin.as_str().trim_end_matches('/')
+            ),
+            true,
+        )
+    } else {
+        #[derive(Serialize)]
+        struct ControlRequest<'a> {
+            request: &'a serde_json::Value,
+        }
+        (
+            serialize_bounded_json(&ControlRequest { request }, budget.max_wire_bytes())?,
+            format!(
+                "{}/rest/v1/rpc/{function}",
+                origin.as_str().trim_end_matches('/')
+            ),
+            false,
+        )
+    };
     let headers = Some(rpc_headers(config)?);
-    let endpoint = format!(
-        "{}/rest/v1/rpc/{function}",
-        origin.as_str().trim_end_matches('/')
-    );
     let canonical = canonical_url(&endpoint)?;
     let (auth_header, dpop_header) =
         build_auth_headers("POST", &canonical, token, proof_signer.as_ref(), dpop_nonce)?;
+    if require_dpop_proof && dpop_header.is_none() {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Authentication,
+            "device_proof_required",
+            "local preflight: control gateway requires a DPoP proof signer",
+        ));
+    }
     let client = match http_client {
         Some(client) if budget.connect_timeout() == std::time::Duration::from_secs(5) => client,
         _ => acquire_client(budget.connect_timeout())?,
@@ -233,9 +269,7 @@ pub(crate) fn control_request_with_auth(
         .map_err(|_| transport_error(false))?
         .join()
         .map_err(|_| maybe_uncertain(transport_error(false), mutates))?;
-    if let Some(captured) = captured_meta {
-        *metadata_out = captured;
-    }
+    *metadata_out = captured_meta.unwrap_or_default();
     outcome.map_err(|error| {
         if error.mutation_outcome() == crate::MutationOutcome::Uncertain {
             // Preserve the real transport category while exposing the
@@ -303,10 +337,12 @@ impl SupabaseAdapter {
             )
         })?;
         context.validate()?;
+        let device_gateway = rpc.is_some_and(SupabaseRpcConfig::uses_device_gateway);
         let rpc_headers = rpc.map(rpc_headers).transpose()?;
         let http_client = acquire_client(budget.connect_timeout())?;
         Ok(Self {
             rpc_headers,
+            device_gateway,
             endpoint: url.as_str().trim_end_matches('/').to_owned(),
             token,
             access_mode: options.access_mode,
@@ -325,7 +361,15 @@ impl SupabaseAdapter {
         mutates: bool,
     ) -> Result<T, DactylError> {
         let max_wire_bytes = self.budget.max_wire_bytes();
-        let body = if self.rpc_headers.is_some() {
+        let body = if self.device_gateway {
+            serialize_bounded_json(
+                &VersionedRequest {
+                    version: SUPABASE_RPC_CONTRACT_VERSION,
+                    body: request,
+                },
+                max_wire_bytes,
+            )?
+        } else if self.rpc_headers.is_some() {
             serialize_bounded_json(
                 &RpcRequest {
                     request: VersionedRequest {
@@ -338,7 +382,13 @@ impl SupabaseAdapter {
         } else {
             serialize_bounded_json(request, max_wire_bytes)?
         };
-        let path = if self.rpc_headers.is_some() {
+        let path = if self.device_gateway {
+            match path {
+                "/query" => "/functions/v1/decapod-onboarding/cloud-query",
+                "/batch" => "/functions/v1/decapod-onboarding/cloud-batch",
+                _ => return Err(protocol_error("unsupported RPC operation")),
+            }
+        } else if self.rpc_headers.is_some() {
             match path {
                 "/query" => "/rest/v1/rpc/dactyl_query_v1",
                 "/batch" if self.access_mode == AccessMode::ReadOnly => {
@@ -359,6 +409,13 @@ impl SupabaseAdapter {
             self.proof_signer.as_ref(),
             self.dpop_nonce.as_deref(),
         )?;
+        if self.device_gateway && dpop_header.is_none() {
+            return Err(DactylError::adapter_with_code(
+                AdapterErrorKind::Authentication,
+                "device_proof_required",
+                "local preflight: device gateway requests require a DPoP proof signer",
+            ));
+        }
         let rpc_headers = self.rpc_headers.clone();
         let budget = self.budget;
         let client = self.http_client.clone();
@@ -427,40 +484,38 @@ fn maybe_uncertain(error: DactylError, mutates: bool) -> DactylError {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn send_request<T: for<'de> Deserialize<'de>>(
-    http_client: Arc<SharedHttpClient>,
-    endpoint: String,
-    canonical: String,
-    auth_header: reqwest::header::HeaderValue,
-    dpop_header: Option<reqwest::header::HeaderValue>,
-    body: Vec<u8>,
-    rpc_headers: Option<reqwest::header::HeaderMap>,
+fn send_once<T: for<'de> Deserialize<'de>>(
+    http_client: &SharedHttpClient,
+    endpoint: &str,
+    canonical: &str,
+    auth: &AuthHeaders,
+    body: &[u8],
+    rpc_headers: Option<&reqwest::header::HeaderMap>,
+    deadline: Instant,
     budget: ResourceBudget,
     mutates: bool,
     validate_rows: bool,
-    proof_signer: Option<Arc<dyn RequestProofSigner>>,
-) -> (Result<T, DactylError>, Option<CloudResponseMetadata>) {
-    let deadline = Instant::now() + budget.request_timeout();
-    let _permit = match acquire_permit(deadline) {
-        Ok(permit) => permit,
-        Err(error) => return (Err(error), None),
-    };
+    rpc: bool,
+    proof_signer: Option<&Arc<dyn RequestProofSigner>>,
+    unauthorized: &mut bool,
+) -> HttpOutcome<T> {
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
         return (Err(transport_error(true)), None);
     }
-    let rpc = rpc_headers.is_some();
     let mut request = http_client
         .client()
         .post(endpoint)
         .timeout(remaining)
-        .headers(rpc_headers.unwrap_or_default())
-        .header(reqwest::header::AUTHORIZATION, auth_header)
+        .headers(rpc_headers.cloned().unwrap_or_default())
         .header(reqwest::header::CONTENT_TYPE, "application/json");
-    if let Some(dpop) = dpop_header {
-        request = request.header("DPoP", dpop);
+    if let Some(auth_header) = auth.0.as_ref() {
+        request = request.header(reqwest::header::AUTHORIZATION, auth_header.clone());
     }
-    let response = match request.body(body).send() {
+    if let Some(dpop) = auth.1.as_ref() {
+        request = request.header("DPoP", dpop.clone());
+    }
+    let response = match request.body(body.to_vec()).send() {
         Ok(response) => response,
         Err(error) => {
             return (
@@ -473,7 +528,9 @@ fn send_request<T: for<'de> Deserialize<'de>>(
         }
     };
     let status = response.status().as_u16();
-    let metadata = extract_response_metadata(response.headers(), &canonical, proof_signer.as_ref());
+    *unauthorized = status == 401;
+    let dpop_challenge = status == 401 && has_dpop_nonce_challenge(response.headers());
+    let metadata = extract_response_metadata(response.headers(), canonical, proof_signer);
     let bytes = match read_bounded_body(response, budget.max_wire_bytes()) {
         Ok(bytes) => bytes,
         Err(BoundedReadError::TooLarge) => {
@@ -501,6 +558,13 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     };
     if !(200..300).contains(&status) {
         let mut error = remote_error(status, &bytes, rpc);
+        if dpop_challenge && error.adapter_code().is_none() {
+            error = DactylError::adapter_with_code(
+                AdapterErrorKind::Authentication,
+                "use_dpop_nonce",
+                "Supabase service rejected request (use_dpop_nonce)",
+            );
+        }
         let res = if mutates && matches!(status, 300..=399 | 408 | 500..=599) {
             if matches!(status, 500..=599) && error.adapter_code().is_none() {
                 if let DactylError::Adapter { kind, message, .. } = error {
@@ -565,6 +629,53 @@ fn send_request<T: for<'de> Deserialize<'de>>(
     let parsed = serde_json::from_value(value)
         .map_err(|_| maybe_uncertain(protocol_error("invalid Supabase service response"), mutates));
     (parsed, Some(metadata))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn send_request<T: for<'de> Deserialize<'de>>(
+    http_client: Arc<SharedHttpClient>,
+    endpoint: String,
+    canonical: String,
+    auth_header: reqwest::header::HeaderValue,
+    dpop_header: Option<reqwest::header::HeaderValue>,
+    body: Vec<u8>,
+    rpc_headers: Option<reqwest::header::HeaderMap>,
+    budget: ResourceBudget,
+    mutates: bool,
+    validate_rows: bool,
+    proof_signer: Option<Arc<dyn RequestProofSigner>>,
+) -> HttpOutcome<T> {
+    let deadline = Instant::now() + budget.request_timeout();
+    let _permit = match acquire_permit(deadline) {
+        Ok(permit) => permit,
+        Err(error) => return (Err(error), None),
+    };
+    let rpc = rpc_headers.is_some();
+    let (outcome, _) = with_dpop_nonce_retry(
+        "POST",
+        &canonical,
+        proof_signer.as_ref(),
+        (Some(auth_header), dpop_header),
+        false,
+        |auth, unauthorized| {
+            send_once(
+                &http_client,
+                &endpoint,
+                &canonical,
+                auth,
+                &body,
+                rpc_headers.as_ref(),
+                deadline,
+                budget,
+                mutates,
+                validate_rows,
+                rpc,
+                proof_signer.as_ref(),
+                unauthorized,
+            )
+        },
+    );
+    outcome
 }
 
 // Strict native results include keys and validate auxiliary write rows too.
@@ -896,12 +1007,23 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
         Some("dpop_jkt_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_jkt_mismatch")),
         Some("stolen_bearer") => Some((AdapterErrorKind::Authentication, "stolen_bearer")),
         Some("device_revoked") => Some((AdapterErrorKind::Authentication, "device_revoked")),
+        Some("device_key_expired") => {
+            Some((AdapterErrorKind::Authentication, "device_key_expired"))
+        }
+        Some("refresh_reuse_detected") => {
+            Some((AdapterErrorKind::Authentication, "refresh_reuse_detected"))
+        }
         Some("device_not_enrolled") => {
             Some((AdapterErrorKind::Authentication, "device_not_enrolled"))
         }
         Some("authorization_denied") => {
             Some((AdapterErrorKind::Authorization, "authorization_denied"))
         }
+        Some("mfa_step_up_required") => {
+            Some((AdapterErrorKind::Authorization, "mfa_step_up_required"))
+        }
+        Some("provider_disabled") => Some((AdapterErrorKind::Authorization, "provider_disabled")),
+        Some("repo_access_denied") => Some((AdapterErrorKind::Authorization, "repo_access_denied")),
         Some("invalid_request") => Some((AdapterErrorKind::InvalidOperation, "invalid_request")),
         Some("unsupported_query") => Some((AdapterErrorKind::Capability, "unsupported_query")),
         Some("unsupported_type") => Some((AdapterErrorKind::Capability, "unsupported_type")),
@@ -918,6 +1040,11 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
         Some("repository_not_authorized") => {
             Some((AdapterErrorKind::Authorization, "repository_not_authorized"))
         }
+        Some("not_found") => Some((AdapterErrorKind::NotFound, "not_found")),
+        Some("project_not_found") => Some((AdapterErrorKind::NotFound, "project_not_found")),
+        Some("member_not_found") => Some((AdapterErrorKind::NotFound, "member_not_found")),
+        Some("invitation_not_found") => Some((AdapterErrorKind::NotFound, "invitation_not_found")),
+        Some("flow_not_found") => Some((AdapterErrorKind::NotFound, "flow_not_found")),
         Some("row_not_found") => Some((AdapterErrorKind::NotFound, "row_not_found")),
         Some("row_conflict") => Some((AdapterErrorKind::Conflict, "row_conflict")),
         Some("constraint_failed") => Some((AdapterErrorKind::Constraint, "constraint_failed")),
@@ -943,6 +1070,7 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
             Some((AdapterErrorKind::TransactionAborted, "transaction_aborted"))
         }
         Some("quota_exceeded") => Some((AdapterErrorKind::Quota, "quota_exceeded")),
+        Some("overage_cap_exhausted") => Some((AdapterErrorKind::Quota, "overage_cap_exhausted")),
         Some("payload_too_large") => Some((AdapterErrorKind::Quota, "payload_too_large")),
         Some("rate_limited") => Some((AdapterErrorKind::RateLimited, "rate_limited")),
         Some("storage_failure") => Some((AdapterErrorKind::Storage, "storage_failure")),

@@ -68,9 +68,21 @@ synchronous caller-supplied proof-of-possession hook:
    touches OS keystores, or caches private key material. Server `DPoP-Nonce`
    challenge headers (including on `401` rejections) are surfaced via
    `RequestProofSigner::observe_nonce` and `CloudResponseMetadata` without
-   exposing tokens, proofs, nonces, or origins in `Debug` or `DactylError`.
-   Refresh tokens go only to the same origin's managed Auth token endpoint, and
-   session revocation uses managed logout.
+   exposing tokens, proofs, nonces, or origins in `Debug` or `DactylError`. When
+   a signer is attached and a server rejects a DPoP-signed request with pre-execution
+   HTTP `401` `use_dpop_nonce` and a bounded `DPoP-Nonce` header, Dactyl
+   performs at most one bounded retry with a freshly signed proof carrying the
+   new nonce (never retrying if the signer returns `AuthScheme::Bearer`, never
+   retrying a second `use_dpop_nonce`, and never retrying post-send
+   `outcome_unknown` failures on mutating calls), returning the final response's
+   `CloudResponseMetadata` (including bounded `Retry-After`). Enabling
+   `.with_device_gateway()` on `CloudConnector`, `LogicalConnector`, or
+   `SupabaseRpcConfig` routes `AuthScheme::DPoP` datastore and control RPCs
+   through `/functions/v1/decapod-onboarding/{cloud-query,cloud-batch,cloud-control}`
+   (with HTTP `404` fallback on `cloud-control` to legacy
+   `/functions/v1/propodus-onboarding/cloud-control` when configured). Refresh
+   tokens go only to the configured origin's token or device-refresh endpoint,
+   and session revocation uses managed logout or device revocation.
 
 `UserSession::provider_token` preserves an optional credential returned by the
 sign-in provider and redacts it in Debug. A refresh response may omit it; callers
@@ -92,41 +104,57 @@ Its `AccountOperation` selects one fixed POST endpoint beneath
 `/functions/v1/propodus-onboarding` during cutover): `Register` uses
 `account-register`, `Status` uses `account-status`, `Quote` uses `billing-quote`,
 `Checkout` uses `billing-checkout`, `Manage` uses `billing-manage`, `Portal` uses
-`billing-portal`, `DeviceChallenge` uses `device-challenge`, `DeviceEnroll` uses
-`device-enroll`, `DeviceStepUp` uses `device-step-up`, and `DeviceRevoke` uses
-`device-revoke`. `AccountOperation::is_mutating` classifies `Register`,
-`Checkout`, `Manage`, `Portal`, `DeviceEnroll`, `DeviceStepUp`, and
-`DeviceRevoke` as mutating/state-changing and `Status`, `Quote`, and
-`DeviceChallenge` as non-mutating calls. The JSON request and response remain
-opaque Decapod Cloud policy. Ordinary registration, status, device, and paid-seat
-access use the current user access token and `None` for the optional SCM
-credential. An explicit SCM-linking call may pass
-`Some(&ScmCredential::github(token)?)` or the corresponding `gitlab` constructor.
-Each validates an opaque header-safe token, keeps it private and redacts Debug.
-`ScmProvider::{GitHub,GitLab}` labels transport metadata; it does not establish
-authorization. The connector sends `X-SCM-Token` together with
+`billing-portal`, `BillingOveragePolicy` uses `billing-overage-policy`,
+`DeviceChallenge` uses `device-challenge`, `DeviceEnroll` uses `device-enroll`,
+`DeviceKeys` uses `device-keys`, `DeviceSessions` uses `device-sessions`,
+`DeviceSession` uses `device-session`, `DeviceRefresh` uses `device-refresh`,
+`DeviceStepUp` uses `device-step-up`, and `DeviceRevoke` uses `device-revoke`.
+`AccountOperation::is_mutating` classifies `Register`, `Checkout`, `Manage`,
+`Portal`, `BillingOveragePolicy`, `DeviceEnroll`, `DeviceSession`, `DeviceRefresh`,
+`DeviceStepUp`, and `DeviceRevoke` as mutating/state-changing and `Status`,
+`Quote`, `DeviceChallenge`, `DeviceKeys`, and `DeviceSessions` as non-mutating
+calls. With `.with_device_gateway()` enabled, account, billing, `DeviceChallenge`,
+`DeviceKeys`, `DeviceSessions`, and `DeviceStepUp` transmit managed
+`Authorization: Bearer <token>`, `DeviceEnroll` and `DeviceSession` require both
+`Authorization: Bearer <token>` and a `DPoP` proof (`device_proof_required`
+when absent), `DeviceRefresh` requires a `DPoP` proof, and `DeviceRevoke`
+supports either `Bearer` or `DPoP` proof according to the attached signer. The
+JSON request and response remain opaque Decapod Cloud policy. Ordinary
+registration, status, device, and paid-seat access use the current user access
+token and `None` for the optional SCM credential. An explicit SCM-linking call
+may pass `Some(&ScmCredential::github(token)?)` or the corresponding `gitlab`
+constructor. Each validates an opaque header-safe token, keeps it private and
+redacts Debug. `ScmProvider::{GitHub,GitLab}` labels transport metadata; it does
+not establish authorization. The connector sends `X-SCM-Token` together with
 `X-SCM-Provider: github` and `X-SCM-Host: github.com`, or the fixed `gitlab`
 and `gitlab.com` pair. Caller-selected hosts are unsupported.
 
 These three headers are added only to the selected account request, never to
 managed Auth, discovery or native data requests. Dactyl does not persist SCM
 credentials. Callers decide consent and handling of an unknown checkout outcome;
-Dactyl does not automatically replay account requests.
+Dactyl does not automatically replay mutating failures or retried nonce
+challenges more than once. `DEFAULT_CLOUD_ORIGIN` remains unchanged at
+`https://goyxpcmxetztjlrrcwew.supabase.co` unless overridden for controlled
+testing via `DACTYL_CLOUD_ORIGIN` or `LogicalTarget::cloud_with_origin`.
 
 Auth, account and discovery HTTP requests are bounded to a 5-second connect timeout,
 15-second request timeout, 16 KiB bodies, and `MAX_JSON_DEPTH = 64` JSON nesting,
 and reuse a bounded connection pool (maximum 32 concurrent in-flight connections)
-safe inside Tokio async runtimes. No redirect or automatic request replay follows
-an error. Bounded `Decapod-Cloud-*` diagnostic headers, `Sunset`, `Deprecation`,
+safe inside Tokio async runtimes. No redirect follows an error. Bounded
+`Decapod-Cloud-*` diagnostic headers, `Sunset`, `Deprecation`, `Retry-After`,
 and `DPoP-Nonce` are captured in redacted `CloudResponseMetadata` without
 interpreting application-layer governance or billing policy. HTTP `409` maps to
-`AdapterErrorKind::Conflict`, `413` maps to `AdapterErrorKind::Quota`, `429` maps
-to `AdapterErrorKind::RateLimited`, and allowlisted public denial/DPoP codes are
-extracted across Decapod Cloud (`error.code`), Supabase GoTrue v2 (`error_code`
-when `code` is numeric), and OAuth2 (`error`) — including `use_dpop_nonce`,
-`invalid_dpop_proof`, `dpop_proof_required`, `dpop_replay`, `dpop_clock_skew`,
-`stolen_bearer`, `device_revoked`, `device_not_enrolled`,
-`organization_seat_required`, `payment_pending`, `repository_not_authorized`,
+`AdapterErrorKind::Conflict`, `413` maps to `AdapterErrorKind::Quota`, `429` with
+`quota_exceeded` or `overage_cap_exhausted` preserves `AdapterErrorKind::Quota`
+while `429 rate_limited` preserves `AdapterErrorKind::RateLimited`, and
+allowlisted public denial/DPoP codes are extracted across Decapod Cloud
+(`error.code`), Supabase GoTrue v2 (`error_code` when `code` is numeric), and
+OAuth2 (`error`) — including `use_dpop_nonce`, `invalid_dpop_proof`,
+`dpop_proof_required`, `dpop_replay`, `dpop_clock_skew`, `stolen_bearer`,
+`device_revoked`, `device_key_expired`, `refresh_reuse_detected`,
+`device_not_enrolled`, `mfa_step_up_required`, `provider_disabled`,
+`repo_access_denied`, `organization_seat_required`, `payment_pending`,
+`repository_not_authorized`, `quota_exceeded`, `overage_cap_exhausted`,
 `session_expired`, `session_revoked`, `session_not_found`, `bad_jwt`,
 `refresh_token_already_used`, `custody_conflict`, and `billing_not_configured` —
 while remote error messages and unknown codes are omitted. Post-send `5xx`,

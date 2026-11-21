@@ -44,6 +44,14 @@ const CTE_WRITE_AS_READ: &str = "WITH changed AS (UPDATE dactyl_service_conforma
 const UNSUPPORTED_SCHEMA: &str =
     "ALTER TABLE dactyl_service_conformance ADD COLUMN forbidden_column TEXT";
 const INJECTION_TEXT: &str = "bound text '); DROP TABLE dactyl_service_conformance; --";
+const EVENT_INSERT_BASELINE: &str = "INSERT INTO events (event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor) VALUES ($1, $2, COALESCE((SELECT MAX(seq) FROM events WHERE stream = 'todo'), 0) + 1, 'todo', 'task', $3, $4, $5, $6)";
+const TASK_INSERT: &str = "INSERT INTO tasks (id, hash, title, status, created_at, updated_at, dir_path, scope, assigned_to, version) VALUES ($1, $2, $3, 'open', $4, $4, '', 'repo', '', 1)";
+const TASK_CLAIM: &str = "UPDATE tasks SET status = 'in_progress', assigned_to = $1, assigned_at = $2, updated_at = $2, version = version + 1 WHERE id = $3 AND status = 'open'";
+const TASK_RELEASE: &str = "UPDATE tasks SET status = 'open', assigned_to = '', assigned_at = NULL, updated_at = $1, version = version + 1 WHERE id = $2 AND status = 'in_progress' AND assigned_to = $3";
+const TASK_DONE: &str = "UPDATE tasks SET status = 'completed', completed_at = $1, updated_at = $1, version = version + 1 WHERE id = $2 AND status = 'in_progress' AND assigned_to = $3";
+const EVENT_INSERT_WITH_PARAMS: &str = "WITH event_params(event_id, event_ts, task_id, event_type, event_payload, event_actor) AS (VALUES ($1, $2, $3, $4, $5, $6)) INSERT INTO events (event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor) SELECT event_params.event_id, event_params.event_ts, COALESCE((SELECT MAX(seq) FROM events WHERE stream = 'todo'), 0) + 1, 'todo', 'task', event_params.task_id, event_params.event_type, event_params.event_payload, event_params.event_actor FROM event_params WHERE EXISTS (SELECT 1 FROM tasks WHERE tasks.id = event_params.task_id AND tasks.updated_at = event_params.event_ts AND ((event_params.event_type = 'task.add' AND tasks.version = 1) OR (event_params.event_type = 'task.claim' AND tasks.status = 'in_progress' AND tasks.assigned_to = event_params.event_actor) OR (event_params.event_type = 'task.release' AND tasks.status = 'open' AND (tasks.assigned_to = '' OR tasks.assigned_to IS NULL)) OR (event_params.event_type = 'task.done' AND tasks.status = 'completed' AND tasks.assigned_to = event_params.event_actor)))";
+const SELECT_EVENTS: &str =
+    "SELECT event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor FROM events ORDER BY seq";
 
 #[derive(Clone, Copy, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -724,6 +732,336 @@ fn run(profile: Profile) {
         .unwrap_or_else(|error| panic!("{error}"));
 }
 
+fn event_params_args(
+    event_id: &str,
+    ts: &str,
+    task_id: &str,
+    event_type: &str,
+    payload: &str,
+    actor: &str,
+) -> Vec<Parameter> {
+    vec![
+        event_id.into(),
+        ts.into(),
+        task_id.into(),
+        event_type.into(),
+        payload.into(),
+        actor.into(),
+    ]
+}
+
+fn check_event_write(
+    result: &WriteResult,
+    count: u64,
+    require_empty_keys: bool,
+    stage: &'static str,
+) -> Check<()> {
+    if require_empty_keys || count == 0 {
+        check_write(result, count, &[])
+    } else {
+        require(result.affected_rows == count, stage)
+    }
+}
+
+fn check_atomic_two_writes(
+    batch: &dactyl_db::AtomicResult,
+    first_rows: u64,
+    second_rows: u64,
+    require_empty_keys: bool,
+    stage: &'static str,
+) -> Check<()> {
+    match batch.results.as_slice() {
+        [OperationResult::Write(first), OperationResult::Write(second)] => {
+            check_event_write(first, first_rows, require_empty_keys, stage)?;
+            check_event_write(second, second_rows, require_empty_keys, stage)
+        }
+        _ => Err(CheckError { stage, kind: None }),
+    }
+}
+
+fn verify_event_sequence(
+    primary: &Connection,
+    secondary: &Connection,
+    require_empty_keys: bool,
+) -> Check<()> {
+    let baseline = checked(
+        primary.write_result(
+            EVENT_INSERT_BASELINE,
+            &[
+                "evt-base-1".into(),
+                "2026-01-01T00:00:00Z".into(),
+                "task-0".into(),
+                "task.note".into(),
+                "{}".into(),
+                "decapod".into(),
+            ],
+        ),
+        "baseline event insert",
+    )?;
+    check_event_write(
+        &baseline,
+        1,
+        require_empty_keys,
+        "baseline event insert count",
+    )?;
+
+    let add = checked(
+        primary.atomic(&[
+            Operation::write(
+                TASK_INSERT,
+                vec![
+                    "task-1".into(),
+                    "hash-1".into(),
+                    "Wave 2 event conformance".into(),
+                    "2026-01-01T00:00:01Z".into(),
+                ],
+            ),
+            Operation::write(
+                EVENT_INSERT_WITH_PARAMS,
+                event_params_args(
+                    "evt-add-1",
+                    "2026-01-01T00:00:01Z",
+                    "task-1",
+                    "task.add",
+                    "{\"action\":\"add\"}",
+                    "agent-a",
+                ),
+            ),
+        ]),
+        "atomic task.add with event_params",
+    )?;
+    check_atomic_two_writes(
+        &add,
+        1,
+        1,
+        require_empty_keys,
+        "atomic task.add result shape",
+    )?;
+
+    let claim = checked(
+        primary.atomic(&[
+            Operation::write(
+                TASK_CLAIM,
+                vec![
+                    "agent-a".into(),
+                    "2026-01-01T00:00:02Z".into(),
+                    "task-1".into(),
+                ],
+            ),
+            Operation::write(
+                EVENT_INSERT_WITH_PARAMS,
+                event_params_args(
+                    "evt-claim-1",
+                    "2026-01-01T00:00:02Z",
+                    "task-1",
+                    "task.claim",
+                    "{\"action\":\"claim\"}",
+                    "agent-a",
+                ),
+            ),
+        ]),
+        "atomic task.claim with event_params",
+    )?;
+    check_atomic_two_writes(
+        &claim,
+        1,
+        1,
+        require_empty_keys,
+        "atomic task.claim result shape",
+    )?;
+
+    let stale_claim = checked(
+        primary.atomic(&[
+            Operation::write(
+                TASK_CLAIM,
+                vec![
+                    "agent-b".into(),
+                    "2026-01-01T00:00:03Z".into(),
+                    "task-1".into(),
+                ],
+            ),
+            Operation::write(
+                EVENT_INSERT_WITH_PARAMS,
+                event_params_args(
+                    "evt-stale-claim",
+                    "2026-01-01T00:00:03Z",
+                    "task-1",
+                    "task.claim",
+                    "{\"action\":\"stale\"}",
+                    "agent-b",
+                ),
+            ),
+        ]),
+        "stale task.claim post-state gate",
+    )?;
+    check_atomic_two_writes(
+        &stale_claim,
+        0,
+        0,
+        require_empty_keys,
+        "stale task.claim result shape",
+    )?;
+
+    let release = checked(
+        primary.atomic(&[
+            Operation::write(
+                TASK_RELEASE,
+                vec![
+                    "2026-01-01T00:00:04Z".into(),
+                    "task-1".into(),
+                    "agent-a".into(),
+                ],
+            ),
+            Operation::write(
+                EVENT_INSERT_WITH_PARAMS,
+                event_params_args(
+                    "evt-release-1",
+                    "2026-01-01T00:00:04Z",
+                    "task-1",
+                    "task.release",
+                    "{\"action\":\"release\"}",
+                    "agent-a",
+                ),
+            ),
+        ]),
+        "atomic task.release with event_params",
+    )?;
+    check_atomic_two_writes(
+        &release,
+        1,
+        1,
+        require_empty_keys,
+        "atomic task.release result shape",
+    )?;
+
+    let reclaim = checked(
+        primary.atomic(&[
+            Operation::write(
+                TASK_CLAIM,
+                vec![
+                    "agent-b".into(),
+                    "2026-01-01T00:00:05Z".into(),
+                    "task-1".into(),
+                ],
+            ),
+            Operation::write(
+                EVENT_INSERT_WITH_PARAMS,
+                event_params_args(
+                    "evt-claim-2",
+                    "2026-01-01T00:00:05Z",
+                    "task-1",
+                    "task.claim",
+                    "{\"action\":\"reclaim\"}",
+                    "agent-b",
+                ),
+            ),
+        ]),
+        "atomic reclaim task.claim with event_params",
+    )?;
+    check_atomic_two_writes(
+        &reclaim,
+        1,
+        1,
+        require_empty_keys,
+        "atomic reclaim result shape",
+    )?;
+
+    let done = checked(
+        primary.atomic(&[
+            Operation::write(
+                TASK_DONE,
+                vec![
+                    "2026-01-01T00:00:06Z".into(),
+                    "task-1".into(),
+                    "agent-b".into(),
+                ],
+            ),
+            Operation::write(
+                EVENT_INSERT_WITH_PARAMS,
+                event_params_args(
+                    "evt-done-1",
+                    "2026-01-01T00:00:06Z",
+                    "task-1",
+                    "task.done",
+                    "{\"action\":\"done\"}",
+                    "agent-b",
+                ),
+            ),
+        ]),
+        "atomic task.done with event_params",
+    )?;
+    check_atomic_two_writes(
+        &done,
+        1,
+        1,
+        require_empty_keys,
+        "atomic task.done result shape",
+    )?;
+
+    let events = checked(secondary.read(SELECT_EVENTS, &[]), "read ordered event log")?;
+    require(events.len() == 6, "six committed event rows")?;
+    let expected = [
+        ("evt-base-1", 1_i64, "task.note", "decapod"),
+        ("evt-add-1", 2_i64, "task.add", "agent-a"),
+        ("evt-claim-1", 3_i64, "task.claim", "agent-a"),
+        ("evt-release-1", 4_i64, "task.release", "agent-a"),
+        ("evt-claim-2", 5_i64, "task.claim", "agent-b"),
+        ("evt-done-1", 6_i64, "task.done", "agent-b"),
+    ];
+    for (row, (event_id, seq, event_type, actor)) in events.as_slice().iter().zip(expected) {
+        require(
+            checked(row.get_str("event_id"), "event_id")? == event_id,
+            "ordered event_id",
+        )?;
+        require(checked(row.get_int("seq"), "seq")? == seq, "ordered seq")?;
+        require(
+            checked(row.get_str("event_type"), "event_type")? == event_type,
+            "ordered event_type",
+        )?;
+        require(
+            checked(row.get_str("actor"), "actor")? == actor,
+            "ordered event actor",
+        )?;
+    }
+    Ok(())
+}
+
+fn exercise_events(fixture: &Fixture) -> Check<Vec<&'static str>> {
+    let primary = open(fixture, &fixture.allowed[0])?;
+    let secondary = open(fixture, &fixture.allowed[1])?;
+    verify_event_sequence(&primary, &secondary, true)?;
+    Ok(vec![
+        "baseline_event_seq_insert",
+        "atomic_event_params_task_add",
+        "atomic_event_params_task_claim",
+        "stale_post_state_claim_emits_zero_events",
+        "atomic_event_params_task_release",
+        "atomic_event_params_task_done",
+        "secondary_principal_observes_ordered_events",
+    ])
+}
+
+fn run_event_conformance(profile: Profile) {
+    let path = std::env::var_os(FIXTURE_ENV)
+        .filter(|path| !path.is_empty())
+        .unwrap_or_else(|| {
+            panic!("unavailable is not a pass: DACTYL_SUPABASE_FIXTURE is required")
+        });
+    let hosted_opt_in = std::env::var(HOSTED_ENV).is_ok_and(|value| value == "1");
+    let fixture = load_fixture(Path::new(&path), profile, hosted_opt_in)
+        .unwrap_or_else(|error| panic!("{error}"));
+    let mut output =
+        reserve_receipt(&fixture.receipt_path, profile).unwrap_or_else(|error| panic!("{error}"));
+    let checks = exercise_events(&fixture).unwrap_or_else(|error| {
+        panic!(
+            "event conformance failed: {}; category={:?}",
+            error.stage, error.kind
+        )
+    });
+    write_receipt(&mut output, &receipt(profile, &checks, true))
+        .unwrap_or_else(|error| panic!("{error}"));
+}
+
 #[test]
 #[ignore = "requires external disposable local PostgreSQL service; unavailable is not a pass"]
 fn local_postgres_service_contract() {
@@ -731,9 +1069,21 @@ fn local_postgres_service_contract() {
 }
 
 #[test]
+#[ignore = "requires external disposable local PostgreSQL service; unavailable is not a pass"]
+fn local_postgres_event_conformance() {
+    run_event_conformance(Profile::LocalPostgres);
+}
+
+#[test]
 #[ignore = "requires protected hosted Supabase service and explicit opt-in; unavailable is not a pass"]
 fn protected_hosted_supabase_service_contract() {
     run(Profile::HostedSupabase);
+}
+
+#[test]
+#[ignore = "requires protected hosted Supabase service and explicit opt-in; unavailable is not a pass"]
+fn protected_hosted_supabase_event_conformance() {
+    run_event_conformance(Profile::HostedSupabase);
 }
 
 #[cfg(test)]
@@ -975,9 +1325,13 @@ mod offline {
     #[test]
     fn schema_and_ordered_sql_are_fixed_and_all_values_are_bound() {
         let schema = include_str!("fixtures/supabase-service-schema.sql");
-        assert_eq!(schema.matches("CREATE TABLE ").count(), 1);
+        assert_eq!(schema.matches("CREATE TABLE ").count(), 3);
+        assert!(schema.contains("CREATE TABLE dactyl_service_conformance"));
+        assert!(schema.contains("CREATE TABLE tasks"));
+        assert!(schema.contains("CREATE TABLE events"));
         assert!(schema.contains("id BIGINT PRIMARY KEY"));
         assert!(schema.contains("blob_value BYTEA NOT NULL"));
+        assert!(schema.contains("UNIQUE (stream, seq)"));
         assert!(!schema.contains("AUTOINCREMENT"));
         let operations = commit_operations();
         assert_eq!(
@@ -1000,6 +1354,31 @@ mod offline {
             Parameter::Text(INJECTION_TEXT.into())
         );
         assert_eq!(operations[0].params(), sample(202, false));
+        assert!(EVENT_INSERT_WITH_PARAMS.contains("WITH event_params("));
+        for event_type in ["task.add", "task.claim", "task.release", "task.done"] {
+            assert!(EVENT_INSERT_WITH_PARAMS.contains(event_type));
+        }
+    }
+
+    #[cfg(feature = "sqlite")]
+    #[test]
+    fn offline_sqlite_executes_event_params_post_state_conformance() {
+        let schema = include_str!("fixtures/supabase-service-schema.sql");
+        let temp = tempfile::NamedTempFile::new().unwrap();
+        let db = Connection::open(DatastoreRoute::sqlite(temp.path().to_str().unwrap())).unwrap();
+        for stmt in schema.split(';') {
+            let trimmed = stmt.trim();
+            if trimmed.is_empty()
+                || trimmed
+                    .lines()
+                    .all(|line| line.trim().is_empty() || line.trim().starts_with("--"))
+            {
+                continue;
+            }
+            db.write(trimmed, &[]).unwrap();
+        }
+        verify_event_sequence(&db, &db, false)
+            .unwrap_or_else(|error| panic!("offline sqlite event check failed: {}", error.stage));
     }
 
     #[test]

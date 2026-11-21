@@ -1,5 +1,13 @@
 # Intent
 
+## Wave 2 Decapod Cloud Edge gateway, RFC 9449 retry, billing overage, and multi-org conformance (issues #132, #133, #136, #137, #138, #139)
+
+- **Proof profile reconciliation (`#137`)**: `.decapod/config.toml` reconciles `[proof.required_profile].reviewed_sources_digest` (`sha256:635177a3b555fa2d1f95a28c13c87515cacbc1e73c4a627c6d4c981a8f1db665`) against accepted `dactyl-db 0.18.0` while keeping `Cargo.toml`/`Cargo.lock`, `.github/workflows/*`, `reviewed_commands_digest`, and `DEFAULT_CLOUD_ORIGIN = "https://goyxpcmxetztjlrrcwew.supabase.co"` unchanged.
+- **Billing overage and error preservation (`#132`)**: `AccountOperation` adds `BillingOveragePolicy` (`"billing-overage-policy"`, mutating), `DeviceKeys` (`"device-keys"`, read), `DeviceSessions` (`"device-sessions"`, read), `DeviceSession` (`"device-session"`, mutating), and `DeviceRefresh` (`"device-refresh"`, mutating); `CloudResponseMetadata` exposes bounded `retry_after()`; HTTP `429` preserves `quota_exceeded` and `overage_cap_exhausted` as `AdapterErrorKind::Quota` (keeping `rate_limited` as `RateLimited`); HTTP `403` preserves `provider_disabled`, `mfa_step_up_required`, and `repo_access_denied` as `Authorization`; and HTTP `401` preserves `device_key_expired` and `refresh_reuse_detected` as `Authentication`.
+- **Bounded single-retry `use_dpop_nonce` (`#133`)**: When a `RequestProofSigner` emits `AuthScheme::DPoP` and the server responds with HTTP `401` (`use_dpop_nonce` body code or `WWW-Authenticate: DPoP error="use_dpop_nonce"`) plus a single valid bounded `DPoP-Nonce` header, `CloudConnector` and `SupabaseRpc` notify `observe_nonce`, re-sign once, retry at most once per logical call, surface final response headers in `CloudResponseMetadata`, stop on double challenges, and never retry `AuthScheme::Bearer` or ambiguous post-send `outcome_unknown` failures.
+- **Edge gateway routing and event conformance (`#136`)**: Opt-in `.with_device_gateway()` routes `AuthScheme::DPoP` datastore and control RPCs through `/functions/v1/decapod-onboarding/{cloud-query,cloud-batch,cloud-control}` (with HTTP `404` fallback on `cloud-control` to `/functions/v1/propodus-onboarding/cloud-control`), enforces gateway-side Bearer vs DPoP requirements per `AccountOperation` while retaining legacy `/rest/v1/rpc/*` behavior when disabled, and adds `tasks` + `events` (`dactyl_event_v1`) post-state `WITH event_params(...)` conformance to `tests/fixtures/supabase-service-schema.sql` and `tests/supabase_service.rs`.
+- **Multi-org/multi-repo single-origin isolation (`#138`, `#139`)**: Wire tests prove multiple organizations and repositories operate concurrently over a single trusted origin without credential leakage, redirect following, cross-tenant state mixing, or SQLite fallback.
+
 ## Decapod Cloud transport, caller-supplied DPoP, and extended conformance (issues #127, #128, #129)
 
 Dactyl exposes two primary logical workspace targets: local SQLite (`LogicalTarget::local`) and Decapod Cloud (`LogicalTarget::cloud`, backed by native Supabase RPC). For `dactyl-db 0.18.0`, Dactyl adds:
@@ -200,7 +208,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `e00be028273712649602196ef4d822b9dc0795e1ee4082372b402b2fec2a600f`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

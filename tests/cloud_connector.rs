@@ -4,8 +4,9 @@
 use dactyl_db::{
     AccountOperation, AdapterErrorKind, AuthenticationSecrets, AuthenticationStart, Backend,
     CloudConnector, CloudResponseMetadata, Connection, Datastore, DatastoreRoute, MutationOutcome,
-    RequestProof, RequestProofInput, RequestProofSigner, ScmCredential, ScmProvider,
-    StorageContext, SupabaseRpcConfig, UserSession,
+    OperationKind, RequestProof, RequestProofInput, RequestProofSigner, ResourceBudget,
+    ScmCredential, ScmProvider, StorageContext, SupabaseRpcConfig, UserSession,
+    DEFAULT_CLOUD_ORIGIN,
 };
 use serde_json::{json, Value};
 use std::io::{Read, Write};
@@ -138,8 +139,16 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         (AccountOperation::Checkout, "billing-checkout"),
         (AccountOperation::Manage, "billing-manage"),
         (AccountOperation::Portal, "billing-portal"),
+        (
+            AccountOperation::BillingOveragePolicy,
+            "billing-overage-policy",
+        ),
         (AccountOperation::DeviceChallenge, "device-challenge"),
         (AccountOperation::DeviceEnroll, "device-enroll"),
+        (AccountOperation::DeviceKeys, "device-keys"),
+        (AccountOperation::DeviceSessions, "device-sessions"),
+        (AccountOperation::DeviceSession, "device-session"),
+        (AccountOperation::DeviceRefresh, "device-refresh"),
         (AccountOperation::DeviceStepUp, "device-step-up"),
         (AccountOperation::DeviceRevoke, "device-revoke"),
     ];
@@ -799,9 +808,10 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
     ]);
     let client = connector_with_signer(&origin, signer.clone());
 
-    // 1. Account request hits 401 use_dpop_nonce, surfaces nonce to signer & metadata, then retries cleanly.
+    // 1. Account request hits 401 use_dpop_nonce, surfaces nonce to signer, retries once automatically,
+    //    and updates metadata from the final 200 response.
     let mut challenge_meta = CloudResponseMetadata::default();
-    let err = client
+    let enrolled = client
         .account_request_with_metadata(
             AccountOperation::DeviceEnroll,
             &json!({"version": 1, "jwk_thumbprint": "thumb-1"}),
@@ -810,25 +820,13 @@ fn dpop_proof_signer_binds_all_surfaces_handles_nonces_and_redacts_challenges() 
             None,
             &mut challenge_meta,
         )
-        .unwrap_err();
-    assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Authentication));
-    assert_eq!(err.adapter_code(), Some("use_dpop_nonce"));
-    assert_eq!(challenge_meta.dpop_nonce(), Some("server-nonce-1"));
-    assert!(!format!("{err} {err:?}").contains("server-nonce-1"));
-    assert!(!format!("{err} {err:?}").contains("secret-nonce-hint"));
-    assert!(!format!("{challenge_meta:?}").contains("server-nonce-1"));
-
-    let enrolled = client
-        .account_request_with_metadata(
-            AccountOperation::DeviceEnroll,
-            &json!({"version": 1, "jwk_thumbprint": "thumb-1"}),
-            "dpop-access-token",
-            None,
-            challenge_meta.dpop_nonce(),
-            &mut CloudResponseMetadata::default(),
-        )
         .unwrap();
     assert_eq!(enrolled["enrolled"], true);
+    assert_eq!(challenge_meta.dpop_nonce(), None);
+    let observed = signer.observed_nonces.lock().unwrap();
+    assert_eq!(observed.len(), 1);
+    assert_eq!(observed[0].1, "server-nonce-1");
+    drop(observed);
 
     // 2. control_request carries DPoP headers.
     let ctrl = client
@@ -1036,4 +1034,431 @@ fn dpop_rejections_and_http_error_matrix_map_deterministically_without_leaks() {
         RequestProof::dpop("").unwrap_err().mutation_outcome(),
         MutationOutcome::NotAttempted
     );
+}
+
+#[test]
+fn billing_overage_policy_quota_codes_and_retry_after_are_preserved_with_default_origin() {
+    assert_eq!(
+        DEFAULT_CLOUD_ORIGIN,
+        "https://goyxpcmxetztjlrrcwew.supabase.co"
+    );
+    assert!(AccountOperation::BillingOveragePolicy.is_mutating());
+    assert!(!AccountOperation::DeviceKeys.is_mutating());
+    assert!(!AccountOperation::DeviceSessions.is_mutating());
+    assert!(AccountOperation::DeviceSession.is_mutating());
+    assert!(AccountOperation::DeviceRefresh.is_mutating());
+
+    for (status, code, retry_after, expected_kind) in [
+        (429, "quota_exceeded", Some("45"), AdapterErrorKind::Quota),
+        (
+            429,
+            "overage_cap_exhausted",
+            Some("120"),
+            AdapterErrorKind::Quota,
+        ),
+        (
+            429,
+            "rate_limited",
+            Some("15"),
+            AdapterErrorKind::RateLimited,
+        ),
+        (
+            403,
+            "provider_disabled",
+            None,
+            AdapterErrorKind::Authorization,
+        ),
+        (
+            403,
+            "mfa_step_up_required",
+            None,
+            AdapterErrorKind::Authorization,
+        ),
+        (
+            403,
+            "repo_access_denied",
+            None,
+            AdapterErrorKind::Authorization,
+        ),
+        (
+            401,
+            "device_key_expired",
+            None,
+            AdapterErrorKind::Authentication,
+        ),
+        (
+            401,
+            "refresh_reuse_detected",
+            None,
+            AdapterErrorKind::Authentication,
+        ),
+    ] {
+        let extra = retry_after
+            .map(|value| format!("Retry-After: {value}\r\n"))
+            .unwrap_or_default();
+        let (origin, rx, handle) = server_with_headers(vec![(
+            status,
+            extra,
+            json!({"error": {"code": code, "message": "raw-internal-billing-msg"}}),
+        )]);
+        let mut meta = CloudResponseMetadata::default();
+        let err = connector(&origin)
+            .account_request_with_metadata(
+                AccountOperation::BillingOveragePolicy,
+                &json!({"version": 1, "organization_id": "org-1", "enabled": true}),
+                "user-access",
+                None,
+                None,
+                &mut meta,
+            )
+            .unwrap_err();
+        assert_eq!(err.adapter_kind(), Some(expected_kind));
+        assert_eq!(err.adapter_code(), Some(code));
+        assert_ne!(err.mutation_outcome(), MutationOutcome::Uncertain);
+        assert_eq!(meta.retry_after(), retry_after);
+        assert!(!format!("{err} {err:?}").contains("raw-internal-billing-msg"));
+        assert!(!format!("{meta:?}").contains("raw-internal-billing-msg"));
+        let (headers, body) = rx.recv().unwrap();
+        assert!(
+            headers.starts_with("POST /functions/v1/decapod-onboarding/billing-overage-policy ")
+        );
+        assert_eq!(body["enabled"], true);
+        handle.join().unwrap();
+    }
+
+    // Mutating BillingOveragePolicy preserves outcome_unknown on post-send connection loss.
+    let (origin, rx, handle) = server_with_headers(vec![(0, String::new(), json!({}))]);
+    let err = connector(&origin)
+        .account_request(
+            AccountOperation::BillingOveragePolicy,
+            &json!({"version": 1, "enabled": false}),
+            "user-access",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_code(), Some("outcome_unknown"));
+    assert_eq!(err.mutation_outcome(), MutationOutcome::Uncertain);
+    rx.recv().unwrap();
+    handle.join().unwrap();
+}
+
+#[test]
+fn use_dpop_nonce_retries_once_stops_on_double_challenge_and_never_retries_bearer_or_unknown() {
+    // 1. Double challenge fails closed after exactly two attempts, keeps final nonce in metadata,
+    //    and redacts both nonces + server message.
+    let signer = Arc::new(RecordingProofSigner::default());
+    let (origin, rx, handle) = server_with_headers(vec![
+        (
+            401,
+            "DPoP-Nonce: challenge-one\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce", "message": "secret-nonce-hint"}}),
+        ),
+        (
+            401,
+            "DPoP-Nonce: challenge-two\r\nDecapod-Cloud-Stage: dpop-check\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce", "message": "secret-nonce-hint"}}),
+        ),
+    ]);
+    let client = connector_with_signer(&origin, signer.clone());
+    let mut meta = CloudResponseMetadata::default();
+    let err = client
+        .account_request_with_metadata(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+            None,
+            &mut meta,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Authentication));
+    assert_eq!(err.adapter_code(), Some("use_dpop_nonce"));
+    assert_ne!(err.mutation_outcome(), MutationOutcome::Uncertain);
+    assert_eq!(meta.dpop_nonce(), Some("challenge-two"));
+    assert_eq!(
+        meta.cloud_headers(),
+        &[("decapod-cloud-stage".into(), "dpop-check".into())]
+    );
+    let rendered = format!("{err} {err:?} {meta:?}");
+    for secret in ["challenge-one", "challenge-two", "secret-nonce-hint"] {
+        assert!(!rendered.contains(secret));
+    }
+    let calls = signer.calls.lock().unwrap();
+    assert_eq!(calls.len(), 2);
+    assert_eq!(calls[0].3, None);
+    assert_eq!(calls[1].3.as_deref(), Some("challenge-one"));
+    drop(calls);
+    rx.recv().unwrap();
+    rx.recv().unwrap();
+    handle.join().unwrap();
+
+    // 2. RFC 9449 WWW-Authenticate header challenge without body code triggers single retry,
+    //    exposing final response metadata (updated DPoP-Nonce + Retry-After).
+    let header_signer = Arc::new(RecordingProofSigner::default());
+    let (origin, rx, handle) = server_with_headers(vec![
+        (
+            401,
+            "WWW-Authenticate: DPoP error=\"use_dpop_nonce\"\r\nDPoP-Nonce: hdr-nonce-1\r\n".into(),
+            json!({}),
+        ),
+        (
+            200,
+            "DPoP-Nonce: hdr-nonce-2\r\nRetry-After: 5\r\n".into(),
+            json!({"ok": true}),
+        ),
+    ]);
+    let mut final_meta = CloudResponseMetadata::default();
+    let ok = connector_with_signer(&origin, header_signer.clone())
+        .account_request_with_metadata(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+            None,
+            &mut final_meta,
+        )
+        .unwrap();
+    assert_eq!(ok["ok"], true);
+    assert_eq!(final_meta.dpop_nonce(), Some("hdr-nonce-2"));
+    assert_eq!(final_meta.retry_after(), Some("5"));
+    assert_eq!(header_signer.calls.lock().unwrap().len(), 2);
+    rx.recv().unwrap();
+    rx.recv().unwrap();
+    handle.join().unwrap();
+
+    // 3. Switching to AuthScheme::Bearer on challenge prevents automatic retry.
+    struct SwitchToBearerOnRetry(Mutex<usize>);
+    impl RequestProofSigner for SwitchToBearerOnRetry {
+        fn sign_request(
+            &self,
+            input: &RequestProofInput<'_>,
+        ) -> Result<RequestProof, dactyl_db::DactylError> {
+            let mut count = self.0.lock().unwrap();
+            *count += 1;
+            if *count == 1 && input.nonce().is_none() {
+                RequestProof::dpop("first-dpop-proof")
+            } else {
+                Ok(RequestProof::bearer())
+            }
+        }
+    }
+    let switch_signer = Arc::new(SwitchToBearerOnRetry(Mutex::new(0)));
+    let (origin, rx, handle) = server_with_headers(vec![(
+        401,
+        "DPoP-Nonce: switch-nonce\r\n".into(),
+        json!({"error": {"code": "use_dpop_nonce"}}),
+    )]);
+    let err = connector_with_signer(&origin, switch_signer.clone())
+        .account_request(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_code(), Some("use_dpop_nonce"));
+    assert_eq!(*switch_signer.0.lock().unwrap(), 2);
+    rx.recv().unwrap();
+    handle.join().unwrap();
+
+    // 4. Bearer signer never retries on 401 use_dpop_nonce, and outcome_unknown never retries.
+    let bearer_signer = Arc::new(RecordingProofSigner {
+        bearer_mode: true,
+        ..Default::default()
+    });
+    let (origin, rx, handle) = server_with_headers(vec![(
+        401,
+        "DPoP-Nonce: bearer-ignored\r\n".into(),
+        json!({"error": {"code": "use_dpop_nonce"}}),
+    )]);
+    let err = connector_with_signer(&origin, bearer_signer.clone())
+        .account_request(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_code(), Some("use_dpop_nonce"));
+    assert_eq!(bearer_signer.calls.lock().unwrap().len(), 1);
+    rx.recv().unwrap();
+    handle.join().unwrap();
+
+    let dpop_signer = Arc::new(RecordingProofSigner::default());
+    let (origin, rx, handle) = server_with_headers(vec![(
+        503,
+        "DPoP-Nonce: unused-on-5xx\r\n".into(),
+        json!({"error": {"code": "provider_unavailable"}}),
+    )]);
+    let err = connector_with_signer(&origin, dpop_signer.clone())
+        .account_request(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1}),
+            "dpop-access-token",
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_code(), Some("outcome_unknown"));
+    assert_eq!(err.mutation_outcome(), MutationOutcome::Uncertain);
+    assert_eq!(dpop_signer.calls.lock().unwrap().len(), 1);
+    rx.recv().unwrap();
+    handle.join().unwrap();
+}
+
+#[test]
+fn device_gateway_enforces_endpoint_auth_matrix_and_control_fallback() {
+    let signer = Arc::new(RecordingProofSigner::default());
+    let (origin, rx, handle) = server_with_headers(vec![
+        // 1. DeviceChallenge / DeviceKeys / DeviceSessions / BillingOveragePolicy send Bearer only.
+        (200, String::new(), json!({"challenge_id": "ch-1"})),
+        (200, String::new(), json!({"keys": []})),
+        (200, String::new(), json!({"sessions": []})),
+        (200, String::new(), json!({"updated": true})),
+        // 2. DeviceSession hits 401 use_dpop_nonce -> single retry keeping Authorization: Bearer!
+        (
+            401,
+            "DPoP-Nonce: gw-nonce-1\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce"}}),
+        ),
+        (
+            200,
+            "DPoP-Nonce: gw-nonce-2\r\n".into(),
+            json!({"access_token": "dpc_at_ok"}),
+        ),
+        // 3. DeviceRefresh requires DPoP proof and succeeds with DPoP.
+        (200, String::new(), json!({"access_token": "dpc_at_next"})),
+        // 4. control_request routes canonical 404 -> falls back once to propodus-onboarding/cloud-control.
+        (404, String::new(), json!({"error": "not_found"})),
+        (
+            200,
+            "Decapod-Cloud-Stage: edge\r\n".into(),
+            json!({"decision": "allow"}),
+        ),
+    ]);
+    let client = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY))
+        .unwrap()
+        .with_device_gateway()
+        .with_proof_signer(signer.clone());
+    assert!(client.uses_device_gateway());
+
+    for (op, expected_path) in [
+        (AccountOperation::DeviceChallenge, "device-challenge"),
+        (AccountOperation::DeviceKeys, "device-keys"),
+        (AccountOperation::DeviceSessions, "device-sessions"),
+        (
+            AccountOperation::BillingOveragePolicy,
+            "billing-overage-policy",
+        ),
+    ] {
+        client
+            .account_request(op, &json!({"version": 1}), "user-jwt-secret", None)
+            .unwrap();
+        let (headers, _) = rx.recv().unwrap();
+        assert!(headers.starts_with(&format!(
+            "POST /functions/v1/decapod-onboarding/{expected_path} "
+        )));
+        assert_eq!(
+            header(&headers, "authorization"),
+            Some("Bearer user-jwt-secret")
+        );
+        assert_eq!(header(&headers, "dpop"), None);
+    }
+
+    let mut session_meta = CloudResponseMetadata::default();
+    let minted = client
+        .account_request_with_metadata(
+            AccountOperation::DeviceSession,
+            &json!({"version": 1, "project_id": "org/repo"}),
+            "user-jwt-secret",
+            None,
+            None,
+            &mut session_meta,
+        )
+        .unwrap();
+    assert_eq!(minted["access_token"], "dpc_at_ok");
+    assert_eq!(session_meta.dpop_nonce(), Some("gw-nonce-2"));
+    for idx in 0..2 {
+        let (headers, _) = rx.recv().unwrap();
+        assert!(headers.starts_with("POST /functions/v1/decapod-onboarding/device-session "));
+        assert_eq!(
+            header(&headers, "authorization"),
+            Some("Bearer user-jwt-secret")
+        );
+        let dpop_hdr = header(&headers, "dpop").unwrap();
+        if idx == 1 {
+            assert!(dpop_hdr.ends_with(".gw-nonce-1"));
+        }
+    }
+
+    let refreshed = client
+        .account_request(
+            AccountOperation::DeviceRefresh,
+            &json!({"version": 1, "refresh_token": "dpc_rt_1"}),
+            "dpc_at_ok",
+            None,
+        )
+        .unwrap();
+    assert_eq!(refreshed["access_token"], "dpc_at_next");
+    let (headers, _) = rx.recv().unwrap();
+    assert!(headers.starts_with("POST /functions/v1/decapod-onboarding/device-refresh "));
+    assert_eq!(header(&headers, "authorization"), Some("DPoP dpc_at_ok"));
+    assert!(header(&headers, "dpop").is_some());
+
+    let mut ctrl_meta = CloudResponseMetadata::default();
+    let decision = client
+        .control_request_with_metadata(
+            "propodus_repository_access_v1",
+            &json!({"version": 1, "project_id": "org/repo"}),
+            Some("dpc_at_next"),
+            None,
+            OperationKind::Read,
+            ResourceBudget::v1(),
+            &mut ctrl_meta,
+        )
+        .unwrap();
+    assert_eq!(decision["decision"], "allow");
+    assert_eq!(
+        ctrl_meta.cloud_headers(),
+        &[("decapod-cloud-stage".into(), "edge".into())]
+    );
+    let (h1, b1) = rx.recv().unwrap();
+    assert!(h1.starts_with("POST /functions/v1/decapod-onboarding/cloud-control "));
+    assert_eq!(b1["version"], 1);
+    assert_eq!(b1["function"], "propodus_repository_access_v1");
+    assert_eq!(b1["request"]["project_id"], "org/repo");
+    let (h2, b2) = rx.recv().unwrap();
+    assert!(h2.starts_with("POST /functions/v1/propodus-onboarding/cloud-control "));
+    assert_eq!(header(&h2, "authorization"), Some("DPoP dpc_at_next"));
+    assert!(header(&h2, "dpop").is_some());
+    assert_eq!(b2["function"], "propodus_repository_access_v1");
+    handle.join().unwrap();
+
+    // Missing DPoP signer in gateway mode fails local preflight before network dispatch.
+    let (unused_origin, _, unused_handle) = server(vec![]);
+    let unsigned_gw = CloudConnector::with_config(SupabaseRpcConfig::v1(&unused_origin, KEY))
+        .unwrap()
+        .with_device_gateway();
+    for op in [
+        AccountOperation::DeviceEnroll,
+        AccountOperation::DeviceSession,
+        AccountOperation::DeviceRefresh,
+    ] {
+        let err = unsigned_gw
+            .account_request(op, &json!({"version": 1}), "user-jwt-secret", None)
+            .unwrap_err();
+        assert_eq!(err.adapter_code(), Some("device_proof_required"));
+        assert_eq!(err.mutation_outcome(), MutationOutcome::NotAttempted);
+    }
+    let ctrl_err = unsigned_gw
+        .control_request(
+            "propodus_repository_access_v1",
+            &json!({"version": 1}),
+            Some("user-jwt-secret"),
+            OperationKind::Read,
+            ResourceBudget::v1(),
+        )
+        .unwrap_err();
+    assert_eq!(ctrl_err.adapter_code(), Some("device_proof_required"));
+    assert_eq!(ctrl_err.mutation_outcome(), MutationOutcome::NotAttempted);
+    unused_handle.join().unwrap();
 }

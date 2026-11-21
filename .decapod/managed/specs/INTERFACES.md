@@ -1,5 +1,17 @@
 # Interfaces
 
+## Wave 2 gateway routing, account operations, retry, and quota interfaces (issues #132, #133, #136, #138, #139)
+
+- `SupabaseRpcConfig`, `CloudConnector`, and `LogicalConnector` expose `.with_device_gateway(self) -> Self` (and `SupabaseRpcConfig::uses_device_gateway(&self) -> bool` / `CloudConnector::uses_device_gateway(&self) -> bool`). Existing legacy `/rest/v1/rpc/{dactyl_query_v1,dactyl_read_batch_v1,dactyl_batch_v1,<function>}` paths and `DEFAULT_CLOUD_ORIGIN = "https://goyxpcmxetztjlrrcwew.supabase.co"` remain unchanged when `with_device_gateway()` is not enabled.
+- `AccountOperation` (`src/connector.rs`) adds `BillingOveragePolicy` (`"billing-overage-policy"`, mutating), `DeviceKeys` (`"device-keys"`, read), `DeviceSessions` (`"device-sessions"`, read), `DeviceSession` (`"device-session"`, mutating), and `DeviceRefresh` (`"device-refresh"`, mutating).
+- `CloudResponseMetadata` (`src/connector.rs`) exposes `pub fn retry_after(&self) -> Option<&str>` (redacted in `Debug` via `has_retry_after`) and reflects the final HTTP attempt's headers after any single `use_dpop_nonce` retry.
+- Gateway wire shapes (`with_device_gateway()`):
+  - Data RPCs POST `VersionedRequest` JSON directly (`version`, flattened query/batch fields) to `/functions/v1/decapod-onboarding/cloud-query` and `/functions/v1/decapod-onboarding/cloud-batch` with `Authorization: DPoP <token>` and `DPoP: <proof>`.
+  - Control RPCs POST `{"version": 1, "function": "<id>", "request": <json>}` to `/functions/v1/decapod-onboarding/cloud-control` (falling back once on HTTP `404` missing-function responses to `/functions/v1/propodus-onboarding/cloud-control`) with `Authorization: DPoP <token>` and `DPoP: <proof>`.
+  - Missing or `AuthScheme::Bearer`-downgraded signers on DPoP-required gateway surfaces fail locally before network dispatch with `AdapterErrorKind::Authentication`, code `Some("device_proof_required")`, and `MutationOutcome::NotAttempted`.
+- Error codes (`src/cloud.rs` and `src/adapter/supabase.rs`): HTTP `429` with `quota_exceeded` or `overage_cap_exhausted` returns `AdapterErrorKind::Quota`; `429` with `rate_limited` returns `RateLimited`; `403` adds `provider_disabled`, `mfa_step_up_required`, and `repo_access_denied` (`Authorization`); `401` adds `device_key_expired` and `refresh_reuse_detected` (`Authentication`).
+- `tests/fixtures/supabase-service-schema.sql` adds SQL-portable `tasks` and `events` (`UNIQUE (stream, seq)`) tables alongside `dactyl_service_conformance` for `dactyl_event_v1` baseline sequence and post-state `WITH event_params(...)` conformance (`task.add`, `task.claim`, `task.release`, `task.done`).
+
 ## DPoP proof signer, Decapod Cloud onboarding, and metadata surfaces (issues #127, #128, #129)
 
 - `src/connector.rs` / `src/lib.rs` export `AuthScheme`, `RequestProofInput`, `RequestProof`, `RequestProofSigner`, and `CloudResponseMetadata` unconditionally across all Cargo feature combinations. `DatastoreRoute`, `CloudConnector`, and `LogicalConnector` accept `.with_proof_signer(Arc<dyn RequestProofSigner>)` and `.with_dpop_nonce(...)`, and `LogicalConnector` / `CloudConnector` expose `resolve_with_metadata`, `discover_with_metadata`, `control_request_with_metadata`, and `account_request_with_metadata` so callers observe `DPoP-Nonce` and `Decapod-Cloud-*` headers even on `401` challenges while keeping `Debug` and `DactylError` formatting strictly redacted.
@@ -279,7 +291,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
+- Repository signal fingerprint: `e00be028273712649602196ef4d822b9dc0795e1ee4082372b402b2fec2a600f`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

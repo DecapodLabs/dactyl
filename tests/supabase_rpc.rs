@@ -836,3 +836,350 @@ fn burst_250_concurrent_clients_reuse_connections_without_fd_leaks_and_enforce_t
     slow_stop.store(true, Ordering::SeqCst);
     slow_srv.join().unwrap();
 }
+
+fn gateway_seq_server(
+    responses: Vec<(u16, String, Value)>,
+) -> (
+    String,
+    mpsc::Receiver<(String, Value)>,
+    thread::JoinHandle<()>,
+) {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let origin = format!("http://{}", listener.local_addr().unwrap());
+    let (tx, rx) = mpsc::channel();
+    let handle = thread::spawn(move || {
+        for (status, extra_headers, body) in responses {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .unwrap();
+            let mut bytes = Vec::new();
+            let (headers, offset, length) = loop {
+                let mut buf = [0; 4096];
+                let n = stream.read(&mut buf).unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&buf[..n]);
+                if let Some(end) = bytes.windows(4).position(|b| b == b"\r\n\r\n") {
+                    let headers = String::from_utf8(bytes[..end].to_vec()).unwrap();
+                    let length = headers
+                        .lines()
+                        .find_map(|line| {
+                            let (k, v) = line.split_once(':')?;
+                            k.eq_ignore_ascii_case("content-length")
+                                .then(|| v.trim().parse::<usize>().unwrap())
+                        })
+                        .unwrap_or(0);
+                    break (headers, end + 4, length);
+                }
+            };
+            while bytes.len() - offset < length {
+                let mut buf = [0; 4096];
+                let n = stream.read(&mut buf).unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&buf[..n]);
+            }
+            let payload = if length == 0 {
+                Value::Null
+            } else {
+                serde_json::from_slice(&bytes[offset..offset + length]).unwrap()
+            };
+            tx.send((headers, payload)).unwrap();
+            if status == 0 {
+                continue;
+            }
+            let raw = body.to_string();
+            write!(
+                stream,
+                "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{extra_headers}\r\n{raw}",
+                raw.len()
+            )
+            .ok();
+        }
+        listener.set_nonblocking(true).unwrap();
+        thread::sleep(Duration::from_millis(80));
+        assert!(
+            listener.accept().is_err(),
+            "unexpected extra HTTP request after responses exhausted"
+        );
+    });
+    (origin, rx, handle)
+}
+
+fn rpc_header<'a>(headers: &'a str, name: &str) -> Option<&'a str> {
+    headers.lines().find_map(|line| {
+        let (key, value) = line.split_once(':')?;
+        key.eq_ignore_ascii_case(name).then(|| value.trim())
+    })
+}
+
+#[test]
+fn device_gateway_routes_cloud_query_cloud_batch_and_retries_dpop_nonce_once() {
+    use dactyl_db::{
+        CloudConnector, CloudResponseMetadata, MutationOutcome, OperationKind, RequestProof,
+        RequestProofInput, RequestProofSigner, ResourceBudget,
+    };
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Default)]
+    struct Signer {
+        calls: Mutex<Vec<(String, Option<String>)>>,
+        observed: Mutex<Vec<String>>,
+        bearer: bool,
+    }
+    impl RequestProofSigner for Signer {
+        fn observe_nonce(&self, _canonical_url: &str, nonce: &str) {
+            self.observed.lock().unwrap().push(nonce.to_owned());
+        }
+        fn sign_request(
+            &self,
+            input: &RequestProofInput<'_>,
+        ) -> Result<RequestProof, dactyl_db::DactylError> {
+            self.calls.lock().unwrap().push((
+                input.canonical_url().to_owned(),
+                input.nonce().map(str::to_owned),
+            ));
+            if self.bearer {
+                return Ok(RequestProof::bearer());
+            }
+            RequestProof::dpop(format!("proof-{}", input.nonce().unwrap_or("none")))
+        }
+    }
+
+    let signer = Arc::new(Signer::default());
+    let (origin, rx, srv) = gateway_seq_server(vec![
+        // 1. cloud-query hits 401 use_dpop_nonce -> single retry -> 200.
+        (
+            401,
+            "DPoP-Nonce: rpc-nonce-1\r\nWWW-Authenticate: DPoP error=\"use_dpop_nonce\"\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce", "message": "raw-nonce-detail"}}),
+        ),
+        (
+            200,
+            "DPoP-Nonce: rpc-nonce-2\r\n".into(),
+            json!({"columns": ["ok"], "rows": [{"ok": true}], "affected_rows": 0, "generated_keys": []}),
+        ),
+        // 2. cloud-batch carries atomic event_params batch directly under VersionedRequest.
+        (
+            200,
+            String::new(),
+            json!({"results": [
+                {"columns": [], "rows": [], "affected_rows": 1, "generated_keys": []},
+                {"columns": [], "rows": [], "affected_rows": 1, "generated_keys": []}
+            ]}),
+        ),
+        // 3. cloud-control hits 401 use_dpop_nonce -> single retry -> 429 overage_cap_exhausted + Retry-After.
+        (
+            401,
+            "DPoP-Nonce: ctrl-nonce-1\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce"}}),
+        ),
+        (
+            429,
+            "DPoP-Nonce: ctrl-nonce-2\r\nRetry-After: 90\r\n".into(),
+            json!({"error": {"code": "overage_cap_exhausted", "message": "raw-cap-detail"}}),
+        ),
+    ]);
+
+    let cfg = SupabaseRpcConfig::v1(&origin, KEY).with_device_gateway();
+    assert!(cfg.uses_device_gateway());
+    let route_gw = DatastoreRoute::supabase_rpc(cfg.clone(), Some("dpc_at_tok".into()))
+        .with_proof_signer(signer.clone());
+    let db = Connection::open_with_context(route_gw, Some(context())).unwrap();
+
+    let rows = db.read("SELECT 1 AS ok", &[]).unwrap();
+    assert!(rows.as_slice()[0].get_bool("ok").unwrap());
+
+    let event_sql = "WITH event_params(event_id, event_ts, task_id, event_type, event_payload, event_actor) AS (VALUES ($1, $2, $3, $4, $5, $6)) INSERT INTO events (event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor) SELECT event_params.event_id, event_params.event_ts, 1, 'todo', 'task', event_params.task_id, event_params.event_type, event_params.event_payload, event_params.event_actor FROM event_params";
+    let batch = db
+        .atomic(&[
+            Operation::write(
+                "INSERT INTO tasks (id, updated_at, version) VALUES ($1, $2, 1)",
+                vec!["task-9".into(), "2026-01-01T00:00:00Z".into()],
+            ),
+            Operation::write(
+                event_sql,
+                vec![
+                    "evt-9".into(),
+                    "2026-01-01T00:00:00Z".into(),
+                    "task-9".into(),
+                    "task.add".into(),
+                    "{}".into(),
+                    "agent-x".into(),
+                ],
+            ),
+        ])
+        .unwrap();
+    assert_eq!(batch.results.len(), 2);
+
+    let cloud = CloudConnector::with_config(cfg)
+        .unwrap()
+        .with_proof_signer(signer.clone());
+    let mut ctrl_meta = CloudResponseMetadata::default();
+    let ctrl_err = cloud
+        .control_request_with_metadata(
+            "propodus_repository_access_v1",
+            &json!({"version": 1, "project_id": "org/repo"}),
+            Some("dpc_at_tok"),
+            None,
+            OperationKind::Read,
+            ResourceBudget::v1(),
+            &mut ctrl_meta,
+        )
+        .unwrap_err();
+    assert_eq!(ctrl_err.adapter_kind(), Some(AdapterErrorKind::Quota));
+    assert_eq!(ctrl_err.adapter_code(), Some("overage_cap_exhausted"));
+    assert_eq!(ctrl_meta.dpop_nonce(), Some("ctrl-nonce-2"));
+    assert_eq!(ctrl_meta.retry_after(), Some("90"));
+    assert!(!format!("{ctrl_err} {ctrl_err:?}").contains("raw-cap-detail"));
+
+    let (h1, b1) = rx.recv().unwrap();
+    assert!(h1.starts_with("POST /functions/v1/decapod-onboarding/cloud-query "));
+    assert_eq!(rpc_header(&h1, "authorization"), Some("DPoP dpc_at_tok"));
+    assert_eq!(rpc_header(&h1, "dpop"), Some("proof-none"));
+    assert_eq!(b1["version"], 1);
+    assert!(b1.get("request").is_none());
+    assert_eq!(b1["sql"], "SELECT 1 AS ok");
+
+    let (h2, _) = rx.recv().unwrap();
+    assert!(h2.starts_with("POST /functions/v1/decapod-onboarding/cloud-query "));
+    assert_eq!(rpc_header(&h2, "dpop"), Some("proof-rpc-nonce-1"));
+
+    let (h3, b3) = rx.recv().unwrap();
+    assert!(h3.starts_with("POST /functions/v1/decapod-onboarding/cloud-batch "));
+    assert_eq!(b3["version"], 1);
+    assert!(b3.get("request").is_none());
+    assert_eq!(b3["operations"].as_array().unwrap().len(), 2);
+
+    let (h4, b4) = rx.recv().unwrap();
+    assert!(h4.starts_with("POST /functions/v1/decapod-onboarding/cloud-control "));
+    assert_eq!(rpc_header(&h4, "dpop"), Some("proof-none"));
+    assert_eq!(b4["version"], 1);
+    assert_eq!(b4["function"], "propodus_repository_access_v1");
+
+    let (h5, _) = rx.recv().unwrap();
+    assert!(h5.starts_with("POST /functions/v1/decapod-onboarding/cloud-control "));
+    assert_eq!(rpc_header(&h5, "dpop"), Some("proof-ctrl-nonce-1"));
+
+    assert_eq!(
+        signer.observed.lock().unwrap().as_slice(),
+        ["rpc-nonce-1", "rpc-nonce-2", "ctrl-nonce-1", "ctrl-nonce-2"]
+    );
+    srv.join().unwrap();
+
+    // Double challenge on cloud-query stops after 2 requests; unsigned or Bearer signer fails preflight.
+    let double_signer = Arc::new(Signer::default());
+    let (origin, rx, srv) = gateway_seq_server(vec![
+        (
+            401,
+            "DPoP-Nonce: q-n1\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce"}}),
+        ),
+        (
+            401,
+            "DPoP-Nonce: q-n2\r\n".into(),
+            json!({"error": {"code": "use_dpop_nonce"}}),
+        ),
+    ]);
+    let db_double = Connection::open_with_context(
+        DatastoreRoute::supabase_rpc(
+            SupabaseRpcConfig::v1(&origin, KEY).with_device_gateway(),
+            Some("dpc_at_tok".into()),
+        )
+        .with_proof_signer(double_signer.clone()),
+        Some(context()),
+    )
+    .unwrap();
+    let double_err = db_double.read("SELECT 1", &[]).unwrap_err();
+    assert_eq!(
+        double_err.adapter_kind(),
+        Some(AdapterErrorKind::Authentication)
+    );
+    assert_eq!(double_err.adapter_code(), Some("use_dpop_nonce"));
+    assert_eq!(double_signer.calls.lock().unwrap().len(), 2);
+    rx.recv().unwrap();
+    rx.recv().unwrap();
+    srv.join().unwrap();
+
+    // Unsigned or Bearer-mode signer fails local preflight on gateway routes with zero HTTP traffic.
+    let (unused_origin, _, unused_srv) = gateway_seq_server(vec![]);
+    let unsigned_db = Connection::open_with_context(
+        DatastoreRoute::supabase_rpc(
+            SupabaseRpcConfig::v1(&unused_origin, KEY).with_device_gateway(),
+            Some(BEARER.into()),
+        ),
+        Some(context()),
+    )
+    .unwrap();
+    let unsigned_err = unsigned_db.read("SELECT 1", &[]).unwrap_err();
+    assert_eq!(unsigned_err.adapter_code(), Some("device_proof_required"));
+    assert_eq!(
+        unsigned_err.mutation_outcome(),
+        MutationOutcome::NotAttempted
+    );
+
+    let bearer_signer = Arc::new(Signer {
+        bearer: true,
+        ..Default::default()
+    });
+    let bearer_db = Connection::open_with_context(
+        DatastoreRoute::supabase_rpc(
+            SupabaseRpcConfig::v1(&unused_origin, KEY).with_device_gateway(),
+            Some(BEARER.into()),
+        )
+        .with_proof_signer(bearer_signer),
+        Some(context()),
+    )
+    .unwrap();
+    let bearer_err = bearer_db.read("SELECT 1", &[]).unwrap_err();
+    assert_eq!(bearer_err.adapter_code(), Some("device_proof_required"));
+    assert_eq!(bearer_err.mutation_outcome(), MutationOutcome::NotAttempted);
+    unused_srv.join().unwrap();
+
+    // Mutating cloud-batch failure (503) marks outcome_unknown without retrying.
+    let dpop_batch_signer = Arc::new(Signer::default());
+    let (origin, rx, srv) = gateway_seq_server(vec![(
+        503,
+        "DPoP-Nonce: ignore-me\r\n".into(),
+        json!({"error": {"code": "storage_unavailable"}}),
+    )]);
+    let batch_db = Connection::open_with_context(
+        DatastoreRoute::supabase_rpc(
+            SupabaseRpcConfig::v1(&origin, KEY).with_device_gateway(),
+            Some("dpc_at_tok".into()),
+        )
+        .with_proof_signer(dpop_batch_signer.clone()),
+        Some(context()),
+    )
+    .unwrap();
+    let batch_err = batch_db
+        .atomic(&[Operation::write(
+            "INSERT INTO tasks (id) VALUES ($1)",
+            vec!["t-1".into()],
+        )])
+        .unwrap_err();
+    assert_eq!(batch_err.mutation_outcome(), MutationOutcome::Uncertain);
+    assert_eq!(dpop_batch_signer.calls.lock().unwrap().len(), 1);
+    rx.recv().unwrap();
+    srv.join().unwrap();
+
+    // New Wave 2 safe codes propagate through SupabaseRpc errors (provider_disabled, device_key_expired, quota_exceeded).
+    for (status, code, kind) in [
+        (403, "provider_disabled", AdapterErrorKind::Authorization),
+        (401, "device_key_expired", AdapterErrorKind::Authentication),
+        (429, "quota_exceeded", AdapterErrorKind::Quota),
+    ] {
+        let (origin, body) = (
+            code,
+            json!({"error": {"code": code, "message": "internal-rpc-secret"}}),
+        );
+        let (url, rx, srv) = fixture(status, body);
+        let err = open(&url, AccessMode::ReadOnly)
+            .read("SELECT 1", &[])
+            .unwrap_err();
+        assert_eq!(err.adapter_kind(), Some(kind));
+        assert_eq!(err.adapter_code(), Some(origin));
+        assert!(!format!("{err} {err:?}").contains("internal-rpc-secret"));
+        rx.recv().unwrap();
+        srv.join().unwrap();
+    }
+}

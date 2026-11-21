@@ -271,6 +271,17 @@ DACTYL_SUPABASE_FIXTURE=/private/disposable/hosted-fixture.json \
   protected_hosted_supabase_service_contract -- --ignored --exact --nocapture
 ```
 
+### Event log conformance (`dactyl_event_v1`)
+
+`tests/fixtures/supabase-service-schema.sql` also defines `tasks` and `events`
+tables (`UNIQUE (stream, seq)`) for baseline sequence insert and atomic
+post-state `WITH event_params(...)` conformance (`task.add`, `task.claim`,
+`task.release`, `task.done`, plus stale post-state zero-row refusal). Run
+`local_postgres_event_conformance` or `protected_hosted_supabase_event_conformance`
+explicitly against a fresh fixture (`unavailable` when the fixture env is absent);
+when `sqlite` is enabled, offline unit checks execute the same conformance SQL
+against an isolated local SQLite database.
+
 No hosted endpoint or credential is supplied by this repository. Run and label
 each supported service-side connection mode separately. A run against direct
 local PostgreSQL cannot establish actual Supabase/Supavisor direct, session
