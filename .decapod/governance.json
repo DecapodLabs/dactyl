@@ -162,6 +162,11 @@
       "id": "chk_dactyl_138_stage1",
       "summary": "Stage 1: add #138 staged first-party custom origin helpers, loopback wire/DPoP/redirect/mismatch tests, docs, and living specs",
       "input_digest": "sha256:b3b26c61144400395ed541ea03f56af92728e327b4914cd706b6401977b984e8"
+    },
+    {
+      "id": "chk_dactyl_decapod_01621",
+      "summary": "Stage 2: pin tools/proof/Containerfile and release-bound entrypoints/specs to decapod 0.162.1 (release-only #137 qualification)",
+      "input_digest": "sha256:3456566ca94607a408b04648d698c77f83aa44507e564c8564c6250bccf41660"
     }
   ],
   "intents": {
