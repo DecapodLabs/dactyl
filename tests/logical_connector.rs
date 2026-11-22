@@ -49,6 +49,41 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     assert!(AccountOperation::DeviceRefresh.is_mutating());
     assert!(AccountOperation::DeviceStepUp.is_mutating());
     assert!(AccountOperation::DeviceRevoke.is_mutating());
+    assert!(AccountOperation::RepositoryEnroll.is_mutating());
+    assert!(!AccountOperation::ResourceLimits.is_mutating());
+    assert!(AccountOperation::OrgAdmins.is_mutating());
+    assert!(AccountOperation::OrgRecovery.is_mutating());
+    assert!(AccountOperation::PolicyTemplates.is_mutating());
+    assert!(AccountOperation::OrgUpgrades.is_mutating());
+
+    for op in [
+        AccountOperation::Register,
+        AccountOperation::Status,
+        AccountOperation::Quote,
+        AccountOperation::Checkout,
+        AccountOperation::Manage,
+        AccountOperation::Portal,
+        AccountOperation::BillingOveragePolicy,
+        AccountOperation::DeviceChallenge,
+        AccountOperation::DeviceEnroll,
+        AccountOperation::DeviceKeys,
+        AccountOperation::DeviceSessions,
+        AccountOperation::DeviceSession,
+        AccountOperation::DeviceStepUp,
+        AccountOperation::RepositoryEnroll,
+        AccountOperation::ResourceLimits,
+        AccountOperation::OrgAdmins,
+        AccountOperation::OrgRecovery,
+        AccountOperation::PolicyTemplates,
+        AccountOperation::OrgUpgrades,
+    ] {
+        assert!(
+            op.requires_human_bearer(),
+            "{op:?} should require human bearer"
+        );
+    }
+    assert!(!AccountOperation::DeviceRefresh.requires_human_bearer());
+    assert!(!AccountOperation::DeviceRevoke.requires_human_bearer());
 
     let scm = ScmCredential::github("gho_secret_linking_token").unwrap();
     assert_eq!(scm.provider(), ScmProvider::GitHub);

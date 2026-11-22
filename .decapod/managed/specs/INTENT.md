@@ -1,9 +1,10 @@
 # Intent
 
-## Runtime-aware HTTP pool budgets and per-operation effect provenance (issues #134, #140)
+## Runtime-aware HTTP pool budgets, per-operation effect provenance, and onboarding/admin operations (issues #134, #140)
 
 - **Runtime-aware pooled transport and `ResourceBudget` concurrency limits (`#134`)**: `ResourceBudget` (`src/budget.rs`) adds `http_max_in_flight` (default `16`, valid `1..=64`), `http_max_idle_per_host` (default `32`, valid `0..=64`), and `http_idle_timeout` (default `15s`, non-zero) via `with_http_pool_limits`. `src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, and `src/adapter/neon/mod.rs` share weak-cached `SharedHttpClient` pools with runtime-aware sync pooling (direct `reqwest::blocking::Client` outside Tokio; off-runtime worker init/exec only when called inside Tokio) plus native non-blocking `*_async` operations (`CloudConnector`, `LogicalConnector`, `Connection`, and `Adapter`) using per-runtime pooled `reqwest::Client` instances and `tokio::sync::Notify` permits while keeping Rust `1.85.0` MSRV and `Cargo.toml`/`Cargo.lock` dependencies unchanged.
 - **Per-operation authorization and effect provenance (`#140`)**: `src/connector.rs`, `src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, `src/adapter/mod.rs`, and `src/lib.rs` carry versioned (`PROVENANCE_CONTRACT_VERSION = 1`), origin- and auth-bound `EffectProvenance` (`EffectStatus::{NotAttempted, Refused, CommittedObserved, RolledBack, Uncertain, UnsupportedProvenance}`, `DecisionOutcome::{Allowed, Refused}`, `ObservationSource::{DirectResponse, ServerReadback, LocalPreflight, TransportFault}`) and `OperationAttempt` identity across `Connection::write_with_attempt*`, `atomic_with_attempt*`, `CloudConnector` / `LogicalConnector` `*_with_attempt*`, and separate idempotent `reconcile_operation*` / `reconcile_control_attempt*` (`ReconciliationObservation`). Mutating operations never auto-retry post-send disconnects; readback reconciliation leaves earlier `Uncertain` client failure metadata immutable while surfacing same-attempt/different-digest `AdapterErrorKind::IdempotencyConflict`, and local SQLite retains full policy-free compatibility.
+- **Propodus onboarding & organizational admin operations**: `AccountOperation` (`src/connector.rs`) adds `RepositoryEnroll` (`"repository-enroll"`, mutating), `ResourceLimits` (`"resource-limits"`, non-mutating), `OrgAdmins` (`"org-admins"`, mutating), `OrgRecovery` (`"org-recovery"`, mutating), `PolicyTemplates` (`"policy-templates"`, mutating), and `OrgUpgrades` (`"org-upgrades"`, mutating). `AccountOperation::requires_human_bearer()` requires human `Bearer` tokens across all onboarding/admin operations except `DeviceRefresh` and `DeviceRevoke`, rejecting `dpc_at_` device session tokens and invalid/missing credentials locally before dispatch (`AdapterErrorKind::Authentication` / `Protocol`, `MutationOutcome::NotAttempted`, `EffectStatus::NotAttempted`).
 
 ## Wave 2 Decapod Cloud Edge gateway, RFC 9449 retry, billing overage, runtime selector, and multi-org conformance (issues #132, #133, #136, #137, #138, #139)
 
@@ -213,7 +214,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

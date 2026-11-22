@@ -108,13 +108,25 @@ Its `AccountOperation` selects one fixed POST endpoint beneath
 `DeviceChallenge` uses `device-challenge`, `DeviceEnroll` uses `device-enroll`,
 `DeviceKeys` uses `device-keys`, `DeviceSessions` uses `device-sessions`,
 `DeviceSession` uses `device-session`, `DeviceRefresh` uses `device-refresh`,
-`DeviceStepUp` uses `device-step-up`, and `DeviceRevoke` uses `device-revoke`.
-`AccountOperation::is_mutating` classifies `Register`, `Checkout`, `Manage`,
-`Portal`, `BillingOveragePolicy`, `DeviceEnroll`, `DeviceSession`, `DeviceRefresh`,
-`DeviceStepUp`, and `DeviceRevoke` as mutating/state-changing and `Status`,
-`Quote`, `DeviceChallenge`, `DeviceKeys`, and `DeviceSessions` as non-mutating
-calls. With `.with_device_gateway()` enabled, account, billing, `DeviceChallenge`,
-`DeviceKeys`, `DeviceSessions`, and `DeviceStepUp` transmit managed
+`DeviceStepUp` uses `device-step-up`, `DeviceRevoke` uses `device-revoke`,
+`RepositoryEnroll` uses `repository-enroll`, `ResourceLimits` uses
+`resource-limits`, `OrgAdmins` uses `org-admins`, `OrgRecovery` uses
+`org-recovery`, `PolicyTemplates` uses `policy-templates`, and `OrgUpgrades` uses
+`org-upgrades`. `AccountOperation::is_mutating` classifies `Register`,
+`Checkout`, `Manage`, `Portal`, `BillingOveragePolicy`, `DeviceEnroll`,
+`DeviceSession`, `DeviceRefresh`, `DeviceStepUp`, `DeviceRevoke`,
+`RepositoryEnroll`, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, and
+`OrgUpgrades` as mutating/state-changing and `Status`, `Quote`,
+`DeviceChallenge`, `DeviceKeys`, `DeviceSessions`, and `ResourceLimits` as
+non-mutating calls. `AccountOperation::requires_human_bearer` is `true` for all
+operations except `DeviceRefresh` and `DeviceRevoke`, so `dpc_at_` device
+session tokens and empty bearer credentials are rejected locally before dispatch
+(`AdapterErrorKind::Authentication`, code `authentication_required`,
+`MutationOutcome::NotAttempted`, `EffectStatus::NotAttempted`). With
+`.with_device_gateway()` enabled, account, billing, onboarding/admin
+(`RepositoryEnroll`, `ResourceLimits`, `OrgAdmins`, `OrgRecovery`,
+`PolicyTemplates`, `OrgUpgrades`), `DeviceChallenge`, `DeviceKeys`,
+`DeviceSessions`, and `DeviceStepUp` transmit managed
 `Authorization: Bearer <token>`, `DeviceEnroll` and `DeviceSession` require both
 `Authorization: Bearer <token>` and a `DPoP` proof (`device_proof_required`
 when absent), `DeviceRefresh` requires a `DPoP` proof, and `DeviceRevoke`

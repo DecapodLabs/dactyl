@@ -51,6 +51,7 @@ struct RequestAuthPolicy<'a> {
     proof_signer: Option<&'a Arc<dyn RequestProofSigner>>,
     managed_bearer_proof: bool,
     require_dpop_proof: bool,
+    require_human_bearer: bool,
 }
 
 impl<'a> RequestAuthPolicy<'a> {
@@ -59,6 +60,16 @@ impl<'a> RequestAuthPolicy<'a> {
             proof_signer: None,
             managed_bearer_proof: false,
             require_dpop_proof: false,
+            require_human_bearer: false,
+        }
+    }
+
+    const fn human_bearer() -> Self {
+        Self {
+            proof_signer: None,
+            managed_bearer_proof: false,
+            require_dpop_proof: false,
+            require_human_bearer: true,
         }
     }
 
@@ -67,6 +78,7 @@ impl<'a> RequestAuthPolicy<'a> {
             proof_signer,
             managed_bearer_proof: false,
             require_dpop_proof: false,
+            require_human_bearer: false,
         }
     }
 }
@@ -650,19 +662,27 @@ impl CloudConnector {
     }
 
     fn account_auth_policy(&self, operation: AccountOperation) -> RequestAuthPolicy<'_> {
+        let require_human_bearer = operation.requires_human_bearer();
         if !self.config.uses_device_gateway() {
-            return RequestAuthPolicy::optional(self.proof_signer.as_ref());
+            return RequestAuthPolicy {
+                proof_signer: self.proof_signer.as_ref(),
+                managed_bearer_proof: false,
+                require_dpop_proof: false,
+                require_human_bearer,
+            };
         }
         match operation {
             AccountOperation::DeviceEnroll | AccountOperation::DeviceSession => RequestAuthPolicy {
                 proof_signer: self.proof_signer.as_ref(),
                 managed_bearer_proof: true,
                 require_dpop_proof: true,
+                require_human_bearer: true,
             },
             AccountOperation::DeviceRefresh => RequestAuthPolicy {
                 proof_signer: self.proof_signer.as_ref(),
                 managed_bearer_proof: false,
                 require_dpop_proof: true,
+                require_human_bearer: false,
             },
             AccountOperation::DeviceRevoke => {
                 RequestAuthPolicy::optional(self.proof_signer.as_ref())
@@ -674,21 +694,30 @@ impl CloudConnector {
             | AccountOperation::Manage
             | AccountOperation::Portal
             | AccountOperation::BillingOveragePolicy
+            | AccountOperation::RepositoryEnroll
+            | AccountOperation::ResourceLimits
+            | AccountOperation::OrgAdmins
+            | AccountOperation::OrgRecovery
+            | AccountOperation::PolicyTemplates
+            | AccountOperation::OrgUpgrades
             | AccountOperation::DeviceChallenge
             | AccountOperation::DeviceKeys
             | AccountOperation::DeviceSessions
-            | AccountOperation::DeviceStepUp => RequestAuthPolicy::none(),
+            | AccountOperation::DeviceStepUp => RequestAuthPolicy::human_bearer(),
         }
     }
 
-    /// Transport an opaque versioned account, device-enrollment, or billing
-    /// request using the current user bearer. Optional SCM credentials are for
-    /// explicit account linking only, never data or Auth token requests. Dactyl
-    /// does not infer identity, roles, pricing or consent, including from a
-    /// managed Auth provider token.
+    /// Transport an opaque versioned account, device-enrollment, billing, or
+    /// administrative management request using the current user bearer. Optional
+    /// SCM credentials are for explicit account linking only, never data or Auth
+    /// token requests. Dactyl does not infer identity, roles, pricing or
+    /// consent, including from a managed Auth provider token.
     ///
-    /// Mutating operations (`Register`, `Checkout`, `Manage`, `Portal`,
-    /// `BillingOveragePolicy`, `DeviceEnroll`, `DeviceSession`, `DeviceRefresh`,
+    /// Operations requiring a human session bearer reject `dpc_at_` device
+    /// session tokens locally before dispatch. Mutating operations (`Register`,
+    /// `Checkout`, `Manage`, `Portal`, `BillingOveragePolicy`,
+    /// `RepositoryEnroll`, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`,
+    /// `OrgUpgrades`, `DeviceEnroll`, `DeviceSession`, `DeviceRefresh`,
     /// `DeviceStepUp`, `DeviceRevoke`) attach error code `"outcome_unknown"` and
     /// [`crate::MutationOutcome::Uncertain`] if transport fails after dispatch
     /// so callers reconcile server state rather than blindly replaying a write.
@@ -1733,6 +1762,22 @@ fn prepare_cloud_request(
     let record_preflight = |err: DactylError,
                             metadata_out: &mut CloudResponseMetadata,
                             auth_scheme: Option<AuthScheme>| {
+        let err = match err {
+            DactylError::Adapter {
+                kind,
+                code,
+                message,
+            } if !message.starts_with("local preflight:")
+                && !message.starts_with(crate::budget::LOCAL_PREFLIGHT_PREFIX) =>
+            {
+                DactylError::Adapter {
+                    kind,
+                    code,
+                    message: format!("local preflight: {message}"),
+                }
+            }
+            other => other,
+        };
         metadata_out.set_provenance(EffectProvenance::local_preflight(
             operation_kind,
             attempt,
@@ -1782,6 +1827,17 @@ fn prepare_cloud_request(
             if let Err(err) = opaque(value) {
                 return Err(record_preflight(err, metadata_out, None));
             }
+            if auth_policy.require_human_bearer && value.starts_with("dpc_at_") {
+                return Err(record_preflight(
+                    DactylError::adapter_with_code(
+                        AdapterErrorKind::Authentication,
+                        "authentication_required",
+                        "local preflight: operation requires a human bearer session, not a device session token",
+                    ),
+                    metadata_out,
+                    Some(AuthScheme::Bearer),
+                ));
+            }
             let (auth, dpop) = match build_auth_headers(
                 &method_str,
                 &canonical,
@@ -1814,7 +1870,10 @@ fn prepare_cloud_request(
             }
         }
         None => {
-            if auth_policy.require_dpop_proof || auth_policy.managed_bearer_proof {
+            if auth_policy.require_dpop_proof
+                || auth_policy.managed_bearer_proof
+                || auth_policy.require_human_bearer
+            {
                 return Err(record_preflight(
                     DactylError::adapter_with_code(
                         AdapterErrorKind::Authentication,

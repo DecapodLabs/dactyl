@@ -1,11 +1,12 @@
 # Interfaces
 
-## HTTP pool budgets, native async operations, and per-operation effect provenance (issues #134, #140)
+## HTTP pool budgets, native async operations, effect provenance, and onboarding/admin accounts (issues #134, #140)
 
 - **`ResourceBudget` & `CloudConnector`/`LogicalConnector` pooling (`#134`)**: `ResourceBudget` adds `http_max_in_flight()`, `http_max_idle_per_host()`, `http_idle_timeout()`, and `with_http_pool_limits(max_in_flight, max_idle_per_host, idle_timeout)` (`1..=64`, `0..=64`, `> Duration::ZERO`). `CloudConnector::with_http_budget` / `LogicalConnector::with_http_budget` configure pooled connector concurrency alongside `Connection::open_with_budget`.
 - **Native async driver & connector surface (`#134`)**: `Connection` exposes `read_async`, `visit_rows_async`, `write_result_async`, `write_async`, `write_with_attempt_async`, `atomic_async`, and `atomic_with_attempt_async`. `CloudConnector` and `LogicalConnector` expose `*_async` equivalents for discovery/resolution, auth start/status/exchange/refresh/revoke, `control_request*`, `account_request*`, `reconcile_operation_async`, and `reconcile_control_attempt_async`.
 - **Unconditional provenance types (`#140`)**: `src/lib.rs` re-exports `PROVENANCE_CONTRACT_VERSION` (`1`), `EffectStatus`, `DecisionOutcome`, `ObservationSource`, `OperationAttempt` (`.new`, `.with_request_digest`, `.with_scope_ref`), `EffectProvenance`, and `ReconciliationObservation` across all feature combinations; `CloudResponseMetadata::provenance()` returns `Option<&EffectProvenance>`.
 - **Attempt & reconciliation methods (`#140`)**: `Connection::{write_with_attempt, write_with_attempt_async, atomic_with_attempt, atomic_with_attempt_async}`, `CloudConnector` / `LogicalConnector` `account_request_with_attempt*`, `control_request_with_attempt*`, `reconcile_operation*` (`operation-status`), and `reconcile_control_attempt*`. Local SQLite and Neon reject `*_with_attempt` and `reconcile_*` locally with `AdapterErrorKind::Capability` (`cloud_connector_required`, `LocalPreflight` / `NotAttempted`) while existing `read`, `visit_rows`, `write`, `write_result`, and `atomic` contracts remain unchanged.
+- **Additional `AccountOperation` onboarding/admin variants (`src/connector.rs`, `src/cloud.rs`)**: Adds `RepositoryEnroll` (`"repository-enroll"`, mutating), `ResourceLimits` (`"resource-limits"`, read), `OrgAdmins` (`"org-admins"`, mutating), `OrgRecovery` (`"org-recovery"`, mutating), `PolicyTemplates` (`"policy-templates"`, mutating), and `OrgUpgrades` (`"org-upgrades"`, mutating), plus `pub fn requires_human_bearer(self) -> bool` (false only for `DeviceRefresh` and `DeviceRevoke`). Passing `dpc_at_` device tokens or empty/missing bearers to human-required calls returns `AdapterErrorKind::Authentication` (`"authentication_required"`) or `Protocol` (`MutationOutcome::NotAttempted`, `EffectStatus::NotAttempted`, `LocalPreflight`) without dispatching network traffic.
 - **Additional allowlisted codes (`src/cloud.rs`, `src/adapter/supabase.rs`, `src/http_pool.rs`)**: `dpop_aud_mismatch`, `expired_credential`, `grant_revoked`, `grant_expired`, `scope_denied`, `idempotency_conflict`, `idempotency_in_progress`, `transaction_aborted`, `accepted_not_committed`.
 
 ## Wave 2 gateway routing, account operations, runtime selector, retry, and quota interfaces (issues #132, #133, #136, #137, #138, #139)
@@ -300,7 +301,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

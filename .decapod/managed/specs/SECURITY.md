@@ -1,9 +1,10 @@
 # Security
 
-## Transport concurrency bounds and origin/auth-bound effect provenance (issues #134, #140)
+## Transport concurrency bounds, origin/auth-bound effect provenance, and human-Bearer boundary (issues #134, #140)
 
 - **FD exhaustion & runtime starvation guard (`#134`)**: `SharedHttpClient` bounds both per-budget and global (`64`) in-flight requests, bounds live pools (`64`) and per-pool async runtime caches (`16`), runs `reqwest::Client` directly inside Tokio async callers, and uses plain worker offload exclusively when sync methods are invoked from an active Tokio runtime.
 - **Strict origin/auth/scope binding & partial-response fail-closed (`#140`)**: `bind_response_provenance` rejects redirects (`300..400`), cross-origin endpoints (`origin_bound = false`), header/JSON envelope conflicts (`provenance_conflict`), unknown provenance contract versions (`unsupported_provenance_version`), swapped `attempt_id` / `operation_kind` / `scope_ref` / `auth_scheme` claims, and truncated/malformed `2xx` bodies (overriding forged header-only `committed_observed` receipts with `EffectProvenance::transport_fault` / `EffectStatus::Uncertain`). `OperationAttempt`, `EffectProvenance`, `ReconciliationObservation`, and `CloudResponseMetadata` redact credentials, proofs, origins, request/decision/scope IDs, and SHA-256 request digests from `Debug` and `Display`.
+- **Human-Bearer preflight & gateway endpoint isolation**: `CloudConnector` rejects `dpc_at_` device session tokens and empty/invalid bearer inputs locally in `prepare_cloud_request` (`MutationOutcome::NotAttempted`, `EffectStatus::NotAttempted`, `LocalPreflight`, full redaction) for all operations where `AccountOperation::requires_human_bearer()` holds (including `RepositoryEnroll`, `ResourceLimits`, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, and `OrgUpgrades`), while under `.with_device_gateway()` those endpoints transmit only `Authorization: Bearer <token>` and strip `DPoP` proofs.
 
 ## Wave 2 gateway auth isolation, bounded nonce retry, and injection hardening (issues #132, #133, #136, #138, #139)
 
@@ -182,7 +183,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

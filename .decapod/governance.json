@@ -105,6 +105,16 @@
         "tests/http_pool_async.rs"
       ]
     },
+    "dactyl-onboarding-admin-human-bearer": {
+      "statement": "All 6 new Propodus onboarding/admin AccountOperation variants map fixed paths, enforce human Bearer preflight (rejecting dpc_at_ and empty bearers before dispatch with MutationOutcome::NotAttempted), preserve post-send outcome_unknown on the 5 mutating operations, and propagate #140 EffectProvenance.",
+      "falsifier": "Any of the 6 operations sends dpc_at_ or empty bearer on the wire, attaches DPoP under with_device_gateway(), classifies ResourceLimits as mutating or the 5 admin ops as non-uncertain on drop, or leaks tokens.",
+      "status": "supported",
+      "proof_refs": [
+        "docs/cloud-connectors.md",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs"
+      ]
+    },
     "dactyl-wave2-gateway-nonce-overage-selector": {
       "statement": "Dactyl Wave 2 implements Edge gateway routing, bounded single-retry use_dpop_nonce, BillingOveragePolicy & 429 Quota mapping, Backend::datastore().as_str(), and decapod 0.160.0 Containerfile alignment; non-recovery dactyl-proof checks, MSRV 1.85.0 Wave 2 suites, clippy, fmt, registry consumer, and host sqlite_maintenance/resource_budgets passed while 14 Linux-only recovery::tests hit Fedora CoreOS SELinux security.selinux xattrs",
       "falsifier": "Any failure in Wave 2 tests, MSRV 1.85.0 compilation/execution, clippy/fmt, CI unlabelled-Linux recovery tests, or decapod-validate drift check",
@@ -136,6 +146,16 @@
         "host-8-feature-matrix",
         "tests/effect_provenance.rs",
         "tests/http_pool_async.rs"
+      ]
+    },
+    {
+      "id": "dactyl-134-140-admin-v0160",
+      "summary": "Add 6 Propodus onboarding/admin AccountOperation variants, human-Bearer preflight enforcement, local preflight MutationOutcome::NotAttempted normalization, and host/MSRV 1.85.0 proof",
+      "input_digest": "sha256:8f23f46543cef8822405a68f822f8b6d9606af19645eac73330d3aaa13096582",
+      "proof_refs": [
+        "docs/cloud-connectors.md",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs"
       ]
     }
   ],
@@ -180,23 +200,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated Architecture spec for #134 SharedHttpClient runtime-aware pooling across Cloud/Supabase/Neon and #140 header/JSON provenance binding",
-          "reviewed_code_fingerprint": "da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad",
-          "spec_material_hash": "f4cd6b7256d1dbd8400180e656b33ec925120969b6258f5ebf34d66ec6f985ad"
+          "reason": "Added onboarding/admin AccountOperation paths, RequestAuthPolicy::human_bearer(), and local preflight MutationOutcome::NotAttempted normalization",
+          "reviewed_code_fingerprint": "83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6",
+          "spec_material_hash": "56f7e7c6c11d489d0041208e1a8455e358f50494bf606a1cfaaf4aa3eaa03b16"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated Interfaces spec for #134 ResourceBudget pool limits & *_async APIs and #140 EffectProvenance/OperationAttempt/reconcile_* contracts",
-          "reviewed_code_fingerprint": "da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad",
-          "spec_material_hash": "34c7df5a3da05f3ff502ed474f7028ba21f24bc0cd1c1dec56b5686e91fd5f0f"
+          "reason": "Documented RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades and requires_human_bearer()",
+          "reviewed_code_fingerprint": "83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6",
+          "spec_material_hash": "e8f164bd783167dcc11de5015ee11b7c684ec602e386c9309bcb82fc37ac12c2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated Security spec for #134 global/per-pool FD bounds and #140 origin/auth/scope binding, partial-body fail-closed, and full Debug redaction",
-          "reviewed_code_fingerprint": "da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad",
-          "spec_material_hash": "8d4a6b7893abd5abce278a3abb57157475a93a14ded3dad3146e30d65fb2aaff"
+          "reason": "Documented pre-dispatch dpc_at_ rejection, gateway Bearer-only isolation, and credential redaction",
+          "reviewed_code_fingerprint": "83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6",
+          "spec_material_hash": "c989d3786697098af6813e584c64aa88ab4e9d48554c118f54143d9078be90ef"
         }
       ],
       "state": "APPROVED",
@@ -208,17 +228,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795313134Z"
+      "updated_at": "1795327799Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f86e0b4c0b93d8b3bcd7b549b3a5654bcb50d2ed373ed731cd7972a2ccbedb0f",
+      "artifact_hash": "sha256:1056cfe7a2d0d92fbf27c6792fa483ffe193d539a7ff19189a80cb95cdd5e4f8",
       "checks": [
         {
           "name": "clippy",
           "status": "passed"
+        },
+        {
+          "name": "container-msrv-1.85.0-non-recovery",
+          "status": "passed"
+        },
+        {
+          "name": "container-msrv-recovery-selinux-tmp",
+          "status": "failed"
         },
         {
           "name": "fmt",
@@ -233,15 +261,43 @@
           "status": "passed"
         },
         {
+          "name": "host-clippy-all-features",
+          "status": "passed"
+        },
+        {
+          "name": "host-clippy-sqlite-neon",
+          "status": "passed"
+        },
+        {
+          "name": "host-fmt",
+          "status": "passed"
+        },
+        {
+          "name": "host-package-check",
+          "status": "passed"
+        },
+        {
           "name": "host-resource-budgets-and-sqlite-maintenance",
           "status": "passed"
+        },
+        {
+          "name": "hosted-supabase",
+          "status": "unavailable"
         },
         {
           "name": "hosted_supabase",
           "status": "unavailable"
         },
         {
+          "name": "live-propodus",
+          "status": "unavailable"
+        },
+        {
           "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "local-postgres",
           "status": "unavailable"
         },
         {
@@ -312,10 +368,17 @@
             "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7ZY76A10FWHK1HPB7CNNMKX": {
@@ -437,6 +500,36 @@
                   "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs to /tmp causing the 14 existing Linux-only adapter::sqlite::recovery::tests to fail with recovery_metadata_unsupported; macOS host recovery tests pass and CI ubuntu runs unlabelled ext4 /tmp",
                   "local_sqlite and synthetic_http fixtures are executed; local_postgres, hosted_supabase, and live Propodus gateway deployments remain unavailable in offline proof"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/error.rs",
+                  "tests/logical_connector.rs",
+                  "tests/cloud_connector.rs",
+                  "docs/cloud-connectors.md",
+                  "Host 8-feature matrix (incl. cloud_connector 19/19, effect_provenance 10/10, http_pool_async 5/5, logical_connector 8/8, resource_budgets 8/8) and Podman MSRV 1.85.0 8-feature non-recovery + offline clean-consumer passed cleanly."
+                ],
+                "proof_refs": [
+                  "host-fmt",
+                  "host-clippy-all-features",
+                  "host-clippy-sqlite-neon",
+                  "host-8-feature-matrix",
+                  "host-package-check",
+                  "container-msrv-1.85.0-non-recovery",
+                  "container-msrv-recovery-selinux-tmp",
+                  "local-postgres",
+                  "hosted-supabase",
+                  "live-propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -452,6 +545,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Host 8-feature matrix (incl. cloud_connector 19/19, effect_provenance 10/10, http_pool_async 5/5, logical_connector 8/8, resource_budgets 8/8) and Podman MSRV 1.85.0 8-feature non-recovery + offline clean-consumer passed cleanly.",
         "host-all-features-100pct",
         "podman-dactyl-proof-msrv-1.85.0-non-recovery-100pct",
         "tests/effect_provenance.rs",

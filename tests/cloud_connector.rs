@@ -3,10 +3,11 @@
 
 use dactyl_db::{
     AccountOperation, AdapterErrorKind, AuthenticationSecrets, AuthenticationStart, Backend,
-    CloudConnector, CloudResponseMetadata, Connection, Datastore, DatastoreRoute, MutationOutcome,
-    OperationKind, RequestProof, RequestProofInput, RequestProofSigner, ResourceBudget,
-    ScmCredential, ScmProvider, StorageContext, SupabaseRpcConfig, UserSession,
-    DEFAULT_CLOUD_ORIGIN,
+    CloudConnector, CloudResponseMetadata, Connection, Datastore, DatastoreRoute, EffectStatus,
+    MutationOutcome, ObservationSource, OperationAttempt, OperationKind, RequestProof,
+    RequestProofInput, RequestProofSigner, ResourceBudget, ScmCredential, ScmProvider,
+    StorageContext, SupabaseRpcConfig, UserSession, DEFAULT_CLOUD_ORIGIN,
+    PROVENANCE_CONTRACT_VERSION,
 };
 use serde_json::{json, Value};
 use std::io::{Read, Write};
@@ -151,6 +152,12 @@ fn account_routes_forward_opaque_policy_and_keep_scm_out_of_auth_and_data() {
         (AccountOperation::DeviceRefresh, "device-refresh"),
         (AccountOperation::DeviceStepUp, "device-step-up"),
         (AccountOperation::DeviceRevoke, "device-revoke"),
+        (AccountOperation::RepositoryEnroll, "repository-enroll"),
+        (AccountOperation::ResourceLimits, "resource-limits"),
+        (AccountOperation::OrgAdmins, "org-admins"),
+        (AccountOperation::OrgRecovery, "org-recovery"),
+        (AccountOperation::PolicyTemplates, "policy-templates"),
+        (AccountOperation::OrgUpgrades, "org-upgrades"),
     ];
     let result =
         json!({"backend_authorized":false,"future":{"opaque":[1,false,"provider-policy"]}});
@@ -586,6 +593,7 @@ fn server_with_headers(
             if status == 0 {
                 continue;
             }
+            let extra_headers = extra_headers.replace("ORIGIN", &address);
             let body = response.to_string().replace("ORIGIN", &address);
             write!(
                 stream,
@@ -1462,4 +1470,449 @@ fn device_gateway_enforces_endpoint_auth_matrix_and_control_fallback() {
     assert_eq!(ctrl_err.adapter_code(), Some("device_proof_required"));
     assert_eq!(ctrl_err.mutation_outcome(), MutationOutcome::NotAttempted);
     unused_handle.join().unwrap();
+}
+
+#[test]
+fn admin_and_onboarding_account_operations_enforce_auth_policy_provenance_and_redaction() {
+    #[allow(clippy::too_many_arguments)]
+    fn prov_hdrs(
+        request_id: &str,
+        status: &str,
+        decision: &str,
+        kind: &str,
+        auth_scheme: &str,
+        reason_code: Option<&str>,
+        decision_ref: Option<&str>,
+        attempt_id: Option<&str>,
+        digest: Option<&str>,
+    ) -> String {
+        let mut out = format!(
+            "Decapod-Cloud-Provenance-Version: {PROVENANCE_CONTRACT_VERSION}\r\n\
+             Decapod-Cloud-Request-Id: {request_id}\r\n\
+             Decapod-Cloud-Effect-Status: {status}\r\n\
+             Decapod-Cloud-Decision: {decision}\r\n\
+             Decapod-Cloud-Operation-Kind: {kind}\r\n\
+             Decapod-Cloud-Origin: ORIGIN\r\n\
+             Decapod-Cloud-Auth-Scheme: {auth_scheme}\r\n"
+        );
+        if let Some(code) = reason_code {
+            out.push_str(&format!("Decapod-Cloud-Reason-Code: {code}\r\n"));
+        }
+        if let Some(dref) = decision_ref {
+            out.push_str(&format!("Decapod-Cloud-Decision-Ref: {dref}\r\n"));
+        }
+        if let Some(aid) = attempt_id {
+            out.push_str(&format!("Decapod-Cloud-Attempt-Id: {aid}\r\n"));
+        }
+        if let Some(d) = digest {
+            out.push_str(&format!("Decapod-Cloud-Request-Digest: {d}\r\n"));
+        }
+        out
+    }
+
+    let new_ops = [
+        (
+            AccountOperation::RepositoryEnroll,
+            "repository-enroll",
+            true,
+            "write",
+        ),
+        (
+            AccountOperation::ResourceLimits,
+            "resource-limits",
+            false,
+            "read",
+        ),
+        (AccountOperation::OrgAdmins, "org-admins", true, "write"),
+        (AccountOperation::OrgRecovery, "org-recovery", true, "write"),
+        (
+            AccountOperation::PolicyTemplates,
+            "policy-templates",
+            true,
+            "write",
+        ),
+        (AccountOperation::OrgUpgrades, "org-upgrades", true, "write"),
+    ];
+
+    // 1. Local preflight MUST reject `dpc_at_` device tokens and empty/whitespace bearers BEFORE any TCP attempt,
+    //    both with and without `.with_device_gateway()`, across sync and async execution, without leaking the token.
+    let signer = Arc::new(RecordingProofSigner::default());
+    let (unused_origin, _, unused_handle) = server(vec![]);
+    let unused_gw = CloudConnector::with_config(SupabaseRpcConfig::v1(&unused_origin, KEY))
+        .unwrap()
+        .with_device_gateway()
+        .with_proof_signer(signer.clone());
+    let unused_direct = connector_with_signer(&unused_origin, signer.clone());
+    let dpc_secret = "dpc_at_sensitive_device_token_12345";
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    for (op, _, _, _) in &new_ops {
+        for client in [&unused_gw, &unused_direct] {
+            for (bad_token, expected_kind, expected_code) in [
+                (
+                    dpc_secret,
+                    AdapterErrorKind::Authentication,
+                    Some("authentication_required"),
+                ),
+                ("", AdapterErrorKind::Protocol, None),
+            ] {
+                let mut meta = CloudResponseMetadata::default();
+                let attempt = OperationAttempt::new("preflight-sync").unwrap();
+                let err = client
+                    .account_request_with_attempt(
+                        *op,
+                        &json!({"version": 1}),
+                        bad_token,
+                        None,
+                        None,
+                        &attempt,
+                        &mut meta,
+                    )
+                    .unwrap_err();
+                assert_eq!(err.adapter_kind(), Some(expected_kind));
+                assert_eq!(err.adapter_code(), expected_code);
+                assert_eq!(err.mutation_outcome(), MutationOutcome::NotAttempted);
+                let prov = meta.provenance().expect("local preflight provenance");
+                assert_eq!(prov.status(), EffectStatus::NotAttempted);
+                assert_eq!(prov.observation_source(), ObservationSource::LocalPreflight);
+                assert!(!format!("{err:?}{err}{prov:?}").contains(dpc_secret));
+            }
+        }
+    }
+
+    rt.block_on(async {
+        let mut meta = CloudResponseMetadata::default();
+        let attempt = OperationAttempt::new("preflight-async").unwrap();
+        let err = unused_gw
+            .account_request_with_attempt_async(
+                AccountOperation::OrgRecovery,
+                &json!({"version": 1}),
+                dpc_secret,
+                None,
+                None,
+                &attempt,
+                &mut meta,
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Authentication));
+        assert_eq!(err.adapter_code(), Some("authentication_required"));
+        assert_eq!(err.mutation_outcome(), MutationOutcome::NotAttempted);
+        let prov = meta.provenance().expect("async local preflight provenance");
+        assert_eq!(prov.status(), EffectStatus::NotAttempted);
+        assert_eq!(prov.observation_source(), ObservationSource::LocalPreflight);
+        assert!(!format!("{err:?}{err}{prov:?}").contains(dpc_secret));
+    });
+    assert!(signer.calls.lock().unwrap().is_empty());
+    unused_handle.join().unwrap();
+
+    // 2. Wire verification across gateway Bearer-only enforcement, canonical + 404 propodus fallback,
+    //    #140 EffectProvenance propagation, post-send socket drop semantics, async transport,
+    //    and separate ServerReadback reconciliation.
+    let mut responses = Vec::new();
+    // [0..6) Canonical 200 responses with full EffectProvenance for all 6 new operations.
+    for (idx, (_, action, _, kind)) in new_ops.iter().enumerate() {
+        let aid = format!("att-op-{idx}");
+        let dig = format!("sha256:op-{idx}");
+        responses.push((
+            200,
+            prov_hdrs(
+                &format!("req-op-{idx}"),
+                "committed_observed",
+                "allowed",
+                kind,
+                "bearer",
+                None,
+                Some(&format!("dec-op-{idx}")),
+                Some(&aid),
+                Some(&dig),
+            ),
+            json!({"ok": true, "action": action}),
+        ));
+    }
+    // [6, 7] ResourceLimits canonical 404 -> legacy /functions/v1/propodus-onboarding/resource-limits 200
+    responses.push((404, String::new(), json!({"error": "not_found"})));
+    responses.push((
+        200,
+        prov_hdrs(
+            "req-limits-fallback",
+            "committed_observed",
+            "allowed",
+            "read",
+            "bearer",
+            None,
+            Some("dec-limits-fallback"),
+            Some("att-limits-fb"),
+            Some("sha256:limits-fb"),
+        ),
+        json!({"limits": {"max_repos": 25}}),
+    ));
+    // [8] PolicyTemplates 403 refusal with provenance Refused
+    responses.push((
+        403,
+        prov_hdrs(
+            "req-policy-refused",
+            "refused",
+            "refused",
+            "write",
+            "bearer",
+            Some("authorization_denied"),
+            Some("dec-policy-refused"),
+            Some("att-policy-refused"),
+            Some("sha256:policy-refused"),
+        ),
+        json!({"error": {"code": "authorization_denied", "message": "private-admin-secret"}}),
+    ));
+    // [9..15) Post-send TCP drop (`status = 0`) for all 6 operations (5 mutating + ResourceLimits read)
+    for _ in 0..new_ops.len() {
+        responses.push((0, String::new(), Value::Null));
+    }
+    // [15] Async OrgAdmins 200 with provenance
+    responses.push((
+        200,
+        prov_hdrs(
+            "req-async-admins",
+            "committed_observed",
+            "allowed",
+            "write",
+            "bearer",
+            None,
+            Some("dec-async-admins"),
+            Some("att-async-admins"),
+            Some("sha256:async-admins"),
+        ),
+        json!({"updated_admins": 2}),
+    ));
+    // [16] Separate ServerReadback reconciliation for dropped OrgUpgrades attempt
+    responses.push((
+        200,
+        prov_hdrs(
+            "req-reconcile-upgrades",
+            "committed_observed",
+            "allowed",
+            "read",
+            "dpop",
+            None,
+            Some("dec-reconcile-upgrades"),
+            Some("att-drop-5"),
+            Some("sha256:drop-5"),
+        ),
+        json!({"status": "committed_observed"}),
+    ));
+
+    let (origin, rx, handle) = server_with_headers(responses);
+    let human_secret = "human-jwt-top-secret";
+    let gw_signer = Arc::new(RecordingProofSigner::default());
+    let client = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY))
+        .unwrap()
+        .with_device_gateway()
+        .with_proof_signer(gw_signer.clone());
+
+    // Execute [0..6) canonical calls
+    for (idx, (op, action, is_mutating, _)) in new_ops.iter().enumerate() {
+        let attempt = OperationAttempt::new(format!("att-op-{idx}"))
+            .unwrap()
+            .with_request_digest(format!("sha256:op-{idx}"))
+            .unwrap();
+        let mut meta = CloudResponseMetadata::default();
+        let res = client
+            .account_request_with_attempt(
+                *op,
+                &json!({"version": 1, "op": action}),
+                human_secret,
+                None,
+                None,
+                &attempt,
+                &mut meta,
+            )
+            .unwrap();
+        assert_eq!(res["ok"], true);
+        let prov = meta.provenance().expect("account response provenance");
+        assert_eq!(prov.status(), EffectStatus::CommittedObserved);
+        assert_eq!(
+            prov.operation_kind(),
+            Some(if *is_mutating {
+                OperationKind::Write
+            } else {
+                OperationKind::Read
+            })
+        );
+        assert_eq!(prov.attempt_id(), Some(attempt.attempt_id()));
+        assert_eq!(
+            prov.request_digest(),
+            Some(attempt.request_digest().unwrap())
+        );
+
+        let (headers, _) = rx.recv().unwrap();
+        assert!(headers.starts_with(&format!("POST /functions/v1/decapod-onboarding/{action} ")));
+        assert_eq!(
+            header(&headers, "authorization"),
+            Some("Bearer human-jwt-top-secret")
+        );
+        assert_eq!(header(&headers, "dpop"), None);
+    }
+    assert!(
+        gw_signer.calls.lock().unwrap().is_empty(),
+        "gateway human-bearer ops must not invoke DPoP proof signer"
+    );
+
+    // Execute [6, 7] 404 fallback on ResourceLimits
+    let fb_attempt = OperationAttempt::new("att-limits-fb")
+        .unwrap()
+        .with_request_digest("sha256:limits-fb")
+        .unwrap();
+    let mut fb_meta = CloudResponseMetadata::default();
+    let fb_res = client
+        .account_request_with_attempt(
+            AccountOperation::ResourceLimits,
+            &json!({"version": 1}),
+            human_secret,
+            None,
+            None,
+            &fb_attempt,
+            &mut fb_meta,
+        )
+        .unwrap();
+    assert_eq!(fb_res["limits"]["max_repos"], 25);
+    assert_eq!(
+        fb_meta.provenance().unwrap().status(),
+        EffectStatus::CommittedObserved
+    );
+    let (fb_h1, _) = rx.recv().unwrap();
+    let (fb_h2, _) = rx.recv().unwrap();
+    assert!(fb_h1.starts_with("POST /functions/v1/decapod-onboarding/resource-limits "));
+    assert!(fb_h2.starts_with("POST /functions/v1/propodus-onboarding/resource-limits "));
+    assert_eq!(
+        header(&fb_h2, "authorization"),
+        Some("Bearer human-jwt-top-secret")
+    );
+    assert_eq!(header(&fb_h2, "dpop"), None);
+
+    // Execute [8] 403 refusal with provenance Refused & secret redaction
+    let mut ref_meta = CloudResponseMetadata::default();
+    let ref_attempt = OperationAttempt::new("att-policy-refused")
+        .unwrap()
+        .with_request_digest("sha256:policy-refused")
+        .unwrap();
+    let ref_err = client
+        .account_request_with_attempt(
+            AccountOperation::PolicyTemplates,
+            &json!({"version": 1}),
+            human_secret,
+            None,
+            None,
+            &ref_attempt,
+            &mut ref_meta,
+        )
+        .unwrap_err();
+    assert_eq!(
+        ref_err.adapter_kind(),
+        Some(AdapterErrorKind::Authorization)
+    );
+    assert_eq!(ref_err.adapter_code(), Some("authorization_denied"));
+    let ref_prov = ref_meta.provenance().unwrap();
+    assert_eq!(ref_prov.status(), EffectStatus::Refused);
+    assert!(!format!("{ref_err:?}{ref_err}").contains("private-admin-secret"));
+    assert!(!format!("{ref_err:?}{ref_err}").contains(human_secret));
+    rx.recv().unwrap();
+
+    // Execute [9..15) post-send drops across all 6 new operations; preserve uncertain outcome on the 5 mutating ops
+    let mut dropped_upgrades_attempt = None;
+    let mut dropped_upgrades_status = None;
+    for (idx, (op, _, is_mutating, _)) in new_ops.iter().enumerate() {
+        let attempt = OperationAttempt::new(format!("att-drop-{idx}"))
+            .unwrap()
+            .with_request_digest(format!("sha256:drop-{idx}"))
+            .unwrap();
+        let mut drop_meta = CloudResponseMetadata::default();
+        let drop_err = client
+            .account_request_with_attempt(
+                *op,
+                &json!({"version": 1}),
+                human_secret,
+                None,
+                None,
+                &attempt,
+                &mut drop_meta,
+            )
+            .unwrap_err();
+        assert!(!format!("{drop_err:?}{drop_err}").contains(human_secret));
+        let drop_prov = drop_meta.provenance().expect("transport fault provenance");
+        assert_eq!(
+            drop_prov.observation_source(),
+            ObservationSource::TransportFault
+        );
+        if *is_mutating {
+            assert_eq!(drop_err.adapter_code(), Some("outcome_unknown"));
+            assert_eq!(drop_err.mutation_outcome(), MutationOutcome::Uncertain);
+            assert_eq!(drop_prov.status(), EffectStatus::Uncertain);
+        } else {
+            assert_ne!(drop_err.adapter_code(), Some("outcome_unknown"));
+            assert_ne!(drop_err.mutation_outcome(), MutationOutcome::Uncertain);
+            assert_ne!(drop_prov.status(), EffectStatus::CommittedObserved);
+        }
+        if *op == AccountOperation::OrgUpgrades {
+            dropped_upgrades_attempt = Some(attempt);
+            dropped_upgrades_status = Some(drop_prov.status());
+        }
+        rx.recv().unwrap();
+    }
+
+    // Execute [15] Async execution on Tokio runtime
+    rt.block_on(async {
+        let attempt = OperationAttempt::new("att-async-admins")
+            .unwrap()
+            .with_request_digest("sha256:async-admins")
+            .unwrap();
+        let mut meta = CloudResponseMetadata::default();
+        let res = client
+            .account_request_with_attempt_async(
+                AccountOperation::OrgAdmins,
+                &json!({"version": 1, "action": "grant"}),
+                human_secret,
+                None,
+                None,
+                &attempt,
+                &mut meta,
+            )
+            .await
+            .unwrap();
+        assert_eq!(res["updated_admins"], 2);
+        assert_eq!(
+            meta.provenance().unwrap().status(),
+            EffectStatus::CommittedObserved
+        );
+    });
+    let (async_hdrs, _) = rx.recv().unwrap();
+    assert!(async_hdrs.starts_with("POST /functions/v1/decapod-onboarding/org-admins "));
+    assert_eq!(header(&async_hdrs, "dpop"), None);
+
+    // Execute [16] Separate ServerReadback reconciliation preserving prior client Uncertain status
+    let mut rec_meta = CloudResponseMetadata::default();
+    let rec = client
+        .reconcile_operation(
+            dropped_upgrades_attempt.as_ref().unwrap(),
+            human_secret,
+            None,
+            dropped_upgrades_status,
+            &mut rec_meta,
+        )
+        .unwrap();
+    assert_eq!(rec.prior_client_status(), Some(EffectStatus::Uncertain));
+    assert_eq!(rec.provenance().status(), EffectStatus::CommittedObserved);
+    assert_eq!(
+        rec.provenance().observation_source(),
+        ObservationSource::ServerReadback
+    );
+    let (rec_hdrs, _) = rx.recv().unwrap();
+    assert!(rec_hdrs.starts_with("POST /functions/v1/decapod-onboarding/operation-status "));
+
+    assert!(
+        !format!("{client:?}").contains(human_secret),
+        "connector Debug must redact caller secrets"
+    );
+    handle.join().unwrap();
 }

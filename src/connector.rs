@@ -728,6 +728,12 @@ pub enum AccountOperation {
     Manage,
     Portal,
     BillingOveragePolicy,
+    RepositoryEnroll,
+    ResourceLimits,
+    OrgAdmins,
+    OrgRecovery,
+    PolicyTemplates,
+    OrgUpgrades,
     DeviceChallenge,
     DeviceEnroll,
     DeviceKeys,
@@ -752,6 +758,12 @@ impl AccountOperation {
             Self::Manage => "billing-manage",
             Self::Portal => "billing-portal",
             Self::BillingOveragePolicy => "billing-overage-policy",
+            Self::RepositoryEnroll => "repository-enroll",
+            Self::ResourceLimits => "resource-limits",
+            Self::OrgAdmins => "org-admins",
+            Self::OrgRecovery => "org-recovery",
+            Self::PolicyTemplates => "policy-templates",
+            Self::OrgUpgrades => "org-upgrades",
             Self::DeviceChallenge => "device-challenge",
             Self::DeviceEnroll => "device-enroll",
             Self::DeviceKeys => "device-keys",
@@ -772,12 +784,23 @@ impl AccountOperation {
                 | Self::Manage
                 | Self::Portal
                 | Self::BillingOveragePolicy
+                | Self::RepositoryEnroll
+                | Self::OrgAdmins
+                | Self::OrgRecovery
+                | Self::PolicyTemplates
+                | Self::OrgUpgrades
                 | Self::DeviceEnroll
                 | Self::DeviceSession
                 | Self::DeviceRefresh
                 | Self::DeviceStepUp
                 | Self::DeviceRevoke
         )
+    }
+
+    /// Whether this onboarding or administrative operation requires a human
+    /// user bearer session and must reject `dpc_at_` device session tokens.
+    pub fn requires_human_bearer(self) -> bool {
+        !matches!(self, Self::DeviceRefresh | Self::DeviceRevoke)
     }
 }
 
