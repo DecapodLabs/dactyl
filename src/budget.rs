@@ -24,6 +24,9 @@ const DEFAULT_MAX_WIRE_BYTES: u64 = 4 * 1024 * 1024;
 const DEFAULT_MAX_BATCH_OPERATIONS: usize = 1_024;
 const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
+const DEFAULT_HTTP_MAX_IN_FLIGHT: usize = 16;
+const DEFAULT_HTTP_MAX_IDLE_PER_HOST: usize = 32;
+const DEFAULT_HTTP_IDLE_TIMEOUT: Duration = Duration::from_secs(15);
 
 #[cfg(any(feature = "neon", feature = "supabase", test))]
 const MAX_JSON_DEPTH: usize = 64;
@@ -78,6 +81,9 @@ pub struct ResourceBudget {
     max_batch_operations: usize,
     connect_timeout: Duration,
     request_timeout: Duration,
+    http_max_in_flight: usize,
+    http_max_idle_per_host: usize,
+    http_idle_timeout: Duration,
 }
 
 impl Default for ResourceBudget {
@@ -102,6 +108,9 @@ impl ResourceBudget {
             max_batch_operations: DEFAULT_MAX_BATCH_OPERATIONS,
             connect_timeout: DEFAULT_CONNECT_TIMEOUT,
             request_timeout: DEFAULT_REQUEST_TIMEOUT,
+            http_max_in_flight: DEFAULT_HTTP_MAX_IN_FLIGHT,
+            http_max_idle_per_host: DEFAULT_HTTP_MAX_IDLE_PER_HOST,
+            http_idle_timeout: DEFAULT_HTTP_IDLE_TIMEOUT,
         }
     }
 
@@ -208,6 +217,32 @@ impl ResourceBudget {
         self
     }
 
+    pub const fn http_max_in_flight(&self) -> usize {
+        self.http_max_in_flight
+    }
+
+    pub const fn http_max_idle_per_host(&self) -> usize {
+        self.http_max_idle_per_host
+    }
+
+    pub const fn http_idle_timeout(&self) -> Duration {
+        self.http_idle_timeout
+    }
+
+    /// Limit the shared HTTP transport pool for this budget. Zero idle
+    /// connections disables keep-alive pooling.
+    pub const fn with_http_pool_limits(
+        mut self,
+        max_in_flight: usize,
+        max_idle_per_host: usize,
+        idle_timeout: Duration,
+    ) -> Self {
+        self.http_max_in_flight = max_in_flight;
+        self.http_max_idle_per_host = max_idle_per_host;
+        self.http_idle_timeout = idle_timeout;
+        self
+    }
+
     /// Validate version and timeout invariants before opening a connection.
     pub fn validate(&self) -> Result<(), DactylError> {
         if self.version != RESOURCE_BUDGET_VERSION {
@@ -219,6 +254,14 @@ impl ResourceBudget {
         if self.connect_timeout.is_zero() || self.request_timeout.is_zero() {
             return Err(DactylError::Config(
                 "resource budget timeouts must be non-zero".into(),
+            ));
+        }
+        if !(1..=64).contains(&self.http_max_in_flight)
+            || self.http_max_idle_per_host > 64
+            || self.http_idle_timeout.is_zero()
+        {
+            return Err(DactylError::Config(
+                "resource budget HTTP pool requires 1-64 requests, 0-64 idle connections, and a non-zero idle timeout".into(),
             ));
         }
         Ok(())
@@ -729,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn budget_validation_rejects_zero_timeouts() {
+    fn budget_validation_rejects_zero_timeouts_and_invalid_pool_limits() {
         assert!(ResourceBudget::v1()
             .with_connect_timeout(Duration::ZERO)
             .validate()
@@ -738,6 +781,26 @@ mod tests {
             .with_request_timeout(Duration::ZERO)
             .validate()
             .is_err());
+        assert!(ResourceBudget::v1()
+            .with_http_pool_limits(0, 1, Duration::from_secs(1))
+            .validate()
+            .is_err());
+        assert!(ResourceBudget::v1()
+            .with_http_pool_limits(65, 1, Duration::from_secs(1))
+            .validate()
+            .is_err());
+        assert!(ResourceBudget::v1()
+            .with_http_pool_limits(1, 65, Duration::from_secs(1))
+            .validate()
+            .is_err());
+        assert!(ResourceBudget::v1()
+            .with_http_pool_limits(1, 0, Duration::ZERO)
+            .validate()
+            .is_err());
+        assert!(ResourceBudget::v1()
+            .with_http_pool_limits(1, 0, Duration::from_secs(1))
+            .validate()
+            .is_ok());
     }
 
     #[test]

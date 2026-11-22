@@ -1,5 +1,11 @@
 # Validation
 
+## Runtime-aware HTTP pooling, async fanout, and provenance fault matrix proof (issues #134, #140)
+
+- **`tests/http_pool_async.rs` (`#134`)**: Exercises `ResourceBudget::with_http_pool_limits` validation bounds (`1..=64` / `0..=64` / non-zero idle timeout), pooled Neon `read_async`/`visit_rows_async`/`write_result_async`/`atomic_async` concurrency ceilings, `current_thread` sync+async safety on both Neon and Supabase, slot-saturation local preflight timeouts (`NotAttempted`), and a 250-way concurrent multi-tenant async fanout across `Connection`, `CloudConnector`, and `LogicalConnector` with a concurrent heartbeat task proving zero Tokio runtime starvation and bounded keep-alive socket reuse (`<= 24` TCP connections vs 250 operations).
+- **`tests/effect_provenance.rs` (`#140`)**: Executes all required provenance and transport fault matrix scenarios: `before_send` local preflight refusals (`ReadOnly`, `device_proof_required`, oversized payload, malformed `OperationAttempt`), `accepted_not_committed` vs explicit server `rolled_back` / `not_attempted` / `refused` / `committed_observed`, `committed_before_ack` single-attempt no-auto-retry + separate `reconcile_operation*` / `reconcile_control_attempt*` (`ServerReadback` retaining immutable prior `Uncertain` status), sync+async `partial_response` ignoring header-only `committed_observed`, `timeout_with_late_effect` + reconciliation, 2 competing clients across 7 severed-socket retries with `commit_count == 1` plus same-ID/different-digest `IdempotencyConflict`, `use_dpop_nonce` + `dpop_aud_mismatch`, HTTP `307` redirect rejection (`origin_bound = false`), swapped `attempt_id`/`scope_ref`/`origin`/`auth_scheme`/`operation_kind` + header/JSON conflicts + unsupported version rejection, unadvertised `UnsupportedProvenance` + `grant_revoked` reconciliation + total `Debug`/`Display` redaction, and `local_sqlite` policy-free compatibility.
+- **Verification scope**: Host checks pass across `cargo fmt --all -- --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, all 8 feature combinations, and `cargo package --locked --allow-dirty`. Inside `localhost/dactyl-proof:latest` (`aarch64` Linux, Rust `1.85.0` MSRV), `--features supabase`, `--features neon`, `--features neon,supabase`, `--no-default-features`, `--all-features --tests`, `--all-features --lib -- --skip adapter::sqlite::recovery`, `msrv-clean-consumer`, `registry-control-0.17.0`, and `package` pass; only the 14 `adapter::sqlite::recovery::tests` fail on the Podman Fedora CoreOS `/tmp` overlay because SELinux MAC labels (`security.selinux`) trigger `recovery_metadata_unsupported`. `local_postgres`, `hosted_supabase`, and live Propodus services remain `unavailable`.
+
 ## Wave 2 protocol, gateway, runtime-selector, and event-conformance proof (issues #132, #133, #136, #137, #138, #139)
 
 - `tools/proof/Containerfile` pins `decapod =0.160.0`, matching the host/release-bound entrypoints, `.decapod/managed/Dockerfile.decapod`, and `.decapod/managed/specs/.manifest.json` evaluated by `.github/workflows/decapod-validate.yml`.
@@ -315,8 +321,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -13,7 +13,7 @@ mod budget;
 mod cloud;
 mod connector;
 mod contract;
-#[cfg(feature = "supabase")]
+#[cfg(any(feature = "neon", feature = "supabase"))]
 mod http_pool;
 mod inspection;
 mod rows;
@@ -25,8 +25,10 @@ pub mod error;
 pub use crate::budget::{FailureOrigin, MutationOutcome, ResourceBudget, RESOURCE_BUDGET_VERSION};
 pub use crate::connector::{
     AccountOperation, AuthScheme, AuthenticationSecrets, AuthenticationStart,
-    CloudResponseMetadata, LogicalConnector, LogicalTarget, RequestProof, RequestProofInput,
-    RequestProofSigner, ScmCredential, ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
+    CloudResponseMetadata, DecisionOutcome, EffectProvenance, EffectStatus, LogicalConnector,
+    LogicalTarget, ObservationSource, OperationAttempt, ReconciliationObservation, RequestProof,
+    RequestProofInput, RequestProofSigner, ScmCredential, ScmProvider, UserSession,
+    DEFAULT_CLOUD_ORIGIN, PROVENANCE_CONTRACT_VERSION,
 };
 pub use crate::contract::{
     AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,
@@ -449,6 +451,11 @@ impl Connection {
         self.adapter.read(sql, params)
     }
 
+    /// Asynchronously read application rows from the selected backend.
+    pub async fn read_async(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
+        self.adapter.read_async(sql, params).await
+    }
+
     /// Visit application rows incrementally without materializing an owned [`Rows`] vector.
     ///
     /// When `visitor` returns `Ok(false)`, scanning stops immediately with
@@ -471,6 +478,21 @@ impl Connection {
         self.adapter.visit_rows(sql, params, &mut visitor)
     }
 
+    /// Asynchronously visit application rows incrementally without materializing [`Rows`].
+    pub async fn visit_rows_async<F>(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        mut visitor: F,
+    ) -> Result<ScanOutcome, DactylError>
+    where
+        F: FnMut(&Row) -> Result<bool, DactylError> + Send,
+    {
+        self.adapter
+            .visit_rows_async(sql, params, &mut visitor)
+            .await
+    }
+
     /// Write application data and return the explicit physical result.
     pub fn write_result(
         &self,
@@ -480,13 +502,87 @@ impl Connection {
         self.adapter.write(sql, params)
     }
 
+    /// Asynchronously write application data and return the explicit physical result.
+    pub async fn write_result_async(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+    ) -> Result<WriteResult, DactylError> {
+        self.adapter.write_async(sql, params).await
+    }
+
     /// Write application data and return the affected count for compatibility.
     pub fn write(&self, sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
         Ok(self.write_result(sql, params)?.affected_rows)
     }
 
+    /// Asynchronously write application data and return the affected count.
+    pub async fn write_async(&self, sql: &str, params: &[Parameter]) -> Result<u64, DactylError> {
+        Ok(self.write_result_async(sql, params).await?.affected_rows)
+    }
+
+    /// Execute a single write carrying caller-supplied attempt/idempotency identity
+    /// and capturing bounded server effect provenance on both success and failure.
+    pub fn write_with_attempt(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<WriteResult, DactylError> {
+        self.adapter
+            .write_with_attempt(sql, params, attempt, metadata_out)
+    }
+
+    /// Asynchronously execute a single write carrying caller-supplied attempt
+    /// identity and capturing bounded server effect provenance.
+    pub async fn write_with_attempt_async(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<WriteResult, DactylError> {
+        self.adapter
+            .write_with_attempt_async(sql, params, attempt, metadata_out)
+            .await
+    }
+
     pub fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DactylError> {
         self.adapter.atomic(operations)
+    }
+
+    /// Asynchronously execute an atomic batch of operations.
+    pub async fn atomic_async(
+        &self,
+        operations: &[Operation],
+    ) -> Result<AtomicResult, DactylError> {
+        self.adapter.atomic_async(operations).await
+    }
+
+    /// Execute an atomic batch carrying caller-supplied attempt/idempotency identity
+    /// and capturing bounded server effect provenance on both success and failure.
+    pub fn atomic_with_attempt(
+        &self,
+        operations: &[Operation],
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<AtomicResult, DactylError> {
+        self.adapter
+            .atomic_with_attempt(operations, attempt, metadata_out)
+    }
+
+    /// Asynchronously execute an atomic batch carrying caller-supplied attempt
+    /// identity and capturing bounded server effect provenance.
+    pub async fn atomic_with_attempt_async(
+        &self,
+        operations: &[Operation],
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<AtomicResult, DactylError> {
+        self.adapter
+            .atomic_with_attempt_async(operations, attempt, metadata_out)
+            .await
     }
 
     pub fn access_mode(&self) -> AccessMode {
@@ -656,7 +752,7 @@ fn build_adapter(
                         _options,
                         _context,
                         _budget,
-                    ),
+                    )?,
                 ))
             }
             #[cfg(not(feature = "neon"))]

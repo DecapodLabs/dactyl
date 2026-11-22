@@ -1,5 +1,10 @@
 # Security
 
+## Transport concurrency bounds and origin/auth-bound effect provenance (issues #134, #140)
+
+- **FD exhaustion & runtime starvation guard (`#134`)**: `SharedHttpClient` bounds both per-budget and global (`64`) in-flight requests, bounds live pools (`64`) and per-pool async runtime caches (`16`), runs `reqwest::Client` directly inside Tokio async callers, and uses plain worker offload exclusively when sync methods are invoked from an active Tokio runtime.
+- **Strict origin/auth/scope binding & partial-response fail-closed (`#140`)**: `bind_response_provenance` rejects redirects (`300..400`), cross-origin endpoints (`origin_bound = false`), header/JSON envelope conflicts (`provenance_conflict`), unknown provenance contract versions (`unsupported_provenance_version`), swapped `attempt_id` / `operation_kind` / `scope_ref` / `auth_scheme` claims, and truncated/malformed `2xx` bodies (overriding forged header-only `committed_observed` receipts with `EffectProvenance::transport_fault` / `EffectStatus::Uncertain`). `OperationAttempt`, `EffectProvenance`, `ReconciliationObservation`, and `CloudResponseMetadata` redact credentials, proofs, origins, request/decision/scope IDs, and SHA-256 request digests from `Debug` and `Display`.
+
 ## Wave 2 gateway auth isolation, bounded nonce retry, and injection hardening (issues #132, #133, #136, #138, #139)
 
 - **Endpoint auth separation**: Under `.with_device_gateway()`, user-JWT management endpoints (`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`, `BillingOveragePolicy`, `DeviceChallenge`, `DeviceKeys`, `DeviceSessions`, `DeviceStepUp`) strip `proof_signer` so they never transmit `Authorization: DPoP`; `DeviceEnroll` and `DeviceSession` require both `Authorization: Bearer <user-jwt>` and `DPoP: <proof>` (`managed_bearer_proof = true`); `DeviceRefresh`, `cloud-control`, `cloud-query`, and `cloud-batch` fail closed preflight (`device_proof_required`, `MutationOutcome::NotAttempted`) when no `DPoP` proof is supplied.
@@ -177,8 +182,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

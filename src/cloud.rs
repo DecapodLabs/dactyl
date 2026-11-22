@@ -9,13 +9,17 @@ use serde::Deserialize;
 
 use crate::budget::mark_remote_uncertain;
 use crate::connector::{
-    validate_dpop_nonce, validate_opaque_credential, AccountOperation, AuthenticationSecrets,
-    AuthenticationStart, CloudResponseMetadata, RequestProofSigner, ScmCredential, UserSession,
-    DEFAULT_CLOUD_ORIGIN,
+    validate_dpop_nonce, validate_opaque_credential, AccountOperation, AuthScheme,
+    AuthenticationSecrets, AuthenticationStart, CloudResponseMetadata, EffectProvenance,
+    EffectStatus, ObservationSource, OperationAttempt, ReconciliationObservation,
+    RequestProofSigner, ScmCredential, UserSession, DEFAULT_CLOUD_ORIGIN,
 };
 use crate::http_pool::{
-    acquire_client, acquire_permit, build_auth_headers, canonical_url, extract_response_metadata,
-    has_dpop_nonce_challenge, with_dpop_nonce_retry, AuthHeaders, HttpOutcome, SharedHttpClient,
+    acquire_client, allowlisted_cloud_code, bind_response_provenance, build_attempt_headers,
+    build_auth_headers, canonical_url, effective_auth_scheme, extract_response_metadata,
+    has_dpop_nonce_challenge, in_tokio_runtime, read_bounded_body_async, with_dpop_nonce_retry,
+    with_dpop_nonce_retry_async, AsyncBodyError, AuthHeaders, HttpOutcome, ProvenanceCheckContext,
+    SharedHttpClient,
 };
 use crate::{
     AdapterErrorKind, DactylError, DatastoreRoute, OperationKind, ResourceBudget, SupabaseRpcConfig,
@@ -25,8 +29,6 @@ const CANONICAL_ONBOARDING: &str = "/functions/v1/decapod-onboarding";
 const LEGACY_ONBOARDING: &str = "/functions/v1/propodus-onboarding";
 const BODY_LIMIT: u64 = 16 * 1024;
 const MAX_JSON_DEPTH: usize = 64;
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum OnboardingPrefix {
@@ -84,6 +86,7 @@ pub struct CloudConnector {
     onboarding_prefix: OnboardingPrefix,
     proof_signer: Option<Arc<dyn RequestProofSigner>>,
     dpop_nonce: Option<String>,
+    http_budget: ResourceBudget,
     http_client: Arc<SharedHttpClient>,
 }
 
@@ -122,6 +125,13 @@ impl CloudConnector {
         Self::discover_with_metadata(origin).map(|(connector, _)| connector)
     }
 
+    /// Asynchronously discover the version-1 Decapod Cloud deployment profile.
+    pub async fn discover_async(origin: &str) -> Result<Self, DactylError> {
+        Self::discover_with_metadata_async(origin)
+            .await
+            .map(|(connector, _)| connector)
+    }
+
     /// Discover the version-1 Decapod Cloud deployment profile, returning bounded
     /// diagnostic/sunset response headers (`Decapod-Cloud-*`, `Sunset`, etc.).
     ///
@@ -131,11 +141,13 @@ impl CloudConnector {
         origin: &str,
     ) -> Result<(Self, CloudResponseMetadata), DactylError> {
         validate_origin(origin)?;
-        let http_client = acquire_client(CONNECT_TIMEOUT)?;
+        let http_budget = ResourceBudget::v1();
+        let http_client = acquire_client(http_budget)?;
         let mut metadata = CloudResponseMetadata::default();
         let mut onboarding_prefix = OnboardingPrefix::Canonical;
         let profile: DeploymentProfile = match request(
             &http_client,
+            http_budget,
             origin,
             None,
             "GET",
@@ -145,6 +157,9 @@ impl CloudConnector {
             None,
             RequestAuthPolicy::none(),
             None,
+            None,
+            Some(OperationKind::Read),
+            ObservationSource::DirectResponse,
             false,
             &mut metadata,
         ) {
@@ -154,6 +169,7 @@ impl CloudConnector {
                 metadata = CloudResponseMetadata::default();
                 request(
                     &http_client,
+                    http_budget,
                     origin,
                     None,
                     "GET",
@@ -163,6 +179,9 @@ impl CloudConnector {
                     None,
                     RequestAuthPolicy::none(),
                     None,
+                    None,
+                    Some(OperationKind::Read),
+                    ObservationSource::DirectResponse,
                     false,
                     &mut metadata,
                 )?
@@ -185,6 +204,85 @@ impl CloudConnector {
                 onboarding_prefix,
                 proof_signer: None,
                 dpop_nonce: None,
+                http_budget,
+                http_client,
+            },
+            metadata,
+        ))
+    }
+
+    /// Asynchronously discover the version-1 Decapod Cloud deployment profile.
+    pub async fn discover_with_metadata_async(
+        origin: &str,
+    ) -> Result<(Self, CloudResponseMetadata), DactylError> {
+        validate_origin(origin)?;
+        let http_budget = ResourceBudget::v1();
+        let http_client = acquire_client(http_budget)?;
+        let mut metadata = CloudResponseMetadata::default();
+        let mut onboarding_prefix = OnboardingPrefix::Canonical;
+        let profile: DeploymentProfile = match request_async(
+            &http_client,
+            http_budget,
+            origin,
+            None,
+            "GET",
+            &format!("{CANONICAL_ONBOARDING}/config"),
+            None,
+            None,
+            None,
+            RequestAuthPolicy::none(),
+            None,
+            None,
+            Some(OperationKind::Read),
+            ObservationSource::DirectResponse,
+            false,
+            &mut metadata,
+        )
+        .await
+        {
+            Ok(profile) => profile,
+            Err(error) if is_missing_onboarding_function(&error) => {
+                onboarding_prefix = OnboardingPrefix::Legacy;
+                metadata = CloudResponseMetadata::default();
+                request_async(
+                    &http_client,
+                    http_budget,
+                    origin,
+                    None,
+                    "GET",
+                    &format!("{LEGACY_ONBOARDING}/config"),
+                    None,
+                    None,
+                    None,
+                    RequestAuthPolicy::none(),
+                    None,
+                    None,
+                    Some(OperationKind::Read),
+                    ObservationSource::DirectResponse,
+                    false,
+                    &mut metadata,
+                )
+                .await?
+            }
+            Err(error) => return Err(error),
+        };
+        if profile.version != 1
+            || profile.project_origin.trim_end_matches('/') != origin.trim_end_matches('/')
+        {
+            return Err(protocol(
+                "cloud deployment profile version or origin mismatch",
+            ));
+        }
+        let config = SupabaseRpcConfig::v1(profile.project_origin, profile.publishable_key)
+            .with_schema(profile.schema);
+        crate::adapter::supabase::validate_rpc(&config)?;
+        Ok((
+            Self {
+                config,
+                onboarding_prefix,
+                proof_signer: None,
+                dpop_nonce: None,
+                http_budget,
                 http_client,
             },
             metadata,
@@ -194,14 +292,30 @@ impl CloudConnector {
     /// Explicit seam for a trusted deployment profile or a disposable fixture.
     pub fn with_config(config: SupabaseRpcConfig) -> Result<Self, DactylError> {
         crate::adapter::supabase::validate_rpc(&config)?;
-        let http_client = acquire_client(CONNECT_TIMEOUT)?;
+        let http_budget = ResourceBudget::v1();
+        let http_client = acquire_client(http_budget)?;
         Ok(Self {
             config,
             onboarding_prefix: OnboardingPrefix::Canonical,
             proof_signer: None,
             dpop_nonce: None,
+            http_budget,
             http_client,
         })
+    }
+
+    /// Select the connection timeout, concurrency, keep-alive, and request
+    /// timeout settings for this connector's authentication and account requests.
+    /// Control and datastore requests use their explicit per-call resource budgets.
+    pub fn with_http_budget(mut self, budget: ResourceBudget) -> Result<Self, DactylError> {
+        budget.validate()?;
+        self.http_client = acquire_client(budget)?;
+        self.http_budget = budget;
+        Ok(self)
+    }
+
+    pub fn http_budget(&self) -> ResourceBudget {
+        self.http_budget
     }
 
     /// Attach a synchronous caller-supplied [`RequestProofSigner`] for Decapod
@@ -236,6 +350,15 @@ impl CloudConnector {
                 Self::with_config(SupabaseRpcConfig::v1(origin, key))
             }
             _ => Self::discover(origin),
+        }
+    }
+
+    pub async fn from_runtime_async(origin: &str) -> Result<Self, DactylError> {
+        match std::env::var("DACTYL_CLOUD_PUBLISHABLE_KEY") {
+            Ok(key) if !key.trim().is_empty() => {
+                Self::with_config(SupabaseRpcConfig::v1(origin, key))
+            }
+            _ => Self::discover_async(origin).await,
         }
     }
 
@@ -292,9 +415,139 @@ impl CloudConnector {
         budget: ResourceBudget,
         metadata_out: &mut CloudResponseMetadata,
     ) -> Result<serde_json::Value, DactylError> {
+        self.control_request_internal(
+            function,
+            request,
+            bearer,
+            dpop_nonce,
+            kind,
+            budget,
+            None,
+            ObservationSource::DirectResponse,
+            metadata_out,
+        )
+    }
+
+    /// Asynchronously invoke a trusted native JSON control function on this connector.
+    pub async fn control_request_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+    ) -> Result<serde_json::Value, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        self.control_request_with_metadata_async(
+            function,
+            request,
+            bearer,
+            None,
+            kind,
+            budget,
+            &mut metadata,
+        )
+        .await
+    }
+
+    /// Asynchronously invoke an opaque native control function while capturing
+    /// bounded response/challenge metadata and validated provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn control_request_with_metadata_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        self.control_request_internal_async(
+            function,
+            request,
+            bearer,
+            dpop_nonce,
+            kind,
+            budget,
+            None,
+            ObservationSource::DirectResponse,
+            metadata_out,
+        )
+        .await
+    }
+
+    /// Invoke an opaque native control function carrying caller-supplied
+    /// attempt/idempotency identity and capturing bounded effect provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub fn control_request_with_attempt(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        self.control_request_internal(
+            function,
+            request,
+            bearer,
+            dpop_nonce,
+            kind,
+            budget,
+            Some(attempt),
+            ObservationSource::DirectResponse,
+            metadata_out,
+        )
+    }
+
+    /// Asynchronously invoke an opaque native control function carrying
+    /// caller-supplied attempt/idempotency identity and capturing bounded provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn control_request_with_attempt_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        self.control_request_internal_async(
+            function,
+            request,
+            bearer,
+            dpop_nonce,
+            kind,
+            budget,
+            Some(attempt),
+            ObservationSource::DirectResponse,
+            metadata_out,
+        )
+        .await
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn control_request_internal(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        attempt: Option<&OperationAttempt>,
+        observation_source: ObservationSource,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
         let primary_prefix = self.onboarding_prefix.as_str();
         let nonce = dpop_nonce.or(self.dpop_nonce.as_deref());
-        match crate::adapter::supabase::control_request_with_auth(
+        match crate::adapter::supabase::control_request_with_auth_and_attempt(
             &self.config,
             primary_prefix,
             function,
@@ -305,6 +558,8 @@ impl CloudConnector {
             budget,
             self.proof_signer.clone(),
             Some(self.http_client.clone()),
+            attempt,
+            observation_source,
             metadata_out,
         ) {
             Ok(value) => Ok(value),
@@ -314,7 +569,7 @@ impl CloudConnector {
                     && is_missing_onboarding_function(&error) =>
             {
                 *metadata_out = CloudResponseMetadata::default();
-                crate::adapter::supabase::control_request_with_auth(
+                crate::adapter::supabase::control_request_with_auth_and_attempt(
                     &self.config,
                     LEGACY_ONBOARDING,
                     function,
@@ -325,8 +580,70 @@ impl CloudConnector {
                     budget,
                     self.proof_signer.clone(),
                     Some(self.http_client.clone()),
+                    attempt,
+                    observation_source,
                     metadata_out,
                 )
+            }
+            Err(error) => Err(error),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn control_request_internal_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        attempt: Option<&OperationAttempt>,
+        observation_source: ObservationSource,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        let primary_prefix = self.onboarding_prefix.as_str();
+        let nonce = dpop_nonce.or(self.dpop_nonce.as_deref());
+        match crate::adapter::supabase::control_request_with_auth_and_attempt_async(
+            &self.config,
+            primary_prefix,
+            function,
+            request,
+            bearer,
+            nonce,
+            kind,
+            budget,
+            self.proof_signer.clone(),
+            Some(self.http_client.clone()),
+            attempt,
+            observation_source,
+            metadata_out,
+        )
+        .await
+        {
+            Ok(value) => Ok(value),
+            Err(error)
+                if self.config.uses_device_gateway()
+                    && self.onboarding_prefix == OnboardingPrefix::Canonical
+                    && is_missing_onboarding_function(&error) =>
+            {
+                *metadata_out = CloudResponseMetadata::default();
+                crate::adapter::supabase::control_request_with_auth_and_attempt_async(
+                    &self.config,
+                    LEGACY_ONBOARDING,
+                    function,
+                    request,
+                    bearer,
+                    nonce,
+                    kind,
+                    budget,
+                    self.proof_signer.clone(),
+                    Some(self.http_client.clone()),
+                    attempt,
+                    observation_source,
+                    metadata_out,
+                )
+                .await
             }
             Err(error) => Err(error),
         }
@@ -398,6 +715,11 @@ impl CloudConnector {
         dpop_nonce: Option<&str>,
         metadata_out: &mut CloudResponseMetadata,
     ) -> Result<serde_json::Value, DactylError> {
+        let kind = if operation.is_mutating() {
+            OperationKind::Write
+        } else {
+            OperationKind::Read
+        };
         self.onboarding_request(
             operation.action(),
             Some(body.clone()),
@@ -405,9 +727,294 @@ impl CloudConnector {
             scm,
             self.account_auth_policy(operation),
             dpop_nonce,
+            None,
+            Some(kind),
+            ObservationSource::DirectResponse,
             operation.is_mutating(),
             metadata_out,
         )
+    }
+
+    /// Asynchronously transport a hosted account, device-enrollment, or billing request.
+    pub async fn account_request_async(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+    ) -> Result<serde_json::Value, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        self.account_request_with_metadata_async(operation, body, bearer, scm, None, &mut metadata)
+            .await
+    }
+
+    /// Asynchronously transport a hosted account, device-enrollment, or billing
+    /// request while capturing bounded response/challenge metadata and provenance.
+    pub async fn account_request_with_metadata_async(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        let kind = if operation.is_mutating() {
+            OperationKind::Write
+        } else {
+            OperationKind::Read
+        };
+        self.onboarding_request_async(
+            operation.action(),
+            Some(body.clone()),
+            Some(bearer),
+            scm,
+            self.account_auth_policy(operation),
+            dpop_nonce,
+            None,
+            Some(kind),
+            ObservationSource::DirectResponse,
+            operation.is_mutating(),
+            metadata_out,
+        )
+        .await
+    }
+
+    /// Transport a hosted account, device-enrollment, or billing request carrying
+    /// caller-supplied attempt/idempotency identity and capturing bounded provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub fn account_request_with_attempt(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        let kind = if operation.is_mutating() {
+            OperationKind::Write
+        } else {
+            OperationKind::Read
+        };
+        self.onboarding_request(
+            operation.action(),
+            Some(body.clone()),
+            Some(bearer),
+            scm,
+            self.account_auth_policy(operation),
+            dpop_nonce,
+            Some(attempt),
+            Some(kind),
+            ObservationSource::DirectResponse,
+            operation.is_mutating(),
+            metadata_out,
+        )
+    }
+
+    /// Asynchronously transport a hosted account, device-enrollment, or billing
+    /// request carrying caller-supplied attempt/idempotency identity.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn account_request_with_attempt_async(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        let kind = if operation.is_mutating() {
+            OperationKind::Write
+        } else {
+            OperationKind::Read
+        };
+        self.onboarding_request_async(
+            operation.action(),
+            Some(body.clone()),
+            Some(bearer),
+            scm,
+            self.account_auth_policy(operation),
+            dpop_nonce,
+            Some(attempt),
+            Some(kind),
+            ObservationSource::DirectResponse,
+            operation.is_mutating(),
+            metadata_out,
+        )
+        .await
+    }
+
+    /// Execute a separate, non-mutating server readback to reconcile an earlier
+    /// onboarding/gateway operation attempt without repeating the write.
+    pub fn reconcile_operation(
+        &self,
+        attempt: &OperationAttempt,
+        bearer: &str,
+        dpop_nonce: Option<&str>,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        let body = reconcile_body(attempt);
+        let payload: serde_json::Value = self.onboarding_request(
+            "operation-status",
+            Some(body),
+            Some(bearer),
+            None,
+            RequestAuthPolicy::optional(self.proof_signer.as_ref()),
+            dpop_nonce,
+            Some(attempt),
+            Some(OperationKind::Read),
+            ObservationSource::ServerReadback,
+            false,
+            metadata_out,
+        )?;
+        let provenance = metadata_out
+            .provenance()
+            .cloned()
+            .ok_or_else(|| protocol("server reconciliation response omitted provenance state"))?;
+        Ok(ReconciliationObservation::new(
+            attempt.attempt_id().to_owned(),
+            provenance
+                .request_digest()
+                .map(str::to_owned)
+                .or_else(|| attempt.request_digest().map(str::to_owned)),
+            provenance,
+            prior_client_status,
+            payload,
+            metadata_out.clone(),
+        ))
+    }
+
+    /// Asynchronously execute a separate, non-mutating server readback to reconcile
+    /// an earlier onboarding/gateway operation attempt without repeating the write.
+    pub async fn reconcile_operation_async(
+        &self,
+        attempt: &OperationAttempt,
+        bearer: &str,
+        dpop_nonce: Option<&str>,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        let body = reconcile_body(attempt);
+        let payload: serde_json::Value = self
+            .onboarding_request_async(
+                "operation-status",
+                Some(body),
+                Some(bearer),
+                None,
+                RequestAuthPolicy::optional(self.proof_signer.as_ref()),
+                dpop_nonce,
+                Some(attempt),
+                Some(OperationKind::Read),
+                ObservationSource::ServerReadback,
+                false,
+                metadata_out,
+            )
+            .await?;
+        let provenance = metadata_out
+            .provenance()
+            .cloned()
+            .ok_or_else(|| protocol("server reconciliation response omitted provenance state"))?;
+        Ok(ReconciliationObservation::new(
+            attempt.attempt_id().to_owned(),
+            provenance
+                .request_digest()
+                .map(str::to_owned)
+                .or_else(|| attempt.request_digest().map(str::to_owned)),
+            provenance,
+            prior_client_status,
+            payload,
+            metadata_out.clone(),
+        ))
+    }
+
+    /// Execute a separate, non-mutating control RPC readback to reconcile an earlier
+    /// control operation attempt without repeating the write.
+    #[allow(clippy::too_many_arguments)]
+    pub fn reconcile_control_attempt(
+        &self,
+        function: &str,
+        attempt: &OperationAttempt,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        budget: ResourceBudget,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        let body = reconcile_body(attempt);
+        let payload = self.control_request_internal(
+            function,
+            &body,
+            bearer,
+            dpop_nonce,
+            OperationKind::Read,
+            budget,
+            Some(attempt),
+            ObservationSource::ServerReadback,
+            metadata_out,
+        )?;
+        let provenance = metadata_out
+            .provenance()
+            .cloned()
+            .ok_or_else(|| protocol("server reconciliation response omitted provenance state"))?;
+        Ok(ReconciliationObservation::new(
+            attempt.attempt_id().to_owned(),
+            provenance
+                .request_digest()
+                .map(str::to_owned)
+                .or_else(|| attempt.request_digest().map(str::to_owned)),
+            provenance,
+            prior_client_status,
+            payload,
+            metadata_out.clone(),
+        ))
+    }
+
+    /// Asynchronously execute a separate, non-mutating control RPC readback to reconcile
+    /// an earlier control operation attempt without repeating the write.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn reconcile_control_attempt_async(
+        &self,
+        function: &str,
+        attempt: &OperationAttempt,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        budget: ResourceBudget,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        let body = reconcile_body(attempt);
+        let payload = self
+            .control_request_internal_async(
+                function,
+                &body,
+                bearer,
+                dpop_nonce,
+                OperationKind::Read,
+                budget,
+                Some(attempt),
+                ObservationSource::ServerReadback,
+                metadata_out,
+            )
+            .await?;
+        let provenance = metadata_out
+            .provenance()
+            .cloned()
+            .ok_or_else(|| protocol("server reconciliation response omitted provenance state"))?;
+        Ok(ReconciliationObservation::new(
+            attempt.attempt_id().to_owned(),
+            provenance
+                .request_digest()
+                .map(str::to_owned)
+                .or_else(|| attempt.request_digest().map(str::to_owned)),
+            provenance,
+            prior_client_status,
+            payload,
+            metadata_out.clone(),
+        ))
     }
 
     pub fn start_authentication(
@@ -427,6 +1034,29 @@ impl CloudConnector {
             None,
             false,
         )?;
+        self.validate_start(&response)?;
+        Ok(response)
+    }
+
+    pub async fn start_authentication_async(
+        &self,
+        repository: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<AuthenticationStart, DactylError> {
+        secrets.validate()?;
+        let response: AuthenticationStart = self
+            .auth_request_async(
+                "start",
+                &serde_json::json!({
+                    "version": 1,
+                    "repository": repository,
+                    "pkce_challenge": AuthenticationSecrets::challenge(&secrets.verifier),
+                    "poll_challenge": AuthenticationSecrets::challenge(&secrets.poll_secret)
+                }),
+                None,
+                false,
+            )
+            .await?;
         self.validate_start(&response)?;
         Ok(response)
     }
@@ -473,10 +1103,18 @@ impl CloudConnector {
     ) -> Result<String, DactylError> {
         let response: serde_json::Value =
             self.auth_request("status", &flow_body(flow_id, secrets)?, None, false)?;
-        match response.get("status").and_then(|v| v.as_str()) {
-            Some(status @ ("pending" | "ready" | "consumed" | "complete")) => Ok(status.into()),
-            _ => Err(protocol("invalid authentication status")),
-        }
+        parse_auth_status(&response)
+    }
+
+    pub async fn authentication_status_async(
+        &self,
+        flow_id: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<String, DactylError> {
+        let response: serde_json::Value = self
+            .auth_request_async("status", &flow_body(flow_id, secrets)?, None, false)
+            .await?;
+        parse_auth_status(&response)
     }
 
     /// One-time operation. The caller must persist an in-flight marker before
@@ -489,18 +1127,18 @@ impl CloudConnector {
     ) -> Result<String, DactylError> {
         let response: serde_json::Value =
             self.auth_request("exchange", &flow_body(flow_id, secrets)?, None, true)?;
-        let code = response
-            .get("auth_code")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| {
-                DactylError::adapter_with_code(
-                    AdapterErrorKind::Protocol,
-                    "outcome_unknown",
-                    "authentication exchange returned no code",
-                )
-            })?;
-        opaque(code)?;
-        Ok(code.into())
+        parse_auth_exchange(&response)
+    }
+
+    pub async fn exchange_authentication_code_async(
+        &self,
+        flow_id: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<String, DactylError> {
+        let response: serde_json::Value = self
+            .auth_request_async("exchange", &flow_body(flow_id, secrets)?, None, true)
+            .await?;
+        parse_auth_exchange(&response)
     }
 
     pub fn exchange_session(
@@ -516,12 +1154,38 @@ impl CloudConnector {
         )
     }
 
+    pub async fn exchange_session_async(
+        &self,
+        code: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<UserSession, DactylError> {
+        secrets.validate()?;
+        opaque(code)?;
+        self.token_request_async(
+            "pkce",
+            serde_json::json!({"auth_code": code, "code_verifier": secrets.verifier}),
+        )
+        .await
+    }
+
     pub fn refresh_session(&self, refresh_token: &str) -> Result<UserSession, DactylError> {
         opaque(refresh_token)?;
         self.token_request(
             "refresh_token",
             serde_json::json!({"refresh_token": refresh_token}),
         )
+    }
+
+    pub async fn refresh_session_async(
+        &self,
+        refresh_token: &str,
+    ) -> Result<UserSession, DactylError> {
+        opaque(refresh_token)?;
+        self.token_request_async(
+            "refresh_token",
+            serde_json::json!({"refresh_token": refresh_token}),
+        )
+        .await
     }
 
     pub fn complete_authentication(
@@ -536,20 +1200,31 @@ impl CloudConnector {
             Some(bearer),
             true,
         )?;
-        if result.get("status").and_then(|v| v.as_str()) != Some("complete") {
-            return Err(DactylError::adapter_with_code(
-                AdapterErrorKind::Protocol,
-                "outcome_unknown",
-                "authentication completion was not confirmed",
-            ));
-        }
-        Ok(())
+        parse_auth_complete(&result)
+    }
+
+    pub async fn complete_authentication_async(
+        &self,
+        flow_id: &str,
+        secrets: &AuthenticationSecrets,
+        bearer: &str,
+    ) -> Result<(), DactylError> {
+        let result: serde_json::Value = self
+            .auth_request_async(
+                "complete",
+                &flow_body(flow_id, secrets)?,
+                Some(bearer),
+                true,
+            )
+            .await?;
+        parse_auth_complete(&result)
     }
 
     pub fn revoke_session(&self, bearer: &str) -> Result<(), DactylError> {
         let mut metadata = CloudResponseMetadata::default();
         let _: serde_json::Value = request(
             &self.http_client,
+            self.http_budget,
             self.origin(),
             Some(self.config.publishable_key()),
             "POST",
@@ -559,9 +1234,36 @@ impl CloudConnector {
             None,
             RequestAuthPolicy::optional(self.proof_signer.as_ref()),
             self.dpop_nonce.as_deref(),
+            None,
+            Some(OperationKind::Write),
+            ObservationSource::DirectResponse,
             true,
             &mut metadata,
         )?;
+        Ok(())
+    }
+
+    pub async fn revoke_session_async(&self, bearer: &str) -> Result<(), DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        let _: serde_json::Value = request_async(
+            &self.http_client,
+            self.http_budget,
+            self.origin(),
+            Some(self.config.publishable_key()),
+            "POST",
+            "/auth/v1/logout?scope=local",
+            None,
+            Some(bearer),
+            None,
+            RequestAuthPolicy::optional(self.proof_signer.as_ref()),
+            self.dpop_nonce.as_deref(),
+            None,
+            Some(OperationKind::Write),
+            ObservationSource::DirectResponse,
+            true,
+            &mut metadata,
+        )
+        .await?;
         Ok(())
     }
 
@@ -570,17 +1272,10 @@ impl CloudConnector {
         grant: &str,
         body: serde_json::Value,
     ) -> Result<UserSession, DactylError> {
-        #[derive(Deserialize)]
-        struct Response {
-            access_token: String,
-            refresh_token: String,
-            expires_in: u64,
-            #[serde(default)]
-            provider_token: Option<String>,
-        }
         let mut metadata = CloudResponseMetadata::default();
-        let response: Response = request(
+        let response: TokenResponse = request(
             &self.http_client,
+            self.http_budget,
             self.origin(),
             Some(self.config.publishable_key()),
             "POST",
@@ -590,27 +1285,41 @@ impl CloudConnector {
             None,
             RequestAuthPolicy::none(),
             None,
+            None,
+            Some(OperationKind::Write),
+            ObservationSource::DirectResponse,
             true,
             &mut metadata,
         )?;
-        opaque(&response.access_token)?;
-        opaque(&response.refresh_token)?;
-        if let Some(token) = response.provider_token.as_deref() {
-            opaque(token)?;
-        }
-        if response.expires_in == 0 || response.expires_in > 86400 {
-            return Err(protocol("invalid managed session lifetime"));
-        }
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|_| protocol("invalid system time"))?
-            .as_secs();
-        Ok(UserSession {
-            access_token: response.access_token,
-            refresh_token: response.refresh_token,
-            expires_at_unix: now + response.expires_in,
-            provider_token: response.provider_token,
-        })
+        finalize_token_response(response)
+    }
+
+    async fn token_request_async(
+        &self,
+        grant: &str,
+        body: serde_json::Value,
+    ) -> Result<UserSession, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        let response: TokenResponse = request_async(
+            &self.http_client,
+            self.http_budget,
+            self.origin(),
+            Some(self.config.publishable_key()),
+            "POST",
+            &format!("/auth/v1/token?grant_type={grant}"),
+            Some(body),
+            None,
+            None,
+            RequestAuthPolicy::none(),
+            None,
+            None,
+            Some(OperationKind::Write),
+            ObservationSource::DirectResponse,
+            true,
+            &mut metadata,
+        )
+        .await?;
+        finalize_token_response(response)
     }
 
     fn auth_request<T: for<'de> Deserialize<'de> + Send + 'static>(
@@ -621,6 +1330,11 @@ impl CloudConnector {
         is_mutating: bool,
     ) -> Result<T, DactylError> {
         let mut metadata = CloudResponseMetadata::default();
+        let kind = if is_mutating {
+            OperationKind::Write
+        } else {
+            OperationKind::Read
+        };
         self.onboarding_request(
             action,
             Some(body.clone()),
@@ -628,9 +1342,41 @@ impl CloudConnector {
             None,
             RequestAuthPolicy::none(),
             None,
+            None,
+            Some(kind),
+            ObservationSource::DirectResponse,
             is_mutating,
             &mut metadata,
         )
+    }
+
+    async fn auth_request_async<T: for<'de> Deserialize<'de> + Send + 'static>(
+        &self,
+        action: &str,
+        body: &serde_json::Value,
+        bearer: Option<&str>,
+        is_mutating: bool,
+    ) -> Result<T, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        let kind = if is_mutating {
+            OperationKind::Write
+        } else {
+            OperationKind::Read
+        };
+        self.onboarding_request_async(
+            action,
+            Some(body.clone()),
+            bearer,
+            None,
+            RequestAuthPolicy::none(),
+            None,
+            None,
+            Some(kind),
+            ObservationSource::DirectResponse,
+            is_mutating,
+            &mut metadata,
+        )
+        .await
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -642,6 +1388,9 @@ impl CloudConnector {
         scm: Option<&ScmCredential>,
         auth_policy: RequestAuthPolicy<'_>,
         dpop_nonce: Option<&str>,
+        attempt: Option<&OperationAttempt>,
+        operation_kind: Option<OperationKind>,
+        observation_source: ObservationSource,
         is_mutating: bool,
         metadata_out: &mut CloudResponseMetadata,
     ) -> Result<T, DactylError> {
@@ -649,6 +1398,7 @@ impl CloudConnector {
         let nonce = dpop_nonce.or(self.dpop_nonce.as_deref());
         match request(
             &self.http_client,
+            self.http_budget,
             self.origin(),
             Some(self.config.publishable_key()),
             "POST",
@@ -658,6 +1408,9 @@ impl CloudConnector {
             scm,
             auth_policy,
             nonce,
+            attempt,
+            operation_kind,
+            observation_source,
             is_mutating,
             metadata_out,
         ) {
@@ -669,6 +1422,7 @@ impl CloudConnector {
                 *metadata_out = CloudResponseMetadata::default();
                 request(
                     &self.http_client,
+                    self.http_budget,
                     self.origin(),
                     Some(self.config.publishable_key()),
                     "POST",
@@ -678,6 +1432,9 @@ impl CloudConnector {
                     scm,
                     auth_policy,
                     nonce,
+                    attempt,
+                    operation_kind,
+                    observation_source,
                     is_mutating,
                     metadata_out,
                 )
@@ -685,6 +1442,150 @@ impl CloudConnector {
             Err(error) => Err(error),
         }
     }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn onboarding_request_async<T: for<'de> Deserialize<'de> + Send + 'static>(
+        &self,
+        action: &str,
+        body: Option<serde_json::Value>,
+        bearer: Option<&str>,
+        scm: Option<&ScmCredential>,
+        auth_policy: RequestAuthPolicy<'_>,
+        dpop_nonce: Option<&str>,
+        attempt: Option<&OperationAttempt>,
+        operation_kind: Option<OperationKind>,
+        observation_source: ObservationSource,
+        is_mutating: bool,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<T, DactylError> {
+        let primary_prefix = self.onboarding_prefix.as_str();
+        let nonce = dpop_nonce.or(self.dpop_nonce.as_deref());
+        match request_async(
+            &self.http_client,
+            self.http_budget,
+            self.origin(),
+            Some(self.config.publishable_key()),
+            "POST",
+            &format!("{primary_prefix}/{action}"),
+            body.clone(),
+            bearer,
+            scm,
+            auth_policy,
+            nonce,
+            attempt,
+            operation_kind,
+            observation_source,
+            is_mutating,
+            metadata_out,
+        )
+        .await
+        {
+            Ok(value) => Ok(value),
+            Err(error)
+                if self.onboarding_prefix == OnboardingPrefix::Canonical
+                    && is_missing_onboarding_function(&error) =>
+            {
+                *metadata_out = CloudResponseMetadata::default();
+                request_async(
+                    &self.http_client,
+                    self.http_budget,
+                    self.origin(),
+                    Some(self.config.publishable_key()),
+                    "POST",
+                    &format!("{LEGACY_ONBOARDING}/{action}"),
+                    body,
+                    bearer,
+                    scm,
+                    auth_policy,
+                    nonce,
+                    attempt,
+                    operation_kind,
+                    observation_source,
+                    is_mutating,
+                    metadata_out,
+                )
+                .await
+            }
+            Err(error) => Err(error),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct TokenResponse {
+    access_token: String,
+    refresh_token: String,
+    expires_in: u64,
+    #[serde(default)]
+    provider_token: Option<String>,
+}
+
+fn finalize_token_response(response: TokenResponse) -> Result<UserSession, DactylError> {
+    opaque(&response.access_token)?;
+    opaque(&response.refresh_token)?;
+    if let Some(token) = response.provider_token.as_deref() {
+        opaque(token)?;
+    }
+    if response.expires_in == 0 || response.expires_in > 86400 {
+        return Err(protocol("invalid managed session lifetime"));
+    }
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|_| protocol("invalid system time"))?
+        .as_secs();
+    Ok(UserSession {
+        access_token: response.access_token,
+        refresh_token: response.refresh_token,
+        expires_at_unix: now + response.expires_in,
+        provider_token: response.provider_token,
+    })
+}
+
+fn parse_auth_status(response: &serde_json::Value) -> Result<String, DactylError> {
+    match response.get("status").and_then(|v| v.as_str()) {
+        Some(status @ ("pending" | "ready" | "consumed" | "complete")) => Ok(status.into()),
+        _ => Err(protocol("invalid authentication status")),
+    }
+}
+
+fn parse_auth_exchange(response: &serde_json::Value) -> Result<String, DactylError> {
+    let code = response
+        .get("auth_code")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| {
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Protocol,
+                "outcome_unknown",
+                "authentication exchange returned no code",
+            )
+        })?;
+    opaque(code)?;
+    Ok(code.into())
+}
+
+fn parse_auth_complete(result: &serde_json::Value) -> Result<(), DactylError> {
+    if result.get("status").and_then(|v| v.as_str()) != Some("complete") {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Protocol,
+            "outcome_unknown",
+            "authentication completion was not confirmed",
+        ));
+    }
+    Ok(())
+}
+
+fn reconcile_body(attempt: &OperationAttempt) -> serde_json::Value {
+    let mut body = serde_json::json!({
+        "version": 1,
+        "attempt_id": attempt.attempt_id(),
+    });
+    if let Some(digest) = attempt.request_digest() {
+        body["request_digest"] = serde_json::Value::String(digest.to_owned());
+    }
+    if let Some(scope) = attempt.scope_ref() {
+        body["scope_ref"] = serde_json::Value::String(scope.to_owned());
+    }
+    body
 }
 
 fn flow_body(
@@ -788,103 +1689,477 @@ fn public_error_code(envelope: &serde_json::Value) -> Option<&'static str> {
         .or_else(|| envelope.get("error_code").and_then(|v| v.as_str()))
         .or_else(|| envelope.get("code").and_then(|v| v.as_str()))
         .or_else(|| envelope.get("error").and_then(|v| v.as_str()))?;
+    allowlisted_cloud_code(raw)
+}
 
-    match raw {
-        "authentication_required" => Some("authentication_required"),
-        "invalid_token" => Some("invalid_token"),
-        "invalid_grant" => Some("invalid_grant"),
-        "bad_jwt" => Some("bad_jwt"),
-        "session_expired" => Some("session_expired"),
-        "session_revoked" => Some("session_revoked"),
-        "session_not_found" => Some("session_not_found"),
-        "refresh_token_not_found" => Some("refresh_token_not_found"),
-        "refresh_token_already_used" => Some("refresh_token_already_used"),
-        "use_dpop_nonce" => Some("use_dpop_nonce"),
-        "invalid_dpop_proof" => Some("invalid_dpop_proof"),
-        "invalid_binding" => Some("invalid_binding"),
-        "dpop_proof_required" => Some("dpop_proof_required"),
-        "missing_dpop_proof" => Some("missing_dpop_proof"),
-        "dpop_replay" => Some("dpop_replay"),
-        "dpop_nonce_mismatch" => Some("dpop_nonce_mismatch"),
-        "dpop_clock_skew" => Some("dpop_clock_skew"),
-        "dpop_ath_mismatch" => Some("dpop_ath_mismatch"),
-        "dpop_htu_mismatch" => Some("dpop_htu_mismatch"),
-        "dpop_htm_mismatch" => Some("dpop_htm_mismatch"),
-        "dpop_jkt_mismatch" => Some("dpop_jkt_mismatch"),
-        "stolen_bearer" => Some("stolen_bearer"),
-        "device_revoked" => Some("device_revoked"),
-        "device_key_expired" => Some("device_key_expired"),
-        "refresh_reuse_detected" => Some("refresh_reuse_detected"),
-        "device_not_enrolled" => Some("device_not_enrolled"),
-        "authorization_denied" => Some("authorization_denied"),
-        "mfa_step_up_required" => Some("mfa_step_up_required"),
-        "provider_disabled" => Some("provider_disabled"),
-        "repo_access_denied" => Some("repo_access_denied"),
-        "repository_not_authorized" => Some("repository_not_authorized"),
-        "entitlement_required" => Some("entitlement_required"),
-        "organization_seat_required" => Some("organization_seat_required"),
-        "seat_required" => Some("seat_required"),
-        "seat_unassigned" => Some("seat_unassigned"),
-        "seat_revoked" => Some("seat_revoked"),
-        "account_setup_required" => Some("account_setup_required"),
-        "identity_link_required" => Some("identity_link_required"),
-        "custody_conflict" => Some("custody_conflict"),
-        "owner_protected" => Some("owner_protected"),
-        "member_not_found" => Some("member_not_found"),
-        "invitation_expired" => Some("invitation_expired"),
-        "invitation_not_found" => Some("invitation_not_found"),
-        "project_not_found" => Some("project_not_found"),
-        "quote_confirmation_required" => Some("quote_confirmation_required"),
-        "billing_binding_required" => Some("billing_binding_required"),
-        "payment_pending" => Some("payment_pending"),
-        "billing_not_configured" => Some("billing_not_configured"),
-        "billing_unavailable" => Some("billing_unavailable"),
-        "provider_unavailable" => Some("provider_unavailable"),
-        "quota_exceeded" => Some("quota_exceeded"),
-        "overage_cap_exhausted" => Some("overage_cap_exhausted"),
-        "invalid_request" => Some("invalid_request"),
-        "payload_too_large" => Some("payload_too_large"),
-        "rate_limited" => Some("rate_limited"),
-        "method_not_allowed" => Some("method_not_allowed"),
-        "not_found" => Some("not_found"),
-        "flow_expired" => Some("flow_expired"),
-        "flow_not_found" => Some("flow_not_found"),
-        "invalid_flow_state" => Some("invalid_flow_state"),
-        _ => None,
+struct PreparedCloudRequest {
+    expected_origin: reqwest::Url,
+    endpoint: String,
+    canonical: String,
+    method_str: String,
+    method: reqwest::Method,
+    key: Option<reqwest::header::HeaderValue>,
+    auth_header: Option<reqwest::header::HeaderValue>,
+    dpop_header: Option<reqwest::header::HeaderValue>,
+    scm: Option<(&'static str, &'static str, reqwest::header::HeaderValue)>,
+    body: Option<Vec<u8>>,
+    attempt: Option<OperationAttempt>,
+    resolved_digest: Option<String>,
+    attempt_headers: Vec<(&'static str, reqwest::header::HeaderValue)>,
+    operation_kind: Option<OperationKind>,
+    observation_source: ObservationSource,
+    is_mutating: bool,
+    request_timeout: Duration,
+}
+
+#[allow(clippy::too_many_arguments)]
+fn prepare_cloud_request(
+    origin: &str,
+    key: Option<&str>,
+    method_name: &str,
+    path: &str,
+    body: Option<serde_json::Value>,
+    bearer: Option<&str>,
+    scm: Option<&ScmCredential>,
+    auth_policy: RequestAuthPolicy<'_>,
+    dpop_nonce: Option<&str>,
+    attempt: Option<&OperationAttempt>,
+    operation_kind: Option<OperationKind>,
+    observation_source: ObservationSource,
+    is_mutating: bool,
+    http_budget: ResourceBudget,
+    metadata_out: &mut CloudResponseMetadata,
+) -> Result<PreparedCloudRequest, DactylError> {
+    let record_preflight = |err: DactylError,
+                            metadata_out: &mut CloudResponseMetadata,
+                            auth_scheme: Option<AuthScheme>| {
+        metadata_out.set_provenance(EffectProvenance::local_preflight(
+            operation_kind,
+            attempt,
+            err.adapter_code(),
+            auth_scheme,
+        ));
+        err
+    };
+
+    let expected_origin = match validate_origin(origin) {
+        Ok(url) => url,
+        Err(err) => return Err(record_preflight(err, metadata_out, None)),
+    };
+    let endpoint = format!("{}{path}", origin.trim_end_matches('/'));
+    let canonical = match canonical_url(&endpoint) {
+        Ok(c) => c,
+        Err(err) => return Err(record_preflight(err, metadata_out, None)),
+    };
+    let method_str = method_name.to_owned();
+    let method = match reqwest::Method::from_bytes(method_name.as_bytes()) {
+        Ok(m) => m,
+        Err(_) => {
+            return Err(record_preflight(
+                protocol("invalid auth request method"),
+                metadata_out,
+                None,
+            ))
+        }
+    };
+    let header = |value: &str| -> Result<reqwest::header::HeaderValue, DactylError> {
+        let mut header = reqwest::header::HeaderValue::from_str(value)
+            .map_err(|_| protocol("invalid authentication header"))?;
+        header.set_sensitive(true);
+        Ok(header)
+    };
+    let key = match key.map(header).transpose() {
+        Ok(k) => k,
+        Err(err) => return Err(record_preflight(err, metadata_out, None)),
+    };
+    if let Some(nonce) = dpop_nonce {
+        if let Err(err) = validate_dpop_nonce(nonce) {
+            return Err(record_preflight(err, metadata_out, None));
+        }
+    }
+    let (auth_header, dpop_header) = match bearer {
+        Some(value) => {
+            if let Err(err) = opaque(value) {
+                return Err(record_preflight(err, metadata_out, None));
+            }
+            let (auth, dpop) = match build_auth_headers(
+                &method_str,
+                &canonical,
+                value,
+                auth_policy.proof_signer,
+                dpop_nonce,
+            ) {
+                Ok(pair) => pair,
+                Err(err) => return Err(record_preflight(err, metadata_out, None)),
+            };
+            if auth_policy.require_dpop_proof && dpop.is_none() {
+                return Err(record_preflight(
+                    DactylError::adapter_with_code(
+                        AdapterErrorKind::Authentication,
+                        "device_proof_required",
+                        "local preflight: operation requires a DPoP proof signer",
+                    ),
+                    metadata_out,
+                    Some(AuthScheme::Bearer),
+                ));
+            }
+            if auth_policy.managed_bearer_proof {
+                let bearer_hdr = match header(&format!("Bearer {value}")) {
+                    Ok(h) => h,
+                    Err(err) => return Err(record_preflight(err, metadata_out, None)),
+                };
+                (Some(bearer_hdr), dpop)
+            } else {
+                (Some(auth), dpop)
+            }
+        }
+        None => {
+            if auth_policy.require_dpop_proof || auth_policy.managed_bearer_proof {
+                return Err(record_preflight(
+                    DactylError::adapter_with_code(
+                        AdapterErrorKind::Authentication,
+                        "authentication_required",
+                        "local preflight: operation requires authentication",
+                    ),
+                    metadata_out,
+                    None,
+                ));
+            }
+            (None, None)
+        }
+    };
+    let auth_scheme = effective_auth_scheme(&(auth_header.clone(), dpop_header.clone()));
+    let scm = match scm
+        .map(|credential| {
+            Ok::<_, DactylError>((
+                credential.provider().label(),
+                credential.host(),
+                header(credential.token())?,
+            ))
+        })
+        .transpose()
+    {
+        Ok(scm) => scm,
+        Err(err) => return Err(record_preflight(err, metadata_out, auth_scheme)),
+    };
+    let body = match body
+        .map(|v| serde_json::to_vec(&v).map_err(|_| protocol("invalid auth request")))
+        .transpose()
+    {
+        Ok(body) => body,
+        Err(err) => return Err(record_preflight(err, metadata_out, auth_scheme)),
+    };
+    if body.as_ref().is_some_and(|v| v.len() as u64 > BODY_LIMIT) {
+        return Err(record_preflight(
+            protocol("auth request exceeds body limit"),
+            metadata_out,
+            auth_scheme,
+        ));
+    }
+    let body_for_digest = if observation_source == ObservationSource::ServerReadback {
+        None
+    } else {
+        body.as_deref()
+    };
+    let (resolved_digest, attempt_headers) =
+        match build_attempt_headers(attempt, body_for_digest, operation_kind) {
+            Ok(pair) => pair,
+            Err(err) => return Err(record_preflight(err, metadata_out, auth_scheme)),
+        };
+
+    Ok(PreparedCloudRequest {
+        expected_origin,
+        endpoint,
+        canonical,
+        method_str,
+        method,
+        key,
+        auth_header,
+        dpop_header,
+        scm,
+        body,
+        attempt: attempt.cloned(),
+        resolved_digest,
+        attempt_headers,
+        operation_kind,
+        observation_source,
+        is_mutating,
+        request_timeout: http_budget.request_timeout(),
+    })
+}
+
+fn error_kind_for_cloud_status_and_code(status: u16, code: Option<&str>) -> AdapterErrorKind {
+    if let Some(code) = code {
+        match code {
+            "idempotency_conflict" => return AdapterErrorKind::IdempotencyConflict,
+            "idempotency_in_progress" => return AdapterErrorKind::IdempotencyInProgress,
+            "version_conflict" => return AdapterErrorKind::VersionConflict,
+            "transaction_aborted" => return AdapterErrorKind::TransactionAborted,
+            "storage_failure" => return AdapterErrorKind::Storage,
+            "storage_unavailable" => return AdapterErrorKind::Unavailable,
+            "quota_exceeded" | "overage_cap_exhausted" if status == 429 => {
+                return AdapterErrorKind::Quota
+            }
+            "dpop_aud_mismatch" | "expired_credential" => return AdapterErrorKind::Authentication,
+            "grant_revoked" | "grant_expired" | "scope_denied" => {
+                return AdapterErrorKind::Authorization
+            }
+            _ => {}
+        }
+    }
+    match status {
+        400 | 401 => AdapterErrorKind::Authentication,
+        403 => AdapterErrorKind::Authorization,
+        404 => AdapterErrorKind::NotFound,
+        409 => AdapterErrorKind::Conflict,
+        413 => AdapterErrorKind::Quota,
+        429 => AdapterErrorKind::RateLimited,
+        500..=599 => AdapterErrorKind::Unavailable,
+        _ => AdapterErrorKind::Protocol,
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-fn send_auth_once<T: for<'de> Deserialize<'de>>(
-    http_client: &SharedHttpClient,
-    method: reqwest::Method,
-    endpoint: &str,
-    canonical: &str,
-    key: Option<&reqwest::header::HeaderValue>,
+fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
+    prepared: &PreparedCloudRequest,
     auth: &AuthHeaders,
-    scm: Option<(&'static str, &'static str, &reqwest::header::HeaderValue)>,
-    body: Option<&[u8]>,
+    status: reqwest::StatusCode,
+    headers: &reqwest::header::HeaderMap,
+    response_url: &reqwest::Url,
+    bytes: &[u8],
+    mut metadata: CloudResponseMetadata,
+) -> HttpOutcome<T> {
+    let status_u16 = status.as_u16();
+    let dpop_challenge =
+        status == reqwest::StatusCode::UNAUTHORIZED && has_dpop_nonce_challenge(headers);
+    let auth_scheme = effective_auth_scheme(auth);
+    let prov_ctx = ProvenanceCheckContext {
+        expected_origin: &prepared.expected_origin,
+        response_url,
+        expected_auth: auth_scheme,
+        expected_kind: prepared.operation_kind,
+        attempt: prepared.attempt.as_ref(),
+        resolved_digest: prepared.resolved_digest.as_deref(),
+        observation_source: prepared.observation_source,
+        http_status: status_u16,
+        is_mutating: prepared.is_mutating,
+    };
+    let tls_authenticated = prepared.expected_origin.scheme() == "https";
+    let origin_matches = response_url.origin() == prepared.expected_origin.origin();
+
+    if !status.is_success() {
+        if (300..400).contains(&status_u16) {
+            let kind = error_kind_for_cloud_status_and_code(status_u16, None);
+            metadata.set_provenance(EffectProvenance::transport_fault(
+                prepared.operation_kind,
+                prepared.attempt.as_ref(),
+                prepared.resolved_digest.as_deref(),
+                metadata
+                    .cloud_header("decapod-cloud-request-id")
+                    .map(str::to_owned),
+                Some("provenance_origin_mismatch"),
+                auth_scheme,
+                false,
+                tls_authenticated,
+            ));
+            return (
+                Err(post_send_error(
+                    kind,
+                    prepared.is_mutating,
+                    "cloud authentication redirect is not permitted",
+                )),
+                Some(metadata),
+            );
+        }
+        let envelope = check_json_depth(bytes)
+            .then(|| serde_json::from_slice::<serde_json::Value>(bytes).ok())
+            .flatten();
+        let code = envelope
+            .as_ref()
+            .and_then(public_error_code)
+            .or_else(|| dpop_challenge.then_some("use_dpop_nonce"));
+        if let Err(prov_err) =
+            bind_response_provenance(headers, envelope.as_ref(), &prov_ctx, &mut metadata, code)
+        {
+            let err = if matches!(
+                prov_err.adapter_kind(),
+                Some(AdapterErrorKind::IdempotencyConflict)
+            ) {
+                prov_err
+            } else if prepared.is_mutating {
+                mark_remote_uncertain(prov_err)
+            } else {
+                prov_err
+            };
+            return (Err(err), Some(metadata));
+        }
+        if prepared.is_mutating && matches!(status_u16, 408 | 500..=599) {
+            let explicit_non_commit = metadata.provenance().is_some_and(|p| {
+                matches!(
+                    p.status(),
+                    EffectStatus::RolledBack | EffectStatus::NotAttempted | EffectStatus::Refused
+                )
+            });
+            if !explicit_non_commit {
+                let kind = error_kind_for_cloud_status_and_code(status_u16, code);
+                return (
+                    Err(post_send_error(
+                        kind,
+                        true,
+                        "cloud authentication request outcome uncertain",
+                    )),
+                    Some(metadata),
+                );
+            }
+        }
+        let kind = error_kind_for_cloud_status_and_code(status_u16, code);
+        let err = if let Some(code) = code {
+            DactylError::adapter_with_code(kind, code, "cloud request was rejected")
+        } else {
+            DactylError::adapter(kind, "cloud authentication request was rejected")
+        };
+        return (Err(err), Some(metadata));
+    }
+
+    if !check_json_depth(bytes) {
+        metadata.set_provenance(EffectProvenance::transport_fault(
+            prepared.operation_kind,
+            prepared.attempt.as_ref(),
+            prepared.resolved_digest.as_deref(),
+            None,
+            Some("payload_too_deep"),
+            auth_scheme,
+            origin_matches,
+            tls_authenticated,
+        ));
+        return (
+            Err(post_send_error(
+                AdapterErrorKind::Protocol,
+                prepared.is_mutating,
+                "cloud response exceeded JSON nesting limit",
+            )),
+            Some(metadata),
+        );
+    }
+
+    let value: serde_json::Value =
+        match serde_json::from_slice(if bytes.is_empty() { b"null" } else { bytes }) {
+            Ok(v) => v,
+            Err(_) => {
+                metadata.set_provenance(EffectProvenance::transport_fault(
+                    prepared.operation_kind,
+                    prepared.attempt.as_ref(),
+                    prepared.resolved_digest.as_deref(),
+                    None,
+                    Some("malformed_response"),
+                    auth_scheme,
+                    origin_matches,
+                    tls_authenticated,
+                ));
+                return (
+                    Err(post_send_error(
+                        AdapterErrorKind::Protocol,
+                        prepared.is_mutating,
+                        "invalid cloud authentication response",
+                    )),
+                    Some(metadata),
+                );
+            }
+        };
+
+    if let Err(prov_err) =
+        bind_response_provenance(headers, Some(&value), &prov_ctx, &mut metadata, None)
+    {
+        let err = if matches!(
+            prov_err.adapter_kind(),
+            Some(
+                AdapterErrorKind::Authorization
+                    | AdapterErrorKind::TransactionAborted
+                    | AdapterErrorKind::IdempotencyConflict
+            )
+        ) {
+            prov_err
+        } else if prepared.is_mutating {
+            mark_remote_uncertain(prov_err)
+        } else {
+            prov_err
+        };
+        return (Err(err), Some(metadata));
+    }
+
+    let parsed = serde_json::from_value(value).map_err(|_| {
+        post_send_error(
+            AdapterErrorKind::Protocol,
+            prepared.is_mutating,
+            "invalid cloud authentication response",
+        )
+    });
+    if parsed.is_err() && prepared.is_mutating {
+        metadata.set_provenance(EffectProvenance::transport_fault(
+            prepared.operation_kind,
+            prepared.attempt.as_ref(),
+            prepared.resolved_digest.as_deref(),
+            None,
+            Some("malformed_response"),
+            auth_scheme,
+            origin_matches,
+            tls_authenticated,
+        ));
+    }
+    (parsed, Some(metadata))
+}
+
+fn fault_metadata(
+    prepared: &PreparedCloudRequest,
+    auth: &AuthHeaders,
+    mut metadata: CloudResponseMetadata,
+    reason_code: &'static str,
+    origin_bound: bool,
+) -> CloudResponseMetadata {
+    metadata.set_provenance(EffectProvenance::transport_fault(
+        prepared.operation_kind,
+        prepared.attempt.as_ref(),
+        prepared.resolved_digest.as_deref(),
+        None,
+        Some(reason_code),
+        effective_auth_scheme(auth),
+        origin_bound,
+        prepared.expected_origin.scheme() == "https",
+    ));
+    metadata
+}
+
+fn send_auth_once<T: for<'de> Deserialize<'de>>(
+    blocking_client: &reqwest::blocking::Client,
+    prepared: &PreparedCloudRequest,
+    auth: &AuthHeaders,
     deadline: Instant,
     proof_signer: Option<&Arc<dyn RequestProofSigner>>,
-    is_mutating: bool,
     unauthorized: &mut bool,
 ) -> HttpOutcome<T> {
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
+        let meta = fault_metadata(
+            prepared,
+            auth,
+            CloudResponseMetadata::default(),
+            "outcome_unknown",
+            false,
+        );
         return (
-            Err(DactylError::adapter(
+            Err(post_send_error(
                 AdapterErrorKind::Timeout,
+                prepared.is_mutating,
                 "cloud authentication timed out",
             )),
-            None,
+            Some(meta),
         );
     }
-    let mut request = http_client
-        .client()
-        .request(method, endpoint)
+    let mut request = blocking_client
+        .request(prepared.method.clone(), &prepared.endpoint)
         .timeout(remaining)
         .header("Accept", "application/json");
-    if let Some(key) = key {
+    if let Some(key) = prepared.key.as_ref() {
         request = request.header("apikey", key.clone());
     }
     if let Some(auth_header) = auth.0.as_ref() {
@@ -893,13 +2168,16 @@ fn send_auth_once<T: for<'de> Deserialize<'de>>(
     if let Some(dpop) = auth.1.as_ref() {
         request = request.header("DPoP", dpop.clone());
     }
-    if let Some((provider, host, token)) = scm {
+    if let Some((provider, host, token)) = prepared.scm.as_ref() {
         request = request
-            .header("X-SCM-Provider", provider)
-            .header("X-SCM-Host", host)
+            .header("X-SCM-Provider", *provider)
+            .header("X-SCM-Host", *host)
             .header("X-SCM-Token", token.clone());
     }
-    if let Some(body) = body {
+    for (name, value) in &prepared.attempt_headers {
+        request = request.header(*name, value.clone());
+    }
+    if let Some(body) = prepared.body.as_deref() {
         request = request
             .header("Content-Type", "application/json")
             .body(body.to_vec());
@@ -907,138 +2185,280 @@ fn send_auth_once<T: for<'de> Deserialize<'de>>(
     let response = match request.send() {
         Ok(response) => response,
         Err(e) => {
+            let meta = fault_metadata(
+                prepared,
+                auth,
+                CloudResponseMetadata::default(),
+                "outcome_unknown",
+                false,
+            );
             return (
                 Err(if e.is_timeout() {
                     post_send_error(
                         AdapterErrorKind::Timeout,
-                        is_mutating,
+                        prepared.is_mutating,
                         "cloud authentication timed out",
                     )
                 } else {
                     post_send_error(
                         AdapterErrorKind::Unavailable,
-                        is_mutating,
+                        prepared.is_mutating,
                         "cloud authentication transport failed",
                     )
                 }),
-                None,
+                Some(meta),
             );
         }
     };
     let status = response.status();
+    let response_url = response.url().clone();
+    let response_headers = response.headers().clone();
     *unauthorized = status == reqwest::StatusCode::UNAUTHORIZED;
-    let dpop_challenge =
-        status == reqwest::StatusCode::UNAUTHORIZED && has_dpop_nonce_challenge(response.headers());
-    let metadata = extract_response_metadata(response.headers(), canonical, proof_signer);
+    let metadata = extract_response_metadata(&response_headers, &prepared.canonical, proof_signer);
+    let origin_matches = response_url.origin() == prepared.expected_origin.origin();
     let mut bytes = Vec::new();
     if let Err(error) = response.take(BODY_LIMIT + 1).read_to_end(&mut bytes) {
+        let meta = fault_metadata(prepared, auth, metadata, "outcome_unknown", origin_matches);
         return (
             Err(if crate::adapter::supabase::body_read_timed_out(&error) {
                 post_send_error(
                     AdapterErrorKind::Timeout,
-                    is_mutating,
+                    prepared.is_mutating,
                     "cloud authentication timed out",
                 )
             } else {
                 post_send_error(
                     AdapterErrorKind::Unavailable,
-                    is_mutating,
+                    prepared.is_mutating,
                     "cloud authentication transport failed",
                 )
             }),
-            Some(metadata),
+            Some(meta),
         );
     }
     if bytes.len() as u64 > BODY_LIMIT {
+        let meta = fault_metadata(
+            prepared,
+            auth,
+            metadata,
+            "response_too_large",
+            origin_matches,
+        );
         return (
             Err(post_send_error(
                 AdapterErrorKind::Protocol,
-                is_mutating,
+                prepared.is_mutating,
                 "auth response exceeds body limit",
             )),
-            Some(metadata),
+            Some(meta),
         );
     }
-    if !status.is_success() {
-        let mut kind = match status.as_u16() {
-            400 | 401 => AdapterErrorKind::Authentication,
-            403 => AdapterErrorKind::Authorization,
-            404 => AdapterErrorKind::NotFound,
-            409 => AdapterErrorKind::Conflict,
-            413 => AdapterErrorKind::Quota,
-            429 => AdapterErrorKind::RateLimited,
-            500..=599 => AdapterErrorKind::Unavailable,
-            _ => AdapterErrorKind::Protocol,
-        };
-        if is_mutating && matches!(status.as_u16(), 300..=399 | 408 | 500..=599) {
-            return (
+    handle_cloud_response(
+        prepared,
+        auth,
+        status,
+        &response_headers,
+        &response_url,
+        &bytes,
+        metadata,
+    )
+}
+
+async fn send_auth_once_async<T: for<'de> Deserialize<'de>>(
+    async_client: &reqwest::Client,
+    prepared: &PreparedCloudRequest,
+    auth: &AuthHeaders,
+    deadline: Instant,
+    proof_signer: Option<&Arc<dyn RequestProofSigner>>,
+) -> (HttpOutcome<T>, bool) {
+    let remaining = deadline.saturating_duration_since(Instant::now());
+    if remaining.is_zero() {
+        let meta = fault_metadata(
+            prepared,
+            auth,
+            CloudResponseMetadata::default(),
+            "outcome_unknown",
+            false,
+        );
+        return (
+            (
                 Err(post_send_error(
-                    kind,
-                    true,
-                    "cloud authentication request outcome uncertain",
+                    AdapterErrorKind::Timeout,
+                    prepared.is_mutating,
+                    "cloud authentication timed out",
                 )),
-                Some(metadata),
-            );
-        }
-        let envelope = check_json_depth(&bytes)
-            .then(|| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-            .flatten();
-        if let Some(code) = envelope.as_ref().and_then(public_error_code) {
-            if status.as_u16() == 429 && matches!(code, "quota_exceeded" | "overage_cap_exhausted")
-            {
-                kind = AdapterErrorKind::Quota;
-            }
-            return (
-                Err(DactylError::adapter_with_code(
-                    kind,
-                    code,
-                    "cloud request was rejected",
-                )),
-                Some(metadata),
-            );
-        }
-        if dpop_challenge {
-            return (
-                Err(DactylError::adapter_with_code(
-                    AdapterErrorKind::Authentication,
-                    "use_dpop_nonce",
-                    "cloud request was rejected",
-                )),
-                Some(metadata),
-            );
-        }
-        return (
-            Err(DactylError::adapter(
-                kind,
-                "cloud authentication request was rejected",
-            )),
-            Some(metadata),
+                Some(meta),
+            ),
+            false,
         );
     }
-    if !check_json_depth(&bytes) {
-        return (
-            Err(post_send_error(
-                AdapterErrorKind::Protocol,
-                is_mutating,
-                "cloud response exceeded JSON nesting limit",
-            )),
-            Some(metadata),
-        );
+    let mut request = async_client
+        .request(prepared.method.clone(), &prepared.endpoint)
+        .timeout(remaining)
+        .header("Accept", "application/json");
+    if let Some(key) = prepared.key.as_ref() {
+        request = request.header("apikey", key.clone());
     }
-    let parsed =
-        serde_json::from_slice(if bytes.is_empty() { b"null" } else { &bytes }).map_err(|_| {
-            post_send_error(
-                AdapterErrorKind::Protocol,
-                is_mutating,
-                "invalid cloud authentication response",
-            )
-        });
-    (parsed, Some(metadata))
+    if let Some(auth_header) = auth.0.as_ref() {
+        request = request.header(reqwest::header::AUTHORIZATION, auth_header.clone());
+    }
+    if let Some(dpop) = auth.1.as_ref() {
+        request = request.header("DPoP", dpop.clone());
+    }
+    if let Some((provider, host, token)) = prepared.scm.as_ref() {
+        request = request
+            .header("X-SCM-Provider", *provider)
+            .header("X-SCM-Host", *host)
+            .header("X-SCM-Token", token.clone());
+    }
+    for (name, value) in &prepared.attempt_headers {
+        request = request.header(*name, value.clone());
+    }
+    if let Some(body) = prepared.body.as_deref() {
+        request = request
+            .header("Content-Type", "application/json")
+            .body(body.to_vec());
+    }
+    let response = match tokio::time::timeout(remaining, request.send()).await {
+        Ok(Ok(response)) => response,
+        Ok(Err(e)) => {
+            let meta = fault_metadata(
+                prepared,
+                auth,
+                CloudResponseMetadata::default(),
+                "outcome_unknown",
+                false,
+            );
+            return (
+                (
+                    Err(if e.is_timeout() {
+                        post_send_error(
+                            AdapterErrorKind::Timeout,
+                            prepared.is_mutating,
+                            "cloud authentication timed out",
+                        )
+                    } else {
+                        post_send_error(
+                            AdapterErrorKind::Unavailable,
+                            prepared.is_mutating,
+                            "cloud authentication transport failed",
+                        )
+                    }),
+                    Some(meta),
+                ),
+                false,
+            );
+        }
+        Err(_) => {
+            let meta = fault_metadata(
+                prepared,
+                auth,
+                CloudResponseMetadata::default(),
+                "outcome_unknown",
+                false,
+            );
+            return (
+                (
+                    Err(post_send_error(
+                        AdapterErrorKind::Timeout,
+                        prepared.is_mutating,
+                        "cloud authentication timed out",
+                    )),
+                    Some(meta),
+                ),
+                false,
+            );
+        }
+    };
+    let status = response.status();
+    let unauthorized = status == reqwest::StatusCode::UNAUTHORIZED;
+    let response_url = response.url().clone();
+    let response_headers = response.headers().clone();
+    let metadata = extract_response_metadata(&response_headers, &prepared.canonical, proof_signer);
+    let origin_matches = response_url.origin() == prepared.expected_origin.origin();
+    let body_remaining = deadline.saturating_duration_since(Instant::now());
+    let bytes = match tokio::time::timeout(
+        body_remaining,
+        read_bounded_body_async(response, BODY_LIMIT),
+    )
+    .await
+    {
+        Ok(Ok(bytes)) => bytes,
+        Ok(Err(AsyncBodyError::TooLarge)) => {
+            let meta = fault_metadata(
+                prepared,
+                auth,
+                metadata,
+                "response_too_large",
+                origin_matches,
+            );
+            return (
+                (
+                    Err(post_send_error(
+                        AdapterErrorKind::Protocol,
+                        prepared.is_mutating,
+                        "auth response exceeds body limit",
+                    )),
+                    Some(meta),
+                ),
+                unauthorized,
+            );
+        }
+        Ok(Err(AsyncBodyError::Transport(e))) => {
+            let meta = fault_metadata(prepared, auth, metadata, "outcome_unknown", origin_matches);
+            return (
+                (
+                    Err(if e.is_timeout() {
+                        post_send_error(
+                            AdapterErrorKind::Timeout,
+                            prepared.is_mutating,
+                            "cloud authentication timed out",
+                        )
+                    } else {
+                        post_send_error(
+                            AdapterErrorKind::Unavailable,
+                            prepared.is_mutating,
+                            "cloud authentication transport failed",
+                        )
+                    }),
+                    Some(meta),
+                ),
+                unauthorized,
+            );
+        }
+        Err(_) => {
+            let meta = fault_metadata(prepared, auth, metadata, "outcome_unknown", origin_matches);
+            return (
+                (
+                    Err(post_send_error(
+                        AdapterErrorKind::Timeout,
+                        prepared.is_mutating,
+                        "cloud authentication timed out",
+                    )),
+                    Some(meta),
+                ),
+                unauthorized,
+            );
+        }
+    };
+    (
+        handle_cloud_response(
+            prepared,
+            auth,
+            status,
+            &response_headers,
+            &response_url,
+            &bytes,
+            metadata,
+        ),
+        unauthorized,
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
 fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     http_client: &Arc<SharedHttpClient>,
+    http_budget: ResourceBudget,
     origin: &str,
     key: Option<&str>,
     method: &str,
@@ -1048,116 +2468,169 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
     scm: Option<&ScmCredential>,
     auth_policy: RequestAuthPolicy<'_>,
     dpop_nonce: Option<&str>,
+    attempt: Option<&OperationAttempt>,
+    operation_kind: Option<OperationKind>,
+    observation_source: ObservationSource,
     is_mutating: bool,
     metadata_out: &mut CloudResponseMetadata,
 ) -> Result<T, DactylError> {
-    validate_origin(origin)?;
-    let endpoint = format!("{}{path}", origin.trim_end_matches('/'));
-    let canonical = canonical_url(&endpoint)?;
-    let method_str = method.to_owned();
-    let method = reqwest::Method::from_bytes(method.as_bytes())
-        .map_err(|_| protocol("invalid auth request method"))?;
-    let header = |value: &str| -> Result<reqwest::header::HeaderValue, DactylError> {
-        let mut header = reqwest::header::HeaderValue::from_str(value)
-            .map_err(|_| protocol("invalid authentication header"))?;
-        header.set_sensitive(true);
-        Ok(header)
-    };
-    let key = key.map(header).transpose()?;
-    if let Some(nonce) = dpop_nonce {
-        validate_dpop_nonce(nonce)?;
-    }
-    let (auth_header, dpop_header) = match bearer {
-        Some(value) => {
-            opaque(value)?;
-            let (auth, dpop) = build_auth_headers(
-                &method_str,
-                &canonical,
-                value,
-                auth_policy.proof_signer,
-                dpop_nonce,
-            )?;
-            if auth_policy.require_dpop_proof && dpop.is_none() {
-                return Err(DactylError::adapter_with_code(
-                    AdapterErrorKind::Authentication,
-                    "device_proof_required",
-                    "local preflight: operation requires a DPoP proof signer",
-                ));
-            }
-            if auth_policy.managed_bearer_proof {
-                (Some(header(&format!("Bearer {value}"))?), dpop)
-            } else {
-                (Some(auth), dpop)
-            }
-        }
-        None => {
-            if auth_policy.require_dpop_proof || auth_policy.managed_bearer_proof {
-                return Err(DactylError::adapter_with_code(
-                    AdapterErrorKind::Authentication,
-                    "authentication_required",
-                    "local preflight: operation requires authentication",
-                ));
-            }
-            (None, None)
-        }
-    };
-    let scm = scm
-        .map(|credential| {
-            Ok::<_, DactylError>((
-                credential.provider().label(),
-                credential.host(),
-                header(credential.token())?,
-            ))
-        })
-        .transpose()?;
-    let body = body
-        .map(|v| serde_json::to_vec(&v).map_err(|_| protocol("invalid auth request")))
-        .transpose()?;
-    if body.as_ref().is_some_and(|v| v.len() as u64 > BODY_LIMIT) {
-        return Err(protocol("auth request exceeds body limit"));
-    }
+    let mut prepared = prepare_cloud_request(
+        origin,
+        key,
+        method,
+        path,
+        body,
+        bearer,
+        scm,
+        auth_policy,
+        dpop_nonce,
+        attempt,
+        operation_kind,
+        observation_source,
+        is_mutating,
+        http_budget,
+        metadata_out,
+    )?;
     let http_client = http_client.clone();
     let proof_signer = auth_policy.proof_signer.cloned();
     let managed_bearer_proof = auth_policy.managed_bearer_proof;
-    let (outcome, captured_meta) = std::thread::Builder::new()
-        .name("dactyl-cloud-auth".into())
-        .spawn(move || -> HttpOutcome<T> {
-            let deadline = Instant::now() + REQUEST_TIMEOUT;
-            let _permit = match acquire_permit(deadline) {
-                Ok(permit) => permit,
-                Err(error) => return (Err(error), None),
-            };
-            let scm_ref = scm
-                .as_ref()
-                .map(|(provider, host, token)| (*provider, *host, token));
-            let (outcome, _) = with_dpop_nonce_retry(
-                &method_str,
-                &canonical,
-                proof_signer.as_ref(),
-                (auth_header, dpop_header),
-                managed_bearer_proof,
-                |auth, unauthorized| {
-                    send_auth_once(
-                        &http_client,
-                        method.clone(),
-                        &endpoint,
-                        &canonical,
-                        key.as_ref(),
-                        auth,
-                        scm_ref,
-                        body.as_deref(),
-                        deadline,
-                        proof_signer.as_ref(),
-                        is_mutating,
-                        unauthorized,
-                    )
-                },
-            );
-            outcome
-        })
-        .map_err(|_| protocol("auth worker unavailable"))?
-        .join()
-        .map_err(|_| protocol("auth worker failed"))?;
+
+    let mut execute = move || -> HttpOutcome<T> {
+        let blocking_client = match http_client.blocking_client() {
+            Ok(c) => c,
+            Err(err) => {
+                let auth = (prepared.auth_header.take(), prepared.dpop_header.take());
+                let mut meta = CloudResponseMetadata::default();
+                meta.set_provenance(EffectProvenance::local_preflight(
+                    prepared.operation_kind,
+                    prepared.attempt.as_ref(),
+                    err.adapter_code(),
+                    effective_auth_scheme(&auth),
+                ));
+                return (Err(err), Some(meta));
+            }
+        };
+        let deadline = Instant::now() + prepared.request_timeout;
+        let _permit = match http_client.acquire_permit(deadline) {
+            Ok(permit) => permit,
+            Err(error) => {
+                let auth = (prepared.auth_header.take(), prepared.dpop_header.take());
+                let mut meta = CloudResponseMetadata::default();
+                meta.set_provenance(EffectProvenance::local_preflight(
+                    prepared.operation_kind,
+                    prepared.attempt.as_ref(),
+                    error.adapter_code(),
+                    effective_auth_scheme(&auth),
+                ));
+                return (Err(error), Some(meta));
+            }
+        };
+        let auth = (prepared.auth_header.take(), prepared.dpop_header.take());
+        let (outcome, _) = with_dpop_nonce_retry(
+            &prepared.method_str,
+            &prepared.canonical,
+            proof_signer.as_ref(),
+            auth,
+            managed_bearer_proof,
+            |auth, unauthorized| {
+                send_auth_once(
+                    &blocking_client,
+                    &prepared,
+                    auth,
+                    deadline,
+                    proof_signer.as_ref(),
+                    unauthorized,
+                )
+            },
+        );
+        outcome
+    };
+
+    let (outcome, captured_meta) = if in_tokio_runtime() {
+        std::thread::Builder::new()
+            .name("dactyl-cloud-auth".into())
+            .spawn(execute)
+            .map_err(|_| protocol("auth worker unavailable"))?
+            .join()
+            .map_err(|_| protocol("auth worker failed"))?
+    } else {
+        execute()
+    };
     *metadata_out = captured_meta.unwrap_or_default();
     outcome
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn request_async<T: for<'de> Deserialize<'de> + Send + 'static>(
+    http_client: &Arc<SharedHttpClient>,
+    http_budget: ResourceBudget,
+    origin: &str,
+    key: Option<&str>,
+    method: &str,
+    path: &str,
+    body: Option<serde_json::Value>,
+    bearer: Option<&str>,
+    scm: Option<&ScmCredential>,
+    auth_policy: RequestAuthPolicy<'_>,
+    dpop_nonce: Option<&str>,
+    attempt: Option<&OperationAttempt>,
+    operation_kind: Option<OperationKind>,
+    observation_source: ObservationSource,
+    is_mutating: bool,
+    metadata_out: &mut CloudResponseMetadata,
+) -> Result<T, DactylError> {
+    let mut prepared = prepare_cloud_request(
+        origin,
+        key,
+        method,
+        path,
+        body,
+        bearer,
+        scm,
+        auth_policy,
+        dpop_nonce,
+        attempt,
+        operation_kind,
+        observation_source,
+        is_mutating,
+        http_budget,
+        metadata_out,
+    )?;
+    let async_client = http_client.async_client()?;
+    let proof_signer = auth_policy.proof_signer.cloned();
+    let managed_bearer_proof = auth_policy.managed_bearer_proof;
+    let deadline = Instant::now() + prepared.request_timeout;
+    let auth = (prepared.auth_header.take(), prepared.dpop_header.take());
+    let _permit = match http_client.acquire_permit_async(deadline).await {
+        Ok(permit) => permit,
+        Err(error) => {
+            *metadata_out = CloudResponseMetadata::default();
+            metadata_out.set_provenance(EffectProvenance::local_preflight(
+                prepared.operation_kind,
+                prepared.attempt.as_ref(),
+                error.adapter_code(),
+                effective_auth_scheme(&auth),
+            ));
+            return Err(error);
+        }
+    };
+    let method_str = prepared.method_str.clone();
+    let canonical = prepared.canonical.clone();
+    let (outcome, _) = with_dpop_nonce_retry_async(
+        &method_str,
+        &canonical,
+        proof_signer.as_ref(),
+        auth,
+        managed_bearer_proof,
+        |auth| {
+            let client = &async_client;
+            let req_ref = &prepared;
+            let signer_ref = proof_signer.as_ref();
+            async move { send_auth_once_async(client, req_ref, &auth, deadline, signer_ref).await }
+        },
+    )
+    .await;
+    let (res, captured_meta) = outcome;
+    *metadata_out = captured_meta.unwrap_or_default();
+    res
 }

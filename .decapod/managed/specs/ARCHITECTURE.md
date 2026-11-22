@@ -1,5 +1,10 @@
 # Architecture
 
+## Runtime-aware HTTP pool budgets and per-operation effect provenance (issues #134, #140)
+
+- **`src/budget.rs` & `src/http_pool.rs` (`#134`)**: `SharedHttpClient` pools are keyed by `PoolSettings::from(ResourceBudget)` (`connect_timeout`, `http_max_in_flight`, `http_max_idle_per_host`, `http_idle_timeout`), gated by both per-budget `RequestLimit` (`Condvar` + `tokio::sync::Notify`) and a `64`-slot process ceiling (`MAX_PROCESS_IN_FLIGHT`), with lazy `blocking_client()` and per-`tokio::runtime::Id` `async_clients` (bounded to `16` runtimes per pool). `in_tokio_runtime()` avoids spawning helper threads for synchronous callers outside Tokio, while native `*_async` execution paths in `src/cloud.rs`, `src/adapter/neon/mod.rs`, `src/adapter/supabase.rs`, and `src/lib.rs` run directly on the active Tokio runtime without blocking worker handoffs (`read_bounded_body_async`, `with_dpop_nonce_retry_async`).
+- **`src/connector.rs`, `src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, `src/lib.rs` (`#140`)**: `build_attempt_headers` attaches `Idempotency-Key`, `Decapod-Cloud-Attempt-Id`, `Decapod-Cloud-Provenance-Version: 1`, `Decapod-Cloud-Request-Digest` (SHA-256 of outbound request payload when omitted by direct writes, or explicit caller digest on readback), `Decapod-Cloud-Operation-Kind`, and optional `Decapod-Cloud-Scope-Ref`. `bind_response_provenance` merges `Decapod-Cloud-*` HTTP headers with parsed JSON `provenance` envelopes, enforces `response_url.origin() == expected_origin.origin()` (rejecting redirects `300..400`), auth scheme parity, operation kind, attempt ID, digest parity (`idempotency_conflict` on readback digest mismatch / `provenance_digest_mismatch` on direct mismatch), and caller scope ref, downgrades truncated/partial or malformed `2xx` bodies to `EffectStatus::Uncertain` (`ObservationSource::TransportFault`) even if headers claim `committed_observed`, preserves explicit non-commit server proofs (`NotAttempted`, `Refused`, `RolledBack`) on errors, and emits `UnsupportedProvenance` when servers do not advertise contract v1.
+
 ## Wave 2 gateway auth policy, bounded nonce retry, runtime selector, and error classification (issues #132, #133, #136, #137, #138, #139)
 
 - `src/lib.rs` defines `Backend::datastore(self) -> Datastore` and `Datastore::as_str(self) -> &'static str`, grounding `DatastoreRoute::sqlite` and `DatastoreRoute::supabase_rpc` in the logical backend without consulting ambient `DATASTORE`.
@@ -241,8 +246,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,8 +1,11 @@
 //! Minimal SQL-over-HTTP transport for Neon with bounded wire and result budgets.
 
+use std::sync::Arc;
+use std::time::Instant;
+
 use serde::{Deserialize, Serialize};
 
-use crate::adapter::Adapter;
+use crate::adapter::{Adapter, AdapterFuture};
 use crate::budget::{
     ensure_json_depth, mark_remote_uncertain, preflight_batch, preflight_statement,
     read_bounded_body, result_limit, serialize_bounded_json, BoundedReadError,
@@ -13,6 +16,9 @@ use crate::contract::{
     StorageContext, WriteResult,
 };
 use crate::error::{AdapterErrorKind, DactylError};
+use crate::http_pool::{
+    acquire_client, in_tokio_runtime, read_bounded_body_async, AsyncBodyError, SharedHttpClient,
+};
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
 
@@ -22,6 +28,7 @@ pub struct NeonAdapter {
     access_mode: AccessMode,
     context: Option<StorageContext>,
     budget: ResourceBudget,
+    http_client: Arc<SharedHttpClient>,
 }
 
 #[derive(Debug, Serialize)]
@@ -71,7 +78,7 @@ struct BatchResponse {
 
 impl NeonAdapter {
     #[allow(dead_code)]
-    pub fn new(endpoint: &str, bearer: Option<String>) -> Self {
+    pub fn new(endpoint: &str, bearer: Option<String>) -> Result<Self, DactylError> {
         Self::new_with_options(endpoint, bearer, OpenOptions::default(), None)
     }
 
@@ -81,7 +88,7 @@ impl NeonAdapter {
         bearer: Option<String>,
         options: OpenOptions,
         context: Option<StorageContext>,
-    ) -> Self {
+    ) -> Result<Self, DactylError> {
         Self::new_with_options_and_budget(
             endpoint,
             bearer,
@@ -97,23 +104,24 @@ impl NeonAdapter {
         options: OpenOptions,
         context: Option<StorageContext>,
         budget: ResourceBudget,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, DactylError> {
+        budget.validate()?;
+        let http_client = acquire_client(budget)?;
+        Ok(Self {
             endpoint: endpoint.trim_end_matches('/').to_owned(),
             bearer,
             access_mode: options.access_mode,
             context,
             budget,
-        }
+            http_client,
+        })
     }
 
-    fn send<T: for<'de> Deserialize<'de> + Send + 'static>(
+    fn prepare_send(
         &self,
         path: &str,
-        operation: &'static str,
         request: &impl Serialize,
-        mutates: bool,
-    ) -> Result<T, DactylError> {
+    ) -> Result<(String, Option<reqwest::header::HeaderValue>, Vec<u8>), DactylError> {
         let body = serialize_bounded_json(request, self.budget.max_wire_bytes())?;
         let bearer = self
             .bearer
@@ -126,15 +134,88 @@ impl NeonAdapter {
             })
             .transpose()?;
         let endpoint = format!("{}{path}", self.endpoint);
+        Ok((endpoint, bearer, body))
+    }
+
+    fn send<T: for<'de> Deserialize<'de> + Send + 'static>(
+        &self,
+        path: &str,
+        operation: &'static str,
+        request: &impl Serialize,
+        mutates: bool,
+    ) -> Result<T, DactylError> {
+        let (endpoint, bearer, body) = self.prepare_send(path, request)?;
         let budget = self.budget;
-        // Execute reqwest::blocking on a dedicated worker thread so callers inside
-        // an async Tokio runtime never panic on runtime-in-runtime client drop.
-        std::thread::Builder::new()
-            .name("dactyl-neon-http".into())
-            .spawn(move || send_neon_request(endpoint, bearer, body, budget, operation, mutates))
-            .map_err(|_| neon_transport_error(false))?
-            .join()
-            .map_err(|_| maybe_uncertain(neon_transport_error(false), mutates))?
+        let http_client = self.http_client.clone();
+        if in_tokio_runtime() {
+            std::thread::Builder::new()
+                .name("dactyl-neon-http".into())
+                .spawn(move || {
+                    send_neon_request(
+                        &http_client,
+                        endpoint,
+                        bearer,
+                        body,
+                        budget,
+                        operation,
+                        mutates,
+                    )
+                })
+                .map_err(|_| neon_transport_error(false))?
+                .join()
+                .map_err(|_| maybe_uncertain(neon_transport_error(false), mutates))?
+        } else {
+            send_neon_request(
+                &http_client,
+                endpoint,
+                bearer,
+                body,
+                budget,
+                operation,
+                mutates,
+            )
+        }
+    }
+
+    async fn send_async<T: for<'de> Deserialize<'de> + Send + 'static>(
+        &self,
+        path: &str,
+        operation: &'static str,
+        request: &impl Serialize,
+        mutates: bool,
+    ) -> Result<T, DactylError> {
+        let (endpoint, bearer, body) = self.prepare_send(path, request)?;
+        send_neon_request_async(
+            &self.http_client,
+            endpoint,
+            bearer,
+            body,
+            self.budget,
+            operation,
+            mutates,
+        )
+        .await
+    }
+
+    fn prepare_query<'a>(
+        &'a self,
+        sql: &'a str,
+        params: &'a [Parameter],
+        mutates: bool,
+    ) -> Result<Request<'a>, DactylError> {
+        let context = self.context()?;
+        check_parameters(params)?;
+        preflight_statement(&self.budget, sql, params)?;
+        Ok(Request {
+            sql,
+            params: Some(params),
+            access_mode: if mutates {
+                self.access_mode
+            } else {
+                AccessMode::ReadOnly
+            },
+            context,
+        })
     }
 
     fn request(
@@ -143,24 +224,39 @@ impl NeonAdapter {
         params: &[Parameter],
         mutates: bool,
     ) -> Result<Response, DactylError> {
+        let req = self.prepare_query(sql, params, mutates)?;
+        self.send("/query", "neon", &req, mutates)
+    }
+
+    async fn request_async(
+        &self,
+        sql: &str,
+        params: &[Parameter],
+        mutates: bool,
+    ) -> Result<Response, DactylError> {
+        let req = self.prepare_query(sql, params, mutates)?;
+        self.send_async("/query", "neon", &req, mutates).await
+    }
+
+    fn prepare_batch<'a>(
+        &'a self,
+        operations: &'a [Operation],
+        mutates: bool,
+    ) -> Result<BatchRequest<'a>, DactylError> {
         let context = self.context()?;
-        check_parameters(params)?;
-        preflight_statement(&self.budget, sql, params)?;
-        self.send(
-            "/query",
-            "neon",
-            &Request {
-                sql,
-                params: Some(params),
-                access_mode: if mutates {
-                    self.access_mode
-                } else {
-                    AccessMode::ReadOnly
-                },
-                context,
+        for operation in operations {
+            check_parameters(operation.params())?;
+        }
+        preflight_batch(&self.budget, operations)?;
+        Ok(BatchRequest {
+            access_mode: if mutates {
+                self.access_mode
+            } else {
+                AccessMode::ReadOnly
             },
-            mutates,
-        )
+            operations,
+            context,
+        })
     }
 
     fn request_batch(
@@ -168,25 +264,17 @@ impl NeonAdapter {
         operations: &[Operation],
         mutates: bool,
     ) -> Result<BatchResponse, DactylError> {
-        let context = self.context()?;
-        for operation in operations {
-            check_parameters(operation.params())?;
-        }
-        preflight_batch(&self.budget, operations)?;
-        self.send(
-            "/batch",
-            "neon batch",
-            &BatchRequest {
-                access_mode: if mutates {
-                    self.access_mode
-                } else {
-                    AccessMode::ReadOnly
-                },
-                operations,
-                context,
-            },
-            mutates,
-        )
+        let req = self.prepare_batch(operations, mutates)?;
+        self.send("/batch", "neon batch", &req, mutates)
+    }
+
+    async fn request_batch_async(
+        &self,
+        operations: &[Operation],
+        mutates: bool,
+    ) -> Result<BatchResponse, DactylError> {
+        let req = self.prepare_batch(operations, mutates)?;
+        self.send_async("/batch", "neon batch", &req, mutates).await
     }
 
     fn context(&self) -> Result<&StorageContext, DactylError> {
@@ -210,7 +298,45 @@ fn maybe_uncertain(error: DactylError, mutates: bool) -> DactylError {
     }
 }
 
+fn decode_neon_response<T: for<'de> Deserialize<'de>>(
+    status: u16,
+    bytes: &[u8],
+    operation: &'static str,
+    mutates: bool,
+) -> Result<T, DactylError> {
+    if !(200..300).contains(&status) {
+        let error = remote_error(status, bytes, operation);
+        return if mutates && matches!(status, 408 | 502 | 504) {
+            Err(mark_remote_uncertain(error))
+        } else {
+            Err(error)
+        };
+    }
+    let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|_| {
+        maybe_uncertain(
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Protocol,
+                "malformed_response",
+                format!("{operation} returned invalid JSON"),
+            ),
+            mutates,
+        )
+    })?;
+    ensure_json_depth(&value).map_err(|error| maybe_uncertain(error, mutates))?;
+    serde_json::from_value(value).map_err(|_| {
+        maybe_uncertain(
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Protocol,
+                "malformed_response",
+                format!("{operation} response envelope did not match contract"),
+            ),
+            mutates,
+        )
+    })
+}
+
 fn send_neon_request<T: for<'de> Deserialize<'de>>(
+    http_client: &SharedHttpClient,
     endpoint: String,
     bearer: Option<reqwest::header::HeaderValue>,
     body: Vec<u8>,
@@ -218,15 +344,16 @@ fn send_neon_request<T: for<'de> Deserialize<'de>>(
     operation: &'static str,
     mutates: bool,
 ) -> Result<T, DactylError> {
-    let client = reqwest::blocking::Client::builder()
-        .connect_timeout(budget.connect_timeout())
-        .timeout(budget.request_timeout())
-        .redirect(reqwest::redirect::Policy::none())
-        .retry(reqwest::retry::never())
-        .build()
-        .map_err(|_| neon_transport_error(false))?;
+    let deadline = Instant::now() + budget.request_timeout();
+    let _permit = http_client.acquire_permit(deadline)?;
+    let remaining = deadline.saturating_duration_since(Instant::now());
+    if remaining.is_zero() {
+        return Err(maybe_uncertain(neon_transport_error(true), mutates));
+    }
+    let client = http_client.blocking_client()?;
     let mut request = client
         .post(endpoint)
+        .timeout(remaining)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(body);
     if let Some(bearer) = bearer {
@@ -255,35 +382,65 @@ fn send_neon_request<T: for<'de> Deserialize<'de>>(
             ))
         }
     };
-    if !(200..300).contains(&status) {
-        let error = remote_error(status, &bytes, operation);
-        return if mutates && matches!(status, 408 | 502 | 504) {
-            Err(mark_remote_uncertain(error))
-        } else {
-            Err(error)
-        };
+    decode_neon_response(status, &bytes, operation, mutates)
+}
+
+async fn send_neon_request_async<T: for<'de> Deserialize<'de>>(
+    http_client: &SharedHttpClient,
+    endpoint: String,
+    bearer: Option<reqwest::header::HeaderValue>,
+    body: Vec<u8>,
+    budget: ResourceBudget,
+    operation: &'static str,
+    mutates: bool,
+) -> Result<T, DactylError> {
+    let deadline = Instant::now() + budget.request_timeout();
+    let _permit = http_client.acquire_permit_async(deadline).await?;
+    let remaining = deadline.saturating_duration_since(Instant::now());
+    if remaining.is_zero() {
+        return Err(maybe_uncertain(neon_transport_error(true), mutates));
     }
-    let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
-        maybe_uncertain(
-            DactylError::adapter_with_code(
-                AdapterErrorKind::Protocol,
-                "malformed_response",
-                format!("{operation} returned invalid JSON"),
-            ),
-            mutates,
-        )
-    })?;
-    ensure_json_depth(&value).map_err(|error| maybe_uncertain(error, mutates))?;
-    serde_json::from_value(value).map_err(|_| {
-        maybe_uncertain(
-            DactylError::adapter_with_code(
-                AdapterErrorKind::Protocol,
-                "malformed_response",
-                format!("{operation} response envelope did not match contract"),
-            ),
-            mutates,
-        )
-    })
+    let client = http_client.async_client()?;
+    let mut request = client
+        .post(endpoint)
+        .timeout(remaining)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .body(body);
+    if let Some(bearer) = bearer {
+        request = request.header(reqwest::header::AUTHORIZATION, bearer);
+    }
+    let response = tokio::time::timeout(remaining, request.send())
+        .await
+        .map_err(|_| maybe_uncertain(neon_transport_error(true), mutates))?
+        .map_err(|error| maybe_uncertain(neon_transport_error(error.is_timeout()), mutates))?;
+    let status = response.status().as_u16();
+    let body_remaining = deadline.saturating_duration_since(Instant::now());
+    let bytes = match tokio::time::timeout(
+        body_remaining,
+        read_bounded_body_async(response, budget.max_wire_bytes()),
+    )
+    .await
+    {
+        Ok(Ok(bytes)) => bytes,
+        Ok(Err(AsyncBodyError::TooLarge)) => {
+            return Err(maybe_uncertain(
+                DactylError::adapter_with_code(
+                    AdapterErrorKind::Protocol,
+                    "response_too_large",
+                    "Neon response exceeds max_wire_bytes",
+                ),
+                mutates,
+            ))
+        }
+        Ok(Err(AsyncBodyError::Transport(error))) => {
+            return Err(maybe_uncertain(
+                neon_transport_error(error.is_timeout()),
+                mutates,
+            ))
+        }
+        Err(_) => return Err(maybe_uncertain(neon_transport_error(true), mutates)),
+    };
+    decode_neon_response(status, &bytes, operation, mutates)
 }
 
 fn body_read_timed_out(error: &std::io::Error) -> bool {
@@ -364,11 +521,80 @@ fn remote_error(status: u16, body: &[u8], operation: &str) -> DactylError {
     }
 }
 
+fn finalize_write_response(
+    response: Response,
+    budget: ResourceBudget,
+) -> Result<WriteResult, DactylError> {
+    if !response.rows.is_empty() {
+        let mut tracker = DecodedResultTracker::new(budget);
+        let auxiliary = Response {
+            columns: response.columns,
+            rows: response.rows.clone(),
+            affected_rows: response.affected_rows,
+            generated_keys: Vec::new(),
+        };
+        rows_from_response_budgeted(auxiliary, budget, &mut tracker)
+            .map_err(mark_remote_uncertain)?;
+    }
+    Ok(WriteResult {
+        affected_rows: response.affected_rows.unwrap_or(response.rows.len() as u64),
+        generated_keys: response.generated_keys,
+    })
+}
+
+fn finalize_batch_response(
+    operations: &[Operation],
+    response: BatchResponse,
+    budget: ResourceBudget,
+    mutates: bool,
+) -> Result<AtomicResult, DactylError> {
+    if response.results.len() != operations.len() {
+        return Err(maybe_uncertain(
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Protocol,
+                "malformed_response",
+                format!(
+                    "neon batch returned {} results for {} operations",
+                    response.results.len(),
+                    operations.len()
+                ),
+            ),
+            mutates,
+        ));
+    }
+    let mut tracker = DecodedResultTracker::new(budget);
+    let mut results = Vec::with_capacity(response.results.len());
+    for (operation, result) in operations.iter().zip(response.results) {
+        match operation.kind() {
+            OperationKind::Read => {
+                let rows = rows_from_response_budgeted(result, budget, &mut tracker)
+                    .map_err(|error| maybe_uncertain(error, mutates))?;
+                results.push(OperationResult::Rows(rows));
+            }
+            OperationKind::Write | OperationKind::Schema => {
+                results.push(OperationResult::Write(WriteResult {
+                    affected_rows: result.affected_rows.unwrap_or(0),
+                    generated_keys: result.generated_keys,
+                }));
+            }
+        }
+    }
+    Ok(AtomicResult { results })
+}
+
 impl Adapter for NeonAdapter {
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
         let response = self.request(sql, params, false)?;
         let mut tracker = DecodedResultTracker::new(self.budget);
         rows_from_response_budgeted(response, self.budget, &mut tracker)
+    }
+
+    fn read_async<'a>(&'a self, sql: &'a str, params: &'a [Parameter]) -> AdapterFuture<'a, Rows> {
+        Box::pin(async move {
+            let response = self.request_async(sql, params, false).await?;
+            let mut tracker = DecodedResultTracker::new(self.budget);
+            rows_from_response_budgeted(response, self.budget, &mut tracker)
+        })
     }
 
     fn visit_rows(
@@ -382,23 +608,34 @@ impl Adapter for NeonAdapter {
         visit_response_rows(response, self.budget, &mut tracker, visitor)
     }
 
+    fn visit_rows_async<'a>(
+        &'a self,
+        sql: &'a str,
+        params: &'a [Parameter],
+        visitor: &'a mut (dyn FnMut(&Row) -> Result<bool, DactylError> + Send),
+    ) -> AdapterFuture<'a, ScanOutcome> {
+        Box::pin(async move {
+            let response = self.request_async(sql, params, false).await?;
+            let mut tracker = DecodedResultTracker::new(self.budget);
+            visit_response_rows(response, self.budget, &mut tracker, visitor)
+        })
+    }
+
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError> {
         ensure_remote_writable(self.access_mode)?;
         let response = self.request(sql, params, true)?;
-        if !response.rows.is_empty() {
-            let mut tracker = DecodedResultTracker::new(self.budget);
-            let auxiliary = Response {
-                columns: response.columns,
-                rows: response.rows.clone(),
-                affected_rows: response.affected_rows,
-                generated_keys: Vec::new(),
-            };
-            rows_from_response_budgeted(auxiliary, self.budget, &mut tracker)
-                .map_err(mark_remote_uncertain)?;
-        }
-        Ok(WriteResult {
-            affected_rows: response.affected_rows.unwrap_or(response.rows.len() as u64),
-            generated_keys: response.generated_keys,
+        finalize_write_response(response, self.budget)
+    }
+
+    fn write_async<'a>(
+        &'a self,
+        sql: &'a str,
+        params: &'a [Parameter],
+    ) -> AdapterFuture<'a, WriteResult> {
+        Box::pin(async move {
+            ensure_remote_writable(self.access_mode)?;
+            let response = self.request_async(sql, params, true).await?;
+            finalize_write_response(response, self.budget)
         })
     }
 
@@ -413,38 +650,23 @@ impl Adapter for NeonAdapter {
             ensure_remote_writable(self.access_mode)?;
         }
         let response = self.request_batch(operations, mutates)?;
-        if response.results.len() != operations.len() {
-            return Err(maybe_uncertain(
-                DactylError::adapter_with_code(
-                    AdapterErrorKind::Protocol,
-                    "malformed_response",
-                    format!(
-                        "neon batch returned {} results for {} operations",
-                        response.results.len(),
-                        operations.len()
-                    ),
-                ),
-                mutates,
-            ));
-        }
-        let mut tracker = DecodedResultTracker::new(self.budget);
-        let mut results = Vec::with_capacity(response.results.len());
-        for (operation, result) in operations.iter().zip(response.results) {
-            match operation.kind() {
-                OperationKind::Read => {
-                    let rows = rows_from_response_budgeted(result, self.budget, &mut tracker)
-                        .map_err(|error| maybe_uncertain(error, mutates))?;
-                    results.push(OperationResult::Rows(rows));
-                }
-                OperationKind::Write | OperationKind::Schema => {
-                    results.push(OperationResult::Write(WriteResult {
-                        affected_rows: result.affected_rows.unwrap_or(0),
-                        generated_keys: result.generated_keys,
-                    }));
-                }
+        finalize_batch_response(operations, response, self.budget, mutates)
+    }
+
+    fn atomic_async<'a>(&'a self, operations: &'a [Operation]) -> AdapterFuture<'a, AtomicResult> {
+        Box::pin(async move {
+            if operations.is_empty() {
+                return Ok(AtomicResult::default());
             }
-        }
-        Ok(AtomicResult { results })
+            let mutates = operations
+                .iter()
+                .any(|operation| operation.kind != crate::contract::OperationKind::Read);
+            if mutates {
+                ensure_remote_writable(self.access_mode)?;
+            }
+            let response = self.request_batch_async(operations, mutates).await?;
+            finalize_batch_response(operations, response, self.budget, mutates)
+        })
     }
 
     fn access_mode(&self) -> AccessMode {

@@ -1,5 +1,10 @@
 # Intent
 
+## Runtime-aware HTTP pool budgets and per-operation effect provenance (issues #134, #140)
+
+- **Runtime-aware pooled transport and `ResourceBudget` concurrency limits (`#134`)**: `ResourceBudget` (`src/budget.rs`) adds `http_max_in_flight` (default `16`, valid `1..=64`), `http_max_idle_per_host` (default `32`, valid `0..=64`), and `http_idle_timeout` (default `15s`, non-zero) via `with_http_pool_limits`. `src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, and `src/adapter/neon/mod.rs` share weak-cached `SharedHttpClient` pools with runtime-aware sync pooling (direct `reqwest::blocking::Client` outside Tokio; off-runtime worker init/exec only when called inside Tokio) plus native non-blocking `*_async` operations (`CloudConnector`, `LogicalConnector`, `Connection`, and `Adapter`) using per-runtime pooled `reqwest::Client` instances and `tokio::sync::Notify` permits while keeping Rust `1.85.0` MSRV and `Cargo.toml`/`Cargo.lock` dependencies unchanged.
+- **Per-operation authorization and effect provenance (`#140`)**: `src/connector.rs`, `src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, `src/adapter/mod.rs`, and `src/lib.rs` carry versioned (`PROVENANCE_CONTRACT_VERSION = 1`), origin- and auth-bound `EffectProvenance` (`EffectStatus::{NotAttempted, Refused, CommittedObserved, RolledBack, Uncertain, UnsupportedProvenance}`, `DecisionOutcome::{Allowed, Refused}`, `ObservationSource::{DirectResponse, ServerReadback, LocalPreflight, TransportFault}`) and `OperationAttempt` identity across `Connection::write_with_attempt*`, `atomic_with_attempt*`, `CloudConnector` / `LogicalConnector` `*_with_attempt*`, and separate idempotent `reconcile_operation*` / `reconcile_control_attempt*` (`ReconciliationObservation`). Mutating operations never auto-retry post-send disconnects; readback reconciliation leaves earlier `Uncertain` client failure metadata immutable while surfacing same-attempt/different-digest `AdapterErrorKind::IdempotencyConflict`, and local SQLite retains full policy-free compatibility.
+
 ## Wave 2 Decapod Cloud Edge gateway, RFC 9449 retry, billing overage, runtime selector, and multi-org conformance (issues #132, #133, #136, #137, #138, #139)
 
 - **Proof profile & runtime selector reconciliation (`#137`)**: `.decapod/config.toml` reconciles `[proof.required_profile].reviewed_sources_digest` (`sha256:635177a3b555fa2d1f95a28c13c87515cacbc1e73c4a627c6d4c981a8f1db665`) against accepted `dactyl-db 0.18.0` and pins `tools/proof/Containerfile` to `decapod =0.160.0` while keeping `Cargo.toml`/`Cargo.lock`, `.github/workflows/*`, `reviewed_commands_digest`, and `DEFAULT_CLOUD_ORIGIN = "https://goyxpcmxetztjlrrcwew.supabase.co"` unchanged. `Backend::datastore()` and `Datastore::as_str()` (`src/lib.rs`) map logical workspace backends directly to runtime datastores without reading process environment variables.
@@ -208,8 +213,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

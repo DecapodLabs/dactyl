@@ -138,32 +138,62 @@ challenges more than once. `DEFAULT_CLOUD_ORIGIN` remains unchanged at
 testing via `DACTYL_CLOUD_ORIGIN` or `LogicalTarget::cloud_with_origin`.
 
 Auth, account and discovery HTTP requests are bounded to a 5-second connect timeout,
-15-second request timeout, 16 KiB bodies, and `MAX_JSON_DEPTH = 64` JSON nesting,
-and reuse a bounded connection pool (maximum 32 concurrent in-flight connections)
-safe inside Tokio async runtimes. No redirect follows an error. Bounded
-`Decapod-Cloud-*` diagnostic headers, `Sunset`, `Deprecation`, `Retry-After`,
-and `DPoP-Nonce` are captured in redacted `CloudResponseMetadata` without
-interpreting application-layer governance or billing policy. HTTP `409` maps to
-`AdapterErrorKind::Conflict`, `413` maps to `AdapterErrorKind::Quota`, `429` with
-`quota_exceeded` or `overage_cap_exhausted` preserves `AdapterErrorKind::Quota`
-while `429 rate_limited` preserves `AdapterErrorKind::RateLimited`, and
-allowlisted public denial/DPoP codes are extracted across Decapod Cloud
-(`error.code`), Supabase GoTrue v2 (`error_code` when `code` is numeric), and
-OAuth2 (`error`) — including `use_dpop_nonce`, `invalid_dpop_proof`,
-`dpop_proof_required`, `dpop_replay`, `dpop_clock_skew`, `stolen_bearer`,
-`device_revoked`, `device_key_expired`, `refresh_reuse_detected`,
-`device_not_enrolled`, `mfa_step_up_required`, `provider_disabled`,
-`repo_access_denied`, `organization_seat_required`, `payment_pending`,
+15-second request timeout, 16 KiB bodies, and `MAX_JSON_DEPTH = 64` JSON nesting.
+Across `Neon`, `Supabase`, and `CloudConnector` (`with_http_budget` / `open_with_budget`),
+`ResourceBudget` explicitly governs transport pooling (`http_max_in_flight = 16` in `1..=64`,
+`http_max_idle_per_host = 32` in `0..=64`, `http_idle_timeout = 15s`), backed by a
+runtime-aware pool bounded globally at 64 in-flight slots. Synchronous callers reuse pooled
+`reqwest::blocking::Client` directly outside Tokio or off-runtime inside Tokio, while native
+`*_async` methods on `CloudConnector`, `LogicalConnector`, and `Connection` run directly
+on the caller's Tokio runtime using per-runtime pooled `reqwest::Client` instances and
+async `Notify` permits without worker-thread handoffs or FD exhaustion. No redirect follows
+an error.
+
+Per-operation authorization and effect provenance (`PROVENANCE_CONTRACT_VERSION = 1`)
+is carried unconditionally across transport via `OperationAttempt`, `EffectProvenance`,
+`EffectStatus` (`NotAttempted`, `Refused`, `CommittedObserved`, `RolledBack`, `Uncertain`,
+`UnsupportedProvenance`), `DecisionOutcome` (`Allowed`, `Refused`), `ObservationSource`
+(`DirectResponse`, `ServerReadback`, `LocalPreflight`, `TransportFault`), and
+`ReconciliationObservation` (`write_with_attempt*`, `atomic_with_attempt*`,
+`account_request_with_attempt*`, `control_request_with_attempt*`,
+`reconcile_operation*`, and `reconcile_control_attempt*`). Validated server provenance
+is bound strictly to the expected origin, authentication scheme, operation kind, caller
+`attempt_id`, SHA-256 request digest, and optional `scope_ref`; header vs. JSON envelope
+disagreements, wrong versions, redirects, mismatched origin/auth/scope/attempt refs, and
+partial or truncated responses fail closed (treating truncated mutating responses as
+`Uncertain` / `TransportFault` even when headers claim `committed_observed`). Mutating calls
+never auto-retry after post-send socket loss or timeout; callers preserve the same
+`OperationAttempt` identity across separate idempotent `reconcile_*` readbacks without
+mutating earlier failure records, and same-`attempt_id`/different-digest mismatches surface
+typed `AdapterErrorKind::IdempotencyConflict` (`idempotency_conflict` /
+`provenance_digest_mismatch`). Unadvertised legacy responses report
+`EffectStatus::UnsupportedProvenance` without fabricating receipts, and local SQLite
+operations remain unaffected without remote policy requirements. Bounded `Decapod-Cloud-*`
+diagnostic headers, `Sunset`, `Deprecation`, `Retry-After`, and `DPoP-Nonce` are captured
+in redacted `CloudResponseMetadata` without interpreting application-layer governance or
+billing policy, and all credential, proof, digest, origin, and correlation references are
+redacted from `Debug` and `Display`. HTTP `409` maps to `AdapterErrorKind::Conflict` (or
+`IdempotencyConflict` / `VersionConflict` on matching codes), `413` maps to
+`AdapterErrorKind::Quota`, `429` with `quota_exceeded` or `overage_cap_exhausted`
+preserves `AdapterErrorKind::Quota` while `429 rate_limited` preserves
+`AdapterErrorKind::RateLimited`, and allowlisted public denial/DPoP codes are extracted
+across Decapod Cloud (`error.code`), Supabase GoTrue v2 (`error_code` when `code` is
+numeric), and OAuth2 (`error`) — including `use_dpop_nonce`, `invalid_dpop_proof`,
+`dpop_proof_required`, `dpop_replay`, `dpop_clock_skew`, `dpop_aud_mismatch`,
+`expired_credential`, `stolen_bearer`, `device_revoked`, `device_key_expired`,
+`refresh_reuse_detected`, `device_not_enrolled`, `mfa_step_up_required`,
+`provider_disabled`, `repo_access_denied`, `grant_revoked`, `grant_expired`,
+`scope_denied`, `organization_seat_required`, `payment_pending`,
 `repository_not_authorized`, `quota_exceeded`, `overage_cap_exhausted`,
 `session_expired`, `session_revoked`, `session_not_found`, `bad_jwt`,
-`refresh_token_already_used`, `custody_conflict`, and `billing_not_configured` —
-while remote error messages and unknown codes are omitted. Post-send `5xx`,
-redirect, network, or response truncation failures on one-time auth exchanges,
-token rotations, revocations, or mutating account operations attach
-`code = Some("outcome_unknown")` and `MutationOutcome::Uncertain` so callers
-reconcile status instead of blindly replaying ambiguous mutations.
-Credential-bearing types redact Debug, and server error bodies are not exposed in
-diagnostics.
+`refresh_token_already_used`, `custody_conflict`, `idempotency_conflict`,
+`idempotency_in_progress`, and `billing_not_configured` — while remote error messages and
+unknown codes are omitted. Post-send `5xx`, redirect, network, or response truncation
+failures on one-time auth exchanges, token rotations, revocations, or uncertified mutating
+operations attach `code = Some("outcome_unknown")` and `MutationOutcome::Uncertain` unless
+certified server provenance explicitly establishes `RolledBack`, `NotAttempted`, or
+`Refused`. Credential-bearing types redact Debug, and server error bodies are not exposed
+in diagnostics.
 
 Person identity, tenant/project isolation, assigned-seat entitlement and
 revocation are backend policy enforced by Decapod Cloud.
@@ -172,17 +202,21 @@ forwards opaque application context and credentials; neither a local agent label
 nor a caller-supplied role creates backend authority. Privileged governance
 operations remain separately controlled by the backend.
 
-`tests/logical_connector.rs`, `tests/cloud_connector.rs`, and
-`tests/supabase_disabled.rs` prove per-workspace `LogicalTarget` /
-`LogicalConnector` isolation across concurrent local SQLite files and separate
-loopback cloud origins without ambient environment variables, portable redaction
-across feature combinations, canonical `decapod-onboarding` discovery with legacy
-404 fallback, bounded `Decapod-Cloud-*` / `DPoP-Nonce` metadata redaction, DPoP
-signer binding and challenge mapping, account/device route and credential
-separation, optional provider-token preservation, managed Auth requests, handoff
-validation, redirect/replay/`outcome_unknown` behavior, allowlisted
-GoTrue/OAuth2/Decapod Cloud error codes, and async-runtime safety using
-`local_sqlite` and `synthetic_http` fixtures. `tests/supabase_rpc.rs` proves
-native request/result normalization. Those tests are not `local_postgres`,
-`hosted_supabase` OAuth, or live Decapod Cloud deployment evidence (`unavailable`
-until exercised in deployment).
+`tests/logical_connector.rs`, `tests/cloud_connector.rs`, `tests/http_pool_async.rs`,
+`tests/effect_provenance.rs`, and `tests/supabase_disabled.rs` prove per-workspace
+`LogicalTarget` / `LogicalConnector` isolation across concurrent local SQLite files and
+separate loopback origins without ambient environment variables, portable redaction across
+feature combinations, runtime-aware async/sync HTTP pool limits and 250-way concurrent
+multi-tenant fanout without starvation or FD leaks, canonical `decapod-onboarding` discovery
+with legacy 404 fallback, bounded `Decapod-Cloud-*` / `DPoP-Nonce` metadata redaction, DPoP
+signer binding and challenge mapping, account/device route and credential separation,
+per-operation effect provenance (`NotAttempted`, `Refused`, `CommittedObserved`, `RolledBack`,
+`Uncertain`, `UnsupportedProvenance`), the full transport fault matrix (`before_send`,
+`accepted_not_committed`, `committed_before_ack`, `partial_response`,
+`timeout_with_late_effect`, 2 competing clients + 7 severed-socket retries without
+duplicate commit, same-ID/different-digest conflict, wrong DPoP audience/nonce, redirect,
+swapped refs, grant revocation), SQLite local compatibility, allowlisted GoTrue/OAuth2/
+Decapod Cloud error codes, and async-runtime safety using `local_sqlite` and
+`synthetic_http` fixtures. `tests/supabase_rpc.rs` proves native request/result
+normalization. Those tests are not `local_postgres`, `hosted_supabase` OAuth, or live
+Decapod Cloud deployment evidence (`unavailable` until exercised in deployment).

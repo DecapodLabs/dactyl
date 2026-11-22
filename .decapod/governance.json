@@ -93,6 +93,18 @@
     "target_base": "origin/main"
   },
   "claims": {
+    "dactyl-http-pool-budgets-and-effect-provenance": {
+      "statement": "Dactyl #134 and #140 add runtime-aware Tokio-safe SharedHttpClient pooling and ResourceBudget concurrency/idle bounds across Neon, Supabase, and CloudConnector plus versioned, origin/auth/scope-bound per-operation EffectProvenance, no post-send mutation auto-retry, separate idempotent readback reconciliation, and IdempotencyConflict detection; offline host all-8-feature suite, clippy, fmt, package, and MSRV 1.85.0 non-recovery/consumer checks pass while 14 Podman recovery::tests hit Fedora CoreOS SELinux /tmp xattrs and live external backends remain unavailable",
+      "falsifier": "Any failure in http_pool_async, effect_provenance, MSRV 1.85.0 non-recovery/clean-consumer/registry-control checks, clippy, fmt, or unlabelled-Linux recovery tests, or any post-send auto-retry/cross-origin/forged provenance acceptance or secret leak",
+      "status": "open",
+      "proof_refs": [
+        "dactyl-proof-msrv-1.85.0",
+        "docs/cloud-connectors.md",
+        "host-8-feature-matrix",
+        "tests/effect_provenance.rs",
+        "tests/http_pool_async.rs"
+      ]
+    },
     "dactyl-wave2-gateway-nonce-overage-selector": {
       "statement": "Dactyl Wave 2 implements Edge gateway routing, bounded single-retry use_dpop_nonce, BillingOveragePolicy & 429 Quota mapping, Backend::datastore().as_str(), and decapod 0.160.0 Containerfile alignment; non-recovery dactyl-proof checks, MSRV 1.85.0 Wave 2 suites, clippy, fmt, registry consumer, and host sqlite_maintenance/resource_budgets passed while 14 Linux-only recovery::tests hit Fedora CoreOS SELinux security.selinux xattrs",
       "falsifier": "Any failure in Wave 2 tests, MSRV 1.85.0 compilation/execution, clippy/fmt, CI unlabelled-Linux recovery tests, or decapod-validate drift check",
@@ -113,6 +125,17 @@
         "dactyl-proof-msrv-1.85.0",
         "host-sqlite-maintenance",
         "rust-contract"
+      ]
+    },
+    {
+      "id": "dactyl-134-140-v0160",
+      "summary": "Dactyl #134 runtime-aware HTTP pool budgets and native async transport plus #140 versioned origin/auth-bound effect provenance and transport fault matrix",
+      "input_digest": "sha256:030316956f96910c6be8d30fe52ec7827a52e49c559de042e48f868224cb13fa",
+      "proof_refs": [
+        "dactyl-proof-msrv-1.85.0",
+        "host-8-feature-matrix",
+        "tests/effect_provenance.rs",
+        "tests/http_pool_async.rs"
       ]
     }
   ],
@@ -147,7 +170,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
+      "intent": "Implement #134 http_pool budgets/runtime-aware transport and #140 effect provenance + transport fault matrix stacked on Wave 2",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -157,47 +180,56 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated Architecture spec for Wave 2 Edge gateway routing, bounded single-retry use_dpop_nonce, Backend::datastore/Datastore::as_str, and invalid_binding/Quota classification",
-          "reviewed_code_fingerprint": "c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c",
-          "spec_material_hash": "2aea136bf24f11717d8515bcc754263c908274bf6c15d50645105ef84b0fd19c"
+          "reason": "Updated Architecture spec for #134 SharedHttpClient runtime-aware pooling across Cloud/Supabase/Neon and #140 header/JSON provenance binding",
+          "reviewed_code_fingerprint": "da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad",
+          "spec_material_hash": "f4cd6b7256d1dbd8400180e656b33ec925120969b6258f5ebf34d66ec6f985ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated Interfaces spec for LogicalConnector::with_device_gateway/uses_device_gateway, AccountOperation additions, CloudResponseMetadata::retry_after, Backend::datastore/Datastore::as_str, and error codes",
-          "reviewed_code_fingerprint": "c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c",
-          "spec_material_hash": "58d29d3bb6ba7cff60b3288ccb92c9f36ac76efdbab20dcf77fad20b3e90e45b"
+          "reason": "Updated Interfaces spec for #134 ResourceBudget pool limits & *_async APIs and #140 EffectProvenance/OperationAttempt/reconcile_* contracts",
+          "reviewed_code_fingerprint": "da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad",
+          "spec_material_hash": "34c7df5a3da05f3ff502ed474f7028ba21f24bc0cd1c1dec56b5686e91fd5f0f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated Security spec for DPoP auth separation, bounded nonce retry invariants, and invalid_binding/redaction boundaries",
-          "reviewed_code_fingerprint": "c13ed60c1cd4aa395065c87050aefd89ff483fc0f1627e5357b9775ef6394e3c",
-          "spec_material_hash": "b1089766a60d23ad60d85cb12ff9de3716ff013a478705d753aa459aefd5f444"
+          "reason": "Updated Security spec for #134 global/per-pool FD bounds and #140 origin/auth/scope binding, partial-body fail-closed, and full Debug redaction",
+          "reviewed_code_fingerprint": "da3c235a912f1c9154e56184840e5ee0f70e56e227f3f8c1deb8b02cd5a2baad",
+          "spec_material_hash": "8d4a6b7893abd5abce278a3abb57157475a93a14ded3dad3146e30d65fb2aaff"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
+      "title": "Wave 2 + #134 http_pool budgets/async transport and #140 effect provenance",
       "todo_ids": [
-        "code_01m7zy6knr4jk864"
+        "code_01m7zy6knr4jk864",
+        "feat_01m80cjw1648txej"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795295059Z"
+      "updated_at": "1795313134Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3408012b83fae22698f22699e8cdaa8f2d0390e2fe876c770ebf59b4978e5fb6",
+      "artifact_hash": "sha256:f86e0b4c0b93d8b3bcd7b549b3a5654bcb50d2ed373ed731cd7972a2ccbedb0f",
       "checks": [
         {
           "name": "clippy",
           "status": "passed"
         },
         {
+          "name": "fmt",
+          "status": "passed"
+        },
+        {
           "name": "format",
+          "status": "passed"
+        },
+        {
+          "name": "host-8-feature-matrix",
           "status": "passed"
         },
         {
@@ -209,12 +241,24 @@
           "status": "unavailable"
         },
         {
+          "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
           "name": "local_postgres",
           "status": "unavailable"
         },
         {
+          "name": "msrv-1.85.0-non-recovery-matrix",
+          "status": "passed"
+        },
+        {
           "name": "msrv-clean-consumer",
           "status": "passed"
+        },
+        {
+          "name": "msrv-linux-selinux-tmp-recovery",
+          "status": "failed"
         },
         {
           "name": "msrv-wave2-integration",
@@ -261,10 +305,17 @@
             "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7ZY76A10FWHK1HPB7CNNMKX": {
@@ -332,25 +383,102 @@
                 "validation_findings": [
                   "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp"
                 ]
+              },
+              {
+                "action": "implemented",
+                "command": "cargo fmt --all -- --check && cargo clippy --locked --all-targets --all-features -- -D warnings",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/budget.rs",
+                  "src/http_pool.rs",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "docs/cloud-connectors.md",
+                  "tools/proof/Containerfile",
+                  ".decapod/config.toml",
+                  "src/budget.rs",
+                  "src/http_pool.rs",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "docs/cloud-connectors.md",
+                  "tests/http_pool_async.rs",
+                  "tests/effect_provenance.rs",
+                  "tests/http_pool_async.rs",
+                  "tests/effect_provenance.rs",
+                  "host-all-features-100pct",
+                  "podman-dactyl-proof-msrv-1.85.0-non-recovery-100pct"
+                ],
+                "proof_refs": [
+                  "fmt",
+                  "clippy",
+                  "host-8-feature-matrix",
+                  "msrv-1.85.0-non-recovery-matrix",
+                  "msrv-clean-consumer",
+                  "registry-control-0.17.0",
+                  "package",
+                  "msrv-linux-selinux-tmp-recovery",
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs to /tmp causing the 14 existing Linux-only adapter::sqlite::recovery::tests to fail with recovery_metadata_unsupported; macOS host recovery tests pass and CI ubuntu runs unlabelled ext4 /tmp",
+                  "local_sqlite and synthetic_http fixtures are executed; local_postgres, hosted_supabase, and live Propodus gateway deployments remain unavailable in offline proof"
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "cargo fmt --all -- --check && cargo clippy --locked --all-targets --all-features -- -D warnings",
         "cargo test --locked --all-features --test resource_budgets --test sqlite_maintenance",
+        "cargo test --locked across all 8 host feature combinations + cargo package --locked --allow-dirty",
+        "podman run --rm --security-opt label=disable localhost/dactyl-proof:latest MSRV 1.85.0 all 8 feature combos (--skip recovery for sqlite) + clippy + msrv-clean-consumer + registry-control-0.17.0 + package",
         "podman run dactyl-proof /usr/bin/python3.11 tools/proof/check.py",
         "podman run dactyl-proof MSRV 1.85.0 cloud_connector/logical_connector/supabase_rpc/supabase_service/control_rpc"
       ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "host-all-features-100pct",
+        "podman-dactyl-proof-msrv-1.85.0-non-recovery-100pct",
+        "tests/effect_provenance.rs",
+        "tests/http_pool_async.rs"
+      ],
+      "inspected_files": [
+        ".decapod/config.toml",
+        "docs/cloud-connectors.md",
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
+        "src/adapter/supabase.rs",
+        "src/budget.rs",
+        "src/cloud.rs",
+        "src/connector.rs",
+        "src/http_pool.rs",
+        "src/lib.rs",
+        "tools/proof/Containerfile"
+      ],
       "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
       "modified_files": [
         ".decapod/config.toml",
         "docs/cloud-connectors.md",
         "docs/supabase-conformance.md",
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
         "src/adapter/supabase.rs",
+        "src/budget.rs",
         "src/cloud.rs",
         "src/connector.rs",
         "src/error.rs",
@@ -358,7 +486,9 @@
         "src/lib.rs",
         "src/supabase_rpc.rs",
         "tests/cloud_connector.rs",
+        "tests/effect_provenance.rs",
         "tests/fixtures/supabase-service-schema.sql",
+        "tests/http_pool_async.rs",
         "tests/logical_connector.rs",
         "tests/supabase_rpc.rs",
         "tests/supabase_service.rs",
@@ -373,10 +503,12 @@
       "run_id": "branch_01M7ZY76A10FWHK1HPB7CNNMKX",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7zy6knr4jk864",
+      "task_id": "feat_01m80cjw1648txej",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp"
+        "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp",
+        "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs to /tmp causing the 14 existing Linux-only adapter::sqlite::recovery::tests to fail with recovery_metadata_unsupported; macOS host recovery tests pass and CI ubuntu runs unlabelled ext4 /tmp",
+        "local_sqlite and synthetic_http fixtures are executed; local_postgres, hosted_supabase, and live Propodus gateway deployments remain unavailable in offline proof"
       ]
     }
   },

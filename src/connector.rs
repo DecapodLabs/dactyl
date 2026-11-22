@@ -18,8 +18,30 @@ use crate::{
 #[cfg(feature = "supabase")]
 use crate::CloudConnector;
 
+/// Current version of the transport decision and effect provenance contract.
+pub const PROVENANCE_CONTRACT_VERSION: u16 = 1;
+
 /// Public Decapod Cloud deployment origin.
 pub const DEFAULT_CLOUD_ORIGIN: &str = "https://goyxpcmxetztjlrrcwew.supabase.co";
+
+pub(crate) fn validate_provenance_token(
+    value: &str,
+    message: &'static str,
+) -> Result<(), DactylError> {
+    if value.is_empty()
+        || value.len() > 128
+        || !value
+            .bytes()
+            .all(|b| b.is_ascii_graphic() && !matches!(b, b'"' | b'\\'))
+    {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Protocol,
+            "invalid_provenance",
+            message,
+        ));
+    }
+    Ok(())
+}
 
 pub(crate) fn validate_opaque_credential(
     value: &str,
@@ -197,8 +219,416 @@ pub trait RequestProofSigner: Send + Sync {
     }
 }
 
+/// Server-attested or transport-observed execution/effect state for a request.
+///
+/// Dactyl never upgrades an unadvertised HTTP 200 into [`Self::CommittedObserved`],
+/// never fabricates a receipt when provenance is omitted ([`Self::UnsupportedProvenance`]),
+/// and never rewrites an earlier [`Self::Uncertain`] client result when a later
+/// readback observes server state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EffectStatus {
+    /// Local preflight stopped the request before dispatch, or authoritative
+    /// server readback confirmed no attempt was recorded.
+    NotAttempted,
+    /// Server explicitly refused the request before committing any effect.
+    Refused,
+    /// Server explicitly established and attested a committed/observed effect
+    /// bound to the authenticated origin, auth scheme, and request correlation.
+    CommittedObserved,
+    /// Authoritative server confirmed the mutation rolled back without effect.
+    RolledBack,
+    /// Post-send transport loss, timeout, truncated body, redirect, or server
+    /// accepted-not-committed state left effect outcome indeterminate.
+    Uncertain,
+    /// Server returned a response without advertising the versioned provenance
+    /// contract; established connector behavior applies with no fabricated receipt.
+    UnsupportedProvenance,
+}
+
+/// Authoritative server admission decision carried in versioned provenance.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DecisionOutcome {
+    Allowed,
+    Refused,
+}
+
+/// Origin of an [`EffectProvenance`] observation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ObservationSource {
+    /// Observed directly in the HTTP response to the operation request itself.
+    DirectResponse,
+    /// Observed in a separate, subsequent idempotent server readback call.
+    ServerReadback,
+    /// Observed locally during preflight checks before any network dispatch.
+    LocalPreflight,
+    /// Observed after post-send socket loss, timeout, truncation, or redirect.
+    TransportFault,
+}
+
+/// Caller-supplied stable attempt/idempotency identity and optional request digest
+/// and opaque scope binding.
+///
+/// Preserving the same `attempt_id` and payload across explicit readback or
+/// caller-owned idempotent retry avoids duplicate commits on servers enforcing
+/// `(attempt_id, request_digest)` idempotency; changing the payload under the
+/// same `attempt_id` surfaces a typed conflict when enforced server-side.
+#[derive(Clone, PartialEq, Eq)]
+pub struct OperationAttempt {
+    attempt_id: String,
+    request_digest: Option<String>,
+    scope_ref: Option<String>,
+}
+
+impl std::fmt::Debug for OperationAttempt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OperationAttempt")
+            .field("attempt_id", &"[redacted]")
+            .field("has_request_digest", &self.request_digest.is_some())
+            .field("has_scope_ref", &self.scope_ref.is_some())
+            .finish()
+    }
+}
+
+impl OperationAttempt {
+    pub fn new(attempt_id: impl Into<String>) -> Result<Self, DactylError> {
+        let attempt_id = attempt_id.into();
+        validate_provenance_token(&attempt_id, "local preflight: invalid attempt identifier")?;
+        Ok(Self {
+            attempt_id,
+            request_digest: None,
+            scope_ref: None,
+        })
+    }
+
+    pub fn with_request_digest(mut self, digest: impl Into<String>) -> Result<Self, DactylError> {
+        let digest = digest.into();
+        validate_provenance_token(&digest, "local preflight: invalid request digest")?;
+        self.request_digest = Some(digest);
+        Ok(self)
+    }
+
+    pub fn with_scope_ref(mut self, scope_ref: impl Into<String>) -> Result<Self, DactylError> {
+        let scope_ref = scope_ref.into();
+        validate_provenance_token(&scope_ref, "local preflight: invalid scope reference")?;
+        self.scope_ref = Some(scope_ref);
+        Ok(self)
+    }
+
+    pub fn attempt_id(&self) -> &str {
+        &self.attempt_id
+    }
+
+    pub fn request_digest(&self) -> Option<&str> {
+        self.request_digest.as_deref()
+    }
+
+    pub fn scope_ref(&self) -> Option<&str> {
+        self.scope_ref.as_deref()
+    }
+}
+
+/// Bounded, origin- and auth-bound server decision/effect provenance.
+///
+/// Sensitive correlation references, tokens, origins, and scopes are redacted
+/// in [`std::fmt::Debug`].
+#[derive(Clone, PartialEq, Eq)]
+pub struct EffectProvenance {
+    contract_version: Option<u16>,
+    status: EffectStatus,
+    decision: Option<DecisionOutcome>,
+    observation_source: ObservationSource,
+    operation_kind: Option<OperationKind>,
+    request_id: Option<String>,
+    attempt_id: Option<String>,
+    request_digest: Option<String>,
+    decision_ref: Option<String>,
+    reason_code: Option<String>,
+    scope_ref: Option<String>,
+    auth_scheme: Option<AuthScheme>,
+    origin_bound: bool,
+    tls_authenticated: bool,
+}
+
+impl std::fmt::Debug for EffectProvenance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EffectProvenance")
+            .field("contract_version", &self.contract_version)
+            .field("status", &self.status)
+            .field("decision", &self.decision)
+            .field("observation_source", &self.observation_source)
+            .field("operation_kind", &self.operation_kind)
+            .field("reason_code", &self.reason_code)
+            .field("auth_scheme", &self.auth_scheme)
+            .field("origin_bound", &self.origin_bound)
+            .field("tls_authenticated", &self.tls_authenticated)
+            .field("has_request_id", &self.request_id.is_some())
+            .field("has_attempt_id", &self.attempt_id.is_some())
+            .field("has_request_digest", &self.request_digest.is_some())
+            .field("has_decision_ref", &self.decision_ref.is_some())
+            .field("has_scope_ref", &self.scope_ref.is_some())
+            .finish()
+    }
+}
+
+impl EffectProvenance {
+    pub fn contract_version(&self) -> Option<u16> {
+        self.contract_version
+    }
+
+    pub fn status(&self) -> EffectStatus {
+        self.status
+    }
+
+    pub fn decision(&self) -> Option<DecisionOutcome> {
+        self.decision
+    }
+
+    pub fn observation_source(&self) -> ObservationSource {
+        self.observation_source
+    }
+
+    pub fn operation_kind(&self) -> Option<OperationKind> {
+        self.operation_kind
+    }
+
+    pub fn request_id(&self) -> Option<&str> {
+        self.request_id.as_deref()
+    }
+
+    pub fn attempt_id(&self) -> Option<&str> {
+        self.attempt_id.as_deref()
+    }
+
+    pub fn request_digest(&self) -> Option<&str> {
+        self.request_digest.as_deref()
+    }
+
+    pub fn decision_ref(&self) -> Option<&str> {
+        self.decision_ref.as_deref()
+    }
+
+    pub fn reason_code(&self) -> Option<&str> {
+        self.reason_code.as_deref()
+    }
+
+    pub fn scope_ref(&self) -> Option<&str> {
+        self.scope_ref.as_deref()
+    }
+
+    pub fn auth_scheme(&self) -> Option<AuthScheme> {
+        self.auth_scheme
+    }
+
+    pub fn origin_bound(&self) -> bool {
+        self.origin_bound
+    }
+
+    pub fn tls_authenticated(&self) -> bool {
+        self.tls_authenticated
+    }
+
+    #[cfg(feature = "supabase")]
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn validated(
+        status: EffectStatus,
+        decision: Option<DecisionOutcome>,
+        observation_source: ObservationSource,
+        operation_kind: Option<OperationKind>,
+        request_id: Option<String>,
+        attempt_id: Option<String>,
+        request_digest: Option<String>,
+        decision_ref: Option<String>,
+        reason_code: Option<String>,
+        scope_ref: Option<String>,
+        auth_scheme: Option<AuthScheme>,
+        origin_bound: bool,
+        tls_authenticated: bool,
+    ) -> Self {
+        Self {
+            contract_version: Some(PROVENANCE_CONTRACT_VERSION),
+            status,
+            decision,
+            observation_source,
+            operation_kind,
+            request_id,
+            attempt_id,
+            request_digest,
+            decision_ref,
+            reason_code,
+            scope_ref,
+            auth_scheme,
+            origin_bound,
+            tls_authenticated,
+        }
+    }
+
+    pub(crate) fn local_preflight(
+        operation_kind: Option<OperationKind>,
+        attempt: Option<&OperationAttempt>,
+        reason_code: Option<&str>,
+        auth_scheme: Option<AuthScheme>,
+    ) -> Self {
+        Self {
+            contract_version: None,
+            status: EffectStatus::NotAttempted,
+            decision: None,
+            observation_source: ObservationSource::LocalPreflight,
+            operation_kind,
+            request_id: None,
+            attempt_id: attempt.map(|a| a.attempt_id.clone()),
+            request_digest: attempt.and_then(|a| a.request_digest.clone()),
+            decision_ref: None,
+            reason_code: reason_code.map(str::to_owned),
+            scope_ref: attempt.and_then(|a| a.scope_ref.clone()),
+            auth_scheme,
+            origin_bound: false,
+            tls_authenticated: false,
+        }
+    }
+
+    #[cfg(feature = "supabase")]
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn transport_fault(
+        operation_kind: Option<OperationKind>,
+        attempt: Option<&OperationAttempt>,
+        resolved_digest: Option<&str>,
+        request_id: Option<String>,
+        reason_code: Option<&str>,
+        auth_scheme: Option<AuthScheme>,
+        origin_bound: bool,
+        tls_authenticated: bool,
+    ) -> Self {
+        Self {
+            contract_version: None,
+            status: EffectStatus::Uncertain,
+            decision: None,
+            observation_source: ObservationSource::TransportFault,
+            operation_kind,
+            request_id,
+            attempt_id: attempt.map(|a| a.attempt_id.clone()),
+            request_digest: resolved_digest
+                .map(str::to_owned)
+                .or_else(|| attempt.and_then(|a| a.request_digest.clone())),
+            decision_ref: None,
+            reason_code: reason_code.map(str::to_owned),
+            scope_ref: attempt.and_then(|a| a.scope_ref.clone()),
+            auth_scheme,
+            origin_bound,
+            tls_authenticated,
+        }
+    }
+
+    #[cfg(feature = "supabase")]
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn unsupported(
+        observation_source: ObservationSource,
+        operation_kind: Option<OperationKind>,
+        attempt: Option<&OperationAttempt>,
+        resolved_digest: Option<&str>,
+        request_id: Option<String>,
+        reason_code: Option<String>,
+        auth_scheme: Option<AuthScheme>,
+        origin_bound: bool,
+        tls_authenticated: bool,
+    ) -> Self {
+        Self {
+            contract_version: None,
+            status: EffectStatus::UnsupportedProvenance,
+            decision: None,
+            observation_source,
+            operation_kind,
+            request_id,
+            attempt_id: attempt.map(|a| a.attempt_id.clone()),
+            request_digest: resolved_digest
+                .map(str::to_owned)
+                .or_else(|| attempt.and_then(|a| a.request_digest.clone())),
+            decision_ref: None,
+            reason_code,
+            scope_ref: attempt.and_then(|a| a.scope_ref.clone()),
+            auth_scheme,
+            origin_bound,
+            tls_authenticated,
+        }
+    }
+}
+
+/// Source-attributed server reconciliation result from a separate idempotent readback.
+///
+/// The earlier client observation (`prior_client_status`, e.g. [`EffectStatus::Uncertain`])
+/// is retained unchanged alongside the new [`ObservationSource::ServerReadback`] provenance.
+#[derive(Clone, PartialEq)]
+pub struct ReconciliationObservation {
+    attempt_id: String,
+    request_digest: Option<String>,
+    provenance: EffectProvenance,
+    prior_client_status: Option<EffectStatus>,
+    payload: serde_json::Value,
+    metadata: CloudResponseMetadata,
+}
+
+impl std::fmt::Debug for ReconciliationObservation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ReconciliationObservation")
+            .field("attempt_id", &"[redacted]")
+            .field("has_request_digest", &self.request_digest.is_some())
+            .field("prior_client_status", &self.prior_client_status)
+            .field("provenance", &self.provenance)
+            .field("payload", &"[redacted]")
+            .finish()
+    }
+}
+
+impl ReconciliationObservation {
+    #[cfg(feature = "supabase")]
+    pub(crate) fn new(
+        attempt_id: String,
+        request_digest: Option<String>,
+        provenance: EffectProvenance,
+        prior_client_status: Option<EffectStatus>,
+        payload: serde_json::Value,
+        metadata: CloudResponseMetadata,
+    ) -> Self {
+        Self {
+            attempt_id,
+            request_digest,
+            provenance,
+            prior_client_status,
+            payload,
+            metadata,
+        }
+    }
+
+    pub fn attempt_id(&self) -> &str {
+        &self.attempt_id
+    }
+
+    pub fn request_digest(&self) -> Option<&str> {
+        self.request_digest.as_deref()
+    }
+
+    pub fn provenance(&self) -> &EffectProvenance {
+        &self.provenance
+    }
+
+    pub fn prior_client_status(&self) -> Option<EffectStatus> {
+        self.prior_client_status
+    }
+
+    pub fn payload(&self) -> &serde_json::Value {
+        &self.payload
+    }
+
+    pub fn metadata(&self) -> &CloudResponseMetadata {
+        &self.metadata
+    }
+}
+
 /// Bounded, redacted `DPoP-Nonce` and `Decapod-Cloud-*` diagnostic/sunset
-/// metadata captured from Decapod Cloud HTTP responses.
+/// metadata and validated decision/effect provenance captured from Decapod Cloud
+/// HTTP responses.
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct CloudResponseMetadata {
     dpop_nonce: Option<String>,
@@ -206,6 +636,7 @@ pub struct CloudResponseMetadata {
     deprecation: Option<String>,
     retry_after: Option<String>,
     cloud_headers: Vec<(String, String)>,
+    provenance: Option<EffectProvenance>,
 }
 
 impl std::fmt::Debug for CloudResponseMetadata {
@@ -216,6 +647,7 @@ impl std::fmt::Debug for CloudResponseMetadata {
             .field("has_deprecation", &self.deprecation.is_some())
             .field("has_retry_after", &self.retry_after.is_some())
             .field("cloud_header_count", &self.cloud_headers.len())
+            .field("provenance", &self.provenance)
             .finish()
     }
 }
@@ -249,6 +681,11 @@ impl CloudResponseMetadata {
             .map(|(_, value)| value.as_str())
     }
 
+    /// Validated, origin- and auth-bound decision/effect provenance for this response.
+    pub fn provenance(&self) -> Option<&EffectProvenance> {
+        self.provenance.as_ref()
+    }
+
     #[cfg(feature = "supabase")]
     pub(crate) fn set_dpop_nonce(&mut self, nonce: String) {
         self.dpop_nonce = Some(nonce);
@@ -272,6 +709,10 @@ impl CloudResponseMetadata {
     #[cfg(feature = "supabase")]
     pub(crate) fn push_cloud_header(&mut self, name: String, value: String) {
         self.cloud_headers.push((name, value));
+    }
+
+    pub(crate) fn set_provenance(&mut self, provenance: EffectProvenance) {
+        self.provenance = Some(provenance);
     }
 }
 
@@ -582,7 +1023,7 @@ enum ConnectorKind {
         path: String,
     },
     #[cfg(feature = "supabase")]
-    Cloud(CloudConnector),
+    Cloud(Box<CloudConnector>),
 }
 
 impl std::fmt::Debug for LogicalConnector {
@@ -619,7 +1060,48 @@ impl LogicalConnector {
                     let (connector, metadata) = CloudConnector::discover_with_metadata(&origin)?;
                     Ok((
                         Self {
-                            inner: ConnectorKind::Cloud(connector),
+                            inner: ConnectorKind::Cloud(Box::new(connector)),
+                        },
+                        metadata,
+                    ))
+                }
+                #[cfg(not(feature = "supabase"))]
+                {
+                    let _ = origin;
+                    Err(DactylError::Config(
+                        "cloud support is disabled; enable the `supabase` feature".into(),
+                    ))
+                }
+            }
+        }
+    }
+
+    /// Asynchronously resolve an explicit [`LogicalTarget`], returning bounded discovery metadata.
+    pub async fn resolve_with_metadata_async(
+        target: LogicalTarget,
+    ) -> Result<(Self, CloudResponseMetadata), DactylError> {
+        match target.inner {
+            TargetKind::Local { path } => {
+                if path.trim().is_empty() {
+                    return Err(DactylError::Config(
+                        "local storage path must not be empty".into(),
+                    ));
+                }
+                Ok((
+                    Self {
+                        inner: ConnectorKind::Local { path },
+                    },
+                    CloudResponseMetadata::default(),
+                ))
+            }
+            TargetKind::Cloud { origin } => {
+                #[cfg(feature = "supabase")]
+                {
+                    let (connector, metadata) =
+                        CloudConnector::discover_with_metadata_async(&origin).await?;
+                    Ok((
+                        Self {
+                            inner: ConnectorKind::Cloud(Box::new(connector)),
                         },
                         metadata,
                     ))
@@ -644,6 +1126,28 @@ impl LogicalConnector {
         Self::resolve_with_metadata(target).map(|(connector, _)| connector)
     }
 
+    /// Asynchronously resolve an explicit [`LogicalTarget`].
+    pub async fn resolve_async(target: LogicalTarget) -> Result<Self, DactylError> {
+        Self::resolve_with_metadata_async(target)
+            .await
+            .map(|(connector, _)| connector)
+    }
+
+    /// Configure the HTTP pool and timeout budget for this connector's cloud
+    /// auth/account transport (validates `budget` and is otherwise a no-op on
+    /// local SQLite connectors).
+    pub fn with_http_budget(mut self, budget: ResourceBudget) -> Result<Self, DactylError> {
+        budget.validate()?;
+        match &mut self.inner {
+            ConnectorKind::Local { .. } => {}
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                **connector = (**connector).clone().with_http_budget(budget)?;
+            }
+        }
+        Ok(self)
+    }
+
     /// Attach a caller-supplied [`RequestProofSigner`] for Decapod Cloud and
     /// Supabase RPC requests on this connector (no-op on local SQLite connectors).
     pub fn with_proof_signer(mut self, signer: Arc<dyn RequestProofSigner>) -> Self {
@@ -653,7 +1157,7 @@ impl LogicalConnector {
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => {
-                *connector = connector.clone().with_proof_signer(signer);
+                **connector = (**connector).clone().with_proof_signer(signer);
             }
         }
         self
@@ -669,7 +1173,7 @@ impl LogicalConnector {
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => {
-                *connector = connector.clone().with_dpop_nonce(nonce);
+                **connector = (**connector).clone().with_dpop_nonce(nonce);
             }
         }
         self
@@ -683,7 +1187,7 @@ impl LogicalConnector {
             ConnectorKind::Local { .. } => {}
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => {
-                *connector = connector.clone().with_device_gateway();
+                **connector = (**connector).clone().with_device_gateway();
             }
         }
         self
@@ -708,8 +1212,16 @@ impl LogicalConnector {
         Self::resolve(LogicalTarget::cloud())
     }
 
+    pub async fn cloud_async() -> Result<Self, DactylError> {
+        Self::resolve_async(LogicalTarget::cloud()).await
+    }
+
     pub fn cloud_with_origin(origin: impl Into<String>) -> Result<Self, DactylError> {
         Self::resolve(LogicalTarget::cloud_with_origin(origin))
+    }
+
+    pub async fn cloud_with_origin_async(origin: impl Into<String>) -> Result<Self, DactylError> {
+        Self::resolve_async(LogicalTarget::cloud_with_origin(origin)).await
     }
 
     /// Construct a cloud connector from an already verified deployment profile
@@ -718,7 +1230,7 @@ impl LogicalConnector {
         #[cfg(feature = "supabase")]
         {
             Ok(Self {
-                inner: ConnectorKind::Cloud(CloudConnector::with_config(config)?),
+                inner: ConnectorKind::Cloud(Box::new(CloudConnector::with_config(config)?)),
             })
         }
         #[cfg(not(feature = "supabase"))]
@@ -830,6 +1342,25 @@ impl LogicalConnector {
         }
     }
 
+    pub async fn start_authentication_async(
+        &self,
+        repository: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<AuthenticationStart, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (repository, secrets);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .start_authentication_async(repository, secrets)
+                    .await
+            }
+        }
+    }
+
     pub fn authentication_status(
         &self,
         flow_id: &str,
@@ -842,6 +1373,25 @@ impl LogicalConnector {
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => connector.authentication_status(flow_id, secrets),
+        }
+    }
+
+    pub async fn authentication_status_async(
+        &self,
+        flow_id: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<String, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (flow_id, secrets);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .authentication_status_async(flow_id, secrets)
+                    .await
+            }
         }
     }
 
@@ -864,6 +1414,25 @@ impl LogicalConnector {
         }
     }
 
+    pub async fn exchange_authentication_code_async(
+        &self,
+        flow_id: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<String, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (flow_id, secrets);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .exchange_authentication_code_async(flow_id, secrets)
+                    .await
+            }
+        }
+    }
+
     /// One-time PKCE verifier exchange. Post-send transport loss returns code
     /// `"outcome_unknown"`.
     pub fn exchange_session(
@@ -881,6 +1450,23 @@ impl LogicalConnector {
         }
     }
 
+    pub async fn exchange_session_async(
+        &self,
+        code: &str,
+        secrets: &AuthenticationSecrets,
+    ) -> Result<UserSession, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (code, secrets);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector.exchange_session_async(code, secrets).await
+            }
+        }
+    }
+
     /// Refresh a managed user session. Post-send transport loss returns code
     /// `"outcome_unknown"` because refresh tokens are single-use.
     pub fn refresh_session(&self, refresh_token: &str) -> Result<UserSession, DactylError> {
@@ -891,6 +1477,20 @@ impl LogicalConnector {
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => connector.refresh_session(refresh_token),
+        }
+    }
+
+    pub async fn refresh_session_async(
+        &self,
+        refresh_token: &str,
+    ) -> Result<UserSession, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = refresh_token;
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.refresh_session_async(refresh_token).await,
         }
     }
 
@@ -912,6 +1512,26 @@ impl LogicalConnector {
         }
     }
 
+    pub async fn complete_authentication_async(
+        &self,
+        flow_id: &str,
+        secrets: &AuthenticationSecrets,
+        bearer: &str,
+    ) -> Result<(), DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (flow_id, secrets, bearer);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .complete_authentication_async(flow_id, secrets, bearer)
+                    .await
+            }
+        }
+    }
+
     /// Revoke the current session scope on the managed Auth service.
     pub fn revoke_session(&self, bearer: &str) -> Result<(), DactylError> {
         match &self.inner {
@@ -921,6 +1541,17 @@ impl LogicalConnector {
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => connector.revoke_session(bearer),
+        }
+    }
+
+    pub async fn revoke_session_async(&self, bearer: &str) -> Result<(), DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = bearer;
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.revoke_session_async(bearer).await,
         }
     }
 
@@ -1002,6 +1633,159 @@ impl LogicalConnector {
         }
     }
 
+    /// Asynchronously invoke a trusted native JSON control function on this cloud connector.
+    pub async fn control_request_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+    ) -> Result<serde_json::Value, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        self.control_request_with_metadata_async(
+            function,
+            request,
+            bearer,
+            None,
+            kind,
+            budget,
+            &mut metadata,
+        )
+        .await
+    }
+
+    /// Asynchronously invoke a trusted native JSON control function while capturing
+    /// bounded response/challenge metadata and validated effect provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn control_request_with_metadata_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    function,
+                    request,
+                    bearer,
+                    dpop_nonce,
+                    kind,
+                    budget,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .control_request_with_metadata_async(
+                        function,
+                        request,
+                        bearer,
+                        dpop_nonce,
+                        kind,
+                        budget,
+                        metadata_out,
+                    )
+                    .await
+            }
+        }
+    }
+
+    /// Invoke a trusted native JSON control function carrying caller-supplied
+    /// attempt/idempotency identity and capturing bounded provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub fn control_request_with_attempt(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    function,
+                    request,
+                    bearer,
+                    dpop_nonce,
+                    kind,
+                    budget,
+                    attempt,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.control_request_with_attempt(
+                function,
+                request,
+                bearer,
+                dpop_nonce,
+                kind,
+                budget,
+                attempt,
+                metadata_out,
+            ),
+        }
+    }
+
+    /// Asynchronously invoke a trusted native JSON control function carrying
+    /// caller-supplied attempt/idempotency identity and capturing bounded provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn control_request_with_attempt_async(
+        &self,
+        function: &str,
+        request: &serde_json::Value,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        kind: OperationKind,
+        budget: ResourceBudget,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    function,
+                    request,
+                    bearer,
+                    dpop_nonce,
+                    kind,
+                    budget,
+                    attempt,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .control_request_with_attempt_async(
+                        function,
+                        request,
+                        bearer,
+                        dpop_nonce,
+                        kind,
+                        budget,
+                        attempt,
+                        metadata_out,
+                    )
+                    .await
+            }
+        }
+    }
+
     /// Transport a hosted account, device-enrollment, or billing request using
     /// the current user bearer. Customer membership, repository/project
     /// authority, seats, pricing, and entitlements stay on Decapod Cloud; its
@@ -1044,6 +1828,283 @@ impl LogicalConnector {
                 dpop_nonce,
                 metadata_out,
             ),
+        }
+    }
+
+    /// Asynchronously transport a hosted account, device-enrollment, or billing request.
+    pub async fn account_request_async(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+    ) -> Result<serde_json::Value, DactylError> {
+        let mut metadata = CloudResponseMetadata::default();
+        self.account_request_with_metadata_async(operation, body, bearer, scm, None, &mut metadata)
+            .await
+    }
+
+    /// Asynchronously transport a hosted account, device-enrollment, or billing
+    /// request while capturing bounded response/challenge metadata and provenance.
+    pub async fn account_request_with_metadata_async(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (operation, body, bearer, scm, dpop_nonce, metadata_out);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .account_request_with_metadata_async(
+                        operation,
+                        body,
+                        bearer,
+                        scm,
+                        dpop_nonce,
+                        metadata_out,
+                    )
+                    .await
+            }
+        }
+    }
+
+    /// Transport a hosted account, device-enrollment, or billing request carrying
+    /// caller-supplied attempt/idempotency identity and capturing bounded provenance.
+    #[allow(clippy::too_many_arguments)]
+    pub fn account_request_with_attempt(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    operation,
+                    body,
+                    bearer,
+                    scm,
+                    dpop_nonce,
+                    attempt,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.account_request_with_attempt(
+                operation,
+                body,
+                bearer,
+                scm,
+                dpop_nonce,
+                attempt,
+                metadata_out,
+            ),
+        }
+    }
+
+    /// Asynchronously transport a hosted account, device-enrollment, or billing
+    /// request carrying caller-supplied attempt/idempotency identity.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn account_request_with_attempt_async(
+        &self,
+        operation: AccountOperation,
+        body: &serde_json::Value,
+        bearer: &str,
+        scm: Option<&ScmCredential>,
+        dpop_nonce: Option<&str>,
+        attempt: &OperationAttempt,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<serde_json::Value, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    operation,
+                    body,
+                    bearer,
+                    scm,
+                    dpop_nonce,
+                    attempt,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .account_request_with_attempt_async(
+                        operation,
+                        body,
+                        bearer,
+                        scm,
+                        dpop_nonce,
+                        attempt,
+                        metadata_out,
+                    )
+                    .await
+            }
+        }
+    }
+
+    /// Execute a separate, non-mutating server readback to reconcile an earlier
+    /// onboarding/gateway operation attempt without repeating the write.
+    pub fn reconcile_operation(
+        &self,
+        attempt: &OperationAttempt,
+        bearer: &str,
+        dpop_nonce: Option<&str>,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    attempt,
+                    bearer,
+                    dpop_nonce,
+                    prior_client_status,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.reconcile_operation(
+                attempt,
+                bearer,
+                dpop_nonce,
+                prior_client_status,
+                metadata_out,
+            ),
+        }
+    }
+
+    /// Asynchronously execute a separate, non-mutating server readback to reconcile
+    /// an earlier onboarding/gateway operation attempt without repeating the write.
+    pub async fn reconcile_operation_async(
+        &self,
+        attempt: &OperationAttempt,
+        bearer: &str,
+        dpop_nonce: Option<&str>,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    attempt,
+                    bearer,
+                    dpop_nonce,
+                    prior_client_status,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .reconcile_operation_async(
+                        attempt,
+                        bearer,
+                        dpop_nonce,
+                        prior_client_status,
+                        metadata_out,
+                    )
+                    .await
+            }
+        }
+    }
+
+    /// Execute a separate, non-mutating control RPC readback to reconcile an earlier
+    /// control operation attempt without repeating the write.
+    #[allow(clippy::too_many_arguments)]
+    pub fn reconcile_control_attempt(
+        &self,
+        function: &str,
+        attempt: &OperationAttempt,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        budget: ResourceBudget,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    function,
+                    attempt,
+                    bearer,
+                    dpop_nonce,
+                    budget,
+                    prior_client_status,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.reconcile_control_attempt(
+                function,
+                attempt,
+                bearer,
+                dpop_nonce,
+                budget,
+                prior_client_status,
+                metadata_out,
+            ),
+        }
+    }
+
+    /// Asynchronously execute a separate, non-mutating control RPC readback to reconcile
+    /// an earlier control operation attempt without repeating the write.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn reconcile_control_attempt_async(
+        &self,
+        function: &str,
+        attempt: &OperationAttempt,
+        bearer: Option<&str>,
+        dpop_nonce: Option<&str>,
+        budget: ResourceBudget,
+        prior_client_status: Option<EffectStatus>,
+        metadata_out: &mut CloudResponseMetadata,
+    ) -> Result<ReconciliationObservation, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (
+                    function,
+                    attempt,
+                    bearer,
+                    dpop_nonce,
+                    budget,
+                    prior_client_status,
+                    metadata_out,
+                );
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => {
+                connector
+                    .reconcile_control_attempt_async(
+                        function,
+                        attempt,
+                        bearer,
+                        dpop_nonce,
+                        budget,
+                        prior_client_status,
+                        metadata_out,
+                    )
+                    .await
+            }
         }
     }
 }
