@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0](https://github.com/DecapodLabs/dactyl/compare/v0.18.0...v0.19.0) (2026-11-22)
+
+
+### Features
+
+* **cloud:** add [#138](https://github.com/DecapodLabs/dactyl/issues/138) staged first-party custom origin helpers and cutover contract tests ([57a3c31](https://github.com/DecapodLabs/dactyl/commit/57a3c31b66ddd949a5cf70b9807ce2a43ca2c5ab))
+* **cloud:** add 6 Propodus onboarding/admin AccountOperation variants with human-Bearer preflight ([ce0abe2](https://github.com/DecapodLabs/dactyl/commit/ce0abe21e56ca358113dcdf341780e2cc02ebddd))
+* **cloud:** add runtime-aware http_pool budgets ([#134](https://github.com/DecapodLabs/dactyl/issues/134)) and effect provenance ([#140](https://github.com/DecapodLabs/dactyl/issues/140)) ([dd20a35](https://github.com/DecapodLabs/dactyl/commit/dd20a35023d5b9bc2d03ecaeca0eaf21deef4b95))
+* **cloud:** unified Wave 2+3+4 cloud transport, http_pool budgets, effect provenance, admin ops, staged api.decapodlabs.ai cutover, and decapod 0.162.1 pin ([05c052e](https://github.com/DecapodLabs/dactyl/commit/05c052e8d0dc324685a2d60f21cea4b54cb80b78))
+* **cloud:** Wave 2 gateway routing, DPoP nonce retry, overages, selector, and v0.160.0 pin ([1c2a719](https://github.com/DecapodLabs/dactyl/commit/1c2a7190ebb4e0bf844ad759b17f0713199a2e33))
+
 ## [0.18.0](https://github.com/DecapodLabs/dactyl/compare/v0.17.0...v0.18.0) (2026-11-18)
 
 
