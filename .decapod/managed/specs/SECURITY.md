@@ -1,5 +1,9 @@
 # Security
 
+## Staged custom origin isolation and path-segment validation (issue #138)
+
+- **No premature origin cutover & strict origin pinning (`#138`)**: `DEFAULT_CLOUD_ORIGIN` stays on `"https://goyxpcmxetztjlrrcwew.supabase.co"` until live custom-domain TLS/OAuth/discovery activation is independently proven. Opt-in `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`) redacts in `LogicalTarget` `Debug` output, refuses cross-origin `project_origin` discovery responses and `308`/`307` redirects without leaking credentials, pins DPoP `htu` signing strictly to the selected origin, refuses undeployed `/auth` or cross-origin `browser_url` handoffs in `validate_start`, and validates `org`/`repo` segments in `canonical_repository_url` against path traversal, slashes, queries, fragments, and percent-encoding.
+
 ## Transport concurrency bounds, origin/auth-bound effect provenance, and human-Bearer boundary (issues #134, #140)
 
 - **FD exhaustion & runtime starvation guard (`#134`)**: `SharedHttpClient` bounds both per-budget and global (`64`) in-flight requests, bounds live pools (`64`) and per-pool async runtime caches (`16`), runs `reqwest::Client` directly inside Tokio async callers, and uses plain worker offload exclusively when sync methods are invoked from an active Tokio runtime.
@@ -183,7 +187,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
+- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

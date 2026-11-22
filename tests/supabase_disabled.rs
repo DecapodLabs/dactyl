@@ -24,6 +24,7 @@ fn rpc_disabled_feature_fails_without_fallback() {
 
     for failed in [
         dactyl_db::LogicalConnector::cloud(),
+        dactyl_db::LogicalConnector::first_party_cloud(),
         dactyl_db::LogicalConnector::cloud_with_origin("https://project.example"),
         dactyl_db::LogicalConnector::cloud_with_config(config),
     ] {

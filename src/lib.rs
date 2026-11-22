@@ -28,7 +28,8 @@ pub use crate::connector::{
     CloudResponseMetadata, DecisionOutcome, EffectProvenance, EffectStatus, LogicalConnector,
     LogicalTarget, ObservationSource, OperationAttempt, ReconciliationObservation, RequestProof,
     RequestProofInput, RequestProofSigner, ScmCredential, ScmProvider, UserSession,
-    DEFAULT_CLOUD_ORIGIN, PROVENANCE_CONTRACT_VERSION,
+    DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_CLOUD_ORIGIN,
+    FIRST_PARTY_REPO_PATH_PREFIX, PROVENANCE_CONTRACT_VERSION,
 };
 pub use crate::contract::{
     AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,

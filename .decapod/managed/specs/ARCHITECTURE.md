@@ -1,5 +1,9 @@
 # Architecture
 
+## Staged first-party custom origin cutover (issue #138)
+
+- **`src/connector.rs`, `src/cloud.rs`, & `src/lib.rs` (`#138`)**: `DEFAULT_CLOUD_ORIGIN` remains `"https://goyxpcmxetztjlrrcwew.supabase.co"` while `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`), `FIRST_PARTY_AUTH_PATH` (`"/auth"`), and `FIRST_PARTY_REPO_PATH_PREFIX` (`"/decapod"`) provide explicit opt-in staging primitives via `LogicalTarget::first_party_cloud()`, `LogicalConnector::first_party_cloud()` / `first_party_cloud_async()`, and origin-bound `canonical_auth_url()` / `canonical_repository_url(org, repo)`. `validate_canonical_path_segment` rejects empty, oversized (`>128`), traversal (`.`, `..`), slash, query, fragment, percent-encoded, and whitespace inputs before constructing `/decapod/<org>/<repo>`. Existing discovery origin-matching (`profile.project_origin == selected_origin`), no-redirect HTTP policies, `validate_start` `/functions/v1/{decapod,propodus}-onboarding/begin` path enforcement, and DPoP `htu` canonical URL signing remain strictly bound to the selected origin.
+
 ## Runtime-aware HTTP pool budgets, per-operation effect provenance, and onboarding/admin auth enforcement (issues #134, #140)
 
 - **`src/budget.rs` & `src/http_pool.rs` (`#134`)**: `SharedHttpClient` pools are keyed by `PoolSettings::from(ResourceBudget)` (`connect_timeout`, `http_max_in_flight`, `http_max_idle_per_host`, `http_idle_timeout`), gated by both per-budget `RequestLimit` (`Condvar` + `tokio::sync::Notify`) and a `64`-slot process ceiling (`MAX_PROCESS_IN_FLIGHT`), with lazy `blocking_client()` and per-`tokio::runtime::Id` `async_clients` (bounded to `16` runtimes per pool). `in_tokio_runtime()` avoids spawning helper threads for synchronous callers outside Tokio, while native `*_async` execution paths in `src/cloud.rs`, `src/adapter/neon/mod.rs`, `src/adapter/supabase.rs`, and `src/lib.rs` run directly on the active Tokio runtime without blocking worker handoffs (`read_bounded_body_async`, `with_dpop_nonce_retry_async`).
@@ -247,7 +251,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
+- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

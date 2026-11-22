@@ -24,6 +24,42 @@ pub const PROVENANCE_CONTRACT_VERSION: u16 = 1;
 /// Public Decapod Cloud deployment origin.
 pub const DEFAULT_CLOUD_ORIGIN: &str = "https://goyxpcmxetztjlrrcwew.supabase.co";
 
+/// Staged first-party Decapod Cloud custom HTTPS origin (`#138`).
+///
+/// [`DEFAULT_CLOUD_ORIGIN`] remains on the Supabase-provisioned hostname until
+/// custom-domain TLS activation, OAuth callback cutover, and server-advertised
+/// `project_origin` discovery are independently proven. Callers may opt in
+/// explicitly via [`LogicalTarget::first_party_cloud`] or
+/// [`LogicalConnector::first_party_cloud`] once the custom origin is live.
+pub const FIRST_PARTY_CLOUD_ORIGIN: &str = "https://api.decapodlabs.ai";
+
+/// Canonical first-party application authentication route path on the custom
+/// origin (`#138`). Existing onboarding calls remain on
+/// `/functions/v1/decapod-onboarding/*` until backend routing is deployed and
+/// verified.
+pub const FIRST_PARTY_AUTH_PATH: &str = "/auth";
+
+/// Canonical first-party repository route prefix (`/decapod/<org>/<repo>`) on
+/// the custom origin (`#138`).
+pub const FIRST_PARTY_REPO_PATH_PREFIX: &str = "/decapod";
+
+#[cfg(feature = "supabase")]
+pub(crate) fn validate_canonical_path_segment(
+    segment: &str,
+    message: &'static str,
+) -> Result<(), DactylError> {
+    if segment.is_empty()
+        || segment.len() > 128
+        || matches!(segment, "." | "..")
+        || !segment
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.'))
+    {
+        return Err(DactylError::adapter(AdapterErrorKind::Protocol, message));
+    }
+    Ok(())
+}
+
 pub(crate) fn validate_provenance_token(
     value: &str,
     message: &'static str,
@@ -1015,6 +1051,13 @@ impl LogicalTarget {
         }
     }
 
+    /// Select the staged first-party custom HTTPS cloud origin
+    /// ([`FIRST_PARTY_CLOUD_ORIGIN`]) without altering [`DEFAULT_CLOUD_ORIGIN`]
+    /// or reading ambient process environment variables.
+    pub fn first_party_cloud() -> Self {
+        Self::cloud_with_origin(FIRST_PARTY_CLOUD_ORIGIN)
+    }
+
     /// Select an explicit cloud deployment origin (such as a private deployment
     /// or loopback test fixture) scoped solely to this target instance.
     pub fn cloud_with_origin(origin: impl Into<String>) -> Self {
@@ -1237,6 +1280,50 @@ impl LogicalConnector {
 
     pub async fn cloud_async() -> Result<Self, DactylError> {
         Self::resolve_async(LogicalTarget::cloud()).await
+    }
+
+    /// Resolve an explicit opt-in connector against the staged first-party
+    /// custom HTTPS origin ([`FIRST_PARTY_CLOUD_ORIGIN`]).
+    pub fn first_party_cloud() -> Result<Self, DactylError> {
+        Self::resolve(LogicalTarget::first_party_cloud())
+    }
+
+    /// Asynchronously resolve an explicit opt-in connector against the staged
+    /// first-party custom HTTPS origin ([`FIRST_PARTY_CLOUD_ORIGIN`]).
+    pub async fn first_party_cloud_async() -> Result<Self, DactylError> {
+        Self::resolve_async(LogicalTarget::first_party_cloud()).await
+    }
+
+    /// Build the canonical `/auth` application URL bound strictly to this
+    /// resolved cloud connector's verified origin (`#138`).
+    ///
+    /// Fails closed on local SQLite connectors with
+    /// `AdapterErrorKind::Capability` (`cloud_connector_required`). Does not
+    /// perform network I/O or alter existing managed onboarding endpoints.
+    pub fn canonical_auth_url(&self) -> Result<String, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => Err(local_cloud_capability_error()),
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.canonical_auth_url(),
+        }
+    }
+
+    /// Build the canonical `/decapod/<org>/<repo>` application URL bound
+    /// strictly to this resolved cloud connector's verified origin (`#138`).
+    ///
+    /// Rejects path traversal, slashes, query strings, fragments, and
+    /// non-identifier characters in `org` or `repo`. Fails closed on local
+    /// SQLite connectors with `AdapterErrorKind::Capability`
+    /// (`cloud_connector_required`).
+    pub fn canonical_repository_url(&self, org: &str, repo: &str) -> Result<String, DactylError> {
+        match &self.inner {
+            ConnectorKind::Local { .. } => {
+                let _ = (org, repo);
+                Err(local_cloud_capability_error())
+            }
+            #[cfg(feature = "supabase")]
+            ConnectorKind::Cloud(connector) => connector.canonical_repository_url(org, repo),
+        }
     }
 
     pub fn cloud_with_origin(origin: impl Into<String>) -> Result<Self, DactylError> {

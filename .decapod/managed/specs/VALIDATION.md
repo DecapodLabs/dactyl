@@ -1,5 +1,9 @@
 # Validation
 
+## Staged first-party custom origin cutover verification (issue #138)
+
+- **`tests/logical_connector.rs` & `tests/supabase_disabled.rs` (`#138`)**: Verifies `DEFAULT_CLOUD_ORIGIN` remains `"https://goyxpcmxetztjlrrcwew.supabase.co"`, `FIRST_PARTY_CLOUD_ORIGIN` is `"https://api.decapodlabs.ai"`, `LogicalTarget::first_party_cloud()` redacts `api.decapodlabs.ai` in `Debug`, `LogicalConnector::first_party_cloud()` fails closed without fallback when `supabase` is disabled, local connectors return `cloud_connector_required` for `canonical_auth_url` / `canonical_repository_url`, malformed/traversal `org`/`repo` segments fail with `AdapterErrorKind::Protocol`, `validate_start` enforces exact origin and `/functions/v1/decapod-onboarding/begin` paths, discovery rejects mismatched `project_origin` and `308` redirects (never contacting redirect targets), and loopback device-gateway calls (`DeviceEnroll`, `cloud-control`, `cloud-query`) sign exact origin-bound DPoP `htu` URLs and surface `401 dpop_aud_mismatch` redacted. Live `https://api.decapodlabs.ai` Supabase custom-domain TLS/OAuth activation remains external and `unavailable` until provisioned.
+
 ## Runtime-aware HTTP pooling, async fanout, provenance fault matrix, and admin/onboarding proof (issues #134, #140)
 
 - **`tests/http_pool_async.rs` (`#134`)**: Exercises `ResourceBudget::with_http_pool_limits` validation bounds (`1..=64` / `0..=64` / non-zero idle timeout), pooled Neon `read_async`/`visit_rows_async`/`write_result_async`/`atomic_async` concurrency ceilings, `current_thread` sync+async safety on both Neon and Supabase, slot-saturation local preflight timeouts (`NotAttempted`), and a 250-way concurrent multi-tenant async fanout across `Connection`, `CloudConnector`, and `LogicalConnector` with a concurrent heartbeat task proving zero Tokio runtime starvation and bounded keep-alive socket reuse (`<= 24` TCP connections vs 250 operations).
@@ -322,7 +326,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
+- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

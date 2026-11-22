@@ -10,7 +10,8 @@
 use dactyl_db::{
     AccountOperation, AdapterErrorKind, AuthenticationSecrets, AuthenticationStart, Backend,
     DactylError, LogicalConnector, LogicalTarget, OpenOptions, ScmCredential, ScmProvider,
-    UserSession, DEFAULT_CLOUD_ORIGIN,
+    UserSession, DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_CLOUD_ORIGIN,
+    FIRST_PARTY_REPO_PATH_PREFIX,
 };
 use serde_json::json;
 
@@ -18,21 +19,32 @@ use serde_json::json;
 fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
     let local_target = LogicalTarget::local("/tmp/private-workspace/decapod.db");
     let cloud_target = LogicalTarget::cloud();
+    let first_party_target = LogicalTarget::first_party_cloud();
     let custom_cloud = LogicalTarget::cloud_with_origin("https://private.example");
     assert_eq!(local_target.backend(), Backend::Local);
     assert_eq!(cloud_target.backend(), Backend::Cloud);
+    assert_eq!(first_party_target.backend(), Backend::Cloud);
     assert_eq!(custom_cloud.backend(), Backend::Cloud);
     assert_eq!(local_target.backend().datastore().as_str(), "sqlite");
     assert_eq!(cloud_target.backend().datastore().as_str(), "supabase");
+    assert_eq!(
+        first_party_target.backend().datastore().as_str(),
+        "supabase"
+    );
     assert!(DEFAULT_CLOUD_ORIGIN.starts_with("https://"));
     assert_eq!(
         DEFAULT_CLOUD_ORIGIN,
         "https://goyxpcmxetztjlrrcwew.supabase.co"
     );
+    assert_eq!(FIRST_PARTY_CLOUD_ORIGIN, "https://api.decapodlabs.ai");
+    assert_eq!(FIRST_PARTY_AUTH_PATH, "/auth");
+    assert_eq!(FIRST_PARTY_REPO_PATH_PREFIX, "/decapod");
 
-    let debug_targets = format!("{local_target:?} {cloud_target:?} {custom_cloud:?}");
+    let debug_targets =
+        format!("{local_target:?} {cloud_target:?} {first_party_target:?} {custom_cloud:?}");
     assert!(!debug_targets.contains("private-workspace"));
     assert!(!debug_targets.contains("private.example"));
+    assert!(!debug_targets.contains("api.decapodlabs.ai"));
 
     assert!(AccountOperation::Register.is_mutating());
     assert!(!AccountOperation::Status.is_mutating());
@@ -151,6 +163,10 @@ fn portable_connector_types_redact_secrets_and_reject_local_misuse() {
         local.revoke_session("bearer").unwrap_err(),
         local
             .account_request(AccountOperation::Status, &json!({"version": 1}), "b", None)
+            .unwrap_err(),
+        local.canonical_auth_url().unwrap_err(),
+        local
+            .canonical_repository_url("DecapodLabs", "dactyl")
             .unwrap_err(),
     ] {
         assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Capability));
@@ -1148,5 +1164,331 @@ mod cloud_and_multi_workspace {
             "redirect target must never be contacted"
         );
         srv.join().unwrap();
+    }
+
+    #[test]
+    fn staged_first_party_custom_origin_cutover_contract() {
+        use std::sync::{Arc, Mutex};
+
+        use dactyl_db::{
+            AuthenticationStart, CloudConnector, CloudResponseMetadata, OperationKind,
+            RequestProof, RequestProofInput, RequestProofSigner, ResourceBudget,
+            DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_CLOUD_ORIGIN,
+        };
+
+        // 1. Default origin stays on Supabase-provisioned hostname until live cutover is proven;
+        //    staged first-party origin is explicit and valid.
+        assert_eq!(
+            DEFAULT_CLOUD_ORIGIN,
+            "https://goyxpcmxetztjlrrcwew.supabase.co"
+        );
+        assert_eq!(FIRST_PARTY_CLOUD_ORIGIN, "https://api.decapodlabs.ai");
+        CloudConnector::validate_origin(FIRST_PARTY_CLOUD_ORIGIN).unwrap();
+
+        let staged_static = LogicalConnector::cloud_with_config(SupabaseRpcConfig::v1(
+            FIRST_PARTY_CLOUD_ORIGIN,
+            KEY_B,
+        ))
+        .unwrap();
+        assert_eq!(
+            staged_static.cloud_connector().unwrap().origin(),
+            FIRST_PARTY_CLOUD_ORIGIN
+        );
+        assert_eq!(
+            staged_static.canonical_auth_url().unwrap(),
+            "https://api.decapodlabs.ai/auth"
+        );
+        assert_eq!(
+            staged_static
+                .canonical_repository_url("DecapodLabs", "dactyl")
+                .unwrap(),
+            "https://api.decapodlabs.ai/decapod/DecapodLabs/dactyl"
+        );
+
+        // Reject path traversal, empty, slash, query, fragment, and percent-encoded segments.
+        let oversized = "a".repeat(129);
+        for (org, repo) in [
+            ("", "dactyl"),
+            ("DecapodLabs", ""),
+            (".", "dactyl"),
+            ("..", "dactyl"),
+            ("DecapodLabs", "."),
+            ("DecapodLabs", ".."),
+            ("DecapodLabs/evil", "dactyl"),
+            ("DecapodLabs", "dactyl/evil"),
+            ("DecapodLabs", "dactyl?x=1"),
+            ("DecapodLabs", "dactyl#frag"),
+            ("DecapodLabs", "dactyl%2Fevil"),
+            ("DecapodLabs\\bad", "dactyl"),
+            ("Decapod Labs", "dactyl"),
+            (oversized.as_str(), "dactyl"),
+        ] {
+            let err = staged_static
+                .canonical_repository_url(org, repo)
+                .unwrap_err();
+            assert_eq!(
+                err.adapter_kind(),
+                Some(AdapterErrorKind::Protocol),
+                "expected protocol error for ({org:?}, {repo:?})"
+            );
+        }
+
+        // validate_start binds browser handoff strictly to the selected origin and preserves
+        // managed onboarding /begin paths (refusing cross-origin or undeployed /auth handoffs).
+        let cloud_static = staged_static.cloud_connector().unwrap();
+        cloud_static
+            .validate_start(&AuthenticationStart {
+                flow_id: FLOW.into(),
+                browser_url: format!(
+                    "{FIRST_PARTY_CLOUD_ORIGIN}/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket=t1"
+                ),
+                expires_at: "2099-01-01T00:00:00Z".into(),
+            })
+            .unwrap();
+        for bad_browser_url in [
+            format!(
+                "{DEFAULT_CLOUD_ORIGIN}/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket=t1"
+            ),
+            format!("{FIRST_PARTY_CLOUD_ORIGIN}/auth?flow_id={FLOW}&ticket=t1"),
+            format!(
+                "{FIRST_PARTY_CLOUD_ORIGIN}/decapod/DecapodLabs/dactyl?flow_id={FLOW}&ticket=t1"
+            ),
+        ] {
+            let err = cloud_static
+                .validate_start(&AuthenticationStart {
+                    flow_id: FLOW.into(),
+                    browser_url: bad_browser_url,
+                    expires_at: "2099-01-01T00:00:00Z".into(),
+                })
+                .unwrap_err();
+            assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Protocol));
+        }
+
+        // 2. Origin-bound discovery rejects mismatched project_origin (e.g. server still
+        //    advertising DEFAULT_CLOUD_ORIGIN or FIRST_PARTY_CLOUD_ORIGIN on a different origin).
+        for mismatched_origin in [DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_CLOUD_ORIGIN] {
+            let (origin, _rx, handle) = mock_server(vec![(
+                200,
+                json!({
+                    "version": 1,
+                    "project_origin": mismatched_origin,
+                    "publishable_key": KEY_B,
+                    "schema": "public",
+                })
+                .to_string(),
+            )]);
+            let err = LogicalConnector::cloud_with_origin(&origin).unwrap_err();
+            assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Protocol));
+            assert!(!format!("{err} {err:?}").contains(mismatched_origin));
+            handle.join().unwrap();
+        }
+
+        // 3. Discovery redirect toward FIRST_PARTY_CLOUD_ORIGIN fails closed without following.
+        let redirect_sink = TcpListener::bind("127.0.0.1:0").unwrap();
+        let sink_origin = format!("http://{}", redirect_sink.local_addr().unwrap());
+        {
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            let origin = format!("http://{}", listener.local_addr().unwrap());
+            let target_loc = format!("{sink_origin}/functions/v1/decapod-onboarding/config");
+            let srv = thread::spawn(move || {
+                let (mut stream, _) = listener.accept().unwrap();
+                let mut buf = [0_u8; 4096];
+                let _ = stream.read(&mut buf);
+                let resp = format!(
+                    "HTTP/1.1 308 Permanent Redirect\r\nLocation: {target_loc}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                );
+                stream.write_all(resp.as_bytes()).unwrap();
+            });
+            let err = LogicalConnector::cloud_with_origin(&origin).unwrap_err();
+            assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Protocol));
+            srv.join().unwrap();
+        }
+        redirect_sink.set_nonblocking(true).unwrap();
+        assert!(
+            redirect_sink.accept().is_err(),
+            "discovery redirect sink must never be contacted"
+        );
+
+        // 4. Loopback staged-origin end-to-end: discovery, /auth & /decapod/<org>/<repo> URL
+        //    binding, DPoP htu origin binding across account/control/data gateway paths, and
+        //    401 dpop_aud_mismatch fail-closed handling.
+        struct RecordingDpopSigner {
+            signed_htus: Arc<Mutex<Vec<(String, String)>>>,
+        }
+
+        impl RequestProofSigner for RecordingDpopSigner {
+            fn sign_request(
+                &self,
+                input: &RequestProofInput<'_>,
+            ) -> Result<RequestProof, dactyl_db::DactylError> {
+                self.signed_htus
+                    .lock()
+                    .unwrap()
+                    .push((input.method().to_owned(), input.canonical_url().to_owned()));
+                RequestProof::dpop("dpop.staged.origin.proof")
+            }
+        }
+
+        let signed_htus = Arc::new(Mutex::new(Vec::<(String, String)>::new()));
+        let signer: Arc<dyn RequestProofSigner> = Arc::new(RecordingDpopSigner {
+            signed_htus: signed_htus.clone(),
+        });
+
+        let (origin, rx, handle) = mock_server(vec![
+            (
+                200,
+                json!({
+                    "version": 1,
+                    "project_origin": "ORIGIN",
+                    "publishable_key": KEY_B,
+                    "schema": "public",
+                })
+                .to_string(),
+            ),
+            (
+                200,
+                json!({"enrolled": true, "device_id": "dev-staged-1"}).to_string(),
+            ),
+            (200, json!({"authorized": true}).to_string()),
+            (
+                200,
+                json!({
+                    "columns": ["origin_check"],
+                    "rows": [{"origin_check": "ok"}],
+                    "affected_rows": 0,
+                    "generated_keys": [],
+                })
+                .to_string(),
+            ),
+            (
+                401,
+                json!({
+                    "error": {
+                        "code": "dpop_aud_mismatch",
+                        "message": "secret-origin-mismatch-detail"
+                    }
+                })
+                .to_string(),
+            ),
+        ]);
+
+        let connector = LogicalConnector::cloud_with_origin(&origin)
+            .unwrap()
+            .with_device_gateway()
+            .with_proof_signer(signer);
+        assert_eq!(
+            connector.canonical_auth_url().unwrap(),
+            format!("{origin}/auth")
+        );
+        assert_eq!(
+            connector
+                .canonical_repository_url("DecapodLabs", "dactyl")
+                .unwrap(),
+            format!("{origin}/decapod/DecapodLabs/dactyl")
+        );
+
+        let enrolled = connector
+            .account_request(
+                AccountOperation::DeviceEnroll,
+                &json!({"version": 1, "jwk": {"kty": "OKP"}}),
+                "human-staged-token",
+                None,
+            )
+            .unwrap();
+        assert_eq!(enrolled["enrolled"], json!(true));
+
+        let ctrl = connector
+            .control_request(
+                "propodus_repository_access_v1",
+                &json!({"version": 1, "project_id": "DecapodLabs/dactyl"}),
+                Some("dpc_at_staged_device"),
+                OperationKind::Read,
+                ResourceBudget::v1(),
+            )
+            .unwrap();
+        assert_eq!(ctrl["authorized"], json!(true));
+
+        let db = connector
+            .open(
+                OpenOptions::default(),
+                Some(StorageContext::new(1, json!({"repo": "DecapodLabs/dactyl"})).unwrap()),
+                Some("dpc_at_staged_device".into()),
+            )
+            .unwrap();
+        let rows = db.read("SELECT 'ok' AS origin_check", &[]).unwrap();
+        assert_eq!(rows.as_slice()[0].get_str("origin_check").unwrap(), "ok");
+
+        let mut meta = CloudResponseMetadata::default();
+        let aud_err = connector
+            .control_request_with_metadata(
+                "propodus_repository_access_v1",
+                &json!({"version": 1, "project_id": "DecapodLabs/dactyl"}),
+                Some("dpc_at_staged_device"),
+                None,
+                OperationKind::Read,
+                ResourceBudget::v1(),
+                &mut meta,
+            )
+            .unwrap_err();
+        assert_eq!(
+            aud_err.adapter_kind(),
+            Some(AdapterErrorKind::Authentication)
+        );
+        assert_eq!(aud_err.adapter_code(), Some("dpop_aud_mismatch"));
+        let rendered = format!("{aud_err} {aud_err:?} {meta:?}");
+        assert!(!rendered.contains("secret-origin-mismatch-detail"));
+        assert!(!rendered.contains("dpc_at_staged_device"));
+        assert!(!rendered.contains("dpop.staged.origin.proof"));
+
+        handle.join().unwrap();
+
+        // Verify wire paths and exact origin-bound DPoP htu values.
+        let captured_wire: Vec<String> = (0..5).map(|_| rx.recv().unwrap()).collect();
+        assert!(captured_wire[0].starts_with("GET /functions/v1/decapod-onboarding/config "));
+        assert!(
+            captured_wire[1].starts_with("POST /functions/v1/decapod-onboarding/device-enroll ")
+        );
+        assert!(
+            captured_wire[2].starts_with("POST /functions/v1/decapod-onboarding/cloud-control ")
+        );
+        assert!(captured_wire[3].starts_with("POST /functions/v1/decapod-onboarding/cloud-query "));
+        assert!(
+            captured_wire[4].starts_with("POST /functions/v1/decapod-onboarding/cloud-control ")
+        );
+
+        let htus = signed_htus.lock().unwrap();
+        assert_eq!(htus.len(), 4);
+        assert_eq!(
+            htus[0],
+            (
+                "POST".into(),
+                format!("{origin}/functions/v1/decapod-onboarding/device-enroll")
+            )
+        );
+        assert_eq!(
+            htus[1],
+            (
+                "POST".into(),
+                format!("{origin}/functions/v1/decapod-onboarding/cloud-control")
+            )
+        );
+        assert_eq!(
+            htus[2],
+            (
+                "POST".into(),
+                format!("{origin}/functions/v1/decapod-onboarding/cloud-query")
+            )
+        );
+        assert_eq!(
+            htus[3],
+            (
+                "POST".into(),
+                format!("{origin}/functions/v1/decapod-onboarding/cloud-control")
+            )
+        );
+        for (_, url) in htus.iter() {
+            assert!(url.starts_with(&origin));
+            assert!(!url.contains(DEFAULT_CLOUD_ORIGIN));
+        }
     }
 }

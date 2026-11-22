@@ -157,6 +157,11 @@
         "tests/cloud_connector.rs",
         "tests/logical_connector.rs"
       ]
+    },
+    {
+      "id": "chk_dactyl_138_stage1",
+      "summary": "Stage 1: add #138 staged first-party custom origin helpers, loopback wire/DPoP/redirect/mismatch tests, docs, and living specs",
+      "input_digest": "sha256:b3b26c61144400395ed541ea03f56af92728e327b4914cd706b6401977b984e8"
     }
   ],
   "intents": {
@@ -190,7 +195,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #134 http_pool budgets/runtime-aware transport and #140 effect provenance + transport fault matrix stacked on Wave 2",
+      "intent": "Prepare Dactyl #132-#140 (Wave 2 gateway/overages/nonce/selector, #134 runtime-aware http_pool budgets, #140 effect provenance, #139 onboarding/admin ops, and #138 staged first-party custom origin cutover without flipping DEFAULT_CLOUD_ORIGIN) for 0.19.0 release under decapod v0.163.0",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -200,35 +205,36 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Added onboarding/admin AccountOperation paths, RequestAuthPolicy::human_bearer(), and local preflight MutationOutcome::NotAttempted normalization",
-          "reviewed_code_fingerprint": "83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6",
-          "spec_material_hash": "56f7e7c6c11d489d0041208e1a8455e358f50494bf606a1cfaaf4aa3eaa03b16"
+          "reason": "Documented #138 FIRST_PARTY_CLOUD_ORIGIN, canonical route builders, and segment validation",
+          "reviewed_code_fingerprint": "547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be",
+          "spec_material_hash": "76a6ff247e82fb56e8524c9592f436f99fa7db7af4a05f94b47e42ffbdda1b86"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades and requires_human_bearer()",
-          "reviewed_code_fingerprint": "83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6",
-          "spec_material_hash": "e8f164bd783167dcc11de5015ee11b7c684ec602e386c9309bcb82fc37ac12c2"
+          "reason": "Documented FIRST_PARTY_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_REPO_PATH_PREFIX, first_party_cloud constructors, and canonical_auth_url/canonical_repository_url",
+          "reviewed_code_fingerprint": "547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be",
+          "spec_material_hash": "3aba3b782c3b03fd92e2d9c02e13944be2f1dba26bc0716d86a5910aa751dc69"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented pre-dispatch dpc_at_ rejection, gateway Bearer-only isolation, and credential redaction",
-          "reviewed_code_fingerprint": "83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6",
-          "spec_material_hash": "c989d3786697098af6813e584c64aa88ab4e9d48554c118f54143d9078be90ef"
+          "reason": "Documented #138 no-premature-cutover boundary, Debug redaction, redirect/origin-mismatch refusal, DPoP htu pinning, and path-segment hardening",
+          "reviewed_code_fingerprint": "547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be",
+          "spec_material_hash": "100183b078518fa86ea834f63afb17e2c5b08b3485de93da3bc90382aee87873"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Wave 2 + #134 http_pool budgets/async transport and #140 effect provenance",
+      "title": "Wave 2+3+4 unified backlog (#132-#140): staged api.decapodlabs.ai cutover, http_pool budgets, effect provenance, gateway DPoP, and release-only qualification",
       "todo_ids": [
         "code_01m7zy6knr4jk864",
-        "feat_01m80cjw1648txej"
+        "feat_01m80cjw1648txej",
+        "bend_01m81g0bnc4sv818"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795327799Z"
+      "updated_at": "1795347413Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -1,13 +1,17 @@
 # Logical backend and managed authentication
 
 Applications select local SQLite (`LogicalTarget::local(path)`) or Decapod Cloud
-(`LogicalTarget::cloud()` / `LogicalTarget::cloud_with_origin(origin)`) per
+(`LogicalTarget::cloud()` / `LogicalTarget::first_party_cloud()` /
+`LogicalTarget::cloud_with_origin(origin)`) per
 workspace through `LogicalTarget` (`Backend::Local` or `Backend::Cloud`) and
 resolve a per-workspace `LogicalConnector` via `LogicalConnector::resolve`,
 `LogicalConnector::resolve_with_metadata`, `LogicalConnector::local`,
-`LogicalConnector::cloud`, `LogicalConnector::cloud_with_origin`, or
+`LogicalConnector::cloud`, `LogicalConnector::first_party_cloud`,
+`LogicalConnector::cloud_with_origin`, or
 `LogicalConnector::cloud_with_config`. `LogicalTarget`, `LogicalConnector`, and
-portable session/account/proof types (`DEFAULT_CLOUD_ORIGIN`, `AccountOperation`,
+portable session/account/proof types (`DEFAULT_CLOUD_ORIGIN`,
+`FIRST_PARTY_CLOUD_ORIGIN`, `FIRST_PARTY_AUTH_PATH`,
+`FIRST_PARTY_REPO_PATH_PREFIX`, `AccountOperation`,
 `AuthScheme`, `RequestProof`, `RequestProofInput`, `RequestProofSigner`,
 `CloudResponseMetadata`, `ScmProvider`, `ScmCredential`, `AuthenticationSecrets`,
 `AuthenticationStart`, and `UserSession`) are exported unconditionally across all
@@ -146,8 +150,19 @@ managed Auth, discovery or native data requests. Dactyl does not persist SCM
 credentials. Callers decide consent and handling of an unknown checkout outcome;
 Dactyl does not automatically replay mutating failures or retried nonce
 challenges more than once. `DEFAULT_CLOUD_ORIGIN` remains unchanged at
-`https://goyxpcmxetztjlrrcwew.supabase.co` unless overridden for controlled
-testing via `DACTYL_CLOUD_ORIGIN` or `LogicalTarget::cloud_with_origin`.
+`https://goyxpcmxetztjlrrcwew.supabase.co` until custom-domain TLS activation,
+managed OAuth callback migration, and server-advertised `project_origin` cutover
+on `https://api.decapodlabs.ai` are independently proven (`#138`). Callers that
+explicitly opt into the staged first-party origin may use
+`FIRST_PARTY_CLOUD_ORIGIN` (`https://api.decapodlabs.ai`),
+`LogicalTarget::first_party_cloud()`, `LogicalConnector::first_party_cloud()` /
+`first_party_cloud_async()`, or `DACTYL_CLOUD_ORIGIN` /
+`LogicalTarget::cloud_with_origin`. Origin-bound canonical application route
+helpers (`canonical_auth_url` -> `<origin>/auth` and
+`canonical_repository_url(org, repo)` -> `<origin>/decapod/<org>/<repo>`) validate
+the selected origin and strict traversal-free path segments without altering
+existing `/functions/v1/decapod-onboarding/*` wire routing until live backend
+routes are deployed and verified.
 
 Auth, account and discovery HTTP requests are bounded to a 5-second connect timeout,
 15-second request timeout, 16 KiB bodies, and `MAX_JSON_DEPTH = 64` JSON nesting.

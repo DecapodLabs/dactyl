@@ -1,5 +1,10 @@
 # Interfaces
 
+## Staged first-party custom origin and canonical route helpers (issue #138)
+
+- **Unconditional exports (`src/connector.rs`, `src/lib.rs`)**: `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`), `FIRST_PARTY_AUTH_PATH` (`"/auth"`), and `FIRST_PARTY_REPO_PATH_PREFIX` (`"/decapod"`) are exported across all Cargo feature combinations alongside unchanged `DEFAULT_CLOUD_ORIGIN` (`"https://goyxpcmxetztjlrrcwew.supabase.co"`).
+- **Opt-in constructors & route builders (`src/connector.rs`, `src/cloud.rs`)**: `LogicalTarget::first_party_cloud()`, `LogicalConnector::first_party_cloud()`, and `LogicalConnector::first_party_cloud_async()` target `FIRST_PARTY_CLOUD_ORIGIN` explicitly without mutating ambient env or falling back to SQLite when `supabase` is disabled. `LogicalConnector` and `CloudConnector` expose `canonical_auth_url(&self) -> Result<String, DactylError>` (`<origin>/auth`) and `canonical_repository_url(&self, org: &str, repo: &str) -> Result<String, DactylError>` (`<origin>/decapod/<org>/<repo>`), failing closed with `AdapterErrorKind::Capability` (`cloud_connector_required`) on local connectors and `AdapterErrorKind::Protocol` on malformed/traversal path segments.
+
 ## HTTP pool budgets, native async operations, effect provenance, and onboarding/admin accounts (issues #134, #140)
 
 - **`ResourceBudget` & `CloudConnector`/`LogicalConnector` pooling (`#134`)**: `ResourceBudget` adds `http_max_in_flight()`, `http_max_idle_per_host()`, `http_idle_timeout()`, and `with_http_pool_limits(max_in_flight, max_idle_per_host, idle_timeout)` (`1..=64`, `0..=64`, `> Duration::ZERO`). `CloudConnector::with_http_budget` / `LogicalConnector::with_http_budget` configure pooled connector concurrency alongside `Connection::open_with_budget`.
@@ -301,7 +306,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83af6796ea7f7753dfedc6cf37f49ad115572ee786722da4affff9331245aaf6`
+- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -9,10 +9,11 @@ use serde::Deserialize;
 
 use crate::budget::mark_remote_uncertain;
 use crate::connector::{
-    validate_dpop_nonce, validate_opaque_credential, AccountOperation, AuthScheme,
-    AuthenticationSecrets, AuthenticationStart, CloudResponseMetadata, EffectProvenance,
-    EffectStatus, ObservationSource, OperationAttempt, ReconciliationObservation,
-    RequestProofSigner, ScmCredential, UserSession, DEFAULT_CLOUD_ORIGIN,
+    validate_canonical_path_segment, validate_dpop_nonce, validate_opaque_credential,
+    AccountOperation, AuthScheme, AuthenticationSecrets, AuthenticationStart,
+    CloudResponseMetadata, EffectProvenance, EffectStatus, ObservationSource, OperationAttempt,
+    ReconciliationObservation, RequestProofSigner, ScmCredential, UserSession,
+    DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_REPO_PATH_PREFIX,
 };
 use crate::http_pool::{
     acquire_client, allowlisted_cloud_code, bind_response_provenance, build_attempt_headers,
@@ -376,6 +377,28 @@ impl CloudConnector {
 
     pub fn origin(&self) -> &str {
         self.config.project_origin()
+    }
+
+    /// Build the canonical `/auth` application URL bound strictly to this
+    /// connector's verified origin (`#138`).
+    pub fn canonical_auth_url(&self) -> Result<String, DactylError> {
+        let origin = validate_origin(self.origin())?;
+        Ok(format!(
+            "{}{FIRST_PARTY_AUTH_PATH}",
+            origin.as_str().trim_end_matches('/')
+        ))
+    }
+
+    /// Build the canonical `/decapod/<org>/<repo>` application URL bound
+    /// strictly to this connector's verified origin (`#138`).
+    pub fn canonical_repository_url(&self, org: &str, repo: &str) -> Result<String, DactylError> {
+        let origin = validate_origin(self.origin())?;
+        validate_canonical_path_segment(org, "invalid repository organization segment")?;
+        validate_canonical_path_segment(repo, "invalid repository name segment")?;
+        Ok(format!(
+            "{}{FIRST_PARTY_REPO_PATH_PREFIX}/{org}/{repo}",
+            origin.as_str().trim_end_matches('/')
+        ))
     }
 
     pub fn route(&self, bearer: Option<String>) -> DatastoreRoute {
