@@ -1,5 +1,21 @@
 # Security
 
+## Staged custom origin isolation and path-segment validation (issue #138)
+
+- **No premature origin cutover & strict origin pinning (`#138`)**: `DEFAULT_CLOUD_ORIGIN` stays on `"https://goyxpcmxetztjlrrcwew.supabase.co"` until live custom-domain TLS/OAuth/discovery activation is independently proven. Opt-in `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`) redacts in `LogicalTarget` `Debug` output, refuses cross-origin `project_origin` discovery responses and `308`/`307` redirects without leaking credentials, pins DPoP `htu` signing strictly to the selected origin, refuses undeployed `/auth` or cross-origin `browser_url` handoffs in `validate_start`, and validates `org`/`repo` segments in `canonical_repository_url` against path traversal, slashes, queries, fragments, and percent-encoding.
+
+## Transport concurrency bounds, origin/auth-bound effect provenance, and human-Bearer boundary (issues #134, #140)
+
+- **FD exhaustion & runtime starvation guard (`#134`)**: `SharedHttpClient` bounds both per-budget and global (`64`) in-flight requests, bounds live pools (`64`) and per-pool async runtime caches (`16`), runs `reqwest::Client` directly inside Tokio async callers, and uses plain worker offload exclusively when sync methods are invoked from an active Tokio runtime.
+- **Strict origin/auth/scope binding & partial-response fail-closed (`#140`)**: `bind_response_provenance` rejects redirects (`300..400`), cross-origin endpoints (`origin_bound = false`), header/JSON envelope conflicts (`provenance_conflict`), unknown provenance contract versions (`unsupported_provenance_version`), swapped `attempt_id` / `operation_kind` / `scope_ref` / `auth_scheme` claims, and truncated/malformed `2xx` bodies (overriding forged header-only `committed_observed` receipts with `EffectProvenance::transport_fault` / `EffectStatus::Uncertain`). `OperationAttempt`, `EffectProvenance`, `ReconciliationObservation`, and `CloudResponseMetadata` redact credentials, proofs, origins, request/decision/scope IDs, and SHA-256 request digests from `Debug` and `Display`.
+- **Human-Bearer preflight & gateway endpoint isolation**: `CloudConnector` rejects `dpc_at_` device session tokens and empty/invalid bearer inputs locally in `prepare_cloud_request` (`MutationOutcome::NotAttempted`, `EffectStatus::NotAttempted`, `LocalPreflight`, full redaction) for all operations where `AccountOperation::requires_human_bearer()` holds (including `RepositoryEnroll`, `ResourceLimits`, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, and `OrgUpgrades`), while under `.with_device_gateway()` those endpoints transmit only `Authorization: Bearer <token>` and strip `DPoP` proofs.
+
+## Wave 2 gateway auth isolation, bounded nonce retry, and injection hardening (issues #132, #133, #136, #138, #139)
+
+- **Endpoint auth separation**: Under `.with_device_gateway()`, user-JWT management endpoints (`Register`, `Status`, `Quote`, `Checkout`, `Manage`, `Portal`, `BillingOveragePolicy`, `DeviceChallenge`, `DeviceKeys`, `DeviceSessions`, `DeviceStepUp`) strip `proof_signer` so they never transmit `Authorization: DPoP`; `DeviceEnroll` and `DeviceSession` require both `Authorization: Bearer <user-jwt>` and `DPoP: <proof>` (`managed_bearer_proof = true`); `DeviceRefresh`, `cloud-control`, `cloud-query`, and `cloud-batch` fail closed preflight (`device_proof_required`, `MutationOutcome::NotAttempted`) when no `DPoP` proof is supplied.
+- **Bounded challenge retry and header hardening**: `validate_dpop_nonce` rejects `"` and `\` alongside whitespace/control bytes, and `extract_response_metadata` rejects multiple `DPoP-Nonce` headers. `with_dpop_nonce_retry` retries pre-execution HTTP `401` `use_dpop_nonce` challenges at most once per logical call, never retries if `RequestProofSigner` switches to `AuthScheme::Bearer`, never follows `3xx` redirects, and never retries post-dispatch `outcome_unknown` failures on mutating calls.
+- **Tenant boundary and redaction**: Multiple organizations and repositories sharing a single origin keep opaque `StorageContext`, tokens, proofs, nonces, `Retry-After` (redacted in `CloudResponseMetadata` `Debug` via `has_retry_after`), and remote messages isolated and scrubbed across pooled requests and error surfaces; `404` `project_not_found` fails closed without legacy function fallback.
+
 ## RFC 9449 DPoP transport and redaction boundary (issues #127, #128)
 
 `RequestProofSigner` keeps all private key generation, OS keystore custody, and signing operations outside Dactyl. Dactyl validates `RequestProof::dpop` tokens and `DPoP-Nonce` headers for ASCII-graphic safety and length bounds (`<= 16384` / `<= 1024` bytes) before dispatch (`MutationOutcome::NotAttempted`), sends proofs only over verified HTTPS or literal loopback HTTP origins with `redirect::Policy::none()` and `retry::never()`, and redacts tokens, proofs, nonces, origins, `Decapod-Cloud-*` values, and raw remote error messages from all `Debug` and `DactylError` outputs.
@@ -171,8 +187,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (24 files), `tools/` (3 files)
+- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

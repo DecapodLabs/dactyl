@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "96bc87e84676d477f19b4fcfad3127137c55012e",
+    "accepted_commit": "b2607c0d105a58156704d076319e4dca6e9e4d65",
+    "release": "v0.18.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -87,69 +88,89 @@
     }
   },
   "change": {
-    "id": "change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-    "base_commit": "96bc87e84676d477f19b4fcfad3127137c55012e",
+    "id": "change_01M7ZY767DC97XK6P78828SPKN",
+    "base_commit": "b2607c0d105a58156704d076319e4dca6e9e4d65",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim-cloud-naming-fallback": {
-      "statement": "Decapod Cloud discovery/handoff/account routes default to /functions/v1/decapod-onboarding with bounded 404 fallback to /functions/v1/propodus-onboarding and redacted Decapod-Cloud-* metadata capture",
-      "falsifier": "Discovery or onboarding fallback fails on 404 or falls back on domain-coded 404/403 or leaks Decapod-Cloud-* values in Debug",
-      "status": "supported",
+    "dactyl-http-pool-budgets-and-effect-provenance": {
+      "statement": "Dactyl #134 and #140 add runtime-aware Tokio-safe SharedHttpClient pooling and ResourceBudget concurrency/idle bounds across Neon, Supabase, and CloudConnector plus versioned, origin/auth/scope-bound per-operation EffectProvenance, no post-send mutation auto-retry, separate idempotent readback reconciliation, and IdempotencyConflict detection; offline host all-8-feature suite, clippy, fmt, package, and MSRV 1.85.0 non-recovery/consumer checks pass while 14 Podman recovery::tests hit Fedora CoreOS SELinux /tmp xattrs and live external backends remain unavailable",
+      "falsifier": "Any failure in http_pool_async, effect_provenance, MSRV 1.85.0 non-recovery/clean-consumer/registry-control checks, clippy, fmt, or unlabelled-Linux recovery tests, or any post-send auto-retry/cross-origin/forged provenance acceptance or secret leak",
+      "status": "open",
       "proof_refs": [
-        "source:docs/cloud-connectors.md",
-        "source:src/cloud.rs",
-        "test:tests/cloud_connector.rs"
+        "dactyl-proof-msrv-1.85.0",
+        "docs/cloud-connectors.md",
+        "host-8-feature-matrix",
+        "tests/effect_provenance.rs",
+        "tests/http_pool_async.rs"
       ]
     },
-    "claim-dpop-transport": {
-      "statement": "Synchronous RequestProofSigner attaches RFC 9449 DPoP or explicit Bearer headers across supabase_rpc, control_request, and account_request, surfaces redacted DPoP-Nonce challenges, and classifies DeviceChallenge/DeviceEnroll/DeviceStepUp/DeviceRevoke mutation loss accurately",
-      "falsifier": "Any test in tests/cloud_connector.rs, tests/logical_connector.rs, or tests/control_rpc.rs fails or leaks secrets/tokens/proofs in Debug/Display",
+    "dactyl-onboarding-admin-human-bearer": {
+      "statement": "All 6 new Propodus onboarding/admin AccountOperation variants map fixed paths, enforce human Bearer preflight (rejecting dpc_at_ and empty bearers before dispatch with MutationOutcome::NotAttempted), preserve post-send outcome_unknown on the 5 mutating operations, and propagate #140 EffectProvenance.",
+      "falsifier": "Any of the 6 operations sends dpc_at_ or empty bearer on the wire, attaches DPoP under with_device_gateway(), classifies ResourceLimits as mutating or the 5 admin ops as non-uncertain on drop, or leaks tokens.",
       "status": "supported",
       "proof_refs": [
-        "source:src/adapter/supabase.rs",
-        "source:src/cloud.rs",
-        "source:src/connector.rs",
-        "source:src/http_pool.rs",
-        "test:tests/cloud_connector.rs"
+        "docs/cloud-connectors.md",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs"
       ]
     },
-    "claim-supabase-conformance": {
-      "statement": "Conformance suites qualify atomic lease-fencing CAS batches, bounded cursor pagination, commit-bound proof control_request envelopes, deterministic 401/403/409/413/429/5xx outcomes, and 250-way concurrent connection reuse with zero FD leaks and ResourceBudget timeout enforcement",
-      "falsifier": "Any conformance test or 250-way burst regression fails or leaks file descriptors or exceeds bounded connection pool limits",
-      "status": "supported",
+    "dactyl-wave2-gateway-nonce-overage-selector": {
+      "statement": "Dactyl Wave 2 implements Edge gateway routing, bounded single-retry use_dpop_nonce, BillingOveragePolicy & 429 Quota mapping, Backend::datastore().as_str(), and decapod 0.160.0 Containerfile alignment; non-recovery dactyl-proof checks, MSRV 1.85.0 Wave 2 suites, clippy, fmt, registry consumer, and host sqlite_maintenance/resource_budgets passed while 14 Linux-only recovery::tests hit Fedora CoreOS SELinux security.selinux xattrs",
+      "falsifier": "Any failure in Wave 2 tests, MSRV 1.85.0 compilation/execution, clippy/fmt, CI unlabelled-Linux recovery tests, or decapod-validate drift check",
+      "status": "open",
       "proof_refs": [
-        "source:src/http_pool.rs",
-        "test:tests/conformance.rs",
-        "test:tests/resource_budgets.rs",
-        "test:tests/supabase_rpc.rs"
+        "dactyl-proof-msrv-1.85.0",
+        "host-sqlite-maintenance",
+        "rust-contract"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-cloud-dpop-v18",
-      "summary": "feat: support caller-supplied DPoP proofs, Decapod Cloud onboarding routes, and extended Supabase conformance",
-      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
+      "id": "dactyl-wave2-v0160",
+      "summary": "Wave 2 Cloud gateway, DPoP nonce retry, overage policy, runtime selector, invalid_binding, and v0.160.0 Containerfile alignment",
+      "input_digest": "sha256:c3e39230daafba419e1b811543f00f36b05ec1278e17653073ec1f53b3c37739",
+      "proof_refs": [
+        "dactyl-proof-msrv-1.85.0",
+        "host-sqlite-maintenance",
+        "rust-contract"
+      ]
     },
     {
-      "id": "chk-containerfile-pin",
-      "summary": "chore: align CI proof controller pin with decapod 0.148.11",
-      "input_digest": "sha256:7b0eb00000ede0e761603bd856607eb83e7d73ef4450f62b246bbbf3a2aaaece"
+      "id": "dactyl-134-140-v0160",
+      "summary": "Dactyl #134 runtime-aware HTTP pool budgets and native async transport plus #140 versioned origin/auth-bound effect provenance and transport fault matrix",
+      "input_digest": "sha256:030316956f96910c6be8d30fe52ec7827a52e49c559de042e48f868224cb13fa",
+      "proof_refs": [
+        "dactyl-proof-msrv-1.85.0",
+        "host-8-feature-matrix",
+        "tests/effect_provenance.rs",
+        "tests/http_pool_async.rs"
+      ]
     },
     {
-      "id": "chk-http-init",
-      "summary": "fix(http): initialize blocking client off caller tokio runtime and bound burst concurrency",
-      "input_digest": "sha256:18680fa3eedfb17272c2032434256354cf90b862a4f7382c6c95641977cf8292"
+      "id": "dactyl-134-140-admin-v0160",
+      "summary": "Add 6 Propodus onboarding/admin AccountOperation variants, human-Bearer preflight enforcement, local preflight MutationOutcome::NotAttempted normalization, and host/MSRV 1.85.0 proof",
+      "input_digest": "sha256:8f23f46543cef8822405a68f822f8b6d9606af19645eac73330d3aaa13096582",
+      "proof_refs": [
+        "docs/cloud-connectors.md",
+        "tests/cloud_connector.rs",
+        "tests/logical_connector.rs"
+      ]
     },
     {
-      "id": "chk-spec-review",
-      "summary": "chore(governance): record refreshed spec reviews for final v0.18.0 candidate",
-      "input_digest": "sha256:c393b41040db319989543b7db8994f0f737630141b6b7bf587b32a1c980707ab"
+      "id": "chk_dactyl_138_stage1",
+      "summary": "Stage 1: add #138 staged first-party custom origin helpers, loopback wire/DPoP/redirect/mismatch tests, docs, and living specs",
+      "input_digest": "sha256:b3b26c61144400395ed541ea03f56af92728e327b4914cd706b6401977b984e8"
+    },
+    {
+      "id": "chk_dactyl_decapod_01621",
+      "summary": "Stage 2: pin tools/proof/Containerfile and release-bound entrypoints/specs to decapod 0.162.1 (release-only #137 qualification)",
+      "input_digest": "sha256:3456566ca94607a408b04648d698c77f83aa44507e564c8564c6250bccf41660"
     }
   ],
   "intents": {
-    "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8": {
+    "intent:change_01M7ZY767DC97XK6P78828SPKN": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -159,11 +180,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+      "id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
-      "refined_intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "raw_intent": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
+      "refined_intent": "Ship Cloud Edge gateway routing, RFC 9449 DPoP nonce retry, billing overage policy, runtime selector, and v0.160.0 proof pin (#132, #133, #136, #137, #139)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -176,7 +200,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "intent": "Prepare Dactyl #132-#140 (Wave 2 gateway/overages/nonce/selector, #134 runtime-aware http_pool budgets, #140 effect provenance, #139 onboarding/admin ops, and #138 staged first-party custom origin cutover without flipping DEFAULT_CLOUD_ORIGIN) for 0.19.0 release under decapod v0.163.0",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -186,146 +210,215 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "eaad0f290af40606858a916969acb81641570ddc714dda74c03d69526295966a"
+          "reason": "Documented #138 FIRST_PARTY_CLOUD_ORIGIN, canonical route builders, and segment validation",
+          "reviewed_code_fingerprint": "547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be",
+          "spec_material_hash": "76a6ff247e82fb56e8524c9592f436f99fa7db7af4a05f94b47e42ffbdda1b86"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "a3061db602802a3c046a1bc56f5fc4f990a267581ef62dcc4d743cbe98926369"
+          "reason": "Documented FIRST_PARTY_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_REPO_PATH_PREFIX, first_party_cloud constructors, and canonical_auth_url/canonical_repository_url",
+          "reviewed_code_fingerprint": "547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be",
+          "spec_material_hash": "3aba3b782c3b03fd92e2d9c02e13944be2f1dba26bc0716d86a5910aa751dc69"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified against current DPoP, Decapod Cloud routing, conformance, and Tokio-safe http_pool implementation",
-          "reviewed_code_fingerprint": "c69623e6f9474e864cfdc60293f29c3aac38f7bd48a8bcfc4dc96720ff489440",
-          "spec_material_hash": "3b44a4a1e4b98486446f95c01da0fcad8925f37cf6a752515ad2f874e64f0930"
+          "reason": "Documented #138 no-premature-cutover boundary, Debug redaction, redirect/origin-mismatch refusal, DPoP htu pinning, and path-segment hardening",
+          "reviewed_code_fingerprint": "547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be",
+          "spec_material_hash": "100183b078518fa86ea834f63afb17e2c5b08b3485de93da3bc90382aee87873"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement DPoP signer (#127), Decapod Cloud naming/routes (#128), and Supabase conformance (#129) for dactyl-db 0.18.0",
+      "title": "Wave 2+3+4 unified backlog (#132-#140): staged api.decapodlabs.ai cutover, http_pool budgets, effect provenance, gateway DPoP, and release-only qualification",
       "todo_ids": [
-        "feat_01m7r9g1z168bt2h"
+        "code_01m7zy6knr4jk864",
+        "feat_01m80cjw1648txej",
+        "bend_01m81g0bnc4sv818"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795043938Z"
+      "updated_at": "1795347413Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d1319f017bd96df3a548141813b8db8eeae94fda26da413c3ca69527eb0c3181",
+      "artifact_hash": "sha256:1056cfe7a2d0d92fbf27c6792fa483ffe193d539a7ff19189a80cb95cdd5e4f8",
       "checks": [
         {
-          "name": "cargo-clippy-all-features",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "cargo-fmt",
+          "name": "container-msrv-1.85.0-non-recovery",
           "status": "passed"
         },
         {
-          "name": "cargo-test-all-features-msrv-1.85",
+          "name": "container-msrv-recovery-selinux-tmp",
+          "status": "failed"
+        },
+        {
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "cargo-test-all-features-stable",
+          "name": "format",
           "status": "passed"
         },
         {
-          "name": "cargo-test-neon-supabase-control-rpc",
+          "name": "host-8-feature-matrix",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy",
+          "name": "host-clippy-all-features",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "host-clippy-sqlite-neon",
           "status": "passed"
         },
         {
-          "name": "cargo_test_all_features",
+          "name": "host-fmt",
           "status": "passed"
         },
         {
-          "name": "cargo_test_feature_matrix",
+          "name": "host-package-check",
           "status": "passed"
+        },
+        {
+          "name": "host-resource-budgets-and-sqlite-maintenance",
+          "status": "passed"
+        },
+        {
+          "name": "hosted-supabase",
+          "status": "unavailable"
+        },
+        {
+          "name": "hosted_supabase",
+          "status": "unavailable"
+        },
+        {
+          "name": "live-propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "local-postgres",
+          "status": "unavailable"
+        },
+        {
+          "name": "local_postgres",
+          "status": "unavailable"
+        },
+        {
+          "name": "msrv-1.85.0-non-recovery-matrix",
+          "status": "passed"
+        },
+        {
+          "name": "msrv-clean-consumer",
+          "status": "passed"
+        },
+        {
+          "name": "msrv-linux-selinux-tmp-recovery",
+          "status": "failed"
+        },
+        {
+          "name": "msrv-wave2-integration",
+          "status": "passed"
+        },
+        {
+          "name": "package",
+          "status": "passed"
+        },
+        {
+          "name": "registry-control-0.17.0",
+          "status": "passed"
+        },
+        {
+          "name": "rust-contract",
+          "status": "partial"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "implemented",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7ZY76A10FWHK1HPB7CNNMKX",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
-        "schema_version": "1.0.0",
+        "next_sequence": 7,
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7R9K34Q0CPH5ENR4N5DHW85": {
+          "branch_01M7ZY76A10FWHK1HPB7CNNMKX": {
             "evidence_only": true,
-            "id": "branch_01M7R9K34Q0CPH5ENR4N5DHW85",
-            "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
+            "id": "branch_01M7ZY76A10FWHK1HPB7CNNMKX",
+            "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
             "steps": [
               {
-                "action": "verification",
+                "action": "implemented",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/http_pool.rs",
-                  "src/connector.rs",
+                  ".decapod/config.toml",
+                  "tools/proof/Containerfile",
                   "src/lib.rs",
-                  "src/adapter/supabase.rs",
+                  "src/connector.rs",
                   "src/cloud.rs",
                   "src/error.rs",
-                  "README.md",
+                  "src/http_pool.rs",
+                  "src/supabase_rpc.rs",
+                  "src/adapter/supabase.rs",
                   "docs/cloud-connectors.md",
-                  "docs/supabase-service.md",
-                  "tools/proof/Containerfile",
+                  "docs/supabase-conformance.md",
                   "tests/cloud_connector.rs",
                   "tests/logical_connector.rs",
-                  "tests/control_rpc.rs",
                   "tests/supabase_rpc.rs",
-                  "tests/conformance.rs",
-                  "tests/resource_budgets.rs",
-                  "task-281: cargo clippy and cargo test --locked --all-features passed",
-                  "task-285: all 7 optional feature combinations passed"
+                  "tests/supabase_service.rs",
+                  "tests/fixtures/supabase-service-schema.sql"
                 ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_test_all_features",
-                  "cargo_test_feature_matrix"
-                ],
+                "proof_refs": [],
                 "scope": [
                   "root"
                 ],
@@ -333,55 +426,177 @@
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "implemented",
+                "command": "podman run dactyl-proof /usr/bin/python3.11 tools/proof/check.py",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/http_pool.rs",
-                  "tests/supabase_rpc.rs",
-                  "tests/support/native_scenarios.rs"
+                  "tools/proof/Containerfile",
+                  "src/cloud.rs",
+                  "src/connector.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/logical_connector.rs"
                 ],
                 "proof_refs": [
-                  "cargo-fmt",
-                  "cargo-clippy-all-features",
-                  "cargo-test-all-features-stable",
-                  "cargo-test-all-features-msrv-1.85",
-                  "cargo-test-neon-supabase-control-rpc"
+                  "rust-contract",
+                  "format",
+                  "clippy",
+                  "msrv-wave2-integration",
+                  "msrv-clean-consumer",
+                  "package",
+                  "registry-control-0.17.0",
+                  "host-resource-budgets-and-sqlite-maintenance",
+                  "local_postgres",
+                  "hosted_supabase"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
+                "validation_findings": [
+                  "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp"
+                ]
+              },
+              {
+                "action": "implemented",
+                "command": "cargo fmt --all -- --check && cargo clippy --locked --all-targets --all-features -- -D warnings",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/budget.rs",
+                  "src/http_pool.rs",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "docs/cloud-connectors.md",
+                  "tools/proof/Containerfile",
+                  ".decapod/config.toml",
+                  "src/budget.rs",
+                  "src/http_pool.rs",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/adapter/mod.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "docs/cloud-connectors.md",
+                  "tests/http_pool_async.rs",
+                  "tests/effect_provenance.rs",
+                  "tests/http_pool_async.rs",
+                  "tests/effect_provenance.rs",
+                  "host-all-features-100pct",
+                  "podman-dactyl-proof-msrv-1.85.0-non-recovery-100pct"
+                ],
+                "proof_refs": [
+                  "fmt",
+                  "clippy",
+                  "host-8-feature-matrix",
+                  "msrv-1.85.0-non-recovery-matrix",
+                  "msrv-clean-consumer",
+                  "registry-control-0.17.0",
+                  "package",
+                  "msrv-linux-selinux-tmp-recovery",
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs to /tmp causing the 14 existing Linux-only adapter::sqlite::recovery::tests to fail with recovery_metadata_unsupported; macOS host recovery tests pass and CI ubuntu runs unlabelled ext4 /tmp",
+                  "local_sqlite and synthetic_http fixtures are executed; local_postgres, hosted_supabase, and live Propodus gateway deployments remain unavailable in offline proof"
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/error.rs",
+                  "tests/logical_connector.rs",
+                  "tests/cloud_connector.rs",
+                  "docs/cloud-connectors.md",
+                  "Host 8-feature matrix (incl. cloud_connector 19/19, effect_provenance 10/10, http_pool_async 5/5, logical_connector 8/8, resource_budgets 8/8) and Podman MSRV 1.85.0 8-feature non-recovery + offline clean-consumer passed cleanly."
+                ],
+                "proof_refs": [
+                  "host-fmt",
+                  "host-clippy-all-features",
+                  "host-clippy-sqlite-neon",
+                  "host-8-feature-matrix",
+                  "host-package-check",
+                  "container-msrv-1.85.0-non-recovery",
+                  "container-msrv-recovery-selinux-tmp",
+                  "local-postgres",
+                  "hosted-supabase",
+                  "live-propodus"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo fmt --all -- --check && cargo clippy --locked --all-targets --all-features -- -D warnings",
+        "cargo test --locked --all-features --test resource_budgets --test sqlite_maintenance",
+        "cargo test --locked across all 8 host feature combinations + cargo package --locked --allow-dirty",
+        "podman run --rm --security-opt label=disable localhost/dactyl-proof:latest MSRV 1.85.0 all 8 feature combos (--skip recovery for sqlite) + clippy + msrv-clean-consumer + registry-control-0.17.0 + package",
+        "podman run dactyl-proof /usr/bin/python3.11 tools/proof/check.py",
+        "podman run dactyl-proof MSRV 1.85.0 cloud_connector/logical_connector/supabase_rpc/supabase_service/control_rpc"
+      ],
       "destination": "pull request",
       "evidence": [
-        "task-281: cargo clippy and cargo test --locked --all-features passed",
-        "task-285: all 7 optional feature combinations passed"
+        "Host 8-feature matrix (incl. cloud_connector 19/19, effect_provenance 10/10, http_pool_async 5/5, logical_connector 8/8, resource_budgets 8/8) and Podman MSRV 1.85.0 8-feature non-recovery + offline clean-consumer passed cleanly.",
+        "host-all-features-100pct",
+        "podman-dactyl-proof-msrv-1.85.0-non-recovery-100pct",
+        "tests/effect_provenance.rs",
+        "tests/http_pool_async.rs"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M7R9K2YYWPB9N1ZDNVJ142H8",
-      "modified_files": [
-        "README.md",
+      "inspected_files": [
+        ".decapod/config.toml",
         "docs/cloud-connectors.md",
-        "docs/supabase-service.md",
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
         "src/adapter/supabase.rs",
+        "src/budget.rs",
+        "src/cloud.rs",
+        "src/connector.rs",
+        "src/http_pool.rs",
+        "src/lib.rs",
+        "tools/proof/Containerfile"
+      ],
+      "intent_id": "intent:change_01M7ZY767DC97XK6P78828SPKN",
+      "modified_files": [
+        ".decapod/config.toml",
+        "docs/cloud-connectors.md",
+        "docs/supabase-conformance.md",
+        "src/adapter/mod.rs",
+        "src/adapter/neon/mod.rs",
+        "src/adapter/supabase.rs",
+        "src/budget.rs",
         "src/cloud.rs",
         "src/connector.rs",
         "src/error.rs",
         "src/http_pool.rs",
         "src/lib.rs",
+        "src/supabase_rpc.rs",
         "tests/cloud_connector.rs",
-        "tests/conformance.rs",
-        "tests/control_rpc.rs",
+        "tests/effect_provenance.rs",
+        "tests/fixtures/supabase-service-schema.sql",
+        "tests/http_pool_async.rs",
         "tests/logical_connector.rs",
-        "tests/resource_budgets.rs",
         "tests/supabase_rpc.rs",
-        "tests/support/native_scenarios.rs",
+        "tests/supabase_service.rs",
         "tools/proof/Containerfile"
       ],
       "next_transitions": [
@@ -390,12 +605,16 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7R9K34Q0CPH5ENR4N5DHW85",
+      "run_id": "branch_01M7ZY76A10FWHK1HPB7CNNMKX",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7r9g1z168bt2h",
+      "task_id": "feat_01m80cjw1648txej",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs causing the 14 Linux-only adapter::sqlite::recovery::tests to fail locally with recovery_metadata_unsupported; CI ubuntu-24.04-arm runs unlabelled ext4 /tmp",
+        "Fedora CoreOS Podman VM getenforce=Enforcing attaches security.selinux xattrs to /tmp causing the 14 existing Linux-only adapter::sqlite::recovery::tests to fail with recovery_metadata_unsupported; macOS host recovery tests pass and CI ubuntu runs unlabelled ext4 /tmp",
+        "local_sqlite and synthetic_http fixtures are executed; local_postgres, hosted_supabase, and live Propodus gateway deployments remain unavailable in offline proof"
+      ]
     }
   },
   "legacy_digests": {

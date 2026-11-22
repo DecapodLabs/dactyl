@@ -9,6 +9,7 @@ pub struct SupabaseRpcConfig {
     project_origin: String,
     publishable_key: String,
     schema: String,
+    device_gateway: bool,
 }
 impl SupabaseRpcConfig {
     /// Select version 1 and the default `dactyl_api` API schema.
@@ -17,11 +18,22 @@ impl SupabaseRpcConfig {
             project_origin: origin.into(),
             publishable_key: publishable_key.into(),
             schema: "dactyl_api".into(),
+            device_gateway: false,
         }
     }
     pub fn with_schema(mut self, schema: impl Into<String>) -> Self {
         self.schema = schema.into();
         self
+    }
+    /// Route sender-constrained (`AuthScheme::DPoP`) data and control RPCs
+    /// through the configured origin's Edge gateway endpoints instead of direct
+    /// `/rest/v1/rpc/*` paths.
+    pub fn with_device_gateway(mut self) -> Self {
+        self.device_gateway = true;
+        self
+    }
+    pub fn uses_device_gateway(&self) -> bool {
+        self.device_gateway
     }
     pub fn project_origin(&self) -> &str {
         &self.project_origin
@@ -44,6 +56,7 @@ impl std::fmt::Debug for SupabaseRpcConfig {
             .field("publishable_key", &"[redacted]")
             .field("schema", &"[redacted]")
             .field("contract_version", &SUPABASE_RPC_CONTRACT_VERSION)
+            .field("device_gateway", &self.device_gateway)
             .finish()
     }
 }
