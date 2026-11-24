@@ -193,6 +193,7 @@ fn prepare_control_request(
     let record_preflight = |err: DactylError,
                             metadata_out: &mut CloudResponseMetadata,
                             auth_scheme: Option<AuthScheme>| {
+        let err = prefix_local_preflight(err);
         metadata_out.set_provenance(EffectProvenance::local_preflight(
             Some(kind),
             attempt,
@@ -442,7 +443,12 @@ pub(crate) fn control_request_with_auth_and_attempt(
         std::thread::Builder::new()
             .name("dactyl-control-rpc".into())
             .spawn(execute)
-            .map_err(|_| transport_error(false))?
+            .map_err(|_| {
+                DactylError::adapter(
+                    AdapterErrorKind::Unavailable,
+                    "local preflight: cloud HTTP transport worker unavailable",
+                )
+            })?
             .join()
             .map_err(|_| maybe_uncertain(transport_error(false), mutates))?
     } else {
@@ -590,6 +596,7 @@ impl SupabaseAdapter {
         attempt: Option<&OperationAttempt>,
         metadata_out: &mut CloudResponseMetadata,
     ) -> DactylError {
+        let err = prefix_local_preflight(err);
         metadata_out.set_provenance(EffectProvenance::local_preflight(
             Some(kind),
             attempt,
@@ -735,7 +742,12 @@ impl SupabaseAdapter {
             std::thread::Builder::new()
                 .name("dactyl-supabase-http".into())
                 .spawn(move || send_request(&client, &mut req_ctx))
-                .map_err(|_| transport_error(false))?
+                .map_err(|_| {
+                    DactylError::adapter(
+                        AdapterErrorKind::Unavailable,
+                        "local preflight: cloud HTTP transport worker unavailable",
+                    )
+                })?
                 .join()
                 .map_err(|_| maybe_uncertain(transport_error(false), mutates))?
         } else {
@@ -870,6 +882,25 @@ impl SupabaseAdapter {
         let mut metadata = CloudResponseMetadata::default();
         self.request_with_attempt_async(sql, params, kind, mutates, None, &mut metadata)
             .await
+    }
+}
+
+fn prefix_local_preflight(error: DactylError) -> DactylError {
+    match error {
+        DactylError::Adapter {
+            kind,
+            code,
+            message,
+        } if !message.starts_with("local preflight:")
+            && !message.starts_with(crate::budget::LOCAL_PREFLIGHT_PREFIX) =>
+        {
+            DactylError::Adapter {
+                kind,
+                code,
+                message: format!("local preflight: {message}"),
+            }
+        }
+        other => other,
     }
 }
 
@@ -1018,7 +1049,10 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
             return (Err(err), Some(metadata));
         }
 
-        if ctx.mutates && matches!(status, 408 | 500..=599) {
+        let prov_uncertain = metadata
+            .provenance()
+            .is_some_and(|p| p.status() == crate::connector::EffectStatus::Uncertain);
+        if ctx.mutates && (matches!(status, 408 | 500..=599) || prov_uncertain) {
             let explicit_non_commit = metadata.provenance().is_some_and(|p| {
                 matches!(
                     p.status(),
@@ -1028,7 +1062,8 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
                 )
             });
             if !explicit_non_commit {
-                if matches!(status, 500..=599) && error.adapter_code().is_none() {
+                if (matches!(status, 500..=599) || prov_uncertain) && error.adapter_code().is_none()
+                {
                     if let DactylError::Adapter { kind, message, .. } = error {
                         error = DactylError::adapter_with_code(kind, "outcome_unknown", message);
                     }
@@ -1083,34 +1118,62 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
         return (Err(err), Some(metadata));
     }
 
+    let set_unadvertised_fault = |metadata: &mut CloudResponseMetadata,
+                                  reason_code: &'static str| {
+        if ctx.mutates
+            && metadata
+                .provenance()
+                .is_none_or(|p| p.status() == crate::connector::EffectStatus::UnsupportedProvenance)
+        {
+            metadata.set_provenance(EffectProvenance::transport_fault(
+                ctx.operation_kind,
+                ctx.attempt.as_ref(),
+                ctx.resolved_digest.as_deref(),
+                metadata
+                    .cloud_header("decapod-cloud-request-id")
+                    .map(str::to_owned),
+                Some(reason_code),
+                effective_auth,
+                origin_matches,
+                tls_authenticated,
+            ));
+        }
+    };
+
     if rpc && ctx.validate_rows {
         if let Some(results) = value.get("results") {
             let mut tracker = DecodedResultTracker::new(ctx.budget);
             let array = match results.as_array() {
                 Some(array) => array,
                 None => {
+                    set_unadvertised_fault(&mut metadata, "malformed_response");
                     return (
                         Err(maybe_uncertain(
                             protocol_error("invalid RPC batch response"),
                             ctx.mutates,
                         )),
                         Some(metadata),
-                    )
+                    );
                 }
             };
             for result in array {
                 if let Err(error) = validate_rpc_result(result, ctx.budget, &mut tracker) {
+                    set_unadvertised_fault(&mut metadata, "malformed_response");
                     return (Err(maybe_uncertain(error, ctx.mutates)), Some(metadata));
                 }
             }
         } else {
             let mut tracker = DecodedResultTracker::new(ctx.budget);
             if let Err(error) = validate_rpc_result(&value, ctx.budget, &mut tracker) {
+                set_unadvertised_fault(&mut metadata, "malformed_response");
                 return (Err(maybe_uncertain(error, ctx.mutates)), Some(metadata));
             }
         }
         let parsed = serde_json::from_value(value)
             .map_err(|_| maybe_uncertain(protocol_error("invalid RPC response"), ctx.mutates));
+        if parsed.is_err() {
+            set_unadvertised_fault(&mut metadata, "malformed_response");
+        }
         return (parsed, Some(metadata));
     }
 
@@ -1120,24 +1183,8 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
             ctx.mutates,
         )
     });
-    if parsed.is_err()
-        && ctx.mutates
-        && metadata
-            .provenance()
-            .is_none_or(|p| p.status() == crate::connector::EffectStatus::UnsupportedProvenance)
-    {
-        metadata.set_provenance(EffectProvenance::transport_fault(
-            ctx.operation_kind,
-            ctx.attempt.as_ref(),
-            ctx.resolved_digest.as_deref(),
-            metadata
-                .cloud_header("decapod-cloud-request-id")
-                .map(str::to_owned),
-            Some("malformed_response"),
-            effective_auth,
-            origin_matches,
-            tls_authenticated,
-        ));
+    if parsed.is_err() {
+        set_unadvertised_fault(&mut metadata, "malformed_response");
     }
     (parsed, Some(metadata))
 }
@@ -1505,6 +1552,32 @@ pub(crate) fn body_read_timed_out(error: &std::io::Error) -> bool {
 }
 
 impl SupabaseAdapter {
+    fn record_decode_fault(
+        &self,
+        kind: OperationKind,
+        attempt: Option<&OperationAttempt>,
+        metadata_out: &mut CloudResponseMetadata,
+        err: &DactylError,
+    ) {
+        if metadata_out
+            .provenance()
+            .is_none_or(|p| p.status() == crate::connector::EffectStatus::UnsupportedProvenance)
+        {
+            metadata_out.set_provenance(EffectProvenance::transport_fault(
+                Some(kind),
+                attempt,
+                attempt.and_then(|a| a.request_digest()),
+                metadata_out
+                    .cloud_header("decapod-cloud-request-id")
+                    .map(str::to_owned),
+                Some(err.adapter_code().unwrap_or("malformed_response")),
+                self.default_auth_scheme(),
+                true,
+                self.expected_origin.scheme() == "https",
+            ));
+        }
+    }
+
     fn decode_write_response(&self, response: Response) -> Result<WriteResult, DactylError> {
         if !response.rows.is_empty() || !response.columns.is_empty() {
             let mut tracker = DecodedResultTracker::new(self.budget);
@@ -1672,7 +1745,9 @@ impl Adapter for SupabaseAdapter {
             Some(attempt),
             metadata_out,
         )?;
-        self.decode_write_response(response)
+        self.decode_write_response(response).inspect_err(|err| {
+            self.record_decode_fault(OperationKind::Write, Some(attempt), metadata_out, err);
+        })
     }
 
     fn write_with_attempt_async<'a>(
@@ -1701,7 +1776,9 @@ impl Adapter for SupabaseAdapter {
                     metadata_out,
                 )
                 .await?;
-            self.decode_write_response(response)
+            self.decode_write_response(response).inspect_err(|err| {
+                self.record_decode_fault(OperationKind::Write, Some(attempt), metadata_out, err);
+            })
         })
     }
 
@@ -1783,6 +1860,11 @@ impl Adapter for SupabaseAdapter {
             metadata_out,
         )?;
         self.decode_atomic_response(operations, response, mutates)
+            .inspect_err(|err| {
+                if mutates {
+                    self.record_decode_fault(batch_kind, Some(attempt), metadata_out, err);
+                }
+            })
     }
 
     fn atomic_with_attempt_async<'a>(
@@ -1818,6 +1900,11 @@ impl Adapter for SupabaseAdapter {
                 )
                 .await?;
             self.decode_atomic_response(operations, response, mutates)
+                .inspect_err(|err| {
+                    if mutates {
+                        self.record_decode_fault(batch_kind, Some(attempt), metadata_out, err);
+                    }
+                })
         })
     }
 

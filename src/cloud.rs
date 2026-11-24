@@ -1683,6 +1683,7 @@ fn protocol(message: &'static str) -> DactylError {
 fn is_missing_onboarding_function(error: &DactylError) -> bool {
     error.adapter_kind() == Some(AdapterErrorKind::NotFound)
         && matches!(error.adapter_code(), None | Some("not_found"))
+        && error.mutation_outcome() != crate::MutationOutcome::Uncertain
 }
 
 fn post_send_error(
@@ -1982,7 +1983,31 @@ fn error_kind_for_cloud_status_and_code(status: u16, code: Option<&str>) -> Adap
             "quota_exceeded" | "overage_cap_exhausted" if status == 429 => {
                 return AdapterErrorKind::Quota
             }
-            "dpop_aud_mismatch" | "expired_credential" => return AdapterErrorKind::Authentication,
+            "authentication_required"
+            | "invalid_token"
+            | "bad_jwt"
+            | "session_expired"
+            | "session_revoked"
+            | "session_not_found"
+            | "expired_credential"
+            | "use_dpop_nonce"
+            | "invalid_dpop_proof"
+            | "invalid_binding"
+            | "dpop_proof_required"
+            | "missing_dpop_proof"
+            | "dpop_replay"
+            | "dpop_nonce_mismatch"
+            | "dpop_clock_skew"
+            | "dpop_ath_mismatch"
+            | "dpop_htu_mismatch"
+            | "dpop_htm_mismatch"
+            | "dpop_jkt_mismatch"
+            | "dpop_aud_mismatch"
+            | "stolen_bearer"
+            | "device_revoked"
+            | "device_key_expired"
+            | "refresh_reuse_detected"
+            | "device_not_enrolled" => return AdapterErrorKind::Authentication,
             "grant_revoked" | "grant_expired" | "scope_denied" => {
                 return AdapterErrorKind::Authorization
             }
@@ -2075,7 +2100,10 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
             };
             return (Err(err), Some(metadata));
         }
-        if prepared.is_mutating && matches!(status_u16, 408 | 500..=599) {
+        let prov_uncertain = metadata
+            .provenance()
+            .is_some_and(|p| p.status() == EffectStatus::Uncertain);
+        if prepared.is_mutating && (matches!(status_u16, 408 | 500..=599) || prov_uncertain) {
             let explicit_non_commit = metadata.provenance().is_some_and(|p| {
                 matches!(
                     p.status(),
@@ -2104,11 +2132,18 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
     }
 
     if !check_json_depth(bytes) {
+        let req_id = origin_matches
+            .then(|| {
+                metadata
+                    .cloud_header("decapod-cloud-request-id")
+                    .map(str::to_owned)
+            })
+            .flatten();
         metadata.set_provenance(EffectProvenance::transport_fault(
             prepared.operation_kind,
             prepared.attempt.as_ref(),
             prepared.resolved_digest.as_deref(),
-            None,
+            req_id,
             Some("payload_too_deep"),
             auth_scheme,
             origin_matches,
@@ -2128,11 +2163,18 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
         match serde_json::from_slice(if bytes.is_empty() { b"null" } else { bytes }) {
             Ok(v) => v,
             Err(_) => {
+                let req_id = origin_matches
+                    .then(|| {
+                        metadata
+                            .cloud_header("decapod-cloud-request-id")
+                            .map(str::to_owned)
+                    })
+                    .flatten();
                 metadata.set_provenance(EffectProvenance::transport_fault(
                     prepared.operation_kind,
                     prepared.attempt.as_ref(),
                     prepared.resolved_digest.as_deref(),
-                    None,
+                    req_id,
                     Some("malformed_response"),
                     auth_scheme,
                     origin_matches,
@@ -2177,11 +2219,18 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
         )
     });
     if parsed.is_err() && prepared.is_mutating {
+        let req_id = origin_matches
+            .then(|| {
+                metadata
+                    .cloud_header("decapod-cloud-request-id")
+                    .map(str::to_owned)
+            })
+            .flatten();
         metadata.set_provenance(EffectProvenance::transport_fault(
             prepared.operation_kind,
             prepared.attempt.as_ref(),
             prepared.resolved_digest.as_deref(),
-            None,
+            req_id,
             Some("malformed_response"),
             auth_scheme,
             origin_matches,
@@ -2198,11 +2247,18 @@ fn fault_metadata(
     reason_code: &'static str,
     origin_bound: bool,
 ) -> CloudResponseMetadata {
+    let req_id = origin_bound
+        .then(|| {
+            metadata
+                .cloud_header("decapod-cloud-request-id")
+                .map(str::to_owned)
+        })
+        .flatten();
     metadata.set_provenance(EffectProvenance::transport_fault(
         prepared.operation_kind,
         prepared.attempt.as_ref(),
         prepared.resolved_digest.as_deref(),
-        None,
+        req_id,
         Some(reason_code),
         effective_auth_scheme(auth),
         origin_bound,
@@ -2632,9 +2688,20 @@ fn request<T: for<'de> Deserialize<'de> + Send + 'static>(
         std::thread::Builder::new()
             .name("dactyl-cloud-auth".into())
             .spawn(execute)
-            .map_err(|_| protocol("auth worker unavailable"))?
+            .map_err(|_| {
+                DactylError::adapter(
+                    AdapterErrorKind::Unavailable,
+                    "local preflight: auth worker unavailable",
+                )
+            })?
             .join()
-            .map_err(|_| protocol("auth worker failed"))?
+            .map_err(|_| {
+                post_send_error(
+                    AdapterErrorKind::Unavailable,
+                    is_mutating,
+                    "auth worker failed",
+                )
+            })?
     } else {
         execute()
     };

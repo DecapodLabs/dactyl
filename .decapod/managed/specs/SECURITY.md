@@ -1,5 +1,10 @@
 # Security
 
+## Cross-layer fault barrier, post-effect retry guard, and cutover origin security (issues #143, #138)
+
+- **No post-effect DPoP replay & consistent DPoP/revocation classification (`src/http_pool.rs`, `src/cloud.rs`)**: `can_retry_dpop_nonce` prevents `401 use_dpop_nonce` retry whenever `MutationOutcome::Uncertain` or `EffectStatus::{Uncertain, CommittedObserved}` provenance is present; `error_kind_for_cloud_status_and_code` maps DPoP mismatch and device/session revocation codes (such as `dpop_htu_mismatch`, `device_revoked`, `session_revoked`) to `AdapterErrorKind::Authentication` even on `403` responses without leaking bearers or DPoP proofs.
+- **Origin cutover fail-closed invariants (`#138`, `tests/transport_fault_reconciliation_143.rs`)**: Stale cross-origin `DeploymentProfile` responses (`supabase.co` <-> `api.decapodlabs.ai`), DPoP `htu` host/path mismatches, and `307`/`308` cutover redirects fail closed without following redirects, forwarding credentials, or falling back to local SQLite, while mid-flight policy-generation revocations (`grant_revoked`) produce zero unauthorized commits and correlate persisted `request_id`/`attempt_id`/`policy_generation` state via separate readback.
+
 ## Read-path mutation prevention, integer bounds, and release-skew fail-closed enforcement (issues #145, #146)
 
 - **SQLite read-path write-escape guard (`#145`, `src/adapter/sqlite/mod.rs`)**: `visit_rows_budgeted` checks `sqlite3_stmt_readonly` before stepping any prepared statement, blocking mutating SQL (`INSERT`/`UPDATE`/`DELETE`/`WITH ... INSERT`/mutating `PRAGMA`) on `read`, `visit_rows`, and `OperationKind::Read` batches even when opened in `AccessMode::ReadWrite` (`AdapterErrorKind::ReadOnly`, `"read_only"`). `check_parameters` rejects non-finite `Parameter::Real` values before transaction start (`"unsupported_value"`).
@@ -199,8 +204,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
+- Repository signal fingerprint: `877ac60808936ba91648cccce3db9fe51310e2557d070110ee88c396743d4e28`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
