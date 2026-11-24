@@ -1,5 +1,11 @@
 # Architecture
 
+## FIFO mixed sync/async transport pool limits, cancellation handoff, and baseline (issue #144)
+
+- **`src/http_pool.rs` (`RequestLimit`, `LimitState`, `WaiterGuard`, `SharedHttpClient`)**: Replaces unordered `Condvar` + `Notify::notify_waiters()` signaling with a FIFO `VecDeque<WaiterEntry>` waiter queue (`WaiterWake::Sync(Arc<(Mutex<bool>, Condvar)>)` and `WaiterWake::Async(Arc<tokio::sync::Notify>)`). Contended callers enqueue in arrival order (`state.waiters.is_empty()` prevents hot-caller barging), `RequestSlot::drop` transfers slot ownership directly to the oldest ungranted waiter without thundering-herd wakeups, and `WaiterGuard::drop` removes cancelled/timed-out waiters and forwards any already-granted slot to the next waiter when an async future is dropped between handoff and next poll.
+- **`src/adapter/neon/mod.rs` & `src/cloud.rs` (pre-send deadline boundary)**: `send_neon_request` and `send_neon_request_async` obtain `blocking_client()` / `async_client()` prior to computing `deadline` and acquiring `_permit` (matching `src/adapter/supabase.rs`), and `neon/mod.rs` plus `send_auth_once` / `send_auth_once_async` (`src/cloud.rs`) return `MutationOutcome::NotAttempted` (`EffectStatus::NotAttempted`, `ObservationSource::LocalPreflight` on cloud channels) when `deadline` expires before `request.send()`.
+- **Baseline & policy boundary (`docs/transport-load-baseline.md`, `tests/transport_load_fairness_144.rs`)**: Measures queue vs. service time, `p50`/`p95`/`p99`, active/idle sockets, cross-platform open FDs/RSS, and aggregate `64`-slot / `64`-pool bounds across sustained and faulted burst workloads without introducing tenant admission scheduling in Dactyl.
+
 ## Cross-layer transport fault reconciliation and origin cutover resilience (issues #143, #138)
 
 - **`src/http_pool.rs`, `src/adapter/supabase.rs`, & `src/cloud.rs` (`#143`, `#138`)**:
@@ -274,8 +280,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
+- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

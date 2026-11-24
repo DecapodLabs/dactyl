@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "8ddda859fa4f19405d4273fe46c5f52c8095c1db",
+    "accepted_commit": "d33f9b1657398d60a2bf14b2eacf178f4ab344c6",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -112,65 +112,56 @@
     }
   },
   "change": {
-    "id": "change_dactyl_p2_143_138",
-    "base_commit": "8ddda859fa4f19405d4273fe46c5f52c8095c1db",
+    "id": "pr-144",
+    "base_commit": "d33f9b1657398d60a2bf14b2eacf178f4ab344c6",
     "target_base": "origin/main"
   },
   "claims": {
-    "dactyl-138-origin-cutover-resilience": {
-      "statement": "Origin cutover tests verify DEFAULT_CLOUD_ORIGIN retention, stale cross-origin discovery rejection, supabase.co <-> api.decapodlabs.ai coexistence, DPoP htu host/path mismatch refusal across 401/403, unsafe redirect refusal, lost ack during cutover without resending to new origin, and strict no-local-fallback.",
-      "falsifier": "Any premature DEFAULT_CLOUD_ORIGIN flip, accepted stale discovery profile, followed redirect, mismatched DPoP htu bypass, or silent local SQLite fallback.",
+    "claim:dactyl-transport-load-fairness-144": {
+      "statement": "Dactyl #144 enforces FIFO mixed sync/async slot fairness, clean cancellation forwarding, aggregate 64-slot/64-pool ceilings, combined queue+execution deadlines with pre-send NotAttempted parity, and verified sustained/burst load baseline thresholds without adding tenant admission policy.",
+      "falsifier": "Any failure in transport_load_fairness_144, http_pool::pool_tests, http_pool_async, resource_budgets, fmt, or clippy across feature matrix, or any slot leak/starvation/uncertain pre-send timeout.",
       "status": "supported",
       "proof_refs": [
-        "tests/transport_fault_reconciliation_143.rs"
-      ]
-    },
-    "dactyl-143-fault-reconciliation": {
-      "statement": "Instrumented SQLite-backed loopback HTTP fault proxy and 12-seed x 24-step campaign verify pre-send/admission/before-commit/after-commit-ack-loss/truncation/timeout/reset/replay barriers, bounded reconciliation, post-effect DPoP retry guard, and 0 duplicate/false-rollback/false-commit/unauthorized commits.",
-      "falsifier": "Any duplicate commit, false RolledBack or CommittedObserved classification, unauthorized commit under revocation, or post-effect DPoP retry across tests/transport_fault_reconciliation_143.rs.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/transport_fault_reconciliation_143.rs"
+        "docs/transport-load-baseline.md",
+        "src/http_pool.rs",
+        "tests/transport_load_fairness_144.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_dactyl_p2_143_138",
-      "summary": "Hardening #143 & #138: cross-layer loopback HTTP fault proxy & 12-seed reconciliation campaign, origin cutover resilience across supabase.co <-> api.decapodlabs.ai, and 6 transport/classification fixes",
-      "input_digest": "sha256:122eea0fd8fd61a64cdcb653742fe2a72ee060f4cc9d5e39a82d6b01a54f8f18",
+      "id": "cp-144-final",
+      "summary": "Phase 4 #144 FIFO RequestLimit, pre-send NotAttempted parity, load baseline doc, and transport_load_fairness_144 suite",
+      "input_digest": "sha256:3ccbaf63dcbac667a476ef42aab80702ae90fb80c5f34190105b472b79600a19",
       "proof_refs": [
-        "tests/transport_fault_reconciliation_143.rs"
-      ]
-    },
-    {
-      "id": "chk_dactyl_p2_143_138_fix_sqlite_lock",
-      "summary": "Serialize FaultProxyServer backing SQLite access with db_lock Mutex and 5s lock_timeout to prevent SQLITE_BUSY under Linux CI timing",
-      "input_digest": "sha256:6f01c5807ce3d2c3f46922f59fd4826fbfc3446ec15ea740958862d1c5f1a045",
-      "proof_refs": [
-        "tests/transport_fault_reconciliation_143.rs"
+        "docs/transport-load-baseline.md",
+        "tests/transport_load_fairness_144.rs"
       ]
     }
   ],
   "intents": {
-    "intent:run_dactyl_p2_143_138": {
+    "intent:run-144": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree branch agent/agy-1933-dactyl-p2/cicd_01m85q8spbech0cx-fault-reconcile-143; offline/loopback proof only without live paid custom domain or hosted spend."
+        "No tenant admission policy in Dactyl (Propodus owns that); no paid infrastructure; preserve Dockerfile.decapod 0.162.1 CI parity."
       ],
       "constraints": [
-        "src/http_pool.rs,src/adapter/supabase.rs,src/cloud.rs,tests/transport_fault_reconciliation_143.rs,.decapod/managed/specs/"
+        "src/http_pool.rs",
+        "src/adapter/neon/mod.rs",
+        "src/cloud.rs",
+        "docs/transport-load-baseline.md",
+        "tests/transport_load_fairness_144.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:run_dactyl_p2_143_138",
+      "id": "intent:run-144",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Phase 2 hardening issues #143 and #138 (origin migration resilience) in DecapodLabs/dactyl",
-      "refined_intent": "Add instrumented SQLite-backed loopback HTTP fault proxy and 12-seed deterministic campaign (#143) plus #138 origin cutover resilience tests, and fix 6 discovered transport/classification defects.",
+      "raw_intent": "Hardening #144: mixed sync/async HTTP pool limits, cancellation, fairness, and load baseline",
+      "refined_intent": "Measure and harden Dactyl HTTP pool limits, cancellation release, mixed sync/async fairness, pre-send vs post-send timeout/uncertain semantics, and document transport load baseline and regression thresholds.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -183,7 +174,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Exercise cross-layer transport fault injection, commit-ack loss reconciliation (#143), and origin cutover resilience across supabase.co <-> api.decapodlabs.ai (#138), fixing post-effect DPoP nonce retry, non-2xx uncertain outcome alignment, pre-send pool/worker NotAttempted classification, unadvertised mutating decode fault provenance, request_id fault correlation, and 403 DPoP/revocation classification.",
+      "intent": "Prove aggregate HTTP pool limits, cancellation release, mixed sync/async fairness, typed pre-send/post-send timeout/uncertain outcomes, and capture a reproducible transport load baseline for DecapodLabs/dactyl#144.",
       "phases": [],
       "proof_hooks": [
         "cargo fmt --all -- --check",
@@ -195,47 +186,59 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access with db_lock Mutex and 5s lock_timeout.",
-          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
-          "spec_material_hash": "ac0bde44bc8ff593d0c7c4202fdd1d8d59ed4c6f4e13029d4927d215a0f00c13"
+          "reason": "Documented #144 FIFO RequestLimit, WaiterGuard cancellation handoff, pre-send NotAttempted alignment, and transport load baseline.",
+          "reviewed_code_fingerprint": "d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f",
+          "spec_material_hash": "34b50a762cd9aa792bf9a227c00eb8e05aedeef8751c0120f4f01ad854f90f58"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access in tests/transport_fault_reconciliation_143.rs.",
-          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
-          "spec_material_hash": "3395663a5415d0957fec79c2b9fd27cc3082e7d1b972b0f590e56764a8debe1c"
+          "reason": "Documented #144 unified queue+execution request_timeout semantics, pre-send NotAttempted guarantees, and Propodus tenant policy boundary.",
+          "reviewed_code_fingerprint": "d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f",
+          "spec_material_hash": "9ebfaf9ff553ae6ae87c6163ec642bff798f74bbbc3a7c550d2065cf2b884588"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access in tests/transport_fault_reconciliation_143.rs.",
-          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
+          "reason": "Refreshed spec fingerprint; #144 preserves existing auth/DPoP/origin security invariants while clarifying pre-send timeout classification.",
+          "reviewed_code_fingerprint": "d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f",
           "spec_material_hash": "6f1e84f8aca1e72d0ad21ae5ed3c88e6d1bc15a2f68f94abc6a8acfae91ea736"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Phase 2 Hardening #143 & #138",
+      "title": "Phase 4 Hardening #144: Transport Load & Fairness Baseline",
       "todo_ids": [
-        "cicd_01m85q8spbech0cx"
+        "code_01m85w2bthajzrgz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795489968Z"
+      "updated_at": "1795494373Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree branch agent/agy-1933-dactyl-p2/cicd_01m85q8spbech0cx-fault-reconcile-143; offline/loopback proof only without live paid custom domain or hosted spend."
+        "No tenant admission policy in Dactyl (Propodus owns that); no paid infrastructure; preserve Dockerfile.decapod 0.162.1 CI parity."
       ],
-      "artifact_hash": "sha256:198339c51adfdb90313e8f77d43e3ecfc1dffd64c909ae8b38748f1af0d575b2",
+      "artifact_hash": "sha256:ce6a18c74bf003b42d2238ff8f20e9342992c69a1158b5a25942d24e694c900c",
       "checks": [
         {
           "name": "cargo-clippy-all-features",
           "status": "passed"
         },
         {
-          "name": "cargo-fmt-check",
+          "name": "cargo-clippy-neon",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-clippy-no-default-features",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-clippy-supabase",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-fmt",
           "status": "passed"
         },
         {
@@ -243,28 +246,38 @@
           "status": "passed"
         },
         {
-          "name": "feature-matrix-143-tests",
-          "status": "passed"
+          "name": "hosted_supabase",
+          "status": "unavailable"
+        },
+        {
+          "name": "live_propodus",
+          "status": "unavailable"
+        },
+        {
+          "name": "local_postgres",
+          "status": "unavailable"
         }
       ],
+      "completion_claim": "Phase 4 #144 transport load/fairness baseline, FIFO sync/async RequestLimit, WaiterGuard cancellation handoff, and pre-send NotAttempted timeout parity verified on loopback HTTP; external Postgres/Supabase/Propodus backends unavailable offline.",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_dactyl_p2_143_138",
+            "intent_id": "intent:run-144",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_dactyl_p2_143_138",
+            "intent_id": "intent:run-144",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_dactyl_p2_143_138",
+            "detail": "trajectory:run-144",
             "event_id": "event:4",
-            "intent_id": "intent:run_dactyl_p2_143_138",
+            "intent_id": "intent:run-144",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -273,36 +286,47 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_dactyl_p2_143_138": {
+          "run-144": {
             "evidence_only": true,
-            "id": "run_dactyl_p2_143_138",
-            "intent_id": "intent:run_dactyl_p2_143_138",
+            "id": "run-144",
+            "intent_id": "intent:run-144",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "validation",
+                "command": "cargo fmt --all -- --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/connector.rs",
-                  "src/error.rs",
                   "src/http_pool.rs",
-                  "src/adapter/supabase.rs",
+                  "src/budget.rs",
+                  "src/adapter/neon/mod.rs",
                   "src/cloud.rs",
-                  "docs/cloud-failure-conformance.md",
-                  "tests/differential_contract.rs",
-                  "tests/wire_compatibility.rs",
+                  "tests/http_pool_async.rs",
+                  "tests/resource_budgets.rs",
                   "src/http_pool.rs",
-                  "src/adapter/supabase.rs",
+                  "src/adapter/neon/mod.rs",
                   "src/cloud.rs",
-                  "tests/transport_fault_reconciliation_143.rs"
+                  "docs/transport-load-baseline.md",
+                  "tests/transport_load_fairness_144.rs",
+                  "cargo test --locked --all-features: 26 suites, 195 passed, 0 failed, 8 ignored (pre-existing external DB/perf tests)",
+                  "tests/transport_load_fairness_144.rs: 4/4 passed; sustained 240+3 ops total p50/p95/p99=125.04/225.71/232.92ms, service p50/p95/p99=6.66/9.16/9.53ms, queue p50/p95/p99=119.50/219.53/227.49ms, burst 160 ops ok=31/cancelled=16/faults=113, post-drop open_conns=0"
                 ],
                 "proof_refs": [
-                  "cargo-fmt-check",
+                  "cargo-fmt",
                   "cargo-clippy-all-features",
+                  "cargo-clippy-neon",
+                  "cargo-clippy-supabase",
+                  "cargo-clippy-no-default-features",
                   "cargo-test-all-features",
-                  "feature-matrix-143-tests"
+                  "local_postgres",
+                  "hosted_supabase",
+                  "live_propodus"
                 ],
                 "scope": [
-                  "src/http_pool.rs,src/adapter/supabase.rs,src/cloud.rs,tests/transport_fault_reconciliation_143.rs,.decapod/managed/specs/"
+                  "docs/transport-load-baseline.md",
+                  "src/adapter/neon/mod.rs",
+                  "src/cloud.rs",
+                  "src/http_pool.rs",
+                  "tests/transport_load_fairness_144.rs"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -311,32 +335,42 @@
           }
         }
       },
-      "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [
-        "docs/cloud-failure-conformance.md",
-        "src/adapter/supabase.rs",
-        "src/cloud.rs",
-        "src/connector.rs",
-        "src/error.rs",
-        "src/http_pool.rs",
-        "tests/differential_contract.rs",
-        "tests/wire_compatibility.rs"
+      "declared_commands": [
+        "cargo clippy --locked --all-targets --all-features -- -D warnings",
+        "cargo fmt --all -- --check",
+        "cargo test --locked --all-features"
       ],
-      "intent_id": "intent:run_dactyl_p2_143_138",
-      "modified_files": [
-        "src/adapter/supabase.rs",
+      "evidence": [
+        "cargo test --locked --all-features: 26 suites, 195 passed, 0 failed, 8 ignored (pre-existing external DB/perf tests)",
+        "tests/transport_load_fairness_144.rs: 4/4 passed; sustained 240+3 ops total p50/p95/p99=125.04/225.71/232.92ms, service p50/p95/p99=6.66/9.16/9.53ms, queue p50/p95/p99=119.50/219.53/227.49ms, burst 160 ops ok=31/cancelled=16/faults=113, post-drop open_conns=0"
+      ],
+      "inspected_files": [
+        "src/adapter/neon/mod.rs",
+        "src/budget.rs",
         "src/cloud.rs",
         "src/http_pool.rs",
-        "tests/transport_fault_reconciliation_143.rs"
+        "tests/http_pool_async.rs",
+        "tests/resource_budgets.rs"
+      ],
+      "intent_id": "intent:run-144",
+      "modified_files": [
+        "docs/transport-load-baseline.md",
+        "src/adapter/neon/mod.rs",
+        "src/cloud.rs",
+        "src/http_pool.rs",
+        "tests/transport_load_fairness_144.rs"
       ],
       "repo_scope": [
-        "src/http_pool.rs,src/adapter/supabase.rs,src/cloud.rs,tests/transport_fault_reconciliation_143.rs,.decapod/managed/specs/"
+        "docs/transport-load-baseline.md",
+        "src/adapter/neon/mod.rs",
+        "src/cloud.rs",
+        "src/http_pool.rs",
+        "tests/transport_load_fairness_144.rs"
       ],
-      "run_id": "run_dactyl_p2_143_138",
+      "run_id": "run-144",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m85q8spbech0cx",
+      "task_id": "code_01m85w2bthajzrgz",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -1,5 +1,10 @@
 # Intent
 
+## Phase 4 transport load, fairness, cancellation, and regression baseline (issue #144)
+
+- **Aggregate pool limits, cancellation, and FIFO sync/async fairness (`#144`)**: Hardens `src/http_pool.rs`, `src/adapter/neon/mod.rs`, and `src/cloud.rs` so `RequestLimit` enforces FIFO arrival-order slot handoff across synchronous and asynchronous callers without barging or thundering-herd wakeups, drops/cancellations forward granted slots cleanly via `WaiterGuard`, and pre-send `request_timeout` expirations (including after permit acquisition prior to `.send()`) classify consistently as `AdapterErrorKind::Timeout` + `MutationOutcome::NotAttempted`.
+- **Reproducible load baseline & Propodus policy boundary (`docs/transport-load-baseline.md`, `tests/transport_load_fairness_144.rs`)**: Documents aggregate pool bounds (`MAX_PROCESS_IN_FLIGHT = 64`, `MAX_LIVE_POOLS = 64`, `MAX_ASYNC_RUNTIMES_PER_POOL = 16`, `http_max_in_flight` `1..=64`), confirms `request_timeout` covers queueing + execution, preserves Dactyl's boundary against tenant admission policy (owned by Propodus), and records sustained/burst fixed-seed latency (`p50`/`p95`/`p99` total, service, queue), active/idle connections, cross-platform FD/RSS deltas, result/wire bytes, and regression thresholds.
+
 ## Cross-layer transport fault injection, commit-ack loss reconciliation, and origin cutover resilience (issues #143, #138)
 
 - **Adversarial fault-injection and reference-model campaign (`#143`)**: `tests/transport_fault_reconciliation_143.rs` exercises an instrumented SQLite-backed loopback HTTP/Edge/RPC fault proxy across explicit barriers (pre-send refusals and pool-slot saturation, server admission refusals, pre-commit rollbacks/5xx, commit-ack socket drop, truncated `2xx` responses, late-commit and pre-commit timeouts, connection resets, duplicated JSON bodies, duplicate provenance headers, reordered `attempt_id`/`scope_ref`/`operation_kind` responses, same-key/different-payload `IdempotencyConflict`, `401 use_dpop_nonce` before-effect vs after-effect retry guards, `429` with `Retry-After` and `accepted_not_committed`, mid-flight policy-generation revocations, and bounded reconciliation readback) plus a 12-seed deterministic campaign proving `0` duplicate commits, `0` false rollback/commit classifications, `0` unauthorized commits, and exact `request_id`/`attempt_id`/`policy_generation` correlation.
@@ -230,16 +235,16 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 59 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (29), `tools/` (3)
-- Core modules: 12 | Workflows: 4 | Integration targets: 26
+- Tracked significant codebase files: 60 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (30), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 27
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
+- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

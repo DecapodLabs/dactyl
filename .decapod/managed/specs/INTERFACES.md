@@ -1,5 +1,10 @@
 # Interfaces
 
+## Transport deadline coverage, fairness guarantees, and regression baseline (issue #144)
+
+- **Unified queue + execution deadline (`src/http_pool.rs`, `src/adapter/neon/mod.rs`, `src/adapter/supabase.rs`, `src/cloud.rs`)**: `ResourceBudget::request_timeout()` bounds both pool-slot queueing (`acquire_permit*`) and HTTP execution/body reading (including a single `401 use_dpop_nonce` retry). Timeouts occurring in queue or after permit acquisition prior to `request.send()` consistently return `AdapterErrorKind::Timeout` + `MutationOutcome::NotAttempted` (`EffectStatus::NotAttempted` / `ObservationSource::LocalPreflight` on Supabase/CloudConnector), whereas post-send mutating timeouts return `MutationOutcome::Uncertain`.
+- **Pool limits & Propodus separation (`docs/transport-load-baseline.md`)**: `PoolSettings` (`connect_timeout`, `http_max_in_flight`, `http_max_idle_per_host`, `http_idle_timeout`) shares `SharedHttpClient` pools across origins, capped at `MAX_LIVE_POOLS = 64` (`AdapterErrorKind::Unavailable`, `NotAttempted` on overflow), `MAX_PROCESS_IN_FLIGHT = 64`, and `MAX_ASYNC_RUNTIMES_PER_POOL = 16`, with FIFO slot fairness and no per-tenant admission policy in Dactyl.
+
 ## Transport fault reconciliation & origin cutover guarantees (issues #143, #138)
 
 - **Pre-effect DPoP challenge & non-2xx uncertain outcome invariants (`src/http_pool.rs`, `src/adapter/supabase.rs`, `src/cloud.rs`)**: `401 use_dpop_nonce` retries at most once and only prior to any `Uncertain`/`CommittedObserved` effect; non-2xx mutating responses with `EffectStatus::Uncertain` provenance always yield `MutationOutcome::Uncertain` (`outcome_unknown` on control/onboarding channels); and `error_kind_for_cloud_status_and_code` (`src/cloud.rs`) maps all allowlisted DPoP/token/device revocation codes (including `dpop_htu_mismatch`) to `AdapterErrorKind::Authentication` across `400`/`401`/`403` statuses.
@@ -325,8 +330,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
+- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
