@@ -9,6 +9,7 @@
 //! directly when outside Tokio and offload blocking initialization/execution
 //! off-runtime only when invoked from inside a Tokio runtime.
 
+use std::collections::VecDeque;
 use std::sync::{Arc, Condvar, Mutex, Weak};
 use std::time::{Duration, Instant};
 
@@ -260,80 +261,245 @@ pub(crate) struct RequestPermit<'a> {
 }
 
 struct RequestLimit {
-    in_flight: Mutex<usize>,
-    changed: Condvar,
-    async_notify: tokio::sync::Notify,
+    state: Mutex<LimitState>,
     capacity: usize,
+}
+
+struct LimitState {
+    in_flight: usize,
+    next_waiter_id: u64,
+    waiters: VecDeque<WaiterEntry>,
+}
+
+struct WaiterEntry {
+    id: u64,
+    granted: bool,
+    wake: WaiterWake,
+}
+
+#[derive(Clone)]
+enum WaiterWake {
+    Sync(Arc<(Mutex<bool>, Condvar)>),
+    Async(Arc<tokio::sync::Notify>),
+}
+
+impl WaiterWake {
+    fn notify(self) {
+        match self {
+            Self::Sync(pair) => {
+                let mut granted = pair
+                    .0
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                *granted = true;
+                pair.1.notify_one();
+            }
+            Self::Async(notify) => {
+                notify.notify_one();
+            }
+        }
+    }
+}
+
+impl LimitState {
+    const fn new() -> Self {
+        Self {
+            in_flight: 0,
+            next_waiter_id: 0,
+            waiters: VecDeque::new(),
+        }
+    }
+
+    fn release_one(&mut self) -> Option<WaiterWake> {
+        if let Some(entry) = self.waiters.iter_mut().find(|entry| !entry.granted) {
+            entry.granted = true;
+            Some(entry.wake.clone())
+        } else {
+            self.in_flight = self.in_flight.saturating_sub(1);
+            None
+        }
+    }
+
+    fn cancel_waiter(&mut self, id: u64) -> Option<WaiterWake> {
+        let idx = self.waiters.iter().position(|entry| entry.id == id)?;
+        let entry = self.waiters.remove(idx)?;
+        if entry.granted {
+            self.release_one()
+        } else {
+            None
+        }
+    }
+
+    fn take_granted(&mut self, id: u64) -> bool {
+        if let Some(idx) = self.waiters.iter().position(|entry| entry.id == id) {
+            if self.waiters[idx].granted {
+                self.waiters.remove(idx);
+                return true;
+            }
+        }
+        false
+    }
+}
+
+struct WaiterGuard<'a> {
+    limit: &'a RequestLimit,
+    id: u64,
+    armed: bool,
+}
+
+impl<'a> WaiterGuard<'a> {
+    fn new(limit: &'a RequestLimit, id: u64) -> Self {
+        Self {
+            limit,
+            id,
+            armed: true,
+        }
+    }
+
+    fn disarm(&mut self) {
+        self.armed = false;
+    }
+}
+
+impl Drop for WaiterGuard<'_> {
+    fn drop(&mut self) {
+        if !self.armed {
+            return;
+        }
+        let wake = {
+            let mut state = self
+                .limit
+                .state
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            state.cancel_waiter(self.id)
+        };
+        if let Some(wake) = wake {
+            wake.notify();
+        }
+    }
+}
+
+fn slot_timeout_error() -> DactylError {
+    DactylError::adapter(
+        AdapterErrorKind::Timeout,
+        "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
+    )
 }
 
 impl RequestLimit {
     const fn new(capacity: usize) -> Self {
         Self {
-            in_flight: Mutex::new(0),
-            changed: Condvar::new(),
-            async_notify: tokio::sync::Notify::const_new(),
+            state: Mutex::new(LimitState::new()),
             capacity,
         }
     }
 
     fn acquire(&self, deadline: Instant) -> Result<RequestSlot<'_>, DactylError> {
-        let mut active = self
-            .in_flight
+        let (id, pair) = {
+            let mut state = self
+                .state
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if state.waiters.is_empty() && state.in_flight < self.capacity {
+                state.in_flight += 1;
+                return Ok(RequestSlot(self));
+            }
+            if deadline.saturating_duration_since(Instant::now()).is_zero() {
+                return Err(slot_timeout_error());
+            }
+            let id = state.next_waiter_id;
+            state.next_waiter_id = state.next_waiter_id.wrapping_add(1);
+            let pair = Arc::new((Mutex::new(false), Condvar::new()));
+            state.waiters.push_back(WaiterEntry {
+                id,
+                granted: false,
+                wake: WaiterWake::Sync(pair.clone()),
+            });
+            (id, pair)
+        };
+        let mut guard = WaiterGuard::new(self, id);
+        {
+            let mut granted = pair
+                .0
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            while !*granted {
+                let remaining = deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return Err(slot_timeout_error());
+                }
+                let (next, _) = pair
+                    .1
+                    .wait_timeout(granted, remaining)
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                granted = next;
+            }
+        }
+        let mut state = self
+            .state
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        while *active >= self.capacity {
-            let remaining = deadline.saturating_duration_since(Instant::now());
-            if remaining.is_zero() {
-                return Err(DactylError::adapter(
-                    AdapterErrorKind::Timeout,
-                    "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
-                ));
-            }
-            let (next, _) = self
-                .changed
-                .wait_timeout(active, remaining)
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
-            active = next;
+        if state.take_granted(id) {
+            guard.disarm();
+            Ok(RequestSlot(self))
+        } else {
+            Err(slot_timeout_error())
         }
-        *active += 1;
-        Ok(RequestSlot(self))
     }
 
     async fn acquire_async(&self, deadline: Instant) -> Result<RequestSlot<'_>, DactylError> {
+        let (id, notify) = {
+            let mut state = self
+                .state
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if state.waiters.is_empty() && state.in_flight < self.capacity {
+                state.in_flight += 1;
+                return Ok(RequestSlot(self));
+            }
+            if deadline.saturating_duration_since(Instant::now()).is_zero() {
+                return Err(slot_timeout_error());
+            }
+            let id = state.next_waiter_id;
+            state.next_waiter_id = state.next_waiter_id.wrapping_add(1);
+            let notify = Arc::new(tokio::sync::Notify::new());
+            state.waiters.push_back(WaiterEntry {
+                id,
+                granted: false,
+                wake: WaiterWake::Async(notify.clone()),
+            });
+            (id, notify)
+        };
+        let mut guard = WaiterGuard::new(self, id);
         loop {
-            let notified = self.async_notify.notified();
+            let notified = notify.notified();
             let mut notified = std::pin::pin!(notified);
             notified.as_mut().enable();
             {
-                let mut active = self
-                    .in_flight
+                let mut state = self
+                    .state
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner());
-                if *active < self.capacity {
-                    *active += 1;
+                if state.take_granted(id) {
+                    guard.disarm();
                     return Ok(RequestSlot(self));
                 }
             }
             let remaining = deadline.saturating_duration_since(Instant::now());
             if remaining.is_zero() {
-                return Err(DactylError::adapter(
-                    AdapterErrorKind::Timeout,
-                    "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
-                ));
+                return Err(slot_timeout_error());
             }
             if tokio::time::timeout(remaining, notified).await.is_err() {
-                let mut active = self
-                    .in_flight
+                let mut state = self
+                    .state
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner());
-                if *active < self.capacity {
-                    *active += 1;
+                if state.take_granted(id) {
+                    guard.disarm();
                     return Ok(RequestSlot(self));
                 }
-                return Err(DactylError::adapter(
-                    AdapterErrorKind::Timeout,
-                    "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
-                ));
+                return Err(slot_timeout_error());
             }
         }
     }
@@ -343,16 +509,17 @@ struct RequestSlot<'a>(&'a RequestLimit);
 
 impl Drop for RequestSlot<'_> {
     fn drop(&mut self) {
-        {
-            let mut active = self
+        let wake = {
+            let mut state = self
                 .0
-                .in_flight
+                .state
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            *active -= 1;
+            state.release_one()
+        };
+        if let Some(wake) = wake {
+            wake.notify();
         }
-        self.0.changed.notify_one();
-        self.0.async_notify.notify_waiters();
     }
 }
 
@@ -1548,9 +1715,15 @@ fn validate_merged_provenance(
 #[cfg(test)]
 mod pool_tests {
     use super::*;
+    use std::future::Future;
+
+    static TEST_SERIALIZER: RequestLimit = RequestLimit::new(1);
 
     #[test]
     fn equal_budgets_share_slots_and_other_budgets_keep_independent_capacity() {
+        let _serial = TEST_SERIALIZER
+            .acquire(Instant::now() + Duration::from_secs(10))
+            .unwrap();
         let budget = ResourceBudget::v1().with_http_pool_limits(1, 0, Duration::from_secs(1));
         let first = acquire_client(budget).unwrap();
         let same = acquire_client(budget.with_request_timeout(Duration::from_secs(2))).unwrap();
@@ -1574,6 +1747,10 @@ mod pool_tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn async_and_sync_permits_share_budget_capacity_without_starvation() {
+        let _serial = TEST_SERIALIZER
+            .acquire_async(Instant::now() + Duration::from_secs(10))
+            .await
+            .unwrap();
         let budget = ResourceBudget::v1().with_http_pool_limits(2, 2, Duration::from_secs(7));
         let client = acquire_client(budget).unwrap();
         let p1 = client
@@ -1618,5 +1795,155 @@ mod pool_tests {
         waiter.await.unwrap();
         drop(p2);
         assert!(client.acquire_permit(Instant::now()).is_ok());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn fifo_order_and_cancellation_handoff_preserve_mixed_sync_async_fairness() {
+        let _serial = TEST_SERIALIZER
+            .acquire_async(Instant::now() + Duration::from_secs(10))
+            .await
+            .unwrap();
+        let limit = Arc::new(RequestLimit::new(1));
+        let order = Arc::new(Mutex::new(Vec::<&'static str>::new()));
+
+        let held = limit
+            .acquire(Instant::now() + Duration::from_secs(1))
+            .unwrap();
+
+        // Enqueue: sync-1, async-cancelled, async-2, sync-2.
+        let l_s1 = limit.clone();
+        let o_s1 = order.clone();
+        let (s1_queued_tx, s1_queued_rx) = std::sync::mpsc::sync_channel(1);
+        let sync1 = std::thread::spawn(move || {
+            let _ = s1_queued_tx.send(());
+            let slot = l_s1
+                .acquire(Instant::now() + Duration::from_secs(2))
+                .unwrap();
+            o_s1.lock().unwrap().push("sync-1");
+            drop(slot);
+        });
+        s1_queued_rx.recv().unwrap();
+        // Wait until sync-1 is actually registered in limit.state.waiters.
+        while limit.state.lock().unwrap().waiters.is_empty() {
+            std::thread::yield_now();
+        }
+
+        // Poll an async waiter once so it registers, then drop it AFTER it receives handoff!
+        let mut cancelled_fut =
+            Box::pin(limit.acquire_async(Instant::now() + Duration::from_secs(2)));
+        let noop_waker = std::task::Waker::noop();
+        let mut cx = std::task::Context::from_waker(noop_waker);
+        assert!(cancelled_fut.as_mut().poll(&mut cx).is_pending());
+        assert_eq!(limit.state.lock().unwrap().waiters.len(), 2);
+
+        let l_a2 = limit.clone();
+        let o_a2 = order.clone();
+        let async2 = tokio::spawn(async move {
+            let slot = l_a2
+                .acquire_async(Instant::now() + Duration::from_secs(2))
+                .await
+                .unwrap();
+            o_a2.lock().unwrap().push("async-2");
+            drop(slot);
+        });
+        while limit.state.lock().unwrap().waiters.len() < 3 {
+            tokio::task::yield_now().await;
+        }
+
+        let l_s2 = limit.clone();
+        let o_s2 = order.clone();
+        let sync2 = std::thread::spawn(move || {
+            let slot = l_s2
+                .acquire(Instant::now() + Duration::from_secs(2))
+                .unwrap();
+            o_s2.lock().unwrap().push("sync-2");
+            drop(slot);
+        });
+        while limit.state.lock().unwrap().waiters.len() < 4 {
+            std::thread::yield_now();
+        }
+
+        // Release initial slot: sync-1 runs, then hands off to cancelled_fut (not polled yet!).
+        drop(held);
+        sync1.join().unwrap();
+        // Wait briefly so sync-1's drop marks cancelled_fut granted without polling it.
+        tokio::time::sleep(Duration::from_millis(15)).await;
+        // Dropping cancelled_fut MUST immediately hand off the granted slot to async-2!
+        drop(cancelled_fut);
+
+        async2.await.unwrap();
+        sync2.join().unwrap();
+
+        assert_eq!(*order.lock().unwrap(), vec!["sync-1", "async-2", "sync-2"]);
+        let state = limit.state.lock().unwrap();
+        assert_eq!(state.in_flight, 0);
+        assert!(state.waiters.is_empty());
+    }
+
+    #[test]
+    fn process_in_flight_ceiling_and_live_pool_cap_enforce_bounds_and_release_on_drop() {
+        let _serial = TEST_SERIALIZER
+            .acquire(Instant::now() + Duration::from_secs(10))
+            .unwrap();
+
+        // 1. Distinct budget pools enforce MAX_LIVE_POOLS = 64 and reclaim on drop.
+        let mut pools = Vec::with_capacity(MAX_LIVE_POOLS);
+        for i in 0..MAX_LIVE_POOLS {
+            let budget = ResourceBudget::v1().with_http_pool_limits(
+                1,
+                0,
+                Duration::from_millis(100 + i as u64),
+            );
+            pools.push(acquire_client(budget).unwrap());
+        }
+        let overflow_budget =
+            ResourceBudget::v1().with_http_pool_limits(1, 0, Duration::from_millis(999));
+        let overflow = acquire_client(overflow_budget)
+            .err()
+            .expect("65th distinct live pool must fail closed");
+        assert_eq!(overflow.adapter_kind(), Some(AdapterErrorKind::Unavailable));
+        assert_eq!(
+            overflow.mutation_outcome(),
+            crate::MutationOutcome::NotAttempted
+        );
+
+        pools.pop();
+        pools.push(acquire_client(overflow_budget).unwrap());
+
+        // 2. Aggregate process ceiling MAX_PROCESS_IN_FLIGHT = 64 holds across distinct pools.
+        let mut permits = Vec::with_capacity(MAX_PROCESS_IN_FLIGHT);
+        for pool in pools.iter().take(MAX_PROCESS_IN_FLIGHT) {
+            permits.push(pool.acquire_permit(Instant::now()).unwrap());
+        }
+        // Drop one pool to free a live-pool slot while keeping its held permit? Wait:
+        // RequestPermit borrows the pool, so drop 1 permit & pool, and open a 64th pool
+        // with capacity 4 alongside 63 held permits, OR open 63 pools + 1 pool with cap 2!
+        drop(permits);
+        pools.pop();
+        let multi_pool = acquire_client(ResourceBudget::v1().with_http_pool_limits(
+            4,
+            0,
+            Duration::from_secs(9),
+        ))
+        .unwrap();
+        let mut held_permits = Vec::with_capacity(MAX_PROCESS_IN_FLIGHT);
+        for pool in &pools {
+            held_permits.push(pool.acquire_permit(Instant::now()).unwrap());
+        }
+        // 63 slots held across `pools`; acquire 1 more from `multi_pool` (64 total).
+        held_permits.push(multi_pool.acquire_permit(Instant::now()).unwrap());
+        // `multi_pool` still has 3 scoped slots left, yet PROCESS_LIMIT (64) must block!
+        let sat_err = multi_pool
+            .acquire_permit(Instant::now() + Duration::from_millis(10))
+            .err()
+            .expect("process-wide ceiling must block 65th slot");
+        assert_eq!(sat_err.adapter_kind(), Some(AdapterErrorKind::Timeout));
+        assert_eq!(
+            sat_err.mutation_outcome(),
+            crate::MutationOutcome::NotAttempted
+        );
+
+        held_permits.pop();
+        assert!(multi_pool.acquire_permit(Instant::now()).is_ok());
     }
 }

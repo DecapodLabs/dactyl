@@ -2267,6 +2267,26 @@ fn fault_metadata(
     metadata
 }
 
+fn pre_send_timeout_outcome<T>(
+    prepared: &PreparedCloudRequest,
+    auth: &AuthHeaders,
+) -> HttpOutcome<T> {
+    let mut meta = CloudResponseMetadata::default();
+    meta.set_provenance(EffectProvenance::local_preflight(
+        prepared.operation_kind,
+        prepared.attempt.as_ref(),
+        Some("timeout"),
+        effective_auth_scheme(auth),
+    ));
+    (
+        Err(DactylError::adapter(
+            AdapterErrorKind::Timeout,
+            "local preflight: request deadline expired before dispatch",
+        )),
+        Some(meta),
+    )
+}
+
 fn send_auth_once<T: for<'de> Deserialize<'de>>(
     blocking_client: &reqwest::blocking::Client,
     prepared: &PreparedCloudRequest,
@@ -2277,21 +2297,7 @@ fn send_auth_once<T: for<'de> Deserialize<'de>>(
 ) -> HttpOutcome<T> {
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
-        let meta = fault_metadata(
-            prepared,
-            auth,
-            CloudResponseMetadata::default(),
-            "outcome_unknown",
-            false,
-        );
-        return (
-            Err(post_send_error(
-                AdapterErrorKind::Timeout,
-                prepared.is_mutating,
-                "cloud authentication timed out",
-            )),
-            Some(meta),
-        );
+        return pre_send_timeout_outcome(prepared, auth);
     }
     let mut request = blocking_client
         .request(prepared.method.clone(), &prepared.endpoint)
@@ -2411,24 +2417,7 @@ async fn send_auth_once_async<T: for<'de> Deserialize<'de>>(
 ) -> (HttpOutcome<T>, bool) {
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
-        let meta = fault_metadata(
-            prepared,
-            auth,
-            CloudResponseMetadata::default(),
-            "outcome_unknown",
-            false,
-        );
-        return (
-            (
-                Err(post_send_error(
-                    AdapterErrorKind::Timeout,
-                    prepared.is_mutating,
-                    "cloud authentication timed out",
-                )),
-                Some(meta),
-            ),
-            false,
-        );
+        return (pre_send_timeout_outcome(prepared, auth), false);
     }
     let mut request = async_client
         .request(prepared.method.clone(), &prepared.endpoint)

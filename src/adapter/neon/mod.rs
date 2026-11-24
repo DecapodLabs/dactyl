@@ -335,6 +335,13 @@ fn decode_neon_response<T: for<'de> Deserialize<'de>>(
     })
 }
 
+fn pre_send_timeout_error() -> DactylError {
+    DactylError::adapter(
+        AdapterErrorKind::Timeout,
+        "local preflight: request deadline expired before dispatch",
+    )
+}
+
 fn send_neon_request<T: for<'de> Deserialize<'de>>(
     http_client: &SharedHttpClient,
     endpoint: String,
@@ -344,13 +351,13 @@ fn send_neon_request<T: for<'de> Deserialize<'de>>(
     operation: &'static str,
     mutates: bool,
 ) -> Result<T, DactylError> {
+    let client = http_client.blocking_client()?;
     let deadline = Instant::now() + budget.request_timeout();
     let _permit = http_client.acquire_permit(deadline)?;
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
-        return Err(maybe_uncertain(neon_transport_error(true), mutates));
+        return Err(pre_send_timeout_error());
     }
-    let client = http_client.blocking_client()?;
     let mut request = client
         .post(endpoint)
         .timeout(remaining)
@@ -394,13 +401,13 @@ async fn send_neon_request_async<T: for<'de> Deserialize<'de>>(
     operation: &'static str,
     mutates: bool,
 ) -> Result<T, DactylError> {
+    let client = http_client.async_client()?;
     let deadline = Instant::now() + budget.request_timeout();
     let _permit = http_client.acquire_permit_async(deadline).await?;
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
-        return Err(maybe_uncertain(neon_transport_error(true), mutates));
+        return Err(pre_send_timeout_error());
     }
-    let client = http_client.async_client()?;
     let mut request = client
         .post(endpoint)
         .timeout(remaining)
