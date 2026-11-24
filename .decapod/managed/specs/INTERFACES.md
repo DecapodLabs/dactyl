@@ -1,5 +1,11 @@
 # Interfaces
 
+## Transport fault reconciliation & origin cutover guarantees (issues #143, #138)
+
+- **Pre-effect DPoP challenge & non-2xx uncertain outcome invariants (`src/http_pool.rs`, `src/adapter/supabase.rs`, `src/cloud.rs`)**: `401 use_dpop_nonce` retries at most once and only prior to any `Uncertain`/`CommittedObserved` effect; non-2xx mutating responses with `EffectStatus::Uncertain` provenance always yield `MutationOutcome::Uncertain` (`outcome_unknown` on control/onboarding channels); and `error_kind_for_cloud_status_and_code` (`src/cloud.rs`) maps all allowlisted DPoP/token/device revocation codes (including `dpop_htu_mismatch`) to `AdapterErrorKind::Authentication` across `400`/`401`/`403` statuses.
+- **Pre-send vs. post-send outcome separation**: Pool-slot exhaustion timeouts (`acquire_permit*`), transport initialization failures, and pre-dispatch worker spawn failures report `MutationOutcome::NotAttempted` + `ObservationSource::LocalPreflight`; unadvertised mutating `2xx` decode/budget failures (`validate_rpc_result`, `decode_write_response`, `decode_atomic_response`) emit `EffectStatus::Uncertain` (`ObservationSource::TransportFault`).
+- **Staged `#138` origin cutover boundary**: `DEFAULT_CLOUD_ORIGIN` stays `"https://goyxpcmxetztjlrrcwew.supabase.co"` while `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`) coexists per workspace with origin-pinned discovery, DPoP `htu` host/path enforcement, non-redirecting transport, and no-local-fallback reconciliation.
+
 ## Compatibility matrix and hardened parameter/read boundaries (issues #145, #146)
 
 - **Compatibility matrix (`docs/wire-compatibility-matrix.md`, `#146`)**: Formalizes required fields, additive extensions, minimum version floors (`1`), downgrade refusal (`0`), unknown enum refusal, strict `DeploymentProfile` schema enforcement, and `#138` `https://api.decapodlabs.ai` DPoP `htu` binding across `PROVENANCE_CONTRACT_VERSION` (`1`), `STORAGE_CONTEXT_VERSION` (`1`), `RESOURCE_BUDGET_VERSION` (`1`), and `SUPABASE_RPC_CONTRACT_VERSION` (`1`), verified by `tests/wire_compatibility.rs` and `tests/fixtures/wire_compat/*.json`.
@@ -319,8 +325,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
+- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

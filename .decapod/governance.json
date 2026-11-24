@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "f4abbac7cff1a30636c4b0b1ab5c4a735d3ed892",
-    "release": "v0.19.0",
+    "accepted_commit": "8ddda859fa4f19405d4273fe46c5f52c8095c1db",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -113,60 +112,65 @@
     }
   },
   "change": {
-    "id": "change_dactyl_p1_145_146",
-    "base_commit": "f4abbac7cff1a30636c4b0b1ab5c4a735d3ed892",
+    "id": "change_dactyl_p2_143_138",
+    "base_commit": "8ddda859fa4f19405d4273fe46c5f52c8095c1db",
     "target_base": "origin/main"
   },
   "claims": {
-    "dactyl-145-differential-contract": {
-      "statement": "Differential seeded histories across ReferenceModel, SqliteAdapter, and HTTP dactyl_api RPC/gateway/legacy servers pass 12 deterministic seeds (48 steps each), shrinkable minimal counterexamples, non-normalizing capability/order checks, and independent readback, fixing SQLite stmt_readonly, 0-row insert key leakage, and non-finite real preflight.",
-      "falsifier": "Any mismatch across ReferenceModel, SqliteAdapter, and HTTP SupabaseAdapter on shared capabilities, any silent fallback on unsupported capability differences, any stale generated key on 0-row insert, or any mutation via read/visit_rows.",
+    "dactyl-138-origin-cutover-resilience": {
+      "statement": "Origin cutover tests verify DEFAULT_CLOUD_ORIGIN retention, stale cross-origin discovery rejection, supabase.co <-> api.decapodlabs.ai coexistence, DPoP htu host/path mismatch refusal across 401/403, unsafe redirect refusal, lost ack during cutover without resending to new origin, and strict no-local-fallback.",
+      "falsifier": "Any premature DEFAULT_CLOUD_ORIGIN flip, accepted stale discovery profile, followed redirect, mismatched DPoP htu bypass, or silent local SQLite fallback.",
       "status": "supported",
       "proof_refs": [
-        "tests/differential_contract.rs"
+        "tests/transport_fault_reconciliation_143.rs"
       ]
     },
-    "dactyl-146-wire-compatibility-matrix": {
-      "statement": "Versioned wire and resource-budget compatibility matrix (docs/wire-compatibility-matrix.md) and recorded skew fixtures (tests/fixtures/wire_compat/*.json, tests/wire_compatibility.rs) verify additive extensions vs. downgrade/unknown-enum/malformed/stale-discovery refusal across sync/async connectors and #138 api.decapodlabs.ai DPoP htu binding, fixing Parameter u64 wrap-around.",
-      "falsifier": "Any accepted version 0 downgrade, unknown enum, stale cross-origin discovery, u64>i64::MAX Parameter wrap-around, or mismatched DPoP htu across sync/async connectors.",
+    "dactyl-143-fault-reconciliation": {
+      "statement": "Instrumented SQLite-backed loopback HTTP fault proxy and 12-seed x 24-step campaign verify pre-send/admission/before-commit/after-commit-ack-loss/truncation/timeout/reset/replay barriers, bounded reconciliation, post-effect DPoP retry guard, and 0 duplicate/false-rollback/false-commit/unauthorized commits.",
+      "falsifier": "Any duplicate commit, false RolledBack or CommittedObserved classification, unauthorized commit under revocation, or post-effect DPoP retry across tests/transport_fault_reconciliation_143.rs.",
       "status": "supported",
       "proof_refs": [
-        "docs/wire-compatibility-matrix.md",
-        "tests/wire_compatibility.rs"
+        "tests/transport_fault_reconciliation_143.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_dactyl_p1_145_146",
-      "summary": "Hardening #145 & #146: differential SQLite/Cloud contract histories, versioned wire/budget compatibility matrix & skew fixtures, and Parameter/SqliteAdapter boundary fixes",
-      "input_digest": "sha256:174aaae9144f5a39e839ee1f3db266e6ba78eeb47c22d070a5d351da56227b98",
+      "id": "chk_dactyl_p2_143_138",
+      "summary": "Hardening #143 & #138: cross-layer loopback HTTP fault proxy & 12-seed reconciliation campaign, origin cutover resilience across supabase.co <-> api.decapodlabs.ai, and 6 transport/classification fixes",
+      "input_digest": "sha256:122eea0fd8fd61a64cdcb653742fe2a72ee060f4cc9d5e39a82d6b01a54f8f18",
       "proof_refs": [
-        "docs/wire-compatibility-matrix.md",
-        "tests/differential_contract.rs",
-        "tests/wire_compatibility.rs"
+        "tests/transport_fault_reconciliation_143.rs"
+      ]
+    },
+    {
+      "id": "chk_dactyl_p2_143_138_fix_sqlite_lock",
+      "summary": "Serialize FaultProxyServer backing SQLite access with db_lock Mutex and 5s lock_timeout to prevent SQLITE_BUSY under Linux CI timing",
+      "input_digest": "sha256:6f01c5807ce3d2c3f46922f59fd4826fbfc3446ec15ea740958862d1c5f1a045",
+      "proof_refs": [
+        "tests/transport_fault_reconciliation_143.rs"
       ]
     }
   ],
   "intents": {
-    "intent:run_dactyl_p1_145_146": {
+    "intent:run_dactyl_p2_143_138": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree branch agent/agy-1933-dactyl-p1/data_01m85kgqfan1czap-p1-hardening; offline/loopback proof only without live hosted spend."
+        "Isolated worktree branch agent/agy-1933-dactyl-p2/cicd_01m85q8spbech0cx-fault-reconcile-143; offline/loopback proof only without live paid custom domain or hosted spend."
       ],
       "constraints": [
-        "src/rows.rs,src/adapter/sqlite/mod.rs,src/budget.rs,docs/wire-compatibility-matrix.md,tests/differential_contract.rs,tests/wire_compatibility.rs,tests/fixtures/wire_compat/"
+        "src/http_pool.rs,src/adapter/supabase.rs,src/cloud.rs,tests/transport_fault_reconciliation_143.rs,.decapod/managed/specs/"
       ],
       "created_sequence": 1,
-      "id": "intent:run_dactyl_p1_145_146",
+      "id": "intent:run_dactyl_p2_143_138",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Phase 1 hardening tasks #145 and #146 in DecapodLabs/dactyl",
-      "refined_intent": "Add differential SQLite/Cloud contract history suite (#145), versioned wire/budget compatibility matrix and skew fixtures (#146), and fix uncovered Parameter/SQLite defects.",
+      "raw_intent": "Execute Phase 2 hardening issues #143 and #138 (origin migration resilience) in DecapodLabs/dactyl",
+      "refined_intent": "Add instrumented SQLite-backed loopback HTTP fault proxy and 12-seed deterministic campaign (#143) plus #138 origin cutover resilience tests, and fix 6 discovered transport/classification defects.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -179,51 +183,52 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement deterministic differential SQLite/Cloud contract histories (#145) and versioned wire/budget compatibility matrix across release skew (#146), fixing Parameter u64 overflow, SQLite 0-row insert key leakage, SQLite read-only enforcement, and SQLite non-finite real preflight.",
+      "intent": "Exercise cross-layer transport fault injection, commit-ack loss reconciliation (#143), and origin cutover resilience across supabase.co <-> api.decapodlabs.ai (#138), fixing post-effect DPoP nonce retry, non-2xx uncertain outcome alignment, pre-send pool/worker NotAttempted classification, unadvertised mutating decode fault provenance, request_id fault correlation, and 403 DPoP/revocation classification.",
       "phases": [],
       "proof_hooks": [
-        "cargo test --locked --all-features",
-        "decapod validate"
+        "cargo fmt --all -- --check",
+        "cargo clippy --locked --all-targets --all-features -- -D warnings",
+        "cargo test --locked --all-features"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented Parameter::deserialize u64 overflow guard, SqliteAdapter stmt_readonly/0-row key/non-finite real fixes, and #145/#146 proof surfaces.",
-          "reviewed_code_fingerprint": "3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a",
-          "spec_material_hash": "09fbea16f2b7fd63ca56265ebf140828722362867083de2b0f7c4df9750d6c5c"
+          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access with db_lock Mutex and 5s lock_timeout.",
+          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
+          "spec_material_hash": "ac0bde44bc8ff593d0c7c4202fdd1d8d59ed4c6f4e13029d4927d215a0f00c13"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented wire compatibility matrix rules and hardened SQLite/Parameter boundary contracts.",
-          "reviewed_code_fingerprint": "3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a",
-          "spec_material_hash": "c14040b1c73d793f9bc87125d6b06719f5bf2b1d1b119d13a7fd9f06fad48e84"
+          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access in tests/transport_fault_reconciliation_143.rs.",
+          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
+          "spec_material_hash": "3395663a5415d0957fec79c2b9fd27cc3082e7d1b972b0f590e56764a8debe1c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented SQLite stmt_readonly read-path guard, Parameter u64 overflow rejection, and #146 skew fail-closed enforcement.",
-          "reviewed_code_fingerprint": "3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a",
-          "spec_material_hash": "e6deb1a714b9b769b0c85048c93ef177386c6dafa54916f8841337ee0fde7d17"
+          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access in tests/transport_fault_reconciliation_143.rs.",
+          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
+          "spec_material_hash": "6f1e84f8aca1e72d0ad21ae5ed3c88e6d1bc15a2f68f94abc6a8acfae91ea736"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Phase 1 Hardening #145 & #146",
+      "title": "Phase 2 Hardening #143 & #138",
       "todo_ids": [
-        "data_01m85kgqfan1czap"
+        "cicd_01m85q8spbech0cx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795485366Z"
+      "updated_at": "1795489968Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree branch agent/agy-1933-dactyl-p1/data_01m85kgqfan1czap-p1-hardening; offline/loopback proof only without live hosted spend."
+        "Isolated worktree branch agent/agy-1933-dactyl-p2/cicd_01m85q8spbech0cx-fault-reconcile-143; offline/loopback proof only without live paid custom domain or hosted spend."
       ],
-      "artifact_hash": "sha256:6c250f1b9fd3c15de818ba503bb4d41a327d248b3c207d0fed227506ee3d6164",
+      "artifact_hash": "sha256:198339c51adfdb90313e8f77d43e3ecfc1dffd64c909ae8b38748f1af0d575b2",
       "checks": [
         {
           "name": "cargo-clippy-all-features",
@@ -238,7 +243,7 @@
           "status": "passed"
         },
         {
-          "name": "feature-matrix-8-combos-new-tests",
+          "name": "feature-matrix-143-tests",
           "status": "passed"
         }
       ],
@@ -246,20 +251,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_dactyl_p1_145_146",
+            "intent_id": "intent:run_dactyl_p2_143_138",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_dactyl_p1_145_146",
+            "intent_id": "intent:run_dactyl_p2_143_138",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_dactyl_p1_145_146",
+            "detail": "trajectory:run_dactyl_p2_143_138",
             "event_id": "event:4",
-            "intent_id": "intent:run_dactyl_p1_145_146",
+            "intent_id": "intent:run_dactyl_p2_143_138",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -268,36 +273,36 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_dactyl_p1_145_146": {
+          "run_dactyl_p2_143_138": {
             "evidence_only": true,
-            "id": "run_dactyl_p1_145_146",
-            "intent_id": "intent:run_dactyl_p1_145_146",
+            "id": "run_dactyl_p2_143_138",
+            "intent_id": "intent:run_dactyl_p2_143_138",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/contract.rs",
                   "src/connector.rs",
-                  "src/budget.rs",
-                  "src/adapter/sqlite/mod.rs",
+                  "src/error.rs",
+                  "src/http_pool.rs",
                   "src/adapter/supabase.rs",
-                  "src/rows.rs",
-                  "src/rows.rs",
-                  "src/adapter/sqlite/mod.rs",
-                  "src/budget.rs",
-                  "docs/wire-compatibility-matrix.md",
+                  "src/cloud.rs",
+                  "docs/cloud-failure-conformance.md",
                   "tests/differential_contract.rs",
-                  "tests/wire_compatibility.rs"
+                  "tests/wire_compatibility.rs",
+                  "src/http_pool.rs",
+                  "src/adapter/supabase.rs",
+                  "src/cloud.rs",
+                  "tests/transport_fault_reconciliation_143.rs"
                 ],
                 "proof_refs": [
-                  "cargo-test-all-features",
-                  "cargo-clippy-all-features",
                   "cargo-fmt-check",
-                  "feature-matrix-8-combos-new-tests"
+                  "cargo-clippy-all-features",
+                  "cargo-test-all-features",
+                  "feature-matrix-143-tests"
                 ],
                 "scope": [
-                  "src/rows.rs,src/adapter/sqlite/mod.rs,src/budget.rs,docs/wire-compatibility-matrix.md,tests/differential_contract.rs,tests/wire_compatibility.rs,tests/fixtures/wire_compat/"
+                  "src/http_pool.rs,src/adapter/supabase.rs,src/cloud.rs,tests/transport_fault_reconciliation_143.rs,.decapod/managed/specs/"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -309,28 +314,29 @@
       "declared_commands": [],
       "evidence": [],
       "inspected_files": [
-        "src/adapter/sqlite/mod.rs",
+        "docs/cloud-failure-conformance.md",
         "src/adapter/supabase.rs",
-        "src/budget.rs",
+        "src/cloud.rs",
         "src/connector.rs",
-        "src/contract.rs",
-        "src/rows.rs"
-      ],
-      "intent_id": "intent:run_dactyl_p1_145_146",
-      "modified_files": [
-        "docs/wire-compatibility-matrix.md",
-        "src/adapter/sqlite/mod.rs",
-        "src/budget.rs",
-        "src/rows.rs",
+        "src/error.rs",
+        "src/http_pool.rs",
         "tests/differential_contract.rs",
         "tests/wire_compatibility.rs"
       ],
-      "repo_scope": [
-        "src/rows.rs,src/adapter/sqlite/mod.rs,src/budget.rs,docs/wire-compatibility-matrix.md,tests/differential_contract.rs,tests/wire_compatibility.rs,tests/fixtures/wire_compat/"
+      "intent_id": "intent:run_dactyl_p2_143_138",
+      "modified_files": [
+        "src/adapter/supabase.rs",
+        "src/cloud.rs",
+        "src/http_pool.rs",
+        "tests/transport_fault_reconciliation_143.rs"
       ],
-      "run_id": "run_dactyl_p1_145_146",
+      "repo_scope": [
+        "src/http_pool.rs,src/adapter/supabase.rs,src/cloud.rs,tests/transport_fault_reconciliation_143.rs,.decapod/managed/specs/"
+      ],
+      "run_id": "run_dactyl_p2_143_138",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
+      "task_id": "cicd_01m85q8spbech0cx",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

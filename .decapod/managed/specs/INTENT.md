@@ -1,5 +1,11 @@
 # Intent
 
+## Cross-layer transport fault injection, commit-ack loss reconciliation, and origin cutover resilience (issues #143, #138)
+
+- **Adversarial fault-injection and reference-model campaign (`#143`)**: `tests/transport_fault_reconciliation_143.rs` exercises an instrumented SQLite-backed loopback HTTP/Edge/RPC fault proxy across explicit barriers (pre-send refusals and pool-slot saturation, server admission refusals, pre-commit rollbacks/5xx, commit-ack socket drop, truncated `2xx` responses, late-commit and pre-commit timeouts, connection resets, duplicated JSON bodies, duplicate provenance headers, reordered `attempt_id`/`scope_ref`/`operation_kind` responses, same-key/different-payload `IdempotencyConflict`, `401 use_dpop_nonce` before-effect vs after-effect retry guards, `429` with `Retry-After` and `accepted_not_committed`, mid-flight policy-generation revocations, and bounded reconciliation readback) plus a 12-seed deterministic campaign proving `0` duplicate commits, `0` false rollback/commit classifications, `0` unauthorized commits, and exact `request_id`/`attempt_id`/`policy_generation` correlation.
+- **Origin cutover resilience (`#138`)**: Preserves `DEFAULT_CLOUD_ORIGIN` (`"https://goyxpcmxetztjlrrcwew.supabase.co"`) and the no-local-fallback guarantee while testing stale cross-origin discovery profiles, `supabase.co` <-> `api.decapodlabs.ai` coexistence, DPoP `htu` host/path mismatch refusal, unsafe redirect refusal, and commit-ack loss during cutover without resending mutations to the new origin.
+- **Transport & classification fixes**: Hardens `src/http_pool.rs`, `src/adapter/supabase.rs`, and `src/cloud.rs` for post-effect `use_dpop_nonce` non-retry, non-2xx `EffectStatus::Uncertain` `MutationOutcome` alignment, pre-send pool/worker `NotAttempted` classification, unadvertised mutating decode fault provenance, `Decapod-Cloud-Request-Id` fault correlation, and `403` DPoP/credential error classification.
+
 ## Differential SQLite/Cloud contract hardening and versioned wire compatibility matrix (issues #145, #146)
 
 - **Differential SQLite vs. Cloud contract histories (`#145`)**: `tests/differential_contract.rs` executes deterministic seeded generated operation histories (typed rows, nulls, Unicode, binary/hex blobs, `i64::MIN`/`i64::MAX`/`0`/`-1` boundary integers, `ORDER BY` tie-breaking, generated keys, predicates, mixed read/write batches, CAS/constraint conflicts, keyset cursor pagination, atomic rollback, and malformed/oversized/non-finite inputs) against a pure-Rust reference model, real local `SqliteAdapter`, and a real HTTP `SupabaseAdapter` wire server speaking canonical `dactyl_api` RPC, device-gateway, and legacy service envelopes, with delta-debugging minimal counterexample shrinking, independent storage readback, and explicit non-normalizing capability-refusal checks.
@@ -224,16 +230,16 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 58 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (28), `tools/` (3)
-- Core modules: 12 | Workflows: 4 | Integration targets: 25
+- Tracked significant codebase files: 59 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (29), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 26
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
+- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

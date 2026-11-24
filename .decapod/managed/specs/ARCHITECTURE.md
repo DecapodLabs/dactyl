@@ -1,5 +1,14 @@
 # Architecture
 
+## Cross-layer transport fault reconciliation and origin cutover resilience (issues #143, #138)
+
+- **`src/http_pool.rs`, `src/adapter/supabase.rs`, & `src/cloud.rs` (`#143`, `#138`)**:
+  - `with_dpop_nonce_retry` and `with_dpop_nonce_retry_async` (`src/http_pool.rs`) gate single-retry `401` `use_dpop_nonce` challenges on `can_retry_dpop_nonce`, refusing to retry whenever `MutationOutcome::Uncertain` or `EffectStatus::{Uncertain, CommittedObserved}` provenance is already present.
+  - Non-2xx mutating responses in `handle_supabase_response` (`src/adapter/supabase.rs`) and `handle_cloud_response` (`src/cloud.rs`) propagate `mark_remote_uncertain` / `post_send_error` whenever provenance attests `EffectStatus::Uncertain` (including `401`/`409`/`429` `accepted_not_committed` responses outside `408`/`5xx`), and `is_missing_onboarding_function` refuses `404` legacy fallback if `MutationOutcome::Uncertain` was observed.
+  - `handle_supabase_response` (`rpc && ctx.validate_rows` failure paths), `decode_write_response`, and `decode_atomic_response` record `EffectProvenance::transport_fault` (`EffectStatus::Uncertain`) on mutating decode/budget failures when server provenance was unadvertised, and `cloud.rs` preserves same-origin `Decapod-Cloud-Request-Id` on `fault_metadata` and post-header malformed-response fault paths (`http_pool::provenance_fault` preserves it when `origin_bound`).
+  - Pre-send pool saturation/client initialization/worker-spawn errors in `src/http_pool.rs`, `src/adapter/supabase.rs` (`prefix_local_preflight`), and `src/cloud.rs` emit `"local preflight: ..."` messages so `DactylError::mutation_outcome()` returns `MutationOutcome::NotAttempted` consistently with `ObservationSource::LocalPreflight`.
+  - `tests/transport_fault_reconciliation_143.rs` runs an instrumented SQLite-backed loopback HTTP fault proxy and 12-seed x 24-step campaign proving zero duplicate commits, zero false rollback/committed classifications, zero unauthorized commits under mid-flight policy revocation, and `#138` origin cutover resilience across `goyxpcmxetztjlrrcwew.supabase.co` <-> `api.decapodlabs.ai`.
+
 ## Differential contract verification and wire compatibility hardening (issues #145, #146)
 
 - **`src/rows.rs` & `src/adapter/sqlite/mod.rs` (`#145`, `#146`)**: `Parameter::deserialize` (`visit_u64`) uses `i64::try_from` to fail closed on out-of-range unsigned integers (`> i64::MAX`) instead of silently wrapping. `SqliteAdapter` validates finite `Parameter::Real` values in `check_parameters` preflight before statement preparation or transaction start, verifies `sqlite3_stmt_readonly` in `visit_rows_budgeted` so `read`, `visit_rows`, and `WITH ... INSERT` read-batch operations cannot mutate durable state, and emits `GeneratedKey::Integer` in `execute_write` only when `affected_rows > 0`.
@@ -265,8 +274,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
+- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

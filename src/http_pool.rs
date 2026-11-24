@@ -130,27 +130,27 @@ impl SharedHttpClient {
                 .map_err(|_| {
                     DactylError::adapter(
                         AdapterErrorKind::Unavailable,
-                        "cloud HTTP transport worker failed",
+                        "local preflight: cloud HTTP transport worker failed",
                     )
                 })?
                 .join()
                 .map_err(|_| {
                     DactylError::adapter(
                         AdapterErrorKind::Unavailable,
-                        "cloud HTTP transport worker panicked",
+                        "local preflight: cloud HTTP transport worker panicked",
                     )
                 })?
                 .map_err(|_| {
                     DactylError::adapter(
                         AdapterErrorKind::Unavailable,
-                        "cloud HTTP transport initialization failed",
+                        "local preflight: cloud HTTP transport initialization failed",
                     )
                 })?
         } else {
             build().map_err(|_| {
                 DactylError::adapter(
                     AdapterErrorKind::Unavailable,
-                    "cloud HTTP transport initialization failed",
+                    "local preflight: cloud HTTP transport initialization failed",
                 )
             })?
         };
@@ -182,7 +182,7 @@ impl SharedHttpClient {
             .map_err(|_| {
                 DactylError::adapter(
                     AdapterErrorKind::Unavailable,
-                    "cloud async HTTP transport initialization failed",
+                    "local preflight: cloud async HTTP transport initialization failed",
                 )
             })?;
         if clients.len() >= MAX_ASYNC_RUNTIMES_PER_POOL {
@@ -241,7 +241,7 @@ pub(crate) fn acquire_client(budget: ResourceBudget) -> Result<Arc<SharedHttpCli
     if cache.len() >= MAX_LIVE_POOLS {
         return Err(DactylError::adapter(
             AdapterErrorKind::Unavailable,
-            "cloud HTTP transport has too many live budget pools",
+            "local preflight: cloud HTTP transport has too many live budget pools",
         ));
     }
     let shared = Arc::new(SharedHttpClient {
@@ -286,7 +286,7 @@ impl RequestLimit {
             if remaining.is_zero() {
                 return Err(DactylError::adapter(
                     AdapterErrorKind::Timeout,
-                    "cloud HTTP request timed out awaiting bounded connection slot",
+                    "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
                 ));
             }
             let (next, _) = self
@@ -318,7 +318,7 @@ impl RequestLimit {
             if remaining.is_zero() {
                 return Err(DactylError::adapter(
                     AdapterErrorKind::Timeout,
-                    "cloud HTTP request timed out awaiting bounded connection slot",
+                    "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
                 ));
             }
             if tokio::time::timeout(remaining, notified).await.is_err() {
@@ -332,7 +332,7 @@ impl RequestLimit {
                 }
                 return Err(DactylError::adapter(
                     AdapterErrorKind::Timeout,
-                    "cloud HTTP request timed out awaiting bounded connection slot",
+                    "local preflight: cloud HTTP request timed out awaiting bounded connection slot",
                 ));
             }
         }
@@ -611,6 +611,29 @@ pub(crate) fn has_dpop_nonce_challenge(headers: &HeaderMap) -> bool {
         })
 }
 
+#[cfg(feature = "supabase")]
+fn can_retry_dpop_nonce<T>(first: &HttpOutcome<T>, unauthorized: bool, auth: &AuthHeaders) -> bool {
+    let effect_occurred_or_uncertain = first
+        .0
+        .as_ref()
+        .err()
+        .is_some_and(|e| e.mutation_outcome() == crate::MutationOutcome::Uncertain)
+        || first
+            .1
+            .as_ref()
+            .and_then(CloudResponseMetadata::provenance)
+            .is_some_and(|p| {
+                matches!(
+                    p.status(),
+                    EffectStatus::Uncertain | EffectStatus::CommittedObserved
+                )
+            });
+    unauthorized
+        && first.0.as_ref().err().and_then(DactylError::adapter_code) == Some("use_dpop_nonce")
+        && auth.1.is_some()
+        && !effect_occurred_or_uncertain
+}
+
 /// Retry only a server's explicit pre-execution challenge to a DPoP request.
 /// Both attempts share the caller's deadline and use the same target and body.
 #[cfg(feature = "supabase")]
@@ -624,15 +647,12 @@ pub(crate) fn with_dpop_nonce_retry<T>(
 ) -> (HttpOutcome<T>, bool) {
     let mut unauthorized = false;
     let first = send(&auth, &mut unauthorized);
+    if !can_retry_dpop_nonce(&first, unauthorized, &auth) {
+        return (first, false);
+    }
     let Some(nonce) = first.1.as_ref().and_then(CloudResponseMetadata::dpop_nonce) else {
         return (first, false);
     };
-    if !unauthorized
-        || first.0.as_ref().err().and_then(DactylError::adapter_code) != Some("use_dpop_nonce")
-        || auth.1.is_none()
-    {
-        return (first, false);
-    }
     let expected_prefix = if managed_bearer_proof {
         "Bearer "
     } else {
@@ -675,15 +695,12 @@ where
     Fut: std::future::Future<Output = (HttpOutcome<T>, bool)>,
 {
     let (first, unauthorized) = send((auth.0.clone(), auth.1.clone())).await;
+    if !can_retry_dpop_nonce(&first, unauthorized, &auth) {
+        return (first, false);
+    }
     let Some(nonce) = first.1.as_ref().and_then(CloudResponseMetadata::dpop_nonce) else {
         return (first, false);
     };
-    if !unauthorized
-        || first.0.as_ref().err().and_then(DactylError::adapter_code) != Some("use_dpop_nonce")
-        || auth.1.is_none()
-    {
-        return (first, false);
-    }
     let expected_prefix = if managed_bearer_proof {
         "Bearer "
     } else {
@@ -1061,14 +1078,26 @@ fn merge_field(left: Option<String>, right: Option<String>) -> Result<Option<Str
 #[cfg(feature = "supabase")]
 fn provenance_fault(
     ctx: &ProvenanceCheckContext<'_>,
+    metadata_out: &CloudResponseMetadata,
     code: &str,
     origin_bound: bool,
 ) -> EffectProvenance {
+    let request_id = if origin_bound {
+        metadata_out
+            .cloud_header("decapod-cloud-request-id")
+            .and_then(|id| {
+                validate_provenance_token(id, "invalid request id")
+                    .ok()
+                    .map(|()| id.to_owned())
+            })
+    } else {
+        None
+    };
     EffectProvenance::transport_fault(
         ctx.expected_kind,
         ctx.attempt,
         ctx.resolved_digest,
-        None,
+        request_id,
         Some(code),
         ctx.expected_auth,
         origin_bound,
@@ -1088,7 +1117,12 @@ pub(crate) fn bind_response_provenance(
     if ctx.response_url.origin() != ctx.expected_origin.origin()
         || (300..400).contains(&ctx.http_status)
     {
-        metadata_out.set_provenance(provenance_fault(ctx, "provenance_origin_mismatch", false));
+        metadata_out.set_provenance(provenance_fault(
+            ctx,
+            metadata_out,
+            "provenance_origin_mismatch",
+            false,
+        ));
         return Err(DactylError::adapter_with_code(
             AdapterErrorKind::Protocol,
             "provenance_origin_mismatch",
@@ -1101,6 +1135,7 @@ pub(crate) fn bind_response_provenance(
         Err(err) => {
             metadata_out.set_provenance(provenance_fault(
                 ctx,
+                metadata_out,
                 err.adapter_code().unwrap_or("invalid_provenance"),
                 true,
             ));
@@ -1112,6 +1147,7 @@ pub(crate) fn bind_response_provenance(
         Err(err) => {
             metadata_out.set_provenance(provenance_fault(
                 ctx,
+                metadata_out,
                 err.adapter_code().unwrap_or("invalid_provenance"),
                 true,
             ));
@@ -1136,7 +1172,12 @@ pub(crate) fn bind_response_provenance(
 
     let version = match (hdr_raw.version, json_raw.version) {
         (Some(a), Some(b)) if a != b => {
-            metadata_out.set_provenance(provenance_fault(ctx, "provenance_conflict", true));
+            metadata_out.set_provenance(provenance_fault(
+                ctx,
+                metadata_out,
+                "provenance_conflict",
+                true,
+            ));
             return Err(DactylError::adapter_with_code(
                 AdapterErrorKind::Protocol,
                 "provenance_conflict",
@@ -1145,7 +1186,12 @@ pub(crate) fn bind_response_provenance(
         }
         (Some(v), _) | (None, Some(v)) => v,
         (None, None) => {
-            metadata_out.set_provenance(provenance_fault(ctx, "invalid_provenance", true));
+            metadata_out.set_provenance(provenance_fault(
+                ctx,
+                metadata_out,
+                "invalid_provenance",
+                true,
+            ));
             return Err(DactylError::adapter_with_code(
                 AdapterErrorKind::Protocol,
                 "invalid_provenance",
@@ -1156,6 +1202,7 @@ pub(crate) fn bind_response_provenance(
     if version != u64::from(PROVENANCE_CONTRACT_VERSION) {
         metadata_out.set_provenance(provenance_fault(
             ctx,
+            metadata_out,
             "unsupported_provenance_version",
             true,
         ));
@@ -1188,6 +1235,7 @@ pub(crate) fn bind_response_provenance(
         Err(err) => {
             metadata_out.set_provenance(provenance_fault(
                 ctx,
+                metadata_out,
                 err.adapter_code().unwrap_or("provenance_conflict"),
                 true,
             ));
@@ -1237,7 +1285,7 @@ pub(crate) fn bind_response_provenance(
         Err(err) => {
             let code = err.adapter_code().unwrap_or("invalid_provenance");
             let origin_bound = code != "provenance_origin_mismatch";
-            metadata_out.set_provenance(provenance_fault(ctx, code, origin_bound));
+            metadata_out.set_provenance(provenance_fault(ctx, metadata_out, code, origin_bound));
             Err(err)
         }
     }

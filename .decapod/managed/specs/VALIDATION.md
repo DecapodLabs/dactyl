@@ -1,5 +1,9 @@
 # Validation
 
+## Cross-layer transport fault reconciliation and origin cutover proof (issues #143, #138)
+
+- **`tests/transport_fault_reconciliation_143.rs` (`#143`, `#138`)**: Exercises `cutover_origin_constants_and_no_local_fallback_are_preserved_across_features` across feature subsets (`--no-default-features`, `--features sqlite`, `--features supabase`, `--features sqlite,neon`, `--all-features`) and executes `fault_barriers_commit_ack_loss_and_dpop_post_effect_guards_hold`, `deterministic_seeded_fault_campaign_matches_reference_model` (12 seeds x 24 steps = 288 faulted steps against a pure-Rust reference model and independent SQLite observer), and `issue_138_origin_cutover_resilience_discovery_htu_redirects_and_ack_loss` under `local_sqlite` + `synthetic_http`. `local_postgres`, `hosted_supabase`, and live `api.decapodlabs.ai` custom-domain activation remain `unavailable` in offline verification.
+
 ## Staged first-party custom origin cutover verification (issue #138)
 
 - **`tests/logical_connector.rs` & `tests/supabase_disabled.rs` (`#138`)**: Verifies `DEFAULT_CLOUD_ORIGIN` remains `"https://goyxpcmxetztjlrrcwew.supabase.co"`, `FIRST_PARTY_CLOUD_ORIGIN` is `"https://api.decapodlabs.ai"`, `LogicalTarget::first_party_cloud()` redacts `api.decapodlabs.ai` in `Debug`, `LogicalConnector::first_party_cloud()` fails closed without fallback when `supabase` is disabled, local connectors return `cloud_connector_required` for `canonical_auth_url` / `canonical_repository_url`, malformed/traversal `org`/`repo` segments fail with `AdapterErrorKind::Protocol`, `validate_start` enforces exact origin and `/functions/v1/decapod-onboarding/begin` paths, discovery rejects mismatched `project_origin` and `308` redirects (never contacting redirect targets), and loopback device-gateway calls (`DeviceEnroll`, `cloud-control`, `cloud-query`) sign exact origin-bound DPoP `htu` URLs and surface `401 dpop_aud_mismatch` redacted. Live `https://api.decapodlabs.ai` Supabase custom-domain TLS/OAuth activation remains external and `unavailable` until provisioned.
@@ -327,15 +331,15 @@ Generated capability obligations: `public-api` is declared for this project. The
 ## Codebase Contract Snapshot
 
 - CI workflows (4): `.github/workflows/decapod-validate.yml`, `.github/workflows/pages.yml`, `.github/workflows/release.yml`, `.github/workflows/rust-contract.yml`
-- Integration test targets (25): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/release_configuration.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, `tests/sqlite_inspection.rs`, `tests/sqlite_maintenance.rs`, (+9 more)
+- Integration test targets (26): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/release_configuration.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, `tests/sqlite_inspection.rs`, `tests/sqlite_maintenance.rs`, (+10 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
+- Repository signal fingerprint: `b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (29 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
