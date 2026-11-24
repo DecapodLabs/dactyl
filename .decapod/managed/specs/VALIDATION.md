@@ -322,12 +322,20 @@ Generated capability obligations: `public-api` is declared for this project. The
 - Token expiry/revocation tests
 <!-- decapod:capability-overlay:public-api:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CI workflows (4): `.github/workflows/decapod-validate.yml`, `.github/workflows/pages.yml`, `.github/workflows/release.yml`, `.github/workflows/rust-contract.yml`
+- Integration test targets (25): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/release_configuration.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, `tests/sqlite_inspection.rs`, `tests/sqlite_maintenance.rs`, (+9 more)
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
+- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

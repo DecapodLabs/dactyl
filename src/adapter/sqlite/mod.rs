@@ -343,6 +343,7 @@ impl Adapter for SqliteAdapter {
     }
 
     fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DactylError> {
+        check_parameters(params)?;
         preflight_statement(&self.budget, sql, params)?;
         let connection = self.connection()?;
         let mut tracker = DecodedResultTracker::new(self.budget);
@@ -355,6 +356,7 @@ impl Adapter for SqliteAdapter {
         params: &[Parameter],
         visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
     ) -> Result<ScanOutcome, DactylError> {
+        check_parameters(params)?;
         preflight_statement(&self.budget, sql, params)?;
         let connection = self.connection()?;
         let mut tracker = DecodedResultTracker::new(self.budget);
@@ -363,6 +365,7 @@ impl Adapter for SqliteAdapter {
 
     fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DactylError> {
         ensure_writable(self.options.access_mode)?;
+        check_parameters(params)?;
         preflight_statement(&self.budget, sql, params)?;
         let connection = self.connection()?;
         execute_write(&connection, sql, params)
@@ -378,6 +381,9 @@ impl Adapter for SqliteAdapter {
             .any(|operation| operation.kind() != OperationKind::Read);
         if mutates {
             ensure_writable(self.options.access_mode)?;
+        }
+        for operation in operations {
+            check_parameters(operation.params())?;
         }
         preflight_batch(&self.budget, operations)?;
 
@@ -888,7 +894,10 @@ fn execute_write(
             _ => unreachable!("Statement::step maps non-row/non-done to an error"),
         }
     }
-    let generated_keys = if first_word(sql).as_deref() == Some("insert") {
+    let affected_rows: u64 = unsafe { connection.api.changes64(connection.database) }
+        .try_into()
+        .unwrap_or_default();
+    let generated_keys = if affected_rows > 0 && first_word(sql).as_deref() == Some("insert") {
         let rowid = unsafe { connection.api.last_insert_rowid(connection.database) };
         if rowid != 0 {
             vec![GeneratedKey::Integer(rowid)]
@@ -899,9 +908,7 @@ fn execute_write(
         Vec::new()
     };
     Ok(WriteResult {
-        affected_rows: unsafe { connection.api.changes64(connection.database) }
-            .try_into()
-            .unwrap_or_default(),
+        affected_rows,
         generated_keys,
     })
 }
@@ -928,6 +935,13 @@ fn visit_rows_budgeted(
     visitor: &mut dyn FnMut(&Row) -> Result<bool, DactylError>,
 ) -> Result<ScanOutcome, DactylError> {
     let mut statement = Statement::prepare(connection, sql)?;
+    if !unsafe { connection.api.stmt_readonly(statement.statement) } {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::ReadOnly,
+            "read_only",
+            "read operation cannot execute a mutating statement",
+        ));
+    }
     statement.bind_all(params)?;
     let column_count = unsafe { connection.api.column_count(statement.statement) }.max(0);
     let columns = (0..column_count)
@@ -1506,6 +1520,20 @@ fn quote_identifier(value: &str) -> String {
 
 fn adapter_error(kind: AdapterErrorKind, message: impl Into<String>) -> DactylError {
     DactylError::adapter(kind, message)
+}
+
+fn check_parameters(params: &[Parameter]) -> Result<(), DactylError> {
+    if params
+        .iter()
+        .any(|param| matches!(param, Parameter::Real(value) if !value.is_finite()))
+    {
+        return Err(DactylError::adapter_with_code(
+            AdapterErrorKind::Value,
+            "unsupported_value",
+            "non-finite real parameters are unsupported",
+        ));
+    }
+    Ok(())
 }
 
 fn ensure_writable(mode: AccessMode) -> Result<(), DactylError> {

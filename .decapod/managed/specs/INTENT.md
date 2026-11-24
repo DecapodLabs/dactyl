@@ -1,5 +1,11 @@
 # Intent
 
+## Differential SQLite/Cloud contract hardening and versioned wire compatibility matrix (issues #145, #146)
+
+- **Differential SQLite vs. Cloud contract histories (`#145`)**: `tests/differential_contract.rs` executes deterministic seeded generated operation histories (typed rows, nulls, Unicode, binary/hex blobs, `i64::MIN`/`i64::MAX`/`0`/`-1` boundary integers, `ORDER BY` tie-breaking, generated keys, predicates, mixed read/write batches, CAS/constraint conflicts, keyset cursor pagination, atomic rollback, and malformed/oversized/non-finite inputs) against a pure-Rust reference model, real local `SqliteAdapter`, and a real HTTP `SupabaseAdapter` wire server speaking canonical `dactyl_api` RPC, device-gateway, and legacy service envelopes, with delta-debugging minimal counterexample shrinking, independent storage readback, and explicit non-normalizing capability-refusal checks.
+- **Versioned wire and resource-budget compatibility across release skew (`#146`)**: `docs/wire-compatibility-matrix.md` and recorded fixtures under `tests/fixtures/wire_compat/` + `tests/wire_compatibility.rs` document and enforce compatibility rules for `PROVENANCE_CONTRACT_VERSION`, `STORAGE_CONTEXT_VERSION`, `RESOURCE_BUDGET_VERSION`, `SUPABASE_RPC_CONTRACT_VERSION`, `DeploymentProfile`, auth/token envelopes, sync/async parity, and `#138` `https://api.decapodlabs.ai` DPoP `htu` binding across release skew.
+- **Hardened driver defects**: `src/rows.rs` rejects out-of-range `u64 > i64::MAX` values in `Parameter::deserialize` instead of wrapping to negative `i64`; `src/adapter/sqlite/mod.rs` enforces `sqlite3_stmt_readonly` on `read`, `visit_rows`, and `OperationKind::Read` queries, guards `last_insert_rowid` on `affected_rows > 0` so 0-row `INSERT OR IGNORE` never leaks stale keys, and rejects non-finite `Parameter::Real` values before execution.
+
 ## Staged first-party custom origin cutover readiness (issue #138)
 
 - **Explicit opt-in first-party origin without premature default flip (`#138`)**: `DEFAULT_CLOUD_ORIGIN` (`src/connector.rs`) remains safely pinned to `"https://goyxpcmxetztjlrrcwew.supabase.co"` until live Supabase custom-domain TLS activation, OAuth callback migration, and server-advertised `project_origin` discovery are independently proven. `src/connector.rs`, `src/cloud.rs`, and `src/lib.rs` add unconditional staged exports `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`), `FIRST_PARTY_AUTH_PATH` (`"/auth"`), `FIRST_PARTY_REPO_PATH_PREFIX` (`"/decapod"`), `LogicalTarget::first_party_cloud()`, `LogicalConnector::first_party_cloud()` / `first_party_cloud_async()`, and origin-bound `canonical_auth_url()` / `canonical_repository_url(org, repo)` helpers without altering default `/functions/v1/decapod-onboarding/*` wire routing.
@@ -214,12 +220,20 @@ These declarations select authoring and proof obligations; they do not attest im
 
 <!-- decapod:declared-capabilities:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Tracked significant codebase files: 58 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (28), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 25
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
+- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

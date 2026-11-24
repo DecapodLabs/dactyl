@@ -801,6 +801,14 @@ mod tests {
             .with_http_pool_limits(1, 0, Duration::from_secs(1))
             .validate()
             .is_ok());
+
+        let mut downgraded = ResourceBudget::v1();
+        downgraded.version = 0;
+        assert!(matches!(downgraded.validate(), Err(DactylError::Config(_))));
+
+        let mut future = ResourceBudget::v1();
+        future.version = 2;
+        assert!(matches!(future.validate(), Err(DactylError::Config(_))));
     }
 
     #[test]

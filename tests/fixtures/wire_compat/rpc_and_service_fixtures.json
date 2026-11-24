@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "description": "Recorded RPC and legacy service datastore response fixtures across release skew",
+  "supported": {
+    "rpc_v1_query_with_additive_fields": {
+      "columns": ["id", "label", "payload"],
+      "rows": [{"id": 42, "label": "compat-v1", "payload": [1, 2, 255]}],
+      "affected_rows": 0,
+      "generated_keys": [],
+      "server_timing_ms": 3,
+      "schema_revision": "2026-11-23-r1"
+    },
+    "rpc_v1_batch_with_additive_fields": {
+      "results": [
+        {
+          "columns": [],
+          "rows": [],
+          "affected_rows": 1,
+          "generated_keys": [7, "key_7"],
+          "op_trace": "additive-ignored"
+        },
+        {
+          "columns": ["id"],
+          "rows": [{"id": 7}],
+          "affected_rows": 0,
+          "generated_keys": []
+        }
+      ],
+      "batch_trace": "additive-ignored"
+    },
+    "legacy_service_0_15_without_generated_keys": {
+      "columns": ["id", "label"],
+      "rows": [{"id": 9, "label": "legacy-0.15"}],
+      "affected_rows": 0
+    }
+  },
+  "rejected": {
+    "rpc_missing_generated_keys": {
+      "columns": ["id"],
+      "rows": [{"id": 1}],
+      "affected_rows": 0
+    },
+    "rpc_null_generated_keys": {
+      "columns": ["id"],
+      "rows": [{"id": 1}],
+      "affected_rows": 0,
+      "generated_keys": null
+    },
+    "rpc_invalid_generated_key_bool": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [true]
+    },
+    "rpc_batch_count_mismatch": {
+      "results": [
+        {"columns": [], "rows": [], "affected_rows": 1, "generated_keys": []}
+      ]
+    },
+    "rpc_unsupported_object_cell": {
+      "columns": ["meta"],
+      "rows": [{"meta": {"nested": "unsupported"}}],
+      "affected_rows": 0,
+      "generated_keys": []
+    },
+    "rpc_u64_overflow_cell": {
+      "columns": ["big"],
+      "rows": [{"big": 9223372036854775808}],
+      "affected_rows": 0,
+      "generated_keys": []
+    },
+    "rpc_duplicate_columns": {
+      "columns": ["dup", "dup"],
+      "rows": [{"dup": 1}],
+      "affected_rows": 0,
+      "generated_keys": []
+    }
+  }
+}

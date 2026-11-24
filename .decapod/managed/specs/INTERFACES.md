@@ -1,5 +1,10 @@
 # Interfaces
 
+## Compatibility matrix and hardened parameter/read boundaries (issues #145, #146)
+
+- **Compatibility matrix (`docs/wire-compatibility-matrix.md`, `#146`)**: Formalizes required fields, additive extensions, minimum version floors (`1`), downgrade refusal (`0`), unknown enum refusal, strict `DeploymentProfile` schema enforcement, and `#138` `https://api.decapodlabs.ai` DPoP `htu` binding across `PROVENANCE_CONTRACT_VERSION` (`1`), `STORAGE_CONTEXT_VERSION` (`1`), `RESOURCE_BUDGET_VERSION` (`1`), and `SUPABASE_RPC_CONTRACT_VERSION` (`1`), verified by `tests/wire_compatibility.rs` and `tests/fixtures/wire_compat/*.json`.
+- **Boundary enforcement (`src/rows.rs`, `src/adapter/sqlite/mod.rs`, `#145`)**: `Parameter` JSON deserialization refuses integers above `i64::MAX`; `SqliteAdapter::read`, `visit_rows`, and `OperationKind::Read` reject non-read-only statements (`AdapterErrorKind::ReadOnly`, `"read_only"`); `SqliteAdapter` rejects non-finite `Parameter::Real` values (`AdapterErrorKind::Value`, `"unsupported_value"`, `MutationOutcome::NotAttempted`); and 0-row `INSERT` writes return empty `generated_keys`.
+
 ## Staged first-party custom origin and canonical route helpers (issue #138)
 
 - **Unconditional exports (`src/connector.rs`, `src/lib.rs`)**: `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`), `FIRST_PARTY_AUTH_PATH` (`"/auth"`), and `FIRST_PARTY_REPO_PATH_PREFIX` (`"/decapod"`) are exported across all Cargo feature combinations alongside unchanged `DEFAULT_CLOUD_ORIGIN` (`"https://goyxpcmxetztjlrrcwew.supabase.co"`).
@@ -302,12 +307,20 @@ Generated capability obligations: `public-api` is declared for this project. The
 - Input validation MUST reject malformed requests with typed errors
 <!-- decapod:capability-overlay:public-api:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CLI/RPC/protocol surfaces (1): `src/lib.rs`
+- Manifest authority path: `.decapod/managed/.manifest.json`
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
+- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

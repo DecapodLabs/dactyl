@@ -45,11 +45,19 @@ These files are the project-local contract for humans and agents.
 - [ ] Ensure architecture diagram, docs, changelog, and tests are mapped to promotion gates.
 - [ ] Run all validation/test commands and attach evidence artifacts.
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Tracked significant codebase files: 58 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (28), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 25
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
+- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

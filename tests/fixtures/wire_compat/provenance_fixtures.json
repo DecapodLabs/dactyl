@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "description": "Recorded EffectProvenance fixtures across release skew",
+  "supported": {
+    "v1_committed_with_additive_fields": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [1],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-compat-1",
+        "attempt_id": "ATTEMPT_ID",
+        "request_digest": "DIGEST",
+        "operation_kind": "write",
+        "decision": "allowed",
+        "effect_status": "committed_observed",
+        "decision_ref": "dec-compat-1",
+        "auth_scheme": "dpop",
+        "origin": "ORIGIN",
+        "server_build": "propodus-2026.11.23",
+        "additive_diagnostics": {"region": "us-west-2"}
+      }
+    },
+    "unadvertised_legacy_response": {
+      "columns": ["ok"],
+      "rows": [{"ok": true}],
+      "affected_rows": 0,
+      "generated_keys": []
+    }
+  },
+  "rejected": {
+    "downgrade_v0": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 0,
+        "request_id": "req-v0",
+        "attempt_id": "ATTEMPT_ID",
+        "operation_kind": "write",
+        "decision": "allowed",
+        "effect_status": "committed_observed",
+        "origin": "ORIGIN"
+      }
+    },
+    "unsupported_v2": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 2,
+        "request_id": "req-v2",
+        "attempt_id": "ATTEMPT_ID",
+        "operation_kind": "write",
+        "decision": "allowed",
+        "effect_status": "committed_observed",
+        "origin": "ORIGIN"
+      }
+    },
+    "missing_version_with_fields": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "request_id": "req-nover",
+        "attempt_id": "ATTEMPT_ID",
+        "effect_status": "committed_observed",
+        "origin": "ORIGIN"
+      }
+    },
+    "unknown_effect_status": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-enum1",
+        "attempt_id": "ATTEMPT_ID",
+        "effect_status": "maybe_committed_v2",
+        "origin": "ORIGIN"
+      }
+    },
+    "unknown_decision": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-enum2",
+        "attempt_id": "ATTEMPT_ID",
+        "decision": "escalated",
+        "effect_status": "committed_observed",
+        "origin": "ORIGIN"
+      }
+    },
+    "unknown_operation_kind": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-enum3",
+        "attempt_id": "ATTEMPT_ID",
+        "operation_kind": "maintenance_vacuum",
+        "effect_status": "committed_observed",
+        "origin": "ORIGIN"
+      }
+    },
+    "unknown_auth_scheme": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-enum4",
+        "attempt_id": "ATTEMPT_ID",
+        "auth_scheme": "mtls",
+        "effect_status": "committed_observed",
+        "origin": "ORIGIN"
+      }
+    },
+    "unknown_reason_code": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-enum5",
+        "attempt_id": "ATTEMPT_ID",
+        "reason_code": "unlisted_internal_secret",
+        "effect_status": "refused",
+        "decision": "refused",
+        "origin": "ORIGIN"
+      }
+    },
+    "stale_origin_mismatch": {
+      "columns": [],
+      "rows": [],
+      "affected_rows": 1,
+      "generated_keys": [],
+      "provenance": {
+        "version": 1,
+        "request_id": "req-orig",
+        "attempt_id": "ATTEMPT_ID",
+        "effect_status": "committed_observed",
+        "origin": "https://goyxpcmxetztjlrrcwew.supabase.co"
+      }
+    }
+  }
+}

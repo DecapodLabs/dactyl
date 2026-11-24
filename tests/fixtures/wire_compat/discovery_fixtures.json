@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "description": "Recorded discovery DeploymentProfile fixtures across release skew",
+  "supported": {
+    "v1_canonical": {
+      "version": 1,
+      "project_origin": "ORIGIN",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api"
+    }
+  },
+  "rejected": {
+    "downgrade_v0": {
+      "version": 0,
+      "project_origin": "ORIGIN",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api"
+    },
+    "unsupported_v2": {
+      "version": 2,
+      "project_origin": "ORIGIN",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api"
+    },
+    "unknown_extra_field": {
+      "version": 1,
+      "project_origin": "ORIGIN",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api",
+      "future_capability_flag": true
+    },
+    "stale_default_origin_on_first_party": {
+      "version": 1,
+      "project_origin": "https://goyxpcmxetztjlrrcwew.supabase.co",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api"
+    },
+    "stale_first_party_origin_on_legacy": {
+      "version": 1,
+      "project_origin": "https://api.decapodlabs.ai",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api"
+    },
+    "secret_key_downgrade": {
+      "version": 1,
+      "project_origin": "ORIGIN",
+      "publishable_key": "sb_secret_forbidden",
+      "schema": "dactyl_api"
+    },
+    "legacy_jwt_anon_key": {
+      "version": 1,
+      "project_origin": "ORIGIN",
+      "publishable_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.legacy",
+      "schema": "dactyl_api"
+    },
+    "invalid_schema_identifier": {
+      "version": 1,
+      "project_origin": "ORIGIN",
+      "publishable_key": "sb_publishable_compat_v1",
+      "schema": "dactyl_api;DROP"
+    }
+  }
+}
