@@ -145,6 +145,7 @@ mod fault_reconciliation_campaign {
 
     struct FaultProxyState {
         db_path: String,
+        db_lock: Mutex<()>,
         policy_generation: AtomicU64,
         revoked: AtomicBool,
         required_nonce: Mutex<Option<String>>,
@@ -195,6 +196,7 @@ mod fault_reconciliation_campaign {
 
             let state = Arc::new(FaultProxyState {
                 db_path: db_path_str.clone(),
+                db_lock: Mutex::new(()),
                 policy_generation: AtomicU64::new(1),
                 revoked: AtomicBool::new(false),
                 required_nonce: Mutex::new(None),
@@ -216,7 +218,14 @@ mod fault_reconciliation_campaign {
             let origin_srv = origin.clone();
 
             let handle = thread::spawn(move || {
-                let rw = Connection::open(DatastoreRoute::sqlite(&db_path_str)).unwrap();
+                let rw = Connection::open_with_options(
+                    DatastoreRoute::sqlite(&db_path_str),
+                    OpenOptions {
+                        access_mode: AccessMode::ReadWrite,
+                        lock_timeout: Duration::from_secs(5),
+                    },
+                )
+                .unwrap();
                 while !stop_srv.load(Ordering::Relaxed) {
                     let (mut stream, _) = match listener.accept() {
                         Ok(pair) => pair,
@@ -254,13 +263,14 @@ mod fault_reconciliation_campaign {
                 DatastoreRoute::sqlite(&self.state.db_path),
                 OpenOptions {
                     access_mode: AccessMode::ReadOnly,
-                    ..OpenOptions::default()
+                    lock_timeout: Duration::from_secs(5),
                 },
             )
             .unwrap()
         }
 
         fn persisted_attempts(&self) -> BTreeMap<String, (String, String, i64, i64)> {
+            let _db_guard = self.state.db_lock.lock().unwrap();
             let obs = self.observer();
             let rows = obs
                 .read(
@@ -435,17 +445,20 @@ mod fault_reconciliation_campaign {
         }
         let seq = state.next_commit_seq.fetch_add(1, Ordering::SeqCst) + 1;
         let actual_val = if val == 0 { seq as i64 } else { val };
-        rw.write(
-            "INSERT INTO mutations (attempt_id, request_digest, request_id, policy_generation, val) VALUES (?1, ?2, ?3, ?4, ?5)",
-            &[
-                Parameter::Text(attempt_id.to_owned()),
-                Parameter::Text(request_digest.to_owned()),
-                Parameter::Text(request_id.to_owned()),
-                Parameter::Integer(policy_gen as i64),
-                Parameter::Integer(actual_val),
-            ],
-        )
-        .unwrap();
+        {
+            let _db_guard = state.db_lock.lock().unwrap();
+            rw.write(
+                "INSERT INTO mutations (attempt_id, request_digest, request_id, policy_generation, val) VALUES (?1, ?2, ?3, ?4, ?5)",
+                &[
+                    Parameter::Text(attempt_id.to_owned()),
+                    Parameter::Text(request_digest.to_owned()),
+                    Parameter::Text(request_id.to_owned()),
+                    Parameter::Integer(policy_gen as i64),
+                    Parameter::Integer(actual_val),
+                ],
+            )
+            .unwrap();
+        }
         let entry = LedgerEntry {
             attempt_id: attempt_id.to_owned(),
             request_digest: request_digest.to_owned(),

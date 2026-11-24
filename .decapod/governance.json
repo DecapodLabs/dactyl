@@ -142,6 +142,14 @@
       "proof_refs": [
         "tests/transport_fault_reconciliation_143.rs"
       ]
+    },
+    {
+      "id": "chk_dactyl_p2_143_138_fix_sqlite_lock",
+      "summary": "Serialize FaultProxyServer backing SQLite access with db_lock Mutex and 5s lock_timeout to prevent SQLITE_BUSY under Linux CI timing",
+      "input_digest": "sha256:6f01c5807ce3d2c3f46922f59fd4826fbfc3446ec15ea740958862d1c5f1a045",
+      "proof_refs": [
+        "tests/transport_fault_reconciliation_143.rs"
+      ]
     }
   ],
   "intents": {
@@ -187,22 +195,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #143/#138 transport fault reconciliation, post-effect DPoP retry guard, pre-send NotAttempted alignment, and loopback fault campaign.",
-          "reviewed_code_fingerprint": "877ac60808936ba91648cccce3db9fe51310e2557d070110ee88c396743d4e28",
+          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access with db_lock Mutex and 5s lock_timeout.",
+          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
           "spec_material_hash": "ac0bde44bc8ff593d0c7c4202fdd1d8d59ed4c6f4e13029d4927d215a0f00c13"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented pre-effect DPoP challenge guard, non-2xx Uncertain outcome parity, pool-slot NotAttempted, and #138 cutover boundary.",
-          "reviewed_code_fingerprint": "877ac60808936ba91648cccce3db9fe51310e2557d070110ee88c396743d4e28",
+          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access in tests/transport_fault_reconciliation_143.rs.",
+          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
           "spec_material_hash": "3395663a5415d0957fec79c2b9fd27cc3082e7d1b972b0f590e56764a8debe1c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented no post-effect DPoP replay, 403 DPoP/revocation Authentication classification, and #138 cutover fail-closed invariants.",
-          "reviewed_code_fingerprint": "877ac60808936ba91648cccce3db9fe51310e2557d070110ee88c396743d4e28",
+          "reason": "Refreshed spec fingerprint after synchronizing FaultProxyServer SQLite access in tests/transport_fault_reconciliation_143.rs.",
+          "reviewed_code_fingerprint": "b016536d70bf86febc80e520e675d3b6f38e11a14a0ceea170aa1361bea6e9a5",
           "spec_material_hash": "6f1e84f8aca1e72d0ad21ae5ed3c88e6d1bc15a2f68f94abc6a8acfae91ea736"
         }
       ],
@@ -214,7 +222,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795489270Z"
+      "updated_at": "1795489968Z"
     },
     "trajectory": {
       "active_boundaries": [
