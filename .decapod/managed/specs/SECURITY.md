@@ -1,5 +1,10 @@
 # Security
 
+## Read-path mutation prevention, integer bounds, and release-skew fail-closed enforcement (issues #145, #146)
+
+- **SQLite read-path write-escape guard (`#145`, `src/adapter/sqlite/mod.rs`)**: `visit_rows_budgeted` checks `sqlite3_stmt_readonly` before stepping any prepared statement, blocking mutating SQL (`INSERT`/`UPDATE`/`DELETE`/`WITH ... INSERT`/mutating `PRAGMA`) on `read`, `visit_rows`, and `OperationKind::Read` batches even when opened in `AccessMode::ReadWrite` (`AdapterErrorKind::ReadOnly`, `"read_only"`). `check_parameters` rejects non-finite `Parameter::Real` values before transaction start (`"unsupported_value"`).
+- **Integer wrap-around and skew refusal (`#146`, `src/rows.rs`, `docs/wire-compatibility-matrix.md`)**: `Parameter::deserialize` rejects JSON `u64 > i64::MAX` via `i64::try_from` instead of wrapping to negative `i64`. `tests/wire_compatibility.rs` proves fail-closed refusal across downgraded (`version: 0`) or unsupported (`version: 2`) discovery, provenance, context, and resource-budget contracts, unknown enums, stale cross-origin discovery, and `https://api.decapodlabs.ai` DPoP `htu` pinning.
+
 ## Staged custom origin isolation and path-segment validation (issue #138)
 
 - **No premature origin cutover & strict origin pinning (`#138`)**: `DEFAULT_CLOUD_ORIGIN` stays on `"https://goyxpcmxetztjlrrcwew.supabase.co"` until live custom-domain TLS/OAuth/discovery activation is independently proven. Opt-in `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`) redacts in `LogicalTarget` `Debug` output, refuses cross-origin `project_origin` discovery responses and `308`/`307` redirects without leaking credentials, pins DPoP `htu` signing strictly to the selected origin, refuses undeployed `/auth` or cross-origin `browser_url` handoffs in `validate_start`, and validates `org`/`repo` segments in `canonical_repository_url` against path traversal, slashes, queries, fragments, and percent-encoding.
@@ -183,12 +188,19 @@ Generated capability obligations: `public-api` is declared for this project. The
 - Client-visible throttling behavior MUST be part of the contract when applicable
 <!-- decapod:capability-overlay:public-api:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Security/policy/auth surfaces (0): none detected
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
+- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

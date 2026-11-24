@@ -1,5 +1,10 @@
 # Architecture
 
+## Differential contract verification and wire compatibility hardening (issues #145, #146)
+
+- **`src/rows.rs` & `src/adapter/sqlite/mod.rs` (`#145`, `#146`)**: `Parameter::deserialize` (`visit_u64`) uses `i64::try_from` to fail closed on out-of-range unsigned integers (`> i64::MAX`) instead of silently wrapping. `SqliteAdapter` validates finite `Parameter::Real` values in `check_parameters` preflight before statement preparation or transaction start, verifies `sqlite3_stmt_readonly` in `visit_rows_budgeted` so `read`, `visit_rows`, and `WITH ... INSERT` read-batch operations cannot mutate durable state, and emits `GeneratedKey::Integer` in `execute_write` only when `affected_rows > 0`.
+- **Differential & skew proof surfaces**: `tests/differential_contract.rs` pairs `ReferenceModel`, `SqliteAdapter`, and an independent SQLite-backed HTTP `dactyl_api` RPC/gateway/legacy server with `shrink_counterexample` delta-debugging and independent read-only observer readbacks. `docs/wire-compatibility-matrix.md` and `tests/wire_compatibility.rs` (with recorded JSON fixtures in `tests/fixtures/wire_compat/`) verify additive-vs-breaking skew, version floors, downgrade refusal, unknown enum refusal, stale-origin discovery refusal, and `https://api.decapodlabs.ai` DPoP `htu` parity across sync and async connectors.
+
 ## Staged first-party custom origin cutover (issue #138)
 
 - **`src/connector.rs`, `src/cloud.rs`, & `src/lib.rs` (`#138`)**: `DEFAULT_CLOUD_ORIGIN` remains `"https://goyxpcmxetztjlrrcwew.supabase.co"` while `FIRST_PARTY_CLOUD_ORIGIN` (`"https://api.decapodlabs.ai"`), `FIRST_PARTY_AUTH_PATH` (`"/auth"`), and `FIRST_PARTY_REPO_PATH_PREFIX` (`"/decapod"`) provide explicit opt-in staging primitives via `LogicalTarget::first_party_cloud()`, `LogicalConnector::first_party_cloud()` / `first_party_cloud_async()`, and origin-bound `canonical_auth_url()` / `canonical_repository_url(org, repo)`. `validate_canonical_path_segment` rejects empty, oversized (`>128`), traversal (`.`, `..`), slash, query, fragment, percent-encoded, and whitespace inputs before constructing `/decapod/<org>/<repo>`. Existing discovery origin-matching (`profile.project_origin == selected_origin`), no-redirect HTTP policies, `validate_start` `/functions/v1/{decapod,propodus}-onboarding/begin` path enforcement, and DPoP `htu` canonical URL signing remain strictly bound to the selected origin.
@@ -247,12 +252,21 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Migration and rollback treatment MUST match the selected storage technology
 <!-- decapod:capability-overlay:persistent-state:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Core modules (12): `adapter`, `budget`, `cloud`, `connector`, `contract`, `error`, `http_pool`, `inspection`, `lib`, `rows`, `schema`, `supabase_rpc`
+- Plugin/extension modules (0): none detected
+- Build manifests (1): `Cargo.toml`
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `547c06983845bc864150ab5d70b93c2bd5fa5cfc930cc457b9409eaf5da580be`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (26 files), `tools/` (3 files)
+- Repository signal fingerprint: `3f8d6f668a42335825336da92004594e501956cc2bbc3257c7e0aff04c39ae2a`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (28 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

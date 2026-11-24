@@ -140,7 +140,9 @@ impl<'de> serde::Deserialize<'de> for Parameter {
             where
                 E: serde::de::Error,
             {
-                Ok(Parameter::Integer(v as i64))
+                i64::try_from(v)
+                    .map(Parameter::Integer)
+                    .map_err(|_| serde::de::Error::custom("integer parameter out of i64 range"))
             }
             fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
             where
