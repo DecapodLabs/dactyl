@@ -551,6 +551,30 @@ pub(crate) async fn read_bounded_body_async(
     Ok(bytes)
 }
 
+pub(crate) fn validate_endpoint(endpoint: &str) -> Result<reqwest::Url, DactylError> {
+    let url = reqwest::Url::parse(endpoint)
+        .map_err(|_| DactylError::Config("invalid HTTP service URL".into()))?;
+    // Literal loopback permits disposable offline service tests. Never use
+    // DNS resolution or suffix matching to decide whether HTTP is trusted.
+    let loopback = url.host_str().is_some_and(|host| {
+        host.trim_matches(['[', ']'])
+            .parse::<std::net::IpAddr>()
+            .is_ok_and(|ip| ip.is_loopback())
+    });
+    if !(url.scheme() == "https" || (url.scheme() == "http" && loopback))
+        || url.host_str().is_none()
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+    {
+        return Err(DactylError::Config(
+            "service requires an HTTPS URL (HTTP only for literal loopback), without credentials, query or fragment".into(),
+        ));
+    }
+    Ok(url)
+}
+
 #[cfg(feature = "supabase")]
 pub(crate) fn canonical_url(endpoint: &str) -> Result<String, DactylError> {
     let mut url = reqwest::Url::parse(endpoint)

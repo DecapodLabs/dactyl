@@ -45,9 +45,9 @@ dev/
 !.decapod/data/
 !.decapod/managed/
 !.decapod/managed/Dockerfile.decapod
+!.decapod/managed/.manifest.json
 !.decapod/managed/specs/
 !.decapod/managed/specs/*.md
-!.decapod/managed/specs/.manifest.json
 # Durable governance cookies under `.decapod/governance/` are tracked; workunit
 # manifests remain ignored current-run execution state.
 # plan.json / trajectory.json are current-run state, not durable records.

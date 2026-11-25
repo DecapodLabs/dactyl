@@ -118,7 +118,7 @@ Merged-PR body commit overrides are unsupported for plain merges.
 
 **CI/CD Notes**:
 - `tools/proof/Containerfile` and the accepted validation entrypoints pin the independent published Decapod controller to `0.143.0`. Full `decapod validate` runs the unchanged reviewed Rust proof through `tools/proof/check.py`, including locked and lock-free consumer checks on Rust 1.85; preparation only fetches dependencies.
-- The `Pages` workflow publishes the `docs/` directory as GitHub Pages. Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md`.
+- The `Pages` workflow (`.github/workflows/pages.yml`) splits artifact preparation into a `build` job (`actions/checkout@v4`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3` for `docs`) and deployment into a downstream `deploy` job (`needs: build`, `actions/deploy-pages@v4`), eliminating the same-job `No artifacts named "github-pages" were found` failure (`#45328247416`). Live github.io hosting still requires the repository Pages source to be GitHub Actions. The connector report is also readable from the tree at `docs/whitepapers/dactyl-sqlite-connector.md` alongside `docs/trust-and-egress-inventory.md`.
 
 ## Local SQLite operations
 
@@ -220,7 +220,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
+- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

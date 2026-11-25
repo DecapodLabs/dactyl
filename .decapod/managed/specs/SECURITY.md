@@ -1,5 +1,10 @@
 # Security
 
+## Permanent trust & zero-egress gate and advisory remediation (issue #1944, RUSTSEC-2026-0538, RUSTSEC-2026-0592)
+
+- **Trust & egress inventory (`docs/trust-and-egress-inventory.md`, `tests/trust_and_egress.rs`)**: Documents every optional remote backend (`neon`, `supabase`), local SQLite zero-egress guarantees (zero sockets, zero ambient `SUPABASE_*`/`DATABASE_URL`/home auth-file reads), allowed origins, fail-closed HTTPS/literal-loopback validation, redirect/origin checks, credential isolation, no identity fingerprinting, and exhaustive `src/` callsite coverage verified in CI.
+- **Advisory remediation (`Cargo.toml`, `Cargo.lock`, `.github/workflows/rust-contract.yml`)**: Requires `quinn-udp >=0.5.16, <0.6` (`RUSTSEC-2026-0538`, inactive HTTP/3 under `[target.'cfg(any())'.dependencies]`) and `url >=2.5.9, <3` (`RUSTSEC-2026-0592`) while retaining `rustix = "1.1.6"` and `quinn-proto >=0.11.19`. `cargo audit` passes with 0 vulnerabilities and runs in CI (`Rust Contract`).
+
 ## Cross-layer fault barrier, post-effect retry guard, and cutover origin security (issues #143, #138)
 
 - **No post-effect DPoP replay & consistent DPoP/revocation classification (`src/http_pool.rs`, `src/cloud.rs`)**: `can_retry_dpop_nonce` prevents `401 use_dpop_nonce` retry whenever `MutationOutcome::Uncertain` or `EffectStatus::{Uncertain, CommittedObserved}` provenance is present; `error_kind_for_cloud_status_and_code` maps DPoP mismatch and device/session revocation codes (such as `dpop_htu_mismatch`, `device_revoked`, `session_revoked`) to `AdapterErrorKind::Authentication` even on `403` responses without leaking bearers or DPoP proofs.
@@ -197,15 +202,15 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Contract Snapshot
 
-- Security/policy/auth surfaces (0): none detected
+- Security/policy/auth surfaces (1): `tests/trust_and_egress.rs`
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
+- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

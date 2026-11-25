@@ -17,13 +17,15 @@ use crate::contract::{
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::http_pool::{
-    acquire_client, in_tokio_runtime, read_bounded_body_async, AsyncBodyError, SharedHttpClient,
+    acquire_client, in_tokio_runtime, read_bounded_body_async, validate_endpoint, AsyncBodyError,
+    SharedHttpClient,
 };
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
 
 pub struct NeonAdapter {
     endpoint: String,
+    expected_origin: reqwest::Url,
     bearer: Option<String>,
     access_mode: AccessMode,
     context: Option<StorageContext>,
@@ -106,9 +108,11 @@ impl NeonAdapter {
         budget: ResourceBudget,
     ) -> Result<Self, DactylError> {
         budget.validate()?;
+        let expected_origin = validate_endpoint(endpoint)?;
         let http_client = acquire_client(budget)?;
         Ok(Self {
-            endpoint: endpoint.trim_end_matches('/').to_owned(),
+            endpoint: expected_origin.as_str().trim_end_matches('/').to_owned(),
+            expected_origin,
             bearer,
             access_mode: options.access_mode,
             context,
@@ -121,7 +125,15 @@ impl NeonAdapter {
         &self,
         path: &str,
         request: &impl Serialize,
-    ) -> Result<(String, Option<reqwest::header::HeaderValue>, Vec<u8>), DactylError> {
+    ) -> Result<
+        (
+            reqwest::Url,
+            String,
+            Option<reqwest::header::HeaderValue>,
+            Vec<u8>,
+        ),
+        DactylError,
+    > {
         let body = serialize_bounded_json(request, self.budget.max_wire_bytes())?;
         let bearer = self
             .bearer
@@ -134,7 +146,7 @@ impl NeonAdapter {
             })
             .transpose()?;
         let endpoint = format!("{}{path}", self.endpoint);
-        Ok((endpoint, bearer, body))
+        Ok((self.expected_origin.clone(), endpoint, bearer, body))
     }
 
     fn send<T: for<'de> Deserialize<'de> + Send + 'static>(
@@ -144,7 +156,7 @@ impl NeonAdapter {
         request: &impl Serialize,
         mutates: bool,
     ) -> Result<T, DactylError> {
-        let (endpoint, bearer, body) = self.prepare_send(path, request)?;
+        let (expected_origin, endpoint, bearer, body) = self.prepare_send(path, request)?;
         let budget = self.budget;
         let http_client = self.http_client.clone();
         if in_tokio_runtime() {
@@ -153,6 +165,7 @@ impl NeonAdapter {
                 .spawn(move || {
                     send_neon_request(
                         &http_client,
+                        &expected_origin,
                         endpoint,
                         bearer,
                         body,
@@ -167,6 +180,7 @@ impl NeonAdapter {
         } else {
             send_neon_request(
                 &http_client,
+                &expected_origin,
                 endpoint,
                 bearer,
                 body,
@@ -184,9 +198,10 @@ impl NeonAdapter {
         request: &impl Serialize,
         mutates: bool,
     ) -> Result<T, DactylError> {
-        let (endpoint, bearer, body) = self.prepare_send(path, request)?;
+        let (expected_origin, endpoint, bearer, body) = self.prepare_send(path, request)?;
         send_neon_request_async(
             &self.http_client,
+            &expected_origin,
             endpoint,
             bearer,
             body,
@@ -342,8 +357,29 @@ fn pre_send_timeout_error() -> DactylError {
     )
 }
 
+fn verify_response_origin(
+    expected_origin: &reqwest::Url,
+    response_url: &reqwest::Url,
+    status: u16,
+    mutates: bool,
+) -> Result<(), DactylError> {
+    if response_url.origin() != expected_origin.origin() || (300..400).contains(&status) {
+        return Err(maybe_uncertain(
+            DactylError::adapter_with_code(
+                AdapterErrorKind::Protocol,
+                "provenance_origin_mismatch",
+                "Neon service redirect or cross-origin response is not permitted",
+            ),
+            mutates,
+        ));
+    }
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
 fn send_neon_request<T: for<'de> Deserialize<'de>>(
     http_client: &SharedHttpClient,
+    expected_origin: &reqwest::Url,
     endpoint: String,
     bearer: Option<reqwest::header::HeaderValue>,
     body: Vec<u8>,
@@ -370,6 +406,7 @@ fn send_neon_request<T: for<'de> Deserialize<'de>>(
         .send()
         .map_err(|error| maybe_uncertain(neon_transport_error(error.is_timeout()), mutates))?;
     let status = response.status().as_u16();
+    verify_response_origin(expected_origin, response.url(), status, mutates)?;
     let bytes = match read_bounded_body(response, budget.max_wire_bytes()) {
         Ok(bytes) => bytes,
         Err(BoundedReadError::TooLarge) => {
@@ -392,8 +429,10 @@ fn send_neon_request<T: for<'de> Deserialize<'de>>(
     decode_neon_response(status, &bytes, operation, mutates)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn send_neon_request_async<T: for<'de> Deserialize<'de>>(
     http_client: &SharedHttpClient,
+    expected_origin: &reqwest::Url,
     endpoint: String,
     bearer: Option<reqwest::header::HeaderValue>,
     body: Vec<u8>,
@@ -421,6 +460,7 @@ async fn send_neon_request_async<T: for<'de> Deserialize<'de>>(
         .map_err(|_| maybe_uncertain(neon_transport_error(true), mutates))?
         .map_err(|error| maybe_uncertain(neon_transport_error(error.is_timeout()), mutates))?;
     let status = response.status().as_u16();
+    verify_response_origin(expected_origin, response.url(), status, mutates)?;
     let body_remaining = deadline.saturating_duration_since(Instant::now());
     let bytes = match tokio::time::timeout(
         body_remaining,
