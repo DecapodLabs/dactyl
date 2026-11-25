@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1](https://github.com/DecapodLabs/dactyl/compare/v0.19.0...v0.19.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **security:** permanent trust & zero-egress gate ([#1944](https://github.com/DecapodLabs/dactyl/issues/1944)), advisory fixes, and Pages CI ([516c6a6](https://github.com/DecapodLabs/dactyl/commit/516c6a602aeeee0d9ee863b6ca66f270fce60922))
+* **security:** permanent trust & zero-egress gate ([#1944](https://github.com/DecapodLabs/dactyl/issues/1944)), advisory fixes, and Pages CI ([bef7ba7](https://github.com/DecapodLabs/dactyl/commit/bef7ba7e737968695a361c9fe8d507cdc88ba22b))
+
 ## [0.19.0](https://github.com/DecapodLabs/dactyl/compare/v0.18.0...v0.19.0) (2026-11-22)
 
 
