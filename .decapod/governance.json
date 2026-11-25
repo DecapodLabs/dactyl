@@ -144,6 +144,11 @@
       "id": "cp-1944-entrypoints-manifest",
       "summary": "Refresh 0.164.1 entrypoints, manifest gitignore rule, and living specs",
       "input_digest": "sha256:0f51808c403b9472a7fc9a6bddafb28c34b56b3a1f3f8d18492e251a59fcfcc2"
+    },
+    {
+      "id": "cp-1944-ci-manifest-and-matrix",
+      "summary": "Update decapod-validate manifest path, reviewed_sources_digest, and complete full feature-matrix + cargo audit checks",
+      "input_digest": "sha256:f136c59d1d6fa02280fdbef8c838acfc552395a743ec829623c8549f38ce3ace"
     }
   ],
   "intents": {
@@ -220,10 +225,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a7db1a6a378a42bc4535d406e3ac1d77125d5e3dcd7e534d334d0f7b490e2707",
+      "artifact_hash": "sha256:372fd0cb89b932a4d7e22f6504a299bb46d323b60c68c99f8d8bf45ee430e443",
       "checks": [
         {
           "name": "cargo-audit",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-clippy",
           "status": "passed"
         },
         {
@@ -239,7 +248,15 @@
           "status": "passed"
         },
         {
+          "name": "cargo-msrv-check",
+          "status": "passed"
+        },
+        {
           "name": "cargo-test-feature-matrix",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-test-matrix",
           "status": "passed"
         },
         {
@@ -275,10 +292,17 @@
             "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M87ZNQTB4Z98PNGZRKAQBX53",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M87ZNQTB4Z98PNGZRKAQBX53": {
@@ -349,6 +373,26 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".github/workflows/decapod-validate.yml",
+                  ".decapod/config.toml"
+                ],
+                "proof_refs": [
+                  "cargo-fmt",
+                  "cargo-clippy",
+                  "cargo-test-matrix",
+                  "cargo-msrv-check",
+                  "cargo-audit"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -401,6 +445,7 @@
         ".decapod/README.md",
         ".decapod/config.toml",
         ".decapod/managed/.manifest.json",
+        ".github/workflows/decapod-validate.yml",
         ".github/workflows/pages.yml",
         ".github/workflows/rust-contract.yml",
         ".gitignore",
