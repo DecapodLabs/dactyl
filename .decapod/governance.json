@@ -149,6 +149,11 @@
       "id": "cp-1944-ci-manifest-and-matrix",
       "summary": "Update decapod-validate manifest path, reviewed_sources_digest, and complete full feature-matrix + cargo audit checks",
       "input_digest": "sha256:f136c59d1d6fa02280fdbef8c838acfc552395a743ec829623c8549f38ce3ace"
+    },
+    {
+      "id": "cp-1944-tempfile-rustix",
+      "summary": "Allow tempfile >=3.15 in dev-dependencies to eliminate dev-only rustix 0.38.44 under MSRV 1.85.0",
+      "input_digest": "sha256:e466c13ccb1fe255489066cfc08fb429e3820288dae48b2ebabe122cfaaa3b12"
     }
   ],
   "intents": {
@@ -225,7 +230,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:372fd0cb89b932a4d7e22f6504a299bb46d323b60c68c99f8d8bf45ee430e443",
+      "artifact_hash": "sha256:b631b9baaea68769fb350dd458c3c52ab19896d0cea49eeffb828fa2ceb78375",
       "checks": [
         {
           "name": "cargo-audit",
@@ -299,10 +304,17 @@
             "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M87ZNQTB4Z98PNGZRKAQBX53",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M87ZNQTB4Z98PNGZRKAQBX53": {
@@ -392,6 +404,26 @@
                   "root"
                 ],
                 "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock"
+                ],
+                "proof_refs": [
+                  "cargo-fmt",
+                  "cargo-clippy",
+                  "cargo-test-matrix",
+                  "cargo-msrv-1.85-check",
+                  "cargo-audit"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
