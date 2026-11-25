@@ -13,8 +13,8 @@ categories = ["database", "api-bindings"]
 [features]
 default = []
 sqlite = ["dep:libloading", "dep:rustix"]
-neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:quinn-proto"]
-supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:base64", "dep:getrandom", "dep:sha2", "dep:quinn-proto"]
+neon = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:url", "dep:quinn-proto", "dep:quinn-udp"]
+supabase = ["dep:reqwest", "dep:hyper-rustls", "dep:hyper-util", "dep:idna_adapter", "dep:litemap", "dep:tokio", "dep:utf8_iter", "dep:utf16_iter", "dep:zeroize", "dep:url", "dep:base64", "dep:getrandom", "dep:sha2", "dep:quinn-proto", "dep:quinn-udp"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -37,6 +37,7 @@ tokio = { version = ">=1.0, <1.54", optional = true, default-features = false }
 utf8_iter = { version = ">=1.0, <1.1", optional = true, default-features = false }
 utf16_iter = { version = ">=1.0, <1.1", optional = true, default-features = false }
 zeroize = { version = ">=1.8, <1.9", optional = true, default-features = false }
+url = { version = ">=2.5.9, <3", optional = true, default-features = false }
 
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1", optional = true, features = ["fs"] }
@@ -46,11 +47,12 @@ rustix = { version = "1", optional = true, features = ["fs"] }
 # Its dependency manifests require Cargo/Rust 1.85 even when HTTP/3 is inactive.
 [target.'cfg(any())'.dependencies]
 quinn-proto = { version = ">=0.11.19, <0.12", optional = true, default-features = false }
+quinn-udp = { version = ">=0.5.16, <0.6", optional = true, default-features = false }
 
 [dev-dependencies]
 tokio = { version = ">=1.0, <1.54", features = ["full"] }
 axum = "0.7"
-tempfile = ">=3.0, <3.15"
+tempfile = ">=3.15, <4"
 
 [workspace]
 resolver = "2"

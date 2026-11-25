@@ -1,5 +1,10 @@
 # Interfaces
 
+## Trust, endpoint validation, and dependency bounds (issue #1944)
+
+- **`DatastoreRoute::validate` (`src/lib.rs`) & `NeonAdapter` (`src/adapter/neon/mod.rs`)**: `DatastoreRoute::validate` and `NeonAdapter::new_with_options_and_budget` now enforce the same `validate_endpoint` HTTPS/literal-loopback URL policy as `Datastore::Supabase`, rejecting `http://` non-loopback hosts, userinfo, queries, and fragments before network dispatch (`DactylError::Config`). `NeonAdapter` rejects `3xx` redirects and cross-origin responses with `AdapterErrorKind::Protocol` (`provenance_origin_mismatch`).
+- **Patched HTTP/URL dependency floors (`Cargo.toml`, `Cargo.lock`)**: `neon` and `supabase` feature lists include `dep:quinn-udp` (`>=0.5.16, <0.6` under `[target.'cfg(any())'.dependencies]`, inactive HTTP/3) and `dep:url` (`>=2.5.9, <3`), preserving `default = []`, `sqlite` zero-HTTP isolation, and `rust-version = "1.85"`.
+
 ## Transport deadline coverage, fairness guarantees, and regression baseline (issue #144)
 
 - **Unified queue + execution deadline (`src/http_pool.rs`, `src/adapter/neon/mod.rs`, `src/adapter/supabase.rs`, `src/cloud.rs`)**: `ResourceBudget::request_timeout()` bounds both pool-slot queueing (`acquire_permit*`) and HTTP execution/body reading (including a single `401 use_dpop_nonce` retry). Timeouts occurring in queue or after permit acquisition prior to `request.send()` consistently return `AdapterErrorKind::Timeout` + `MutationOutcome::NotAttempted` (`EffectStatus::NotAttempted` / `ObservationSource::LocalPreflight` on Supabase/CloudConnector), whereas post-send mutating timeouts return `MutationOutcome::Uncertain`.
@@ -330,8 +335,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
+- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

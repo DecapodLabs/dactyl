@@ -1,5 +1,11 @@
 # Architecture
 
+## Permanent trust & zero-egress boundary (issue #1944)
+
+- **Shared endpoint policy (`src/http_pool.rs`, `src/adapter/neon/mod.rs`, `src/adapter/supabase.rs`, `src/lib.rs`)**: Centralizes `validate_endpoint` in `src/http_pool.rs` so both `NeonAdapter::new_with_options_and_budget` and `SupabaseAdapter::new` (as well as `DatastoreRoute::validate` for `Datastore::Neon` and `Datastore::Supabase`) enforce HTTPS-only URLs (permitting plain `http://` solely for parsed `IpAddr::is_loopback()` literals) without embedded credentials, query strings, or fragments.
+- **Neon origin & redirect guard (`src/adapter/neon/mod.rs`)**: `NeonAdapter` pins `expected_origin` at open time and invokes `verify_response_origin` in both `send_neon_request` and `send_neon_request_async`, rejecting `300..400` redirects and cross-origin responses before decoding bodies (marking mutating failures `MutationOutcome::Uncertain`).
+- **Callsite inventory (`docs/trust-and-egress-inventory.md`, `tests/trust_and_egress.rs`)**: Inventories every `reqwest`, `SharedHttpClient`, `libloading`, and `std::env::var` surface in `src/` and enforces at test time that `sqlite` remains isolated from HTTP/TLS crates and every transport/env callsite is documented.
+
 ## FIFO mixed sync/async transport pool limits, cancellation handoff, and baseline (issue #144)
 
 - **`src/http_pool.rs` (`RequestLimit`, `LimitState`, `WaiterGuard`, `SharedHttpClient`)**: Replaces unordered `Condvar` + `Notify::notify_waiters()` signaling with a FIFO `VecDeque<WaiterEntry>` waiter queue (`WaiterWake::Sync(Arc<(Mutex<bool>, Condvar)>)` and `WaiterWake::Async(Arc<tokio::sync::Notify>)`). Contended callers enqueue in arrival order (`state.waiters.is_empty()` prevents hot-caller barging), `RequestSlot::drop` transfers slot ownership directly to the oldest ungranted waiter without thundering-herd wakeups, and `WaiterGuard::drop` removes cancelled/timed-out waiters and forwards any already-granted slot to the next waiter when an async future is dropped between handoff and next poll.
@@ -280,8 +286,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
+- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

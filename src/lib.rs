@@ -251,30 +251,45 @@ impl DatastoreRoute {
 
     /// Validate the provider's endpoint policy without network I/O or credentials.
     ///
-    /// Supabase enforces its secure service URL policy here so callers can check
-    /// an authentication origin before sending a token or refreshing a session.
-    /// This does not authenticate, check context, or verify service capabilities.
-    /// Existing SQLite and Neon endpoint acceptance remains unchanged.
+    /// Neon and Supabase enforce their secure service URL policy here so callers
+    /// can check an origin before sending credentials. This does not authenticate,
+    /// check context, or verify service capabilities. SQLite accepts local paths.
     pub fn validate(&self) -> Result<(), DactylError> {
         if let Some(nonce) = &self.dpop_nonce {
             crate::connector::validate_dpop_nonce(nonce)?;
         }
-        if self.datastore == Datastore::Supabase {
-            #[cfg(feature = "supabase")]
-            {
-                return match &self.rpc {
-                    Some(config) => crate::adapter::supabase::validate_rpc(config).map(|_| ()),
-                    None => crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ()),
-                };
+        match self.datastore {
+            Datastore::Sqlite => Ok(()),
+            Datastore::Neon => {
+                #[cfg(feature = "neon")]
+                {
+                    crate::http_pool::validate_endpoint(&self.route).map(|_| ())
+                }
+                #[cfg(not(feature = "neon"))]
+                {
+                    Err(DactylError::Config(
+                        "neon support is disabled; enable the `neon` feature".into(),
+                    ))
+                }
             }
-            #[cfg(not(feature = "supabase"))]
-            {
-                return Err(DactylError::Config(
-                    "supabase support is disabled; enable the `supabase` feature".into(),
-                ));
+            Datastore::Supabase => {
+                #[cfg(feature = "supabase")]
+                {
+                    match &self.rpc {
+                        Some(config) => crate::adapter::supabase::validate_rpc(config).map(|_| ()),
+                        None => {
+                            crate::adapter::supabase::validate_endpoint(&self.route).map(|_| ())
+                        }
+                    }
+                }
+                #[cfg(not(feature = "supabase"))]
+                {
+                    Err(DactylError::Config(
+                        "supabase support is disabled; enable the `supabase` feature".into(),
+                    ))
+                }
             }
         }
-        Ok(())
     }
 
     pub fn transport(&self) -> DatastoreTransport {
