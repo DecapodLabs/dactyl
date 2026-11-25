@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d33f9b1657398d60a2bf14b2eacf178f4ab344c6",
+    "accepted_commit": "0d1ac859273cc76892823a06adabd4d19eccf9c5",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -112,56 +112,54 @@
     }
   },
   "change": {
-    "id": "pr-144",
-    "base_commit": "d33f9b1657398d60a2bf14b2eacf178f4ab344c6",
+    "id": "change_01M87ZNQHK6C4NKQBMSQ6JWM15",
+    "base_commit": "0d1ac859273cc76892823a06adabd4d19eccf9c5",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim:dactyl-transport-load-fairness-144": {
-      "statement": "Dactyl #144 enforces FIFO mixed sync/async slot fairness, clean cancellation forwarding, aggregate 64-slot/64-pool ceilings, combined queue+execution deadlines with pre-send NotAttempted parity, and verified sustained/burst load baseline thresholds without adding tenant admission policy.",
-      "falsifier": "Any failure in transport_load_fairness_144, http_pool::pool_tests, http_pool_async, resource_budgets, fmt, or clippy across feature matrix, or any slot leak/starvation/uncertain pre-send timeout.",
+    "claim:dactyl-trust-egress-and-advisory-remediation": {
+      "statement": "Dactyl #1944 enforces zero-egress local SQLite, HTTPS/literal-loopback and no-redirect fail-closed validation across Neon and Supabase, exhaustive src callsite inventory, zero-vulnerability Cargo.lock (quinn-udp 0.5.16, url 2.5.9, rustix 1.1.6), and split Pages build+deploy CI.",
+      "falsifier": "Any failure in trust_and_egress, feature matrix, fmt, clippy, cargo audit, MSRV 1.85 check, or Pages/CI workflows, or any outbound socket in sqlite mode or followed redirect.",
       "status": "supported",
       "proof_refs": [
-        "docs/transport-load-baseline.md",
-        "src/http_pool.rs",
-        "tests/transport_load_fairness_144.rs"
+        ".github/workflows/pages.yml",
+        ".github/workflows/rust-contract.yml",
+        "Cargo.lock",
+        "docs/trust-and-egress-inventory.md",
+        "tests/trust_and_egress.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-144-final",
-      "summary": "Phase 4 #144 FIFO RequestLimit, pre-send NotAttempted parity, load baseline doc, and transport_load_fairness_144 suite",
-      "input_digest": "sha256:3ccbaf63dcbac667a476ef42aab80702ae90fb80c5f34190105b472b79600a19",
+      "id": "cp-1944-trust-gate",
+      "summary": "Fix Pages workflow, patch quinn-udp RUSTSEC-2026-0538 & url RUSTSEC-2026-0592, implement #1944 trust & zero-egress gate, update living specs",
+      "input_digest": "sha256:b34d2eadbbefc0195bcd98784dfe5ab51b42b20532287d3be38f0c5a39e241fd",
       "proof_refs": [
-        "docs/transport-load-baseline.md",
-        "tests/transport_load_fairness_144.rs"
+        "docs/trust-and-egress-inventory.md",
+        "tests/trust_and_egress.rs"
       ]
     }
   ],
   "intents": {
-    "intent:run-144": {
+    "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No tenant admission policy in Dactyl (Propodus owns that); no paid infrastructure; preserve Dockerfile.decapod 0.162.1 CI parity."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/http_pool.rs",
-        "src/adapter/neon/mod.rs",
-        "src/cloud.rs",
-        "docs/transport-load-baseline.md",
-        "tests/transport_load_fairness_144.rs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run-144",
+      "id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Hardening #144: mixed sync/async HTTP pool limits, cancellation, fairness, and load baseline",
-      "refined_intent": "Measure and harden Dactyl HTTP pool limits, cancellation release, mixed sync/async fairness, pre-send vs post-send timeout/uncertain semantics, and document transport load baseline and regression thresholds.",
+      "raw_intent": "Dactyl #1944 trust & zero-egress gate, quinn-udp advisory, Pages fix, v0.19.1\n\nTrack 2: fix Pages workflow, patch quinn-udp RUSTSEC-2026-0538 & rustix, implement #1944 trust & zero-egress gate, update living specs, merge & cut v0.19.1",
+      "refined_intent": "Dactyl #1944 trust & zero-egress gate, quinn-udp advisory, Pages fix, v0.19.1\n\nTrack 2: fix Pages workflow, patch quinn-udp RUSTSEC-2026-0538 & rustix, implement #1944 trust & zero-egress gate, update living specs, merge & cut v0.19.1",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -174,67 +172,57 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prove aggregate HTTP pool limits, cancellation release, mixed sync/async fairness, typed pre-send/post-send timeout/uncertain outcomes, and capture a reproducible transport load baseline for DecapodLabs/dactyl#144.",
+      "intent": "Dactyl #1944 trust & zero-egress gate, quinn-udp advisory, Pages fix, v0.19.1\n\nTrack 2: fix Pages workflow, patch quinn-udp RUSTSEC-2026-0538 & rustix, implement #1944 trust & zero-egress gate, update living specs, merge & cut v0.19.1",
       "phases": [],
       "proof_hooks": [
-        "cargo fmt --all -- --check",
-        "cargo clippy --locked --all-targets --all-features -- -D warnings",
-        "cargo test --locked --all-features"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #144 FIFO RequestLimit, WaiterGuard cancellation handoff, pre-send NotAttempted alignment, and transport load baseline.",
-          "reviewed_code_fingerprint": "d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f",
-          "spec_material_hash": "34b50a762cd9aa792bf9a227c00eb8e05aedeef8751c0120f4f01ad854f90f58"
+          "reason": "Documented centralized validate_endpoint, Neon verify_response_origin, and trust callsite inventory.",
+          "reviewed_code_fingerprint": "aea1bc096a07434e91ee51ea9cdbb138a21ca2b31ab9a594f636f7f5364fe194",
+          "spec_material_hash": "a3b7484ed940b10d281fd42383981df72c7dd572969eccd32d3cc815ea38b49c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented #144 unified queue+execution request_timeout semantics, pre-send NotAttempted guarantees, and Propodus tenant policy boundary.",
-          "reviewed_code_fingerprint": "d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f",
-          "spec_material_hash": "9ebfaf9ff553ae6ae87c6163ec642bff798f74bbbc3a7c550d2065cf2b884588"
+          "reason": "Documented DatastoreRoute::validate Neon coverage and quinn-udp/url dependency bounds.",
+          "reviewed_code_fingerprint": "aea1bc096a07434e91ee51ea9cdbb138a21ca2b31ab9a594f636f7f5364fe194",
+          "spec_material_hash": "7bdcc0e40b375f552ed625a6ec24c25cac91ffcf0a2f717efdb15bab39dbd700"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed spec fingerprint; #144 preserves existing auth/DPoP/origin security invariants while clarifying pre-send timeout classification.",
-          "reviewed_code_fingerprint": "d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f",
-          "spec_material_hash": "6f1e84f8aca1e72d0ad21ae5ed3c88e6d1bc15a2f68f94abc6a8acfae91ea736"
+          "reason": "Documented #1944 trust/egress inventory, quinn-udp/url advisory fixes, and cargo audit CI check.",
+          "reviewed_code_fingerprint": "aea1bc096a07434e91ee51ea9cdbb138a21ca2b31ab9a594f636f7f5364fe194",
+          "spec_material_hash": "73366628de8b0ea827ddff745f297eb811cc6494415f993c8622380dda30de6d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Phase 4 Hardening #144: Transport Load & Fairness Baseline",
+      "title": "Dactyl #1944 trust & zero-egress gate, quinn-udp advisory, Pages fix, v0.19.1",
       "todo_ids": [
-        "code_01m85w2bthajzrgz"
+        "bugs_01m87zmegws3t4r4"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795494373Z"
+      "updated_at": "1795565138Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No tenant admission policy in Dactyl (Propodus owns that); no paid infrastructure; preserve Dockerfile.decapod 0.162.1 CI parity."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ce6a18c74bf003b42d2238ff8f20e9342992c69a1158b5a25942d24e694c900c",
+      "artifact_hash": "sha256:4e648bc515b46a0f6ac0cea5c05f57f247f03a8fc37d34ee2313eff77f8d330f",
       "checks": [
         {
+          "name": "cargo-audit",
+          "status": "passed"
+        },
+        {
           "name": "cargo-clippy-all-features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-clippy-neon",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-clippy-no-default-features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-clippy-supabase",
           "status": "passed"
         },
         {
@@ -242,42 +230,37 @@
           "status": "passed"
         },
         {
-          "name": "cargo-test-all-features",
+          "name": "cargo-msrv-1.85-check",
           "status": "passed"
         },
         {
-          "name": "hosted_supabase",
-          "status": "unavailable"
+          "name": "cargo-test-feature-matrix",
+          "status": "passed"
         },
         {
-          "name": "live_propodus",
-          "status": "unavailable"
-        },
-        {
-          "name": "local_postgres",
-          "status": "unavailable"
+          "name": "cargo-test-trust-and-egress",
+          "status": "passed"
         }
       ],
-      "completion_claim": "Phase 4 #144 transport load/fairness baseline, FIFO sync/async RequestLimit, WaiterGuard cancellation handoff, and pre-send NotAttempted timeout parity verified on loopback HTTP; external Postgres/Supabase/Propodus backends unavailable offline.",
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-144",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-144",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-144",
+            "detail": "trajectory:branch_01M87ZNQTB4Z98PNGZRKAQBX53",
             "event_id": "event:4",
-            "intent_id": "intent:run-144",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -286,47 +269,51 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-144": {
+          "branch_01M87ZNQTB4Z98PNGZRKAQBX53": {
             "evidence_only": true,
-            "id": "run-144",
-            "intent_id": "intent:run-144",
+            "id": "branch_01M87ZNQTB4Z98PNGZRKAQBX53",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
             "steps": [
               {
-                "action": "validation",
-                "command": "cargo fmt --all -- --check",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".github/workflows/pages.yml",
+                  ".github/workflows/rust-contract.yml",
+                  "src/lib.rs",
                   "src/http_pool.rs",
-                  "src/budget.rs",
-                  "src/adapter/neon/mod.rs",
                   "src/cloud.rs",
-                  "tests/http_pool_async.rs",
-                  "tests/resource_budgets.rs",
+                  "src/connector.rs",
+                  "src/adapter/neon/mod.rs",
+                  "src/adapter/supabase.rs",
+                  "src/adapter/sqlite/mod.rs",
+                  "src/adapter/sqlite/ffi.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".github/workflows/pages.yml",
+                  ".github/workflows/rust-contract.yml",
+                  "tools/proof/Containerfile",
+                  ".decapod/config.toml",
                   "src/http_pool.rs",
                   "src/adapter/neon/mod.rs",
-                  "src/cloud.rs",
-                  "docs/transport-load-baseline.md",
-                  "tests/transport_load_fairness_144.rs",
-                  "cargo test --locked --all-features: 26 suites, 195 passed, 0 failed, 8 ignored (pre-existing external DB/perf tests)",
-                  "tests/transport_load_fairness_144.rs: 4/4 passed; sustained 240+3 ops total p50/p95/p99=125.04/225.71/232.92ms, service p50/p95/p99=6.66/9.16/9.53ms, queue p50/p95/p99=119.50/219.53/227.49ms, burst 160 ops ok=31/cancelled=16/faults=113, post-drop open_conns=0"
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "docs/trust-and-egress-inventory.md",
+                  "tests/trust_and_egress.rs",
+                  "0 vulnerabilities in cargo audit; all feature matrix and trust_and_egress tests passed"
                 ],
                 "proof_refs": [
                   "cargo-fmt",
                   "cargo-clippy-all-features",
-                  "cargo-clippy-neon",
-                  "cargo-clippy-supabase",
-                  "cargo-clippy-no-default-features",
-                  "cargo-test-all-features",
-                  "local_postgres",
-                  "hosted_supabase",
-                  "live_propodus"
+                  "cargo-test-feature-matrix",
+                  "cargo-test-trust-and-egress",
+                  "cargo-msrv-1.85-check",
+                  "cargo-audit"
                 ],
                 "scope": [
-                  "docs/transport-load-baseline.md",
-                  "src/adapter/neon/mod.rs",
-                  "src/cloud.rs",
-                  "src/http_pool.rs",
-                  "tests/transport_load_fairness_144.rs"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -335,42 +322,73 @@
           }
         }
       },
-      "declared_commands": [
-        "cargo clippy --locked --all-targets --all-features -- -D warnings",
-        "cargo fmt --all -- --check",
-        "cargo test --locked --all-features"
-      ],
+      "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "cargo test --locked --all-features: 26 suites, 195 passed, 0 failed, 8 ignored (pre-existing external DB/perf tests)",
-        "tests/transport_load_fairness_144.rs: 4/4 passed; sustained 240+3 ops total p50/p95/p99=125.04/225.71/232.92ms, service p50/p95/p99=6.66/9.16/9.53ms, queue p50/p95/p99=119.50/219.53/227.49ms, burst 160 ops ok=31/cancelled=16/faults=113, post-drop open_conns=0"
+        "0 vulnerabilities in cargo audit; all feature matrix and trust_and_egress tests passed"
+      ],
+      "execution_checkpoints": [
+        {
+          "binding": {
+            "governance_digest": "sha256:5e37c28ab7656122ae8683d2e78afe4f95e50877771f75f42ff85ff6e47b0807",
+            "head_revision": "0d1ac859273cc76892823a06adabd4d19eccf9c5",
+            "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
+            "material_digest": "sha256:a18d0c3db1a8e00912a9f1a7545374d5ff9d549a67ad489771cbadf9f0cd8da1",
+            "plan_digest": "sha256:f9af1944aa24e885c7875a7917941635336c0f1ad37909779b5158ea52516b32",
+            "policy_digest": "sha256:ba2406e69d4b899d252d1d3e53e800b1f10a59ecaa65dee07e77af3d32de7a53",
+            "required_approvals": [],
+            "run_id": "branch_01M87ZNQTB4Z98PNGZRKAQBX53",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:d01c1ee8ec5e6d5bae33929ba4c1f3578edff633199fd95c21f722cd42f2ed8b",
+            "task_id": "bugs_01m87zmegws3t4r4",
+            "trajectory_digest": "sha256:b6c5c83a3c1ca0ff937903597a1bd80add3c714f019e3d25ead05e2dcc4bec3e",
+            "validation_epoch_digest": "sha256:37e2f56877c781144f2c8618218fe6a04a10ade00c27a55504fb5a980e665ffe",
+            "work_branch": "agent/agy-track2/bugs_01m87zmegws3t4r4-security-trust"
+          },
+          "binding_digest": "sha256:83659b3a3c4aac24f98ba78fbf6064676f77867f8b1944c081dbd178dce7c0ca",
+          "checkpoint_id": "cp-1944-trust-gate",
+          "sequence": 1
+        }
       ],
       "inspected_files": [
+        ".github/workflows/pages.yml",
+        ".github/workflows/rust-contract.yml",
+        "Cargo.lock",
+        "Cargo.toml",
         "src/adapter/neon/mod.rs",
-        "src/budget.rs",
+        "src/adapter/sqlite/ffi.rs",
+        "src/adapter/sqlite/mod.rs",
+        "src/adapter/supabase.rs",
         "src/cloud.rs",
+        "src/connector.rs",
         "src/http_pool.rs",
-        "tests/http_pool_async.rs",
-        "tests/resource_budgets.rs"
+        "src/lib.rs"
       ],
-      "intent_id": "intent:run-144",
+      "intent_id": "intent:change_01M87ZNQHK6C4NKQBMSQ6JWM15",
       "modified_files": [
-        "docs/transport-load-baseline.md",
+        ".decapod/config.toml",
+        ".github/workflows/pages.yml",
+        ".github/workflows/rust-contract.yml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "docs/trust-and-egress-inventory.md",
         "src/adapter/neon/mod.rs",
-        "src/cloud.rs",
+        "src/adapter/supabase.rs",
         "src/http_pool.rs",
-        "tests/transport_load_fairness_144.rs"
+        "src/lib.rs",
+        "tests/trust_and_egress.rs",
+        "tools/proof/Containerfile"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "docs/transport-load-baseline.md",
-        "src/adapter/neon/mod.rs",
-        "src/cloud.rs",
-        "src/http_pool.rs",
-        "tests/transport_load_fairness_144.rs"
+        "root"
       ],
-      "run_id": "run-144",
+      "run_id": "branch_01M87ZNQTB4Z98PNGZRKAQBX53",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m85w2bthajzrgz",
+      "task_id": "bugs_01m87zmegws3t4r4",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

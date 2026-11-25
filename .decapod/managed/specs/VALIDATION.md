@@ -1,5 +1,10 @@
 # Validation
 
+## Permanent trust & zero-egress gate and advisory CI check (issue #1944)
+
+- **`tests/trust_and_egress.rs` (`#1944`)**: Runs across every feature combination (`--no-default-features`, `--features sqlite`, `--features neon`, `--features supabase`, `--all-features`) to verify: (1) all `src/` transport/socket/env/FFI callsites are accounted for in `docs/trust-and-egress-inventory.md` and `sqlite` never pulls `reqwest`/`tokio`/`url`/`quinn`; (2) `sqlite` mode creates zero outbound TCP connections even when canary `SUPABASE_*`, `DATABASE_URL`, `DATASTORE=supabase`, and home credential files exist; and (3) `NeonAdapter`, `SupabaseAdapter`, and `CloudConnector` fail closed on non-HTTPS/non-loopback URLs, mismatched `project_origin` discovery profiles, invalid `browser_url` handoffs, and `302`/`307`/`308` redirects without contacting redirect targets or leaking tokens.
+- **`.github/workflows/rust-contract.yml` & controller alignment**: Installs `cargo-audit` via `taiki-e/install-action@cargo-audit` and runs `cargo audit` on every PR and `main`/`master` push alongside formatting, clippy, and the full feature matrix; `tools/proof/Containerfile` aligns the `decapod` controller pin to `=0.164.1` matching the host/release-bound projections.
+
 ## Transport load, cancellation, fairness, and baseline suite (issue #144)
 
 - **`src/http_pool.rs` (`pool_tests`) & `tests/transport_load_fairness_144.rs` (`#144`)**:
@@ -337,15 +342,15 @@ Generated capability obligations: `public-api` is declared for this project. The
 ## Codebase Contract Snapshot
 
 - CI workflows (4): `.github/workflows/decapod-validate.yml`, `.github/workflows/pages.yml`, `.github/workflows/release.yml`, `.github/workflows/rust-contract.yml`
-- Integration test targets (27): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/release_configuration.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, `tests/sqlite_inspection.rs`, `tests/sqlite_maintenance.rs`, (+11 more)
+- Integration test targets (28): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/release_configuration.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, `tests/sqlite_inspection.rs`, `tests/sqlite_maintenance.rs`, (+12 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
+- Repository signal fingerprint: `aea1bc096a07434e91ee51ea9cdbb138a21ca2b31ab9a594f636f7f5364fe194`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

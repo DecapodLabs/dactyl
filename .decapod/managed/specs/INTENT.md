@@ -1,5 +1,11 @@
 # Intent
 
+## Permanent trust & zero-egress gate, advisory remediation, and Pages fix (issue #1944)
+
+- **Zero-egress local SQLite & negative-control transport gate (`#1944`)**: Formalizes and tests Dactyl's zero-egress local SQLite contract, fail-closed HTTPS/literal-loopback endpoint validation across both `NeonAdapter` and `SupabaseAdapter`, and redirect/cross-origin rejection across all HTTP adapters in `docs/trust-and-egress-inventory.md` and `tests/trust_and_egress.rs`.
+- **Security advisory remediation (`RUSTSEC-2026-0538`, `RUSTSEC-2026-0592`)**: Constrains inactive `quinn-udp` (`>=0.5.16, <0.6` under `[target.'cfg(any())'.dependencies]`) and active `url` (`>=2.5.9, <3`) in `Cargo.toml` and `Cargo.lock`, keeps `rustix` at `1.1.6`, and adds `cargo audit` to `.github/workflows/rust-contract.yml`.
+- **GitHub Pages deployment fix**: Splits `.github/workflows/pages.yml` into separate `build` (`actions/configure-pages@v5`, `actions/upload-pages-artifact@v3`) and `deploy` (`needs: build`, `actions/deploy-pages@v4`) jobs so `deploy-pages@v4` reliably finds the uploaded `github-pages` artifact.
+
 ## Phase 4 transport load, fairness, cancellation, and regression baseline (issue #144)
 
 - **Aggregate pool limits, cancellation, and FIFO sync/async fairness (`#144`)**: Hardens `src/http_pool.rs`, `src/adapter/neon/mod.rs`, and `src/cloud.rs` so `RequestLimit` enforces FIFO arrival-order slot handoff across synchronous and asynchronous callers without barging or thundering-herd wakeups, drops/cancellations forward granted slots cleanly via `WaiterGuard`, and pre-send `request_timeout` expirations (including after permit acquisition prior to `.send()`) classify consistently as `AdapterErrorKind::Timeout` + `MutationOutcome::NotAttempted`.
@@ -235,16 +241,16 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 60 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (30), `tools/` (3)
-- Core modules: 12 | Workflows: 4 | Integration targets: 27
+- Tracked significant codebase files: 61 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (31), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 28
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d48c9e1e1cd75ab5e3686715792172387e10225b2b045bd903caa1e115775a6f`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (30 files), `tools/` (3 files)
+- Repository signal fingerprint: `aea1bc096a07434e91ee51ea9cdbb138a21ca2b31ab9a594f636f7f5364fe194`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
