@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0](https://github.com/DecapodLabs/dactyl/compare/v0.20.0...v0.21.0) (2026-11-27)
+
+
+### Features
+
+* **error:** add typed OperationalDisposition with CloudRecoveryFacts integration ([#150](https://github.com/DecapodLabs/dactyl/issues/150)) ([65266f1](https://github.com/DecapodLabs/dactyl/commit/65266f13ccc524d2c599e97619dba88724be1a11))
+* **error:** add typed OperationalDisposition with CloudRecoveryFacts integration ([#150](https://github.com/DecapodLabs/dactyl/issues/150)) ([04457cb](https://github.com/DecapodLabs/dactyl/commit/04457cb3209157b0cd7799e64ddb27a7a629bcf9))
+
 ## [0.20.0](https://github.com/DecapodLabs/dactyl/compare/v0.19.1...v0.20.0) (2026-11-27)
 
 
