@@ -24,9 +24,10 @@ use sha2::{Digest, Sha256};
 
 #[cfg(feature = "supabase")]
 use crate::connector::{
-    validate_dpop_nonce, validate_provenance_token, AuthScheme, CloudResponseMetadata,
-    DecisionOutcome, EffectProvenance, EffectStatus, ObservationSource, OperationAttempt,
-    RequestProofInput, RequestProofSigner, PROVENANCE_CONTRACT_VERSION,
+    validate_dpop_nonce, validate_provenance_token, AuthScheme, CloudRecoveryFacts,
+    CloudResponseMetadata, DecisionOutcome, EffectProvenance, EffectStatus, ExecutionPhase,
+    ObservationSource, OperationAttempt, RecoveryActionCategory, RequestProofInput,
+    RequestProofSigner, PROVENANCE_CONTRACT_VERSION,
 };
 #[cfg(feature = "supabase")]
 use crate::OperationKind;
@@ -818,6 +819,14 @@ fn can_retry_dpop_nonce<T>(first: &HttpOutcome<T>, unauthorized: bool, auth: &Au
                     p.status(),
                     EffectStatus::Uncertain | EffectStatus::CommittedObserved
                 )
+            })
+        || first
+            .1
+            .as_ref()
+            .and_then(CloudResponseMetadata::recovery)
+            .is_some_and(|r| {
+                r.action_category() == RecoveryActionCategory::OutcomeUnknown
+                    || r.execution_phase() == ExecutionPhase::AfterSend
             });
     unauthorized
         && first.0.as_ref().err().and_then(DactylError::adapter_code) == Some("use_dpop_nonce")
@@ -1017,22 +1026,82 @@ pub(crate) fn allowlisted_cloud_code(raw: &str) -> Option<&'static str> {
         "dpop_aud_mismatch" => Some("dpop_aud_mismatch"),
         "stolen_bearer" => Some("stolen_bearer"),
         "device_revoked" => Some("device_revoked"),
+        "device_key_revoked" => Some("device_key_revoked"),
+        "device_key_not_found" => Some("device_key_not_found"),
         "device_key_expired" => Some("device_key_expired"),
+        "device_session_required" => Some("device_session_required"),
+        "device_session_revoked" => Some("device_session_revoked"),
+        "challenge_consumed" => Some("challenge_consumed"),
+        "challenge_expired" => Some("challenge_expired"),
         "refresh_reuse_detected" => Some("refresh_reuse_detected"),
         "device_not_enrolled" => Some("device_not_enrolled"),
         "authorization_denied" => Some("authorization_denied"),
         "mfa_step_up_required" => Some("mfa_step_up_required"),
+        "aal2_step_up_required" => Some("aal2_step_up_required"),
+        "aal2_required" => Some("aal2_required"),
+        "stepup_required" => Some("stepup_required"),
+        "provider_link_stepup_required" => Some("provider_link_stepup_required"),
+        "approval_required" => Some("approval_required"),
         "provider_disabled" => Some("provider_disabled"),
         "repo_access_denied" => Some("repo_access_denied"),
         "repository_not_authorized" => Some("repository_not_authorized"),
+        "repo_binding_mismatch" => Some("repo_binding_mismatch"),
+        "org_binding_mismatch" => Some("org_binding_mismatch"),
+        "grant_required" => Some("grant_required"),
+        "grant_not_found" => Some("grant_not_found"),
         "grant_revoked" => Some("grant_revoked"),
         "grant_expired" => Some("grant_expired"),
+        "grant_stale_generation" => Some("grant_stale_generation"),
+        "grant_session_mismatch" => Some("grant_session_mismatch"),
         "scope_denied" => Some("scope_denied"),
+        "scope_required" => Some("scope_required"),
+        "path_scope_denied" => Some("path_scope_denied"),
+        "resource_scope_denied" => Some("resource_scope_denied"),
+        "task_scope_denied" => Some("task_scope_denied"),
+        "workspace_scope_denied" => Some("workspace_scope_denied"),
+        "custody_scope_denied" => Some("custody_scope_denied"),
+        "capability_denied" => Some("capability_denied"),
+        "audience_mismatch" => Some("audience_mismatch"),
+        "parameter_constraint_denied" => Some("parameter_constraint_denied"),
+        "delegation_widening_denied" => Some("delegation_widening_denied"),
+        "spoofed_authority_claim" => Some("spoofed_authority_claim"),
+        "policy_not_bound" => Some("policy_not_bound"),
         "entitlement_required" => Some("entitlement_required"),
+        "entitlement_denied" => Some("entitlement_denied"),
         "organization_seat_required" => Some("organization_seat_required"),
+        "organization_already_enrolled" => Some("organization_already_enrolled"),
+        "admin_approval_required" => Some("admin_approval_required"),
+        "admin_required" => Some("admin_required"),
+        "owner_required" => Some("owner_required"),
+        "provider_quarantined" => Some("provider_quarantined"),
+        "quarantined_provider_link" => Some("quarantined_provider_link"),
+        "paid_seat_required" => Some("paid_seat_required"),
+        "seat_capacity_exceeded" => Some("seat_capacity_exceeded"),
+        "seat_limit" => Some("seat_limit"),
+        "seat_limit_reached" => Some("seat_limit_reached"),
         "seat_required" => Some("seat_required"),
         "seat_unassigned" => Some("seat_unassigned"),
         "seat_revoked" => Some("seat_revoked"),
+        "seat_available_for_assignment" => Some("seat_available_for_assignment"),
+        "repository_capacity_exhausted" => Some("repository_capacity_exhausted"),
+        "repository_reservation_exhausted" => Some("repository_reservation_exhausted"),
+        "reservation_available_for_binding" => Some("reservation_available_for_binding"),
+        "repository_not_approved" => Some("repository_not_approved"),
+        "repository_access_denied" => Some("repository_access_denied"),
+        "code_host_link_required" => Some("code_host_link_required"),
+        "repository_verification_required" => Some("repository_verification_required"),
+        "unverified_repository" => Some("unverified_repository"),
+        "organization_verification_required" => Some("organization_verification_required"),
+        "signup_required" => Some("signup_required"),
+        "payment_required" => Some("payment_required"),
+        "pending_fulfillment" => Some("pending_fulfillment"),
+        "tenant_upgrade_required" => Some("tenant_upgrade_required"),
+        "tenant_upgrading" => Some("tenant_upgrading"),
+        "tenant_suspended" => Some("tenant_suspended"),
+        "tenant_archived" => Some("tenant_archived"),
+        "org_recovery_required" => Some("org_recovery_required"),
+        "policy_template_conflict" => Some("policy_template_conflict"),
+        "provenance_origin_mismatch" => Some("provenance_origin_mismatch"),
         "account_setup_required" => Some("account_setup_required"),
         "identity_link_required" => Some("identity_link_required"),
         "custody_conflict" => Some("custody_conflict"),
@@ -1041,15 +1110,24 @@ pub(crate) fn allowlisted_cloud_code(raw: &str) -> Option<&'static str> {
         "invitation_expired" => Some("invitation_expired"),
         "invitation_not_found" => Some("invitation_not_found"),
         "project_not_found" => Some("project_not_found"),
+        "repository_not_found" => Some("repository_not_found"),
+        "target_not_found" => Some("target_not_found"),
+        "attempt_not_found" => Some("attempt_not_found"),
         "quote_confirmation_required" => Some("quote_confirmation_required"),
         "billing_binding_required" => Some("billing_binding_required"),
         "payment_pending" => Some("payment_pending"),
         "billing_not_configured" => Some("billing_not_configured"),
         "billing_unavailable" => Some("billing_unavailable"),
         "provider_unavailable" => Some("provider_unavailable"),
+        "service_unavailable" => Some("service_unavailable"),
+        "overage_not_enabled" => Some("overage_not_enabled"),
+        "paid_overages_disabled" => Some("paid_overages_disabled"),
         "quota_exceeded" => Some("quota_exceeded"),
         "overage_cap_exhausted" => Some("overage_cap_exhausted"),
+        "capacity_exceeded" => Some("capacity_exceeded"),
+        "result_limit_exceeded" => Some("result_limit_exceeded"),
         "invalid_request" => Some("invalid_request"),
+        "invalid_scope" => Some("invalid_scope"),
         "payload_too_large" => Some("payload_too_large"),
         "rate_limited" => Some("rate_limited"),
         "method_not_allowed" => Some("method_not_allowed"),
@@ -1058,15 +1136,28 @@ pub(crate) fn allowlisted_cloud_code(raw: &str) -> Option<&'static str> {
         "flow_not_found" => Some("flow_not_found"),
         "invalid_flow_state" => Some("invalid_flow_state"),
         "version_conflict" => Some("version_conflict"),
+        "revision_conflict" => Some("revision_conflict"),
+        "prestate_conflict" => Some("prestate_conflict"),
+        "lease_conflict" => Some("lease_conflict"),
+        "stale_reconciliation" => Some("stale_reconciliation"),
+        "reconciliation_not_ready" => Some("reconciliation_not_ready"),
+        "reconciliation_required" => Some("reconciliation_required"),
+        "remote_creation_recovery_required" => Some("remote_creation_recovery_required"),
+        "effect_not_observed" => Some("effect_not_observed"),
+        "request_conflict" => Some("request_conflict"),
         "idempotency_conflict" => Some("idempotency_conflict"),
         "idempotency_in_progress" => Some("idempotency_in_progress"),
         "transaction_aborted" => Some("transaction_aborted"),
+        "outcome_integrity_failed" => Some("outcome_integrity_failed"),
         "storage_failure" => Some("storage_failure"),
         "storage_unavailable" => Some("storage_unavailable"),
+        "unsupported_operation" => Some("unsupported_operation"),
         "unsupported_query" => Some("unsupported_query"),
         "unsupported_type" => Some("unsupported_type"),
+        "unsupported_codec" => Some("unsupported_codec"),
         "unsupported_schema" => Some("unsupported_schema"),
         "unsupported_rpc" => Some("unsupported_rpc"),
+        "legacy_endpoint_retired" => Some("legacy_endpoint_retired"),
         "missing_context" => Some("missing_context"),
         "invalid_context" => Some("invalid_context"),
         "malformed_context" => Some("malformed_context"),
@@ -1090,6 +1181,353 @@ pub(crate) fn allowlisted_cloud_code(raw: &str) -> Option<&'static str> {
         "outcome_unknown" => Some("outcome_unknown"),
         "unsupported_provenance" => Some("unsupported_provenance"),
         _ => None,
+    }
+}
+
+/// Map an allowlisted cloud error code and HTTP status to a coarse
+/// [`AdapterErrorKind`], returning `None` when the HTTP status fallback should
+/// decide.
+#[cfg(feature = "supabase")]
+pub(crate) fn cloud_error_kind_for_code(status: u16, code: &str) -> Option<AdapterErrorKind> {
+    match code {
+        "authentication_required"
+        | "invalid_token"
+        | "invalid_grant"
+        | "bad_jwt"
+        | "session_expired"
+        | "session_revoked"
+        | "session_not_found"
+        | "expired_credential"
+        | "refresh_token_not_found"
+        | "refresh_token_already_used"
+        | "use_dpop_nonce"
+        | "invalid_dpop_proof"
+        | "invalid_binding"
+        | "dpop_proof_required"
+        | "missing_dpop_proof"
+        | "dpop_replay"
+        | "dpop_nonce_mismatch"
+        | "dpop_clock_skew"
+        | "dpop_ath_mismatch"
+        | "dpop_htu_mismatch"
+        | "dpop_htm_mismatch"
+        | "dpop_jkt_mismatch"
+        | "dpop_aud_mismatch"
+        | "stolen_bearer"
+        | "device_revoked"
+        | "device_key_revoked"
+        | "device_key_not_found"
+        | "device_key_expired"
+        | "device_session_required"
+        | "device_session_revoked"
+        | "challenge_consumed"
+        | "challenge_expired"
+        | "refresh_reuse_detected"
+        | "device_not_enrolled" => Some(AdapterErrorKind::Authentication),
+        "authorization_denied"
+        | "mfa_step_up_required"
+        | "aal2_step_up_required"
+        | "aal2_required"
+        | "stepup_required"
+        | "provider_link_stepup_required"
+        | "approval_required"
+        | "provider_disabled"
+        | "repo_access_denied"
+        | "repository_not_authorized"
+        | "repository_access_denied"
+        | "repository_not_approved"
+        | "repo_binding_mismatch"
+        | "org_binding_mismatch"
+        | "grant_required"
+        | "grant_not_found"
+        | "grant_revoked"
+        | "grant_expired"
+        | "grant_stale_generation"
+        | "grant_session_mismatch"
+        | "scope_denied"
+        | "scope_required"
+        | "path_scope_denied"
+        | "resource_scope_denied"
+        | "task_scope_denied"
+        | "workspace_scope_denied"
+        | "custody_scope_denied"
+        | "capability_denied"
+        | "audience_mismatch"
+        | "parameter_constraint_denied"
+        | "delegation_widening_denied"
+        | "spoofed_authority_claim"
+        | "policy_not_bound"
+        | "entitlement_required"
+        | "entitlement_denied"
+        | "organization_seat_required"
+        | "admin_approval_required"
+        | "admin_required"
+        | "owner_required"
+        | "provider_quarantined"
+        | "quarantined_provider_link"
+        | "paid_seat_required"
+        | "seat_limit"
+        | "seat_limit_reached"
+        | "seat_required"
+        | "seat_unassigned"
+        | "seat_revoked"
+        | "code_host_link_required"
+        | "repository_verification_required"
+        | "unverified_repository"
+        | "organization_verification_required"
+        | "signup_required"
+        | "payment_required"
+        | "pending_fulfillment"
+        | "billing_binding_required"
+        | "overage_not_enabled"
+        | "paid_overages_disabled"
+        | "tenant_upgrade_required"
+        | "tenant_suspended"
+        | "tenant_archived"
+        | "org_recovery_required"
+        | "account_setup_required"
+        | "identity_link_required"
+        | "owner_protected" => Some(AdapterErrorKind::Authorization),
+        "idempotency_conflict" => Some(AdapterErrorKind::IdempotencyConflict),
+        "idempotency_in_progress" | "reconciliation_not_ready" => {
+            Some(AdapterErrorKind::IdempotencyInProgress)
+        }
+        "version_conflict" | "revision_conflict" => Some(AdapterErrorKind::VersionConflict),
+        "transaction_aborted" => Some(AdapterErrorKind::TransactionAborted),
+        "row_conflict"
+        | "custody_conflict"
+        | "prestate_conflict"
+        | "lease_conflict"
+        | "stale_reconciliation"
+        | "request_conflict"
+        | "outcome_integrity_failed"
+        | "organization_already_enrolled"
+        | "policy_template_conflict" => Some(AdapterErrorKind::Conflict),
+        "repository_capacity_exhausted"
+        | "repository_reservation_exhausted"
+        | "seat_capacity_exceeded"
+        | "capacity_exceeded" => Some(if matches!(status, 413 | 429) {
+            AdapterErrorKind::Quota
+        } else if status == 409 {
+            AdapterErrorKind::Conflict
+        } else {
+            AdapterErrorKind::Authorization
+        }),
+        "tenant_upgrading" => Some(if (500..=599).contains(&status) {
+            AdapterErrorKind::Unavailable
+        } else {
+            AdapterErrorKind::Conflict
+        }),
+        "payload_too_large"
+        | "quota_exceeded"
+        | "overage_cap_exhausted"
+        | "result_limit_exceeded" => Some(AdapterErrorKind::Quota),
+        "rate_limited" => Some(AdapterErrorKind::RateLimited),
+        "provenance_origin_mismatch" | "invalid_context" | "malformed_context" => {
+            Some(AdapterErrorKind::Protocol)
+        }
+        "invalid_request" | "method_not_allowed" => Some(AdapterErrorKind::InvalidOperation),
+        "unsupported_operation"
+        | "unsupported_query"
+        | "unsupported_type"
+        | "unsupported_codec"
+        | "unsupported_schema"
+        | "unsupported_rpc"
+        | "legacy_endpoint_retired" => Some(AdapterErrorKind::Capability),
+        "not_found"
+        | "project_not_found"
+        | "repository_not_found"
+        | "target_not_found"
+        | "attempt_not_found"
+        | "member_not_found"
+        | "invitation_not_found"
+        | "flow_not_found"
+        | "row_not_found" => Some(AdapterErrorKind::NotFound),
+        "constraint_failed"
+        | "unique_violation"
+        | "not_null_violation"
+        | "foreign_key_violation" => Some(AdapterErrorKind::Constraint),
+        "busy" => Some(AdapterErrorKind::Busy),
+        "locked" => Some(AdapterErrorKind::Locked),
+        "timeout" => Some(AdapterErrorKind::Timeout),
+        "read_only" => Some(AdapterErrorKind::ReadOnly),
+        "storage_failure" => Some(AdapterErrorKind::Storage),
+        "storage_unavailable"
+        | "provider_unavailable"
+        | "billing_unavailable"
+        | "service_unavailable" => Some(AdapterErrorKind::Unavailable),
+        _ => None,
+    }
+}
+
+#[cfg(feature = "supabase")]
+fn parse_recovery_category(raw: &str) -> Option<RecoveryActionCategory> {
+    match raw {
+        "recoverable_within_authority" => Some(RecoveryActionCategory::RecoverableWithinAuthority),
+        "refresh_reconcile_state" => Some(RecoveryActionCategory::RefreshReconcileState),
+        "requires_human_action" => Some(RecoveryActionCategory::RequiresHumanAction),
+        "denied_permanently_for_scope" => Some(RecoveryActionCategory::DeniedPermanentlyForScope),
+        "outcome_unknown" => Some(RecoveryActionCategory::OutcomeUnknown),
+        _ => None,
+    }
+}
+
+#[cfg(feature = "supabase")]
+fn parse_recovery_phase(raw: &str) -> Option<ExecutionPhase> {
+    match raw {
+        "pre_dispatch" => Some(ExecutionPhase::PreDispatch),
+        "after_send" => Some(ExecutionPhase::AfterSend),
+        _ => None,
+    }
+}
+
+#[cfg(feature = "supabase")]
+fn parse_bounded_snake_token(
+    obj: &serde_json::Map<String, serde_json::Value>,
+    key: &str,
+) -> Result<Option<String>, ()> {
+    match obj.get(key) {
+        None | Some(serde_json::Value::Null) => Ok(None),
+        Some(serde_json::Value::String(s)) => {
+            if s.is_empty()
+                || s.len() > 64
+                || !s
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+            {
+                return Err(());
+            }
+            Ok(Some(s.clone()))
+        }
+        Some(_) => Err(()),
+    }
+}
+
+#[cfg(feature = "supabase")]
+fn parse_optional_u64(
+    obj: &serde_json::Map<String, serde_json::Value>,
+    key: &str,
+) -> Result<Option<u64>, ()> {
+    match obj.get(key) {
+        None | Some(serde_json::Value::Null) => Ok(None),
+        Some(v) => v.as_u64().map(Some).ok_or(()),
+    }
+}
+
+/// Parse bounded, privacy-safe Propodus `#268` / `048` recovery facts from an
+/// untrusted Cloud JSON error envelope (`error.recovery`, top-level `recovery`,
+/// or PostgREST `details.recovery`).
+///
+/// Supports canonical `classification`/`dispatch_phase` keys as well as
+/// `action_category`/`execution_phase` aliases (rejecting conflicting pairs),
+/// enforces `version == 1`, and rejects malformed, oversized, or out-of-range
+/// fields without fabricating metadata.
+#[cfg(feature = "supabase")]
+pub(crate) fn parse_error_recovery(envelope: &serde_json::Value) -> Option<CloudRecoveryFacts> {
+    let rec = envelope
+        .get("error")
+        .and_then(|v| v.get("recovery"))
+        .or_else(|| envelope.get("recovery"))
+        .or_else(|| envelope.get("details").and_then(|v| v.get("recovery")))?;
+    let obj = rec.as_object()?;
+    let version = obj.get("version").and_then(|v| v.as_u64())?;
+    if version != 1 {
+        return None;
+    }
+
+    let cls = obj
+        .get("classification")
+        .map(|v| v.as_str().and_then(parse_recovery_category))
+        .transpose_opt()?;
+    let act = obj
+        .get("action_category")
+        .map(|v| v.as_str().and_then(parse_recovery_category))
+        .transpose_opt()?;
+    let action_category = match (cls, act) {
+        (Some(a), Some(b)) if a != b => return None,
+        (Some(a), _) | (None, Some(a)) => a,
+        (None, None) => return None,
+    };
+
+    let dp = obj
+        .get("dispatch_phase")
+        .map(|v| v.as_str().and_then(parse_recovery_phase))
+        .transpose_opt()?;
+    let ep = obj
+        .get("execution_phase")
+        .map(|v| v.as_str().and_then(parse_recovery_phase))
+        .transpose_opt()?;
+    let execution_phase = match (dp, ep) {
+        (Some(a), Some(b)) if a != b => return None,
+        (Some(a), _) | (None, Some(a)) => a,
+        (None, None) => return None,
+    };
+
+    let missing_fact = parse_bounded_snake_token(obj, "missing_fact").ok()?;
+    let authority_freshness = parse_bounded_snake_token(obj, "authority_freshness").ok()?;
+    let grant_generation = parse_optional_u64(obj, "grant_generation").ok()?;
+    let session_generation = parse_optional_u64(obj, "session_generation").ok()?;
+    let attempt_ref = match obj.get("attempt_ref") {
+        None | Some(serde_json::Value::Null) => None,
+        Some(serde_json::Value::String(s)) => {
+            if s.is_empty()
+                || s.len() > 256
+                || !s
+                    .bytes()
+                    .all(|b| b.is_ascii_graphic() && !matches!(b, b'"' | b'\\'))
+            {
+                return None;
+            }
+            Some(s.clone())
+        }
+        Some(_) => return None,
+    };
+    let retry_after_seconds = match parse_optional_u64(obj, "retry_after_seconds").ok()? {
+        None => None,
+        Some(secs) if secs <= 3600 => Some(secs),
+        Some(_) => return None,
+    };
+
+    Some(CloudRecoveryFacts::new(
+        1,
+        action_category,
+        execution_phase,
+        missing_fact,
+        authority_freshness,
+        grant_generation,
+        session_generation,
+        attempt_ref,
+        retry_after_seconds,
+    ))
+}
+
+#[cfg(feature = "supabase")]
+trait TransposeOpt<T> {
+    fn transpose_opt(self) -> Option<Option<T>>;
+}
+
+#[cfg(feature = "supabase")]
+impl<T> TransposeOpt<T> for Option<Option<T>> {
+    fn transpose_opt(self) -> Option<Option<T>> {
+        match self {
+            None => Some(None),
+            Some(Some(v)) => Some(Some(v)),
+            Some(None) => None,
+        }
+    }
+}
+
+#[cfg(feature = "supabase")]
+pub(crate) fn extract_error_recovery(
+    envelope: Option<&serde_json::Value>,
+    origin_matches: bool,
+    metadata_out: &mut CloudResponseMetadata,
+) {
+    if !origin_matches {
+        return;
+    }
+    if let Some(recovery) = envelope.and_then(parse_error_recovery) {
+        metadata_out.set_recovery(recovery);
     }
 }
 
@@ -1969,5 +2407,155 @@ mod pool_tests {
 
         held_permits.pop();
         assert!(multi_pool.acquire_permit(Instant::now()).is_ok());
+    }
+}
+
+#[cfg(all(test, feature = "supabase"))]
+mod commercial_allowlist_tests {
+    use super::{allowlisted_cloud_code, cloud_error_kind_for_code};
+    use crate::AdapterErrorKind;
+
+    #[test]
+    fn commercial_entitlement_and_disposition_codes_are_allowlisted() {
+        for code in [
+            "signup_required",
+            "payment_required",
+            "pending_fulfillment",
+            "entitlement_denied",
+            "admin_approval_required",
+            "organization_already_enrolled",
+            "paid_seat_required",
+            "seat_capacity_exceeded",
+            "repository_capacity_exhausted",
+            "repository_reservation_exhausted",
+            "reservation_available_for_binding",
+            "repository_not_approved",
+            "seat_available_for_assignment",
+            "repository_access_denied",
+            "admin_required",
+            "owner_required",
+            "provider_quarantined",
+            "quarantined_provider_link",
+            "tenant_upgrade_required",
+            "tenant_upgrading",
+            "tenant_suspended",
+            "tenant_archived",
+            "org_recovery_required",
+            "policy_template_conflict",
+            "provenance_origin_mismatch",
+        ] {
+            assert_eq!(allowlisted_cloud_code(code), Some(code));
+        }
+        assert_eq!(allowlisted_cloud_code("untrusted_arbitrary_code"), None);
+        assert_eq!(allowlisted_cloud_code(""), None);
+    }
+
+    #[test]
+    fn commercial_codes_map_to_expected_adapter_error_kinds() {
+        assert_eq!(
+            cloud_error_kind_for_code(402, "payment_required"),
+            Some(AdapterErrorKind::Authorization)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(403, "repository_access_denied"),
+            Some(AdapterErrorKind::Authorization)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(403, "tenant_suspended"),
+            Some(AdapterErrorKind::Authorization)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(409, "repository_capacity_exhausted"),
+            Some(AdapterErrorKind::Conflict)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(429, "seat_capacity_exceeded"),
+            Some(AdapterErrorKind::Quota)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(503, "tenant_upgrading"),
+            Some(AdapterErrorKind::Unavailable)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(409, "policy_template_conflict"),
+            Some(AdapterErrorKind::Conflict)
+        );
+        assert_eq!(
+            cloud_error_kind_for_code(403, "provenance_origin_mismatch"),
+            Some(AdapterErrorKind::Protocol)
+        );
+    }
+
+    #[test]
+    fn error_recovery_facts_parse_both_canonical_and_alias_keys_and_redact_attempt_ref() {
+        use super::parse_error_recovery;
+        use crate::{ExecutionPhase, RecoveryActionCategory};
+
+        let canonical = serde_json::json!({
+            "error": {
+                "code": "grant_stale_generation",
+                "message": "grant_stale_generation",
+                "recovery": {
+                    "version": 1,
+                    "classification": "refresh_reconcile_state",
+                    "dispatch_phase": "pre_dispatch",
+                    "missing_fact": "delegated_permission",
+                    "authority_freshness": "stale",
+                    "grant_generation": 7,
+                    "session_generation": 3,
+                    "retry_after_seconds": 15
+                }
+            }
+        });
+        let facts = parse_error_recovery(&canonical).expect("canonical recovery");
+        assert_eq!(facts.version(), 1);
+        assert_eq!(
+            facts.action_category(),
+            RecoveryActionCategory::RefreshReconcileState
+        );
+        assert_eq!(facts.execution_phase(), ExecutionPhase::PreDispatch);
+        assert_eq!(facts.missing_fact(), Some("delegated_permission"));
+        assert_eq!(facts.authority_freshness(), Some("stale"));
+        assert_eq!(facts.grant_generation(), Some(7));
+        assert_eq!(facts.session_generation(), Some(3));
+        assert_eq!(facts.attempt_ref(), None);
+        assert_eq!(facts.retry_after_seconds(), Some(15));
+
+        let aliased = serde_json::json!({
+            "error": {
+                "code": "reconciliation_required",
+                "recovery": {
+                    "version": 1,
+                    "action_category": "outcome_unknown",
+                    "execution_phase": "after_send",
+                    "missing_fact": "uncertain_outcome",
+                    "authority_freshness": "unknown",
+                    "attempt_ref": "att-secret-ref-268",
+                    "retry_after_seconds": 0
+                }
+            }
+        });
+        let aliased_facts = parse_error_recovery(&aliased).expect("aliased recovery");
+        assert_eq!(
+            aliased_facts.action_category(),
+            RecoveryActionCategory::OutcomeUnknown
+        );
+        assert_eq!(aliased_facts.execution_phase(), ExecutionPhase::AfterSend);
+        assert_eq!(aliased_facts.attempt_ref(), Some("att-secret-ref-268"));
+        assert_eq!(aliased_facts.retry_after_seconds(), Some(0));
+        let dbg = format!("{aliased_facts:?}");
+        assert!(dbg.contains("has_attempt_ref: true"));
+        assert!(!dbg.contains("att-secret-ref-268"));
+
+        // Reject unsupported version, conflicting aliases, out-of-range retry, or unsafe tokens.
+        for bad in [
+            serde_json::json!({"error":{"recovery":{"version":2,"classification":"outcome_unknown","dispatch_phase":"after_send"}}}),
+            serde_json::json!({"error":{"recovery":{"version":1,"classification":"outcome_unknown","action_category":"requires_human_action","dispatch_phase":"after_send"}}}),
+            serde_json::json!({"error":{"recovery":{"version":1,"classification":"outcome_unknown","dispatch_phase":"after_send","execution_phase":"pre_dispatch"}}}),
+            serde_json::json!({"error":{"recovery":{"version":1,"classification":"outcome_unknown","dispatch_phase":"after_send","retry_after_seconds":3601}}}),
+            serde_json::json!({"error":{"recovery":{"version":1,"classification":"outcome_unknown","dispatch_phase":"after_send","attempt_ref":"bad ref\n"}}}),
+        ] {
+            assert_eq!(parse_error_recovery(&bad), None);
+        }
     }
 }

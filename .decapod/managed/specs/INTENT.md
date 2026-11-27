@@ -1,5 +1,10 @@
 # Intent
 
+## Commercial cloud entitlement, reservation, recovery-facts, and origin live-test contract (issue #138)
+
+- **Allowlist & Propodus `#268` (`048`) recovery-facts alignment (`src/http_pool.rs`, `src/connector.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, `src/lib.rs`)**: Extends the Supabase transport's closed response-code allowlist with Propodus commercial enrollment, repository reservation, collaborator seat-policy, admin/custody, physical tenant lifecycle, and `#268` recovery-facts error codes (`service_unavailable`, `grant_stale_generation`, `device_session_required`, `reconciliation_required`, `remote_creation_recovery_required`, `effect_not_observed`, `reconciliation_not_ready`, `seat_limit`, `seat_limit_reached`, etc.) while continuing to reject arbitrary untrusted wire strings. Parses bounded, same-origin `error.recovery` metadata into `CloudRecoveryFacts` (`RecoveryActionCategory`, `ExecutionPhase`, `missing_fact`, `authority_freshness`, `grant_generation`, `session_generation`, `attempt_ref` redacted in `Debug`, `retry_after_seconds <= 3600`) on `CloudResponseMetadata::recovery()`, prevents `401 use_dpop_nonce` auto-retries on `after_send` or `outcome_unknown` recovery responses, and marks mutating `outcome_unknown` / `after_send` recoverable failures as `MutationOutcome::Uncertain`.
+- **Live `https://api.decapodlabs.ai` qualification gap (`2026-11-26`)**: Live probes confirm `/functions/v1/decapod-onboarding/readyz` (`200`), `/auth/providers` (`200`), `DPoP-Nonce` headers, and `error.recovery` envelopes on `cloud-query`/`cloud-control`/`/decapod/<org>/<repo>/query` (`400`/`401`), but `GET https://api.decapodlabs.ai/functions/v1/decapod-onboarding/config` still advertises `"project_origin":"https://goyxpcmxetztjlrrcwew.supabase.co"`, failing Dactyl's origin-pinned discovery check (`CloudConnector::discover`). `DEFAULT_CLOUD_ORIGIN` therefore remains `"https://goyxpcmxetztjlrrcwew.supabase.co"` while `FIRST_PARTY_CLOUD_ORIGIN` stays staged until server-side `project_origin` and OAuth `browser_url` match `https://api.decapodlabs.ai`.
+
 ## Project-opted safe local database maintenance policy (Decapod #1568)
 
 - **Narrow `[governance.db_maintenance]` opt-in (`.decapod/config.toml`)**: Opts the `dactyl-db` repository into Decapod's project-scoped local agent database maintenance policy (`enabled = true`) with only the safe diagnostic, lock-contention, and bounded online-backup capability slice (`allowed = ["db.inspect", "db.verify", "db.lock.diagnose", "db.lock.retry", "db.lock.release_own", "db.backup"]`), explicitly omitting `db.recover` (reserved for repository `owner` repair authority under Decapod `#1590`).
@@ -253,7 +258,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
+- Repository signal fingerprint: `149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

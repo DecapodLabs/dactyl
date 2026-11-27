@@ -662,6 +662,127 @@ impl ReconciliationObservation {
     }
 }
 
+/// Server-classified recovery category from Decapod Cloud `error.recovery`
+/// (`#268` / `048` recovery-facts contract).
+///
+/// This metadata never grants authority, triggers payment, or permits blind
+/// replay of uncertain mutations.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RecoveryActionCategory {
+    RecoverableWithinAuthority,
+    RefreshReconcileState,
+    RequiresHumanAction,
+    DeniedPermanentlyForScope,
+    OutcomeUnknown,
+}
+
+/// Server-observed request execution phase from Decapod Cloud `error.recovery`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecutionPhase {
+    PreDispatch,
+    AfterSend,
+}
+
+/// Bounded, privacy-safe recovery facts parsed from a same-origin Decapod Cloud
+/// `error.recovery` envelope.
+///
+/// Correlation identifiers such as `attempt_ref` are redacted in
+/// [`std::fmt::Debug`].
+#[derive(Clone, PartialEq, Eq)]
+pub struct CloudRecoveryFacts {
+    version: u16,
+    action_category: RecoveryActionCategory,
+    execution_phase: ExecutionPhase,
+    missing_fact: Option<String>,
+    authority_freshness: Option<String>,
+    grant_generation: Option<u64>,
+    session_generation: Option<u64>,
+    attempt_ref: Option<String>,
+    retry_after_seconds: Option<u64>,
+}
+
+impl std::fmt::Debug for CloudRecoveryFacts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CloudRecoveryFacts")
+            .field("version", &self.version)
+            .field("action_category", &self.action_category)
+            .field("execution_phase", &self.execution_phase)
+            .field("missing_fact", &self.missing_fact)
+            .field("authority_freshness", &self.authority_freshness)
+            .field("grant_generation", &self.grant_generation)
+            .field("session_generation", &self.session_generation)
+            .field("has_attempt_ref", &self.attempt_ref.is_some())
+            .field("retry_after_seconds", &self.retry_after_seconds)
+            .finish()
+    }
+}
+
+impl CloudRecoveryFacts {
+    #[cfg(feature = "supabase")]
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn new(
+        version: u16,
+        action_category: RecoveryActionCategory,
+        execution_phase: ExecutionPhase,
+        missing_fact: Option<String>,
+        authority_freshness: Option<String>,
+        grant_generation: Option<u64>,
+        session_generation: Option<u64>,
+        attempt_ref: Option<String>,
+        retry_after_seconds: Option<u64>,
+    ) -> Self {
+        Self {
+            version,
+            action_category,
+            execution_phase,
+            missing_fact,
+            authority_freshness,
+            grant_generation,
+            session_generation,
+            attempt_ref,
+            retry_after_seconds,
+        }
+    }
+
+    pub fn version(&self) -> u16 {
+        self.version
+    }
+
+    pub fn action_category(&self) -> RecoveryActionCategory {
+        self.action_category
+    }
+
+    pub fn execution_phase(&self) -> ExecutionPhase {
+        self.execution_phase
+    }
+
+    pub fn missing_fact(&self) -> Option<&str> {
+        self.missing_fact.as_deref()
+    }
+
+    pub fn authority_freshness(&self) -> Option<&str> {
+        self.authority_freshness.as_deref()
+    }
+
+    pub fn grant_generation(&self) -> Option<u64> {
+        self.grant_generation
+    }
+
+    pub fn session_generation(&self) -> Option<u64> {
+        self.session_generation
+    }
+
+    pub fn attempt_ref(&self) -> Option<&str> {
+        self.attempt_ref.as_deref()
+    }
+
+    pub fn retry_after_seconds(&self) -> Option<u64> {
+        self.retry_after_seconds
+    }
+}
+
 /// Bounded, redacted `DPoP-Nonce` and `Decapod-Cloud-*` diagnostic/sunset
 /// metadata and validated decision/effect provenance captured from Decapod Cloud
 /// HTTP responses.
@@ -673,6 +794,7 @@ pub struct CloudResponseMetadata {
     retry_after: Option<String>,
     cloud_headers: Vec<(String, String)>,
     provenance: Option<EffectProvenance>,
+    recovery: Option<CloudRecoveryFacts>,
 }
 
 impl std::fmt::Debug for CloudResponseMetadata {
@@ -684,6 +806,7 @@ impl std::fmt::Debug for CloudResponseMetadata {
             .field("has_retry_after", &self.retry_after.is_some())
             .field("cloud_header_count", &self.cloud_headers.len())
             .field("provenance", &self.provenance)
+            .field("recovery", &self.recovery)
             .finish()
     }
 }
@@ -722,6 +845,11 @@ impl CloudResponseMetadata {
         self.provenance.as_ref()
     }
 
+    /// Validated, same-origin `error.recovery` facts for this error response.
+    pub fn recovery(&self) -> Option<&CloudRecoveryFacts> {
+        self.recovery.as_ref()
+    }
+
     #[cfg(feature = "supabase")]
     pub(crate) fn set_dpop_nonce(&mut self, nonce: String) {
         self.dpop_nonce = Some(nonce);
@@ -749,6 +877,11 @@ impl CloudResponseMetadata {
 
     pub(crate) fn set_provenance(&mut self, provenance: EffectProvenance) {
         self.provenance = Some(provenance);
+    }
+
+    #[cfg(feature = "supabase")]
+    pub(crate) fn set_recovery(&mut self, recovery: CloudRecoveryFacts) {
+        self.recovery = Some(recovery);
     }
 }
 

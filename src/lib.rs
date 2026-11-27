@@ -24,12 +24,13 @@ pub mod error;
 
 pub use crate::budget::{FailureOrigin, MutationOutcome, ResourceBudget, RESOURCE_BUDGET_VERSION};
 pub use crate::connector::{
-    AccountOperation, AuthScheme, AuthenticationSecrets, AuthenticationStart,
-    CloudResponseMetadata, DecisionOutcome, EffectProvenance, EffectStatus, LogicalConnector,
-    LogicalTarget, ObservationSource, OperationAttempt, ReconciliationObservation, RequestProof,
-    RequestProofInput, RequestProofSigner, ScmCredential, ScmProvider, UserSession,
-    DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_CLOUD_ORIGIN,
-    FIRST_PARTY_REPO_PATH_PREFIX, PROVENANCE_CONTRACT_VERSION,
+    AccountOperation, AuthScheme, AuthenticationSecrets, AuthenticationStart, CloudRecoveryFacts,
+    CloudResponseMetadata, DecisionOutcome, EffectProvenance, EffectStatus, ExecutionPhase,
+    LogicalConnector, LogicalTarget, ObservationSource, OperationAttempt,
+    ReconciliationObservation, RecoveryActionCategory, RequestProof, RequestProofInput,
+    RequestProofSigner, ScmCredential, ScmProvider, UserSession, DEFAULT_CLOUD_ORIGIN,
+    FIRST_PARTY_AUTH_PATH, FIRST_PARTY_CLOUD_ORIGIN, FIRST_PARTY_REPO_PATH_PREFIX,
+    PROVENANCE_CONTRACT_VERSION,
 };
 pub use crate::contract::{
     AccessMode, AtomicResult, BackupResult, GeneratedKey, IntegrityReport, OpenOptions, Operation,

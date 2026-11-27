@@ -15,8 +15,8 @@ use crate::budget::{
     DecodedResultTracker, ResourceBudget,
 };
 use crate::connector::{
-    validate_dpop_nonce, AuthScheme, CloudResponseMetadata, EffectProvenance, ObservationSource,
-    OperationAttempt, RequestProofSigner,
+    validate_dpop_nonce, AuthScheme, CloudResponseMetadata, EffectProvenance, ExecutionPhase,
+    ObservationSource, OperationAttempt, RecoveryActionCategory, RequestProofSigner,
 };
 use crate::contract::{
     AccessMode, AtomicResult, GeneratedKey, OpenOptions, Operation, OperationKind, OperationResult,
@@ -24,10 +24,11 @@ use crate::contract::{
 };
 use crate::error::{AdapterErrorKind, DactylError};
 use crate::http_pool::{
-    acquire_client, bind_response_provenance, build_attempt_headers, build_auth_headers,
-    canonical_url, effective_auth_scheme, extract_response_metadata, has_dpop_nonce_challenge,
-    in_tokio_runtime, read_bounded_body_async, with_dpop_nonce_retry, with_dpop_nonce_retry_async,
-    AsyncBodyError, AuthHeaders, HttpOutcome, ProvenanceCheckContext, SharedHttpClient,
+    acquire_client, allowlisted_cloud_code, bind_response_provenance, build_attempt_headers,
+    build_auth_headers, canonical_url, cloud_error_kind_for_code, effective_auth_scheme,
+    extract_error_recovery, extract_response_metadata, has_dpop_nonce_challenge, in_tokio_runtime,
+    read_bounded_body_async, with_dpop_nonce_retry, with_dpop_nonce_retry_async, AsyncBodyError,
+    AuthHeaders, HttpOutcome, ProvenanceCheckContext, SharedHttpClient,
 };
 use crate::inspection::ScanOutcome;
 use crate::rows::{Parameter, Row, Rows};
@@ -1027,10 +1028,23 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
             return (Err(err), Some(metadata));
         }
 
+        extract_error_recovery(envelope.as_ref(), origin_matches, &mut metadata);
         let prov_uncertain = metadata
             .provenance()
             .is_some_and(|p| p.status() == crate::connector::EffectStatus::Uncertain);
-        if ctx.mutates && (matches!(status, 408 | 500..=599) || prov_uncertain) {
+        let recovery_outcome_unknown = metadata
+            .recovery()
+            .is_some_and(|r| r.action_category() == RecoveryActionCategory::OutcomeUnknown);
+        let recovery_after_send_retry = metadata.recovery().is_some_and(|r| {
+            r.execution_phase() == ExecutionPhase::AfterSend
+                && r.action_category() == RecoveryActionCategory::RecoverableWithinAuthority
+        });
+        if ctx.mutates
+            && (matches!(status, 408 | 500..=599)
+                || prov_uncertain
+                || recovery_outcome_unknown
+                || recovery_after_send_retry)
+        {
             let explicit_non_commit = metadata.provenance().is_some_and(|p| {
                 matches!(
                     p.status(),
@@ -1039,8 +1053,9 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
                         | crate::connector::EffectStatus::Refused
                 )
             });
-            if !explicit_non_commit {
-                if (matches!(status, 500..=599) || prov_uncertain) && error.adapter_code().is_none()
+            if !explicit_non_commit || recovery_outcome_unknown {
+                if (matches!(status, 500..=599) || prov_uncertain || recovery_outcome_unknown)
+                    && error.adapter_code().is_none()
                 {
                     if let DactylError::Adapter { kind, message, .. } = error {
                         error = DactylError::adapter_with_code(kind, "outcome_unknown", message);
@@ -2080,120 +2095,7 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
             );
         }
     }
-    // Only fixed public codes leave the boundary. Remote messages and unknown
-    // codes may echo tokens, SQL parameters or database connection strings.
-    let known = match code {
-        Some("session_expired") => Some((AdapterErrorKind::Authentication, "session_expired")),
-        Some("session_revoked") => Some((AdapterErrorKind::Authentication, "session_revoked")),
-        Some("session_not_found") => Some((AdapterErrorKind::Authentication, "session_not_found")),
-        Some("invalid_token") => Some((AdapterErrorKind::Authentication, "invalid_token")),
-        Some("use_dpop_nonce") => Some((AdapterErrorKind::Authentication, "use_dpop_nonce")),
-        Some("invalid_dpop_proof") => {
-            Some((AdapterErrorKind::Authentication, "invalid_dpop_proof"))
-        }
-        Some("invalid_binding") => Some((AdapterErrorKind::Authentication, "invalid_binding")),
-        Some("dpop_proof_required") => {
-            Some((AdapterErrorKind::Authentication, "dpop_proof_required"))
-        }
-        Some("missing_dpop_proof") => {
-            Some((AdapterErrorKind::Authentication, "missing_dpop_proof"))
-        }
-        Some("dpop_replay") => Some((AdapterErrorKind::Authentication, "dpop_replay")),
-        Some("dpop_nonce_mismatch") => {
-            Some((AdapterErrorKind::Authentication, "dpop_nonce_mismatch"))
-        }
-        Some("dpop_clock_skew") => Some((AdapterErrorKind::Authentication, "dpop_clock_skew")),
-        Some("dpop_ath_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_ath_mismatch")),
-        Some("dpop_htu_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_htu_mismatch")),
-        Some("dpop_htm_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_htm_mismatch")),
-        Some("dpop_jkt_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_jkt_mismatch")),
-        Some("dpop_aud_mismatch") => Some((AdapterErrorKind::Authentication, "dpop_aud_mismatch")),
-        Some("expired_credential") => {
-            Some((AdapterErrorKind::Authentication, "expired_credential"))
-        }
-        Some("stolen_bearer") => Some((AdapterErrorKind::Authentication, "stolen_bearer")),
-        Some("device_revoked") => Some((AdapterErrorKind::Authentication, "device_revoked")),
-        Some("device_key_expired") => {
-            Some((AdapterErrorKind::Authentication, "device_key_expired"))
-        }
-        Some("refresh_reuse_detected") => {
-            Some((AdapterErrorKind::Authentication, "refresh_reuse_detected"))
-        }
-        Some("device_not_enrolled") => {
-            Some((AdapterErrorKind::Authentication, "device_not_enrolled"))
-        }
-        Some("authorization_denied") => {
-            Some((AdapterErrorKind::Authorization, "authorization_denied"))
-        }
-        Some("grant_revoked") => Some((AdapterErrorKind::Authorization, "grant_revoked")),
-        Some("grant_expired") => Some((AdapterErrorKind::Authorization, "grant_expired")),
-        Some("scope_denied") => Some((AdapterErrorKind::Authorization, "scope_denied")),
-        Some("mfa_step_up_required") => {
-            Some((AdapterErrorKind::Authorization, "mfa_step_up_required"))
-        }
-        Some("provider_disabled") => Some((AdapterErrorKind::Authorization, "provider_disabled")),
-        Some("repo_access_denied") => Some((AdapterErrorKind::Authorization, "repo_access_denied")),
-        Some("invalid_request") => Some((AdapterErrorKind::InvalidOperation, "invalid_request")),
-        Some("unsupported_query") => Some((AdapterErrorKind::Capability, "unsupported_query")),
-        Some("unsupported_type") => Some((AdapterErrorKind::Capability, "unsupported_type")),
-        Some("unsupported_schema") => Some((AdapterErrorKind::Capability, "unsupported_schema")),
-        Some("authentication_required") => {
-            Some((AdapterErrorKind::Authentication, "authentication_required"))
-        }
-        Some("missing_context") => Some((AdapterErrorKind::Authentication, "missing_context")),
-        Some("invalid_context") => Some((AdapterErrorKind::Protocol, "invalid_context")),
-        Some("malformed_context") => Some((AdapterErrorKind::Protocol, "malformed_context")),
-        Some("entitlement_required") => {
-            Some((AdapterErrorKind::Authorization, "entitlement_required"))
-        }
-        Some("repository_not_authorized") => {
-            Some((AdapterErrorKind::Authorization, "repository_not_authorized"))
-        }
-        Some("not_found") => Some((AdapterErrorKind::NotFound, "not_found")),
-        Some("project_not_found") => Some((AdapterErrorKind::NotFound, "project_not_found")),
-        Some("member_not_found") => Some((AdapterErrorKind::NotFound, "member_not_found")),
-        Some("invitation_not_found") => Some((AdapterErrorKind::NotFound, "invitation_not_found")),
-        Some("flow_not_found") => Some((AdapterErrorKind::NotFound, "flow_not_found")),
-        Some("row_not_found") => Some((AdapterErrorKind::NotFound, "row_not_found")),
-        Some("row_conflict") => Some((AdapterErrorKind::Conflict, "row_conflict")),
-        Some("constraint_failed") => Some((AdapterErrorKind::Constraint, "constraint_failed")),
-        Some("unique_violation") => Some((AdapterErrorKind::Constraint, "unique_violation")),
-        Some("not_null_violation") => Some((AdapterErrorKind::Constraint, "not_null_violation")),
-        Some("foreign_key_violation") => {
-            Some((AdapterErrorKind::Constraint, "foreign_key_violation"))
-        }
-        Some("busy") => Some((AdapterErrorKind::Busy, "busy")),
-        Some("locked") => Some((AdapterErrorKind::Locked, "locked")),
-        Some("timeout") => Some((AdapterErrorKind::Timeout, "timeout")),
-        Some("read_only") => Some((AdapterErrorKind::ReadOnly, "read_only")),
-        Some("version_conflict") => Some((AdapterErrorKind::VersionConflict, "version_conflict")),
-        Some("idempotency_conflict") => Some((
-            AdapterErrorKind::IdempotencyConflict,
-            "idempotency_conflict",
-        )),
-        Some("idempotency_in_progress") => Some((
-            AdapterErrorKind::IdempotencyInProgress,
-            "idempotency_in_progress",
-        )),
-        Some("transaction_aborted") => {
-            Some((AdapterErrorKind::TransactionAborted, "transaction_aborted"))
-        }
-        Some("quota_exceeded") => Some((AdapterErrorKind::Quota, "quota_exceeded")),
-        Some("overage_cap_exhausted") => Some((AdapterErrorKind::Quota, "overage_cap_exhausted")),
-        Some("payload_too_large") => Some((AdapterErrorKind::Quota, "payload_too_large")),
-        Some("rate_limited") => Some((AdapterErrorKind::RateLimited, "rate_limited")),
-        Some("storage_failure") => Some((AdapterErrorKind::Storage, "storage_failure")),
-        Some("storage_unavailable") => Some((AdapterErrorKind::Unavailable, "storage_unavailable")),
-        _ => None,
-    };
-    if let Some((kind, code)) = known {
-        return DactylError::adapter_with_code(
-            kind,
-            code,
-            format!("Supabase service rejected request ({code})"),
-        );
-    }
-    let kind = match status {
+    let fallback_kind = match status {
         300..=399 => AdapterErrorKind::Protocol,
         401 => AdapterErrorKind::Authentication,
         402 | 403 => AdapterErrorKind::Authorization,
@@ -2206,8 +2108,19 @@ fn remote_error(status: u16, body: &[u8], rpc: bool) -> DactylError {
         502..=504 => AdapterErrorKind::Unavailable,
         _ => AdapterErrorKind::Query,
     };
+    // Only fixed allowlisted public codes leave the boundary. Remote messages
+    // and unknown codes may echo tokens, SQL parameters or database connection
+    // strings.
+    if let Some(safe_code) = code.and_then(allowlisted_cloud_code) {
+        let kind = cloud_error_kind_for_code(status, safe_code).unwrap_or(fallback_kind);
+        return DactylError::adapter_with_code(
+            kind,
+            safe_code,
+            format!("Supabase service rejected request ({safe_code})"),
+        );
+    }
     DactylError::adapter(
-        kind,
+        fallback_kind,
         format!("Supabase service returned HTTP status {status}"),
     )
 }

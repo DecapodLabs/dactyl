@@ -1101,6 +1101,36 @@ fn billing_overage_policy_quota_codes_and_retry_after_are_preserved_with_default
             None,
             AdapterErrorKind::Authentication,
         ),
+        (
+            402,
+            "payment_required",
+            None,
+            AdapterErrorKind::Authorization,
+        ),
+        (
+            403,
+            "repository_access_denied",
+            None,
+            AdapterErrorKind::Authorization,
+        ),
+        (
+            403,
+            "tenant_suspended",
+            None,
+            AdapterErrorKind::Authorization,
+        ),
+        (
+            409,
+            "repository_capacity_exhausted",
+            None,
+            AdapterErrorKind::Conflict,
+        ),
+        (
+            429,
+            "seat_capacity_exceeded",
+            Some("30"),
+            AdapterErrorKind::Quota,
+        ),
     ] {
         let extra = retry_after
             .map(|value| format!("Retry-After: {value}\r\n"))
@@ -1134,6 +1164,31 @@ fn billing_overage_policy_quota_codes_and_retry_after_are_preserved_with_default
         assert_eq!(body["enabled"], true);
         handle.join().unwrap();
     }
+
+    // Non-mutating ResourceLimits preserves 503 tenant_upgrading + Retry-After.
+    let (origin, rx, handle) = server_with_headers(vec![(
+        503,
+        "Retry-After: 10\r\n".into(),
+        json!({"error": {"code": "tenant_upgrading", "message": "raw-internal-upgrade-msg"}}),
+    )]);
+    let mut meta = CloudResponseMetadata::default();
+    let err = connector(&origin)
+        .account_request_with_metadata(
+            AccountOperation::ResourceLimits,
+            &json!({"version": 1, "organization_id": "org-1"}),
+            "user-access",
+            None,
+            None,
+            &mut meta,
+        )
+        .unwrap_err();
+    assert_eq!(err.adapter_kind(), Some(AdapterErrorKind::Unavailable));
+    assert_eq!(err.adapter_code(), Some("tenant_upgrading"));
+    assert_ne!(err.mutation_outcome(), MutationOutcome::Uncertain);
+    assert_eq!(meta.retry_after(), Some("10"));
+    assert!(!format!("{err} {err:?}").contains("raw-internal-upgrade-msg"));
+    rx.recv().unwrap();
+    handle.join().unwrap();
 
     // Mutating BillingOveragePolicy preserves outcome_unknown on post-send connection loss.
     let (origin, rx, handle) = server_with_headers(vec![(0, String::new(), json!({}))]);
@@ -1913,6 +1968,114 @@ fn admin_and_onboarding_account_operations_enforce_auth_policy_provenance_and_re
     assert!(
         !format!("{client:?}").contains(human_secret),
         "connector Debug must redact caller secrets"
+    );
+    handle.join().unwrap();
+}
+
+#[test]
+fn cloud_error_recovery_metadata_propagates_and_blocks_uncertain_dpop_retry() {
+    use dactyl_db::{ExecutionPhase, RecoveryActionCategory};
+
+    let signer = Arc::new(RecordingProofSigner::default());
+    let (origin, rx, handle) = server_with_headers(vec![
+        // 1. Authorized/scoped grant_stale_generation with recovery metadata on read.
+        (
+            403,
+            String::new(),
+            json!({
+                "error": {
+                    "code": "grant_stale_generation",
+                    "message": "grant_stale_generation",
+                    "recovery": {
+                        "version": 1,
+                        "classification": "refresh_reconcile_state",
+                        "dispatch_phase": "pre_dispatch",
+                        "missing_fact": "delegated_permission",
+                        "authority_freshness": "stale",
+                        "grant_generation": 11,
+                        "session_generation": 4
+                    }
+                }
+            }),
+        ),
+        // 2. 401 use_dpop_nonce whose error.recovery says after_send -> MUST NOT auto-retry!
+        (
+            401,
+            "DPoP-Nonce: post-send-nonce\r\nWWW-Authenticate: DPoP error=\"use_dpop_nonce\"\r\n"
+                .into(),
+            json!({
+                "error": {
+                    "code": "use_dpop_nonce",
+                    "message": "use_dpop_nonce",
+                    "recovery": {
+                        "version": 1,
+                        "classification": "outcome_unknown",
+                        "dispatch_phase": "after_send",
+                        "missing_fact": "uncertain_outcome",
+                        "attempt_ref": "att-uncertain-138"
+                    }
+                }
+            }),
+        ),
+    ]);
+
+    let connector = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY))
+        .unwrap()
+        .with_device_gateway()
+        .with_proof_signer(signer.clone());
+
+    let mut meta1 = CloudResponseMetadata::default();
+    let err1 = connector
+        .control_request_with_metadata(
+            "propodus_delegated_grants_v1",
+            &json!({"version": 1}),
+            Some("dpc_at_tok"),
+            None,
+            OperationKind::Read,
+            ResourceBudget::v1(),
+            &mut meta1,
+        )
+        .unwrap_err();
+    assert_eq!(err1.adapter_kind(), Some(AdapterErrorKind::Authorization));
+    assert_eq!(err1.adapter_code(), Some("grant_stale_generation"));
+    let rec1 = meta1.recovery().expect("recovery facts captured");
+    assert_eq!(
+        rec1.action_category(),
+        RecoveryActionCategory::RefreshReconcileState
+    );
+    assert_eq!(rec1.execution_phase(), ExecutionPhase::PreDispatch);
+    assert_eq!(rec1.missing_fact(), Some("delegated_permission"));
+    assert_eq!(rec1.authority_freshness(), Some("stale"));
+    assert_eq!(rec1.grant_generation(), Some(11));
+    assert_eq!(rec1.session_generation(), Some(4));
+
+    let mut meta2 = CloudResponseMetadata::default();
+    let err2 = connector
+        .account_request_with_metadata(
+            AccountOperation::DeviceEnroll,
+            &json!({"version": 1}),
+            "human-bearer",
+            None,
+            None,
+            &mut meta2,
+        )
+        .unwrap_err();
+    assert_eq!(err2.mutation_outcome(), MutationOutcome::Uncertain);
+    let rec2 = meta2.recovery().expect("uncertain recovery facts");
+    assert_eq!(
+        rec2.action_category(),
+        RecoveryActionCategory::OutcomeUnknown
+    );
+    assert_eq!(rec2.execution_phase(), ExecutionPhase::AfterSend);
+    assert_eq!(rec2.attempt_ref(), Some("att-uncertain-138"));
+    assert!(!format!("{meta2:?}").contains("att-uncertain-138"));
+
+    rx.recv().unwrap();
+    rx.recv().unwrap();
+    assert_eq!(
+        signer.calls.lock().unwrap().len(),
+        2,
+        "after_send outcome_unknown 401 must not trigger automatic DPoP nonce retry"
     );
     handle.join().unwrap();
 }

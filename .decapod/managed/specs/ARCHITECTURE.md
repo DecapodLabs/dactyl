@@ -1,5 +1,10 @@
 # Architecture
 
+## Commercial cloud allowlist and Propodus `#268` recovery-facts extension (issue #138)
+
+- **`src/http_pool.rs::{allowlisted_cloud_code, cloud_error_kind_for_code, parse_error_recovery, extract_error_recovery}`, `src/connector.rs::CloudRecoveryFacts`, `src/cloud.rs`, & `src/adapter/supabase.rs`**: Expands the static allowlist matched against untrusted JSON error envelopes (`error.code` / `error_code` / `code` / `error`) and shares `cloud_error_kind_for_code` across both `CloudConnector` and `SupabaseAdapter` so Propodus onboarding, commercial, custody, tenant lifecycle, and `#268` recovery codes (`service_unavailable`, `grant_stale_generation`, `device_session_required`, `reconciliation_required`, `remote_creation_recovery_required`, `effect_not_observed`, `reconciliation_not_ready`, etc.) pass cleanly as `&'static str` with consistent `AdapterErrorKind` classification. `parse_error_recovery` validates `version == 1`, `classification`/`action_category` (`RecoveryActionCategory`), `dispatch_phase`/`execution_phase` (`ExecutionPhase`), bounded snake-case `missing_fact`/`authority_freshness`, `grant_generation`, `session_generation`, `attempt_ref`, and `retry_after_seconds <= 3600` on same-origin error envelopes into `CloudResponseMetadata::recovery()`, while `can_retry_dpop_nonce` and `handle_cloud_response`/`handle_supabase_response` prevent auto-retry and enforce `MutationOutcome::Uncertain` on `after_send` / `outcome_unknown` mutations.
+- **Live `api.decapodlabs.ai` gap**: Retained `DEFAULT_CLOUD_ORIGIN = "https://goyxpcmxetztjlrrcwew.supabase.co"` because live `https://api.decapodlabs.ai/functions/v1/decapod-onboarding/config` returns `project_origin = "https://goyxpcmxetztjlrrcwew.supabase.co"`.
+
 ## Local database maintenance governance configuration (Decapod #1568)
 
 - **`.decapod/config.toml` (`[governance.db_maintenance]`)**: Enables project-opted local SQLite maintenance for authenticated workspace agents via `enabled = true` and `allowed = ["db.inspect", "db.verify", "db.lock.diagnose", "db.lock.retry", "db.lock.release_own", "db.backup"]`. This policy applies strictly to Decapod's local control-plane SQLite store inside claimed isolated worktrees without modifying `dactyl-db` crate runtime behavior or exposing `db.recover`.
@@ -290,7 +295,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
+- Repository signal fingerprint: `149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
