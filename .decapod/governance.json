@@ -138,6 +138,11 @@
       "id": "pr-a-v01662-pin",
       "summary": "Refresh 0.166.2 entrypoints, specs manifest, and Containerfile pin for PR A (#1568)",
       "input_digest": "sha256:d710a560b60cb092c4c9f0fbc99852406fa6aa9f3e2aa7ac0d7f28c0b0d02d00"
+    },
+    {
+      "id": "pr-a-plan-approved",
+      "summary": "Approve governed plan and recheckpoint for full decapod validate on PR A (#1568)",
+      "input_digest": "sha256:0a794babb6b536c76e7a985fd588c44e49dc1d3d6b4b385e9882d2cc7ad8c87c"
     }
   ],
   "intents": {
@@ -165,18 +170,27 @@
   },
   "sections": {
     "plan": {
-      "constraints": {},
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
       "intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
+      "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "state": "APPROVED",
+      "stop_conditions": [],
       "title": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
       "todo_ids": [
         "data_01m8d51m66zwpf29"
       ],
-      "updated_at": "1795737917Z"
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1795744382Z"
     },
     "trajectory": {
       "active_boundaries": [
