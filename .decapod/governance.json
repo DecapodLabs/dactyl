@@ -153,6 +153,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "pr-138-spec-reviews-complete",
+      "summary": "Record ARCHITECTURE, INTENT, and SECURITY spec reviews for #138",
+      "input_digest": "sha256:0d6afbb5307ce03824751d39bf35ed0ab101228dc82eca4d78db2eee9c336d29",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
@@ -195,10 +203,24 @@
       "spec_reviews": [
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Verified #138 allowlist_cloud_code, cloud_error_kind_for_code, parse_error_recovery, CloudRecoveryFacts, and live api.decapodlabs.ai gap in ARCHITECTURE.md against src/http_pool.rs, src/connector.rs, src/cloud.rs, and src/adapter/supabase.rs",
+          "reviewed_code_fingerprint": "149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6",
+          "spec_material_hash": "b8bb3488beed5f2beec8cac752531d9433acf4ca2461c7fe8333bc22600eb044"
+        },
+        {
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Verified #138 public exports (RecoveryActionCategory, ExecutionPhase, CloudRecoveryFacts, CloudResponseMetadata::recovery) and allowlist/DEFAULT_CLOUD_ORIGIN guarantees in INTERFACES.md against src/connector.rs, src/lib.rs, src/http_pool.rs, src/cloud.rs, src/adapter/supabase.rs",
           "reviewed_code_fingerprint": "149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6",
           "spec_material_hash": "1cce8ab6625f034839874a6498b7bdb3eb6f80ea67f53142795a7122636976c7"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Verified #138 error.recovery uncertainty guard, DPoP replay prevention, and origin pinning in SECURITY.md",
+          "reviewed_code_fingerprint": "149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6",
+          "spec_material_hash": "86fa02b91b03856d7500d8fd52882589bb5d81b6b3a2b2e94e001f55d55dc661"
         }
       ],
       "state": "APPROVED",
@@ -209,7 +231,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795747724Z"
+      "updated_at": "1795747796Z"
     },
     "trajectory": {
       "active_boundaries": [
