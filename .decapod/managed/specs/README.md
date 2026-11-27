@@ -49,15 +49,15 @@ These files are the project-local contract for humans and agents.
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 62 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (32), `tools/` (3)
-- Core modules: 12 | Workflows: 4 | Integration targets: 29
+- Tracked significant codebase files: 63 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (33), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 30
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
+- Repository signal fingerprint: `8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

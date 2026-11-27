@@ -70,3 +70,8 @@ capture or acceptance.
 
 The contract is preparation for execution. It does not record any new real
 PostgreSQL, hosted Supabase, managed OAuth or legacy Neon conformance pass.
+
+See [guarantee-matrix.md](guarantee-matrix.md) (`#158`) for the compact comparison
+across local SQLite, authenticated `DirectResponse` transport (`TLS`, `DPoP`,
+correlation, and server metadata limits), and `ServerReadback` / independent
+observer qualification of published `dactyl-db 0.21.0`.

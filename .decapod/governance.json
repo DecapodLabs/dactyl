@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d50567671b49b08a835464969c891f793878447c",
-    "release": "v0.20.0",
+    "accepted_commit": "0e7213a40d1a3106276f0a5c124bd59c57757053",
+    "release": "v0.21.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -113,51 +113,48 @@
     }
   },
   "change": {
-    "id": "change_150_disposition",
-    "base_commit": "d50567671b49b08a835464969c891f793878447c",
+    "id": "change_01M8E441X96S6MRT8DV92JDJN6",
+    "base_commit": "0e7213a40d1a3106276f0a5c124bd59c57757053",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim:operational-disposition-150": {
-      "statement": "DactylError::operational_disposition and operational_disposition_with_context classify errors into Retry, InspectAndDecide, Reconcile, or Stop using typed AdapterErrorKind, error code, FailureOrigin, MutationOutcome, OperationKind, OperationAttempt, and same-origin #138 CloudRecoveryFacts without blind retry of uncertain mutations or English-text scraping",
-      "falsifier": "Any uncertain or after_send recoverable mutation maps to Retry, any preflight failure maps to Reconcile, or any feature combination fails to export OperationalAction/OperationalDisposition",
+    "claim:released-021-claim-qualification": {
+      "statement": "Local SQLite observers, DirectResponse transport claims, and ServerReadback reconciliation remain strictly separated across dactyl-db 0.21.0 and clean crates.io consumers without elevating unpersisted claims or silently escalating uncertain mutations; hosted_supabase/local_postgres remain unavailable without fixtures.",
+      "falsifier": "Any inaccurate DirectResponse claim elevates to persisted/ServerReadback, valid-correlation accepted_not_committed succeeds or blindly retries, stale/mismatched readback escalates, or clean 0.21.0 consumer fails against disposable SQLite/Cloud observers.",
       "status": "supported",
       "proof_refs": [
-        "cargo test --locked --all-features",
-        "src/error.rs",
-        "tests/operational_disposition_150.rs"
+        "docs/guarantee-matrix.md",
+        "https://crates.io/crates/dactyl-db/0.21.0",
+        "tests/released_claim_qualification_158.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "pr-150-rebased-0200",
-      "summary": "Rebase #150 OperationalDisposition + CloudRecoveryFacts onto 0.20.0 (d5056767) and reconcile reviewed_sources_digest",
-      "input_digest": "sha256:f61274dff06671d01a6c305eb8e54973b55d8ed91bf8793fe7b9b5debaf99405",
-      "proof_refs": [
-        "tests/operational_disposition_150.rs"
-      ]
+      "id": "chk_dactyl_158_initial",
+      "summary": "Add #158 guarantee matrix, negative qualification fixtures, clean 0.21.0 registry verification, and v0.166.5 proof alignment",
+      "input_digest": "sha256:6bc9a7cf36ae0bdf11591e9fa928a57e87f67e063d4f9f91d35602fced3cbeb1"
     }
   ],
   "intents": {
-    "intent:run_150_disposition": {
+    "intent:change_01M8E441X96S6MRT8DV92JDJN6": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Never blindly retry uncertain remote mutations; keep unknown metadata None and preserve existing DactylError compatibility"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run_150_disposition",
+      "id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Give storage callers an unambiguous retry, reconcile, or stop disposition (#150)",
-      "refined_intent": "Rebase #150 with integrated #138 CloudRecoveryFacts onto d5056767 (0.20.0), reconcile reviewed_sources_digest, refresh v0.166.2 specs/checkpoints, verify tests, and validate",
+      "raw_intent": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
+      "refined_intent": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -170,7 +167,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Export OperationalAction and OperationalDisposition on DactylError integrating #138 CloudRecoveryFacts and typed adapter preflight/outcome signals (#150)",
+      "intent": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -180,72 +177,89 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified Retry/InspectAndDecide/Reconcile/Stop decision table, CloudRecoveryFacts integration, and typed preflight classification in ARCHITECTURE.md against src/error.rs, src/adapter/{sqlite,neon,supabase}, and src/cloud.rs",
-          "reviewed_code_fingerprint": "9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b",
-          "spec_material_hash": "7953288fbc44e7c064bad5b16d7078d0b0260548860b5274823ec8a248a2232e"
+          "reason": "Added #158 guarantee matrix and released 0.21.0 qualification architecture",
+          "reviewed_code_fingerprint": "8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995",
+          "spec_material_hash": "6766d5b25958d7920307353e7942b60dcd1d5a1f331e0b36123d727a16cd24b0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified OperationalAction, OperationalDisposition, DactylError::operational_disposition, and operational_disposition_with_context unconditional exports and accessors in INTERFACES.md against src/lib.rs, src/error.rs, and tests/operational_disposition_150.rs",
-          "reviewed_code_fingerprint": "9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b",
-          "spec_material_hash": "1eb722df5c5b9b7d680bdf6f2995a5ef8282c174bddbafe5a245a22b83980d43"
+          "reason": "Documented #158 guarantee matrix, 0.21.0 provenance parity, and Containerfile alignment",
+          "reviewed_code_fingerprint": "8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995",
+          "spec_material_hash": "b34e12632049e132beb50c633cb0a67320eb836fedb9de349a21ef82cf8abb5c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No security boundary or origin/egress policy changes introduced beyond PR #154 (#138); OperationalDisposition fails closed to Reconcile/Stop on uncertain mutations and redacts Debug fields",
-          "reviewed_code_fingerprint": "9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b",
+          "reason": "No runtime transport or policy changes beyond docs/guarantee-matrix.md and negative tests",
+          "reviewed_code_fingerprint": "8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995",
           "spec_material_hash": "86fa02b91b03856d7500d8fd52882589bb5d81b6b3a2b2e94e001f55d55dc661"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Give storage callers an unambiguous retry, reconcile, or stop disposition (#150)",
+      "title": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
       "todo_ids": [
-        "bugs_01m8bjcmjxv4et9b"
+        "bend_01m8e43nr49kvs3k"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795749206Z"
+      "updated_at": "1795770952Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Never blindly retry uncertain remote mutations; keep unknown metadata None and preserve existing DactylError compatibility"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e570c839b536b39baaa92deb011338941c7bc58dac433cb1b97278ed389d0d60",
+      "artifact_hash": "sha256:a9f9f6ea043e9dc24abf86da104bae823863575d24d93957dd6f0d71ca805525",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "cargo_test_all_features",
+          "name": "local_postgres_and_hosted_native",
+          "status": "unavailable"
+        },
+        {
+          "name": "operational_disposition_150",
+          "status": "passed"
+        },
+        {
+          "name": "registry_021_msrv_185",
+          "status": "passed"
+        },
+        {
+          "name": "released_claim_qualification_158_all_8_features",
+          "status": "passed"
+        },
+        {
+          "name": "trust_and_egress",
           "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_150_disposition",
+            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_150_disposition",
+            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_150_disposition",
+            "detail": "trajectory:branch_01M8E4420EHR8DJTJ6KNTX8PBV",
             "event_id": "event:4",
-            "intent_id": "intent:run_150_disposition",
+            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -254,39 +268,33 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_150_disposition": {
+          "branch_01M8E4420EHR8DJTJ6KNTX8PBV": {
             "evidence_only": true,
-            "id": "run_150_disposition",
-            "intent_id": "intent:run_150_disposition",
+            "id": "branch_01M8E4420EHR8DJTJ6KNTX8PBV",
+            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "cargo test --locked --all-features --test released_claim_qualification_158",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/error.rs",
-                  "src/lib.rs",
-                  "src/adapter/sqlite/mod.rs",
-                  "src/adapter/neon/mod.rs",
-                  "src/adapter/supabase.rs",
+                  "src/connector.rs",
+                  "src/http_pool.rs",
                   "src/cloud.rs",
-                  ".decapod/config.toml",
-                  ".decapod/config.toml",
                   "src/error.rs",
-                  "src/lib.rs",
-                  "src/adapter/sqlite/mod.rs",
-                  "src/adapter/neon/mod.rs",
-                  "src/adapter/supabase.rs",
-                  "src/cloud.rs",
-                  "tests/operational_disposition_150.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "cargo fmt --all -- --check; cargo clippy --locked --all-targets --all-features -- -D warnings; cargo test --locked --all-features passed on d5056767 base"
+                  "docs/guarantee-matrix.md",
+                  "docs/cloud-failure-conformance.md",
+                  "tests/released_claim_qualification_158.rs",
+                  "tools/proof/Containerfile"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_test_all_features"
+                  "released_claim_qualification_158_all_8_features",
+                  "registry_021_msrv_185",
+                  "trust_and_egress",
+                  "operational_disposition_150",
+                  "clippy_all_targets",
+                  "fmt",
+                  "local_postgres_and_hosted_native"
                 ],
                 "scope": [
                   "root"
@@ -298,40 +306,34 @@
           }
         }
       },
-      "declared_commands": [],
-      "evidence": [
-        "cargo fmt --all -- --check; cargo clippy --locked --all-targets --all-features -- -D warnings; cargo test --locked --all-features passed on d5056767 base"
+      "declared_commands": [
+        "cargo test --locked --all-features --test released_claim_qualification_158"
       ],
+      "destination": "pull request",
+      "evidence": [],
       "inspected_files": [
-        ".decapod/config.toml",
-        "src/adapter/neon/mod.rs",
-        "src/adapter/sqlite/mod.rs",
-        "src/adapter/supabase.rs",
         "src/cloud.rs",
+        "src/connector.rs",
         "src/error.rs",
-        "src/lib.rs"
+        "src/http_pool.rs"
       ],
-      "intent_id": "intent:run_150_disposition",
+      "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        "src/adapter/neon/mod.rs",
-        "src/adapter/sqlite/mod.rs",
-        "src/adapter/supabase.rs",
-        "src/cloud.rs",
-        "src/error.rs",
-        "src/lib.rs",
-        "tests/operational_disposition_150.rs"
+        "docs/cloud-failure-conformance.md",
+        "docs/guarantee-matrix.md",
+        "tests/released_claim_qualification_158.rs",
+        "tools/proof/Containerfile"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "run_150_disposition",
+      "run_id": "branch_01M8E4420EHR8DJTJ6KNTX8PBV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m8bjcmjxv4et9b",
+      "task_id": "bend_01m8e43nr49kvs3k",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

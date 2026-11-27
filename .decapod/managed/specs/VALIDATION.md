@@ -342,15 +342,15 @@ Generated capability obligations: `public-api` is declared for this project. The
 ## Codebase Contract Snapshot
 
 - CI workflows (4): `.github/workflows/decapod-validate.yml`, `.github/workflows/pages.yml`, `.github/workflows/release.yml`, `.github/workflows/rust-contract.yml`
-- Integration test targets (29): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/operational_disposition_150.rs`, `tests/release_configuration.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, `tests/sqlite_inspection.rs`, (+13 more)
+- Integration test targets (30): `tests/backend_contract.rs`, `tests/catalog_capabilities.rs`, `tests/catalog_predicates.rs`, `tests/cloud_connector.rs`, `tests/conformance.rs`, `tests/control_rpc.rs`, `tests/differential_contract.rs`, `tests/effect_provenance.rs`, `tests/http_pool_async.rs`, `tests/logical_connector.rs`, `tests/native_service.rs`, `tests/operational_disposition_150.rs`, `tests/release_configuration.rs`, `tests/released_claim_qualification_158.rs`, `tests/resource_budgets.rs`, `tests/sqlite_existing.rs`, (+14 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
+- Repository signal fingerprint: `8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

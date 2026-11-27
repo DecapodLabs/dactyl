@@ -1,5 +1,10 @@
 # Intent
 
+## Guarantee matrix & released connector claim qualification (issue #158)
+
+- **Compact tier guarantee matrix (`docs/guarantee-matrix.md`, `docs/cloud-failure-conformance.md`)**: Separates what local SQLite (`Backend::Local`), authenticated Cloud transport (`ObservationSource::DirectResponse` via TLS, `DPoP`, correlation tokens, and server metadata), and independently reconciled effects (`ObservationSource::ServerReadback` + independent observer) do and do not establish. Documents exact `dactyl-db 0.21.0` registry-artifact vs. accepted-source (`0e7213a4`) parity, remaining endpoint trust assumptions, and honest `unavailable` non-proven classification for skipped/private PostgreSQL and hosted native profiles.
+- **Controlled negative qualification & clean `0.21.0` consumer proof (`tests/released_claim_qualification_158.rs`)**: Exercises protocol-conformant inaccurate authenticated `committed_observed` claims alongside `0`-row independent observers and `ServerReadback` `NotAttempted`, valid correlation envelopes with `accepted_not_committed` / `not_attempted`, missing provenance (`UnsupportedProvenance` and post-send `503` without blind retry), stale/mismatched digests/attempts/origins/nonces, and a standalone clean `dactyl-db = "=0.21.0"` crates.io consumer on Rust `1.85.0` against disposable local SQLite and loopback Cloud observers without altering runtime transport or domain policy.
+
 ## Unambiguous operational disposition for retry, reconcile, or stop (issue #150)
 
 - **Composite machine-readable disposition (`src/error.rs`, `src/lib.rs`, `tests/operational_disposition_150.rs`)**: Exports unconditional `OperationalAction::{Retry, InspectAndDecide, Reconcile, Stop}` and `OperationalDisposition` via `DactylError::operational_disposition` and `DactylError::operational_disposition_with_context`. Callers (including Decapod consumers) derive the exact next step from typed error facts, `OperationKind`, `OperationAttempt`, and bounded `CloudResponseMetadata` (`EffectProvenance`, `#138` `CloudRecoveryFacts` / Propodus `048`, and `Retry-After`) without parsing displayed error strings, preserving unknown metadata as `None`, keeping `not_attempted`/`rolled_back`/`uncertain` distinct, and never authorizing blind replay of an uncertain write even when `is_retryable()` is true or `after_send` `recoverable_within_authority` is reported.
@@ -255,16 +260,16 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 62 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (32), `tools/` (3)
-- Core modules: 12 | Workflows: 4 | Integration targets: 29
+- Tracked significant codebase files: 63 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (33), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 30
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
+- Repository signal fingerprint: `8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
