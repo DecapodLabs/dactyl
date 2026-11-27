@@ -525,7 +525,7 @@ impl SupabaseAdapter {
                 DactylError::adapter_with_code(
                     AdapterErrorKind::Authentication,
                     "authentication_required",
-                    "Supabase service requires a user bearer token",
+                    "local preflight: Supabase service requires a user bearer token",
                 )
             })?;
         let header_check = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
@@ -538,7 +538,7 @@ impl SupabaseAdapter {
             DactylError::adapter_with_code(
                 AdapterErrorKind::Authentication,
                 "missing_context",
-                "Supabase service requires an authenticated storage context",
+                "local preflight: Supabase service requires an authenticated storage context",
             )
         })?;
         context.validate()?;
@@ -1045,14 +1045,23 @@ fn handle_supabase_response<T: for<'de> Deserialize<'de>>(
                 || recovery_outcome_unknown
                 || recovery_after_send_retry)
         {
-            let explicit_non_commit = metadata.provenance().is_some_and(|p| {
-                matches!(
-                    p.status(),
+            let explicit_non_commit = match metadata.provenance().map(|p| p.status()) {
+                Some(
                     crate::connector::EffectStatus::RolledBack
-                        | crate::connector::EffectStatus::NotAttempted
-                        | crate::connector::EffectStatus::Refused
-                )
-            });
+                    | crate::connector::EffectStatus::NotAttempted
+                    | crate::connector::EffectStatus::Refused,
+                ) => true,
+                Some(
+                    crate::connector::EffectStatus::Uncertain
+                    | crate::connector::EffectStatus::CommittedObserved,
+                ) => false,
+                Some(crate::connector::EffectStatus::UnsupportedProvenance) | None => {
+                    metadata.recovery().is_some_and(|r| {
+                        r.execution_phase() == ExecutionPhase::PreDispatch
+                            && r.action_category() != RecoveryActionCategory::OutcomeUnknown
+                    })
+                }
+            };
             if !explicit_non_commit || recovery_outcome_unknown {
                 if (matches!(status, 500..=599) || prov_uncertain || recovery_outcome_unknown)
                     && error.adapter_code().is_none()
@@ -1925,7 +1934,7 @@ fn ensure_writable(mode: AccessMode) -> Result<(), DactylError> {
         Err(DactylError::adapter_with_code(
             AdapterErrorKind::ReadOnly,
             "read_only",
-            "route is read-only",
+            "local preflight: route is read-only",
         ))
     } else {
         Ok(())

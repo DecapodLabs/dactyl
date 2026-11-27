@@ -1,5 +1,10 @@
 # Intent
 
+## Unambiguous operational disposition for retry, reconcile, or stop (issue #150)
+
+- **Composite machine-readable disposition (`src/error.rs`, `src/lib.rs`, `tests/operational_disposition_150.rs`)**: Exports unconditional `OperationalAction::{Retry, InspectAndDecide, Reconcile, Stop}` and `OperationalDisposition` via `DactylError::operational_disposition` and `DactylError::operational_disposition_with_context`. Callers (including Decapod consumers) derive the exact next step from typed error facts, `OperationKind`, `OperationAttempt`, and bounded `CloudResponseMetadata` (`EffectProvenance`, `#138` `CloudRecoveryFacts` / Propodus `048`, and `Retry-After`) without parsing displayed error strings, preserving unknown metadata as `None`, keeping `not_attempted`/`rolled_back`/`uncertain` distinct, and never authorizing blind replay of an uncertain write even when `is_retryable()` is true or `after_send` `recoverable_within_authority` is reported.
+- **Reduced English-text dependence (`src/error.rs`, `src/adapter/{sqlite,neon,supabase}`)**: Replaces remote/local disambiguation heuristics (`contains("rejected request")`, `contains("HTTP status")`, English authentication substrings) with typed local budget/capability code matching and consistent `local preflight:` marking across SQLite, Neon, and Supabase adapters while keeping all existing public APIs and `MutationOutcome` contracts backward-compatible.
+
 ## Commercial cloud entitlement, reservation, recovery-facts, and origin live-test contract (issue #138)
 
 - **Allowlist & Propodus `#268` (`048`) recovery-facts alignment (`src/http_pool.rs`, `src/connector.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`, `src/lib.rs`)**: Extends the Supabase transport's closed response-code allowlist with Propodus commercial enrollment, repository reservation, collaborator seat-policy, admin/custody, physical tenant lifecycle, and `#268` recovery-facts error codes (`service_unavailable`, `grant_stale_generation`, `device_session_required`, `reconciliation_required`, `remote_creation_recovery_required`, `effect_not_observed`, `reconciliation_not_ready`, `seat_limit`, `seat_limit_reached`, etc.) while continuing to reject arbitrary untrusted wire strings. Parses bounded, same-origin `error.recovery` metadata into `CloudRecoveryFacts` (`RecoveryActionCategory`, `ExecutionPhase`, `missing_fact`, `authority_freshness`, `grant_generation`, `session_generation`, `attempt_ref` redacted in `Debug`, `retry_after_seconds <= 3600`) on `CloudResponseMetadata::recovery()`, prevents `401 use_dpop_nonce` auto-retries on `after_send` or `outcome_unknown` recovery responses, and marks mutating `outcome_unknown` / `after_send` recoverable failures as `MutationOutcome::Uncertain`.
@@ -250,16 +255,16 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 61 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (31), `tools/` (3)
-- Core modules: 12 | Workflows: 4 | Integration targets: 28
+- Tracked significant codebase files: 62 across `.github/` (4), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `examples/` (1), `src/` (19), `tests/` (32), `tools/` (3)
+- Core modules: 12 | Workflows: 4 | Integration targets: 29
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
+- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
