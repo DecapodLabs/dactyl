@@ -37,7 +37,7 @@ pub use crate::contract::{
     OperationKind, OperationResult, RecoveryJournalMode, RecoveryOptions, RecoveryResult,
     StorageContext, WriteResult, STORAGE_CONTEXT_VERSION,
 };
-pub use crate::error::{AdapterErrorKind, DactylError};
+pub use crate::error::{AdapterErrorKind, DactylError, OperationalAction, OperationalDisposition};
 pub use crate::inspection::{ScanOutcome, SnapshotLimits, SnapshotReader};
 pub use crate::rows::{Parameter, Row, Rows};
 pub use crate::schema::{

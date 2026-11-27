@@ -297,7 +297,7 @@ impl NeonAdapter {
             DactylError::adapter_with_code(
                 AdapterErrorKind::Authentication,
                 "authentication_required",
-                "neon requests require an authenticated storage context",
+                "local preflight: neon requests require an authenticated storage context",
             )
         })?;
         context.validate()?;
@@ -740,7 +740,7 @@ fn ensure_remote_writable(mode: AccessMode) -> Result<(), DactylError> {
         Err(DactylError::adapter_with_code(
             AdapterErrorKind::ReadOnly,
             "read_only",
-            "route is read-only",
+            "local preflight: route is read-only",
         ))
     } else {
         Ok(())

@@ -2079,12 +2079,18 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
                 || recovery_outcome_unknown
                 || recovery_after_send_retry)
         {
-            let explicit_non_commit = metadata.provenance().is_some_and(|p| {
-                matches!(
-                    p.status(),
-                    EffectStatus::RolledBack | EffectStatus::NotAttempted | EffectStatus::Refused
-                )
-            });
+            let explicit_non_commit = match metadata.provenance().map(|p| p.status()) {
+                Some(
+                    EffectStatus::RolledBack | EffectStatus::NotAttempted | EffectStatus::Refused,
+                ) => true,
+                Some(EffectStatus::Uncertain | EffectStatus::CommittedObserved) => false,
+                Some(EffectStatus::UnsupportedProvenance) | None => {
+                    metadata.recovery().is_some_and(|r| {
+                        r.execution_phase() == ExecutionPhase::PreDispatch
+                            && r.action_category() != RecoveryActionCategory::OutcomeUnknown
+                    })
+                }
+            };
             if !explicit_non_commit {
                 let kind = error_kind_for_cloud_status_and_code(status_u16, code);
                 return (

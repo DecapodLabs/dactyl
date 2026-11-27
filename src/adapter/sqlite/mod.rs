@@ -390,7 +390,9 @@ impl Adapter for SqliteAdapter {
         let connection = self.connection()?;
         if mutates {
             exec_sql(&connection, "BEGIN IMMEDIATE").map_err(|error| {
-                connection.error_from_failure("begin SQLite transaction", error)
+                prefix_local_preflight(
+                    connection.error_from_failure("begin SQLite transaction", error),
+                )
             })?;
         }
 
@@ -483,7 +485,7 @@ impl Adapter for SqliteAdapter {
             return Err(DactylError::adapter_with_code(
                 AdapterErrorKind::ReadOnly,
                 "read_only",
-                "SQLite recovery requires a read-write connection",
+                "local preflight: SQLite recovery requires a read-write connection",
             ));
         }
         if has_other_connection(&self.path)? {
@@ -939,7 +941,7 @@ fn visit_rows_budgeted(
         return Err(DactylError::adapter_with_code(
             AdapterErrorKind::ReadOnly,
             "read_only",
-            "read operation cannot execute a mutating statement",
+            "local preflight: read operation cannot execute a mutating statement",
         ));
     }
     statement.bind_all(params)?;
@@ -1538,12 +1540,32 @@ fn check_parameters(params: &[Parameter]) -> Result<(), DactylError> {
 
 fn ensure_writable(mode: AccessMode) -> Result<(), DactylError> {
     if mode == AccessMode::ReadOnly {
-        Err(adapter_error(
+        Err(DactylError::adapter_with_code(
             AdapterErrorKind::ReadOnly,
-            "route is read-only",
+            "read_only",
+            "local preflight: route is read-only",
         ))
     } else {
         Ok(())
+    }
+}
+
+fn prefix_local_preflight(error: DactylError) -> DactylError {
+    match error {
+        DactylError::Adapter {
+            kind,
+            code,
+            message,
+        } if !message.starts_with("local preflight:")
+            && !message.starts_with(crate::budget::LOCAL_PREFLIGHT_PREFIX) =>
+        {
+            DactylError::Adapter {
+                kind,
+                code,
+                message: format!("local preflight: {message}"),
+            }
+        }
+        other => other,
     }
 }
 

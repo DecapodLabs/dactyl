@@ -1,5 +1,10 @@
 # Interfaces
 
+## Operational disposition interface (issue #150)
+
+- **Unconditional exports (`src/lib.rs`, `src/error.rs`)**: Re-exports `OperationalAction` (`Retry`, `InspectAndDecide`, `Reconcile`, `Stop`) and `OperationalDisposition` (redacted `Debug`; accessors `action()`, `operation_kind()`, `error_kind()`, `code()`, `failure_origin()`, `mutation_outcome()`, `effect_status()`, `observation_source()`, `request_id()`, `attempt_id()`, `request_digest()`, `retry_after()`, `retry_after_seconds()`, and `recovery_facts()`) across all feature combinations (`default`, `sqlite`, `neon`, `supabase`).
+- **Additive `DactylError` methods (`src/error.rs`)**: `DactylError::operational_disposition(&self, operation_kind: OperationKind)` and `DactylError::operational_disposition_with_context(&self, operation_kind: OperationKind, attempt: Option<&OperationAttempt>, metadata: Option<&CloudResponseMetadata>)` preserve existing `DactylError::Adapter`, `is_retryable()`, `failure_origin()`, and `mutation_outcome()` compatibility while eliminating string-parsing requirements in storage consumers (`tests/operational_disposition_150.rs`).
+
 ## Commercial entitlement, reservation, tenancy allowlist & recovery-facts interfaces (issue #138)
 
 - **`RecoveryActionCategory`, `ExecutionPhase`, `CloudRecoveryFacts`, & `CloudResponseMetadata::recovery` (`src/connector.rs`, `src/lib.rs`)**: Unconditionally exports `RecoveryActionCategory::{RecoverableWithinAuthority, RefreshReconcileState, RequiresHumanAction, DeniedPermanentlyForScope, OutcomeUnknown}`, `ExecutionPhase::{PreDispatch, AfterSend}`, and `CloudRecoveryFacts` (`version`, `action_category`, `execution_phase`, `missing_fact`, `authority_freshness`, `grant_generation`, `session_generation`, `attempt_ref` redacted in `Debug`, `retry_after_seconds`). Populated from same-origin `error.recovery` (and `recovery` / `details.recovery`) across `src/http_pool.rs`, `src/cloud.rs`, and `src/adapter/supabase.rs`.
@@ -344,8 +349,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
+- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
