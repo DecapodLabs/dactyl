@@ -133,6 +133,11 @@
       "id": "pr-a-db-maintenance-1568",
       "summary": "Enable narrow [governance.db_maintenance] safe allowlist (#1568) and reconcile reviewed_sources_digest",
       "input_digest": "sha256:6c537c62fdc14a40b3c1e293ca36cf73a410dcb44d3237c622ba68cb17776dbf"
+    },
+    {
+      "id": "pr-a-v01662-pin",
+      "summary": "Refresh 0.166.2 entrypoints, specs manifest, and Containerfile pin for PR A (#1568)",
+      "input_digest": "sha256:d710a560b60cb092c4c9f0fbc99852406fa6aa9f3e2aa7ac0d7f28c0b0d02d00"
     }
   ],
   "intents": {
