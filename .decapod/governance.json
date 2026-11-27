@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "fa4a10b7a29879f1e80c704a0cdb042bab3903a9",
-    "release": "v0.19.1",
+    "accepted_commit": "c32e19642185971e37572eea63f0bc6cc69277c5",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -113,40 +112,59 @@
     }
   },
   "change": {
-    "id": "change_01M8D545SJ6WM2DAG7VP1GPJEF",
-    "base_commit": "fa4a10b7a29879f1e80c704a0cdb042bab3903a9",
+    "id": "change_01M8DDZA7YGKCZ1KTHY0D603DW",
+    "base_commit": "c32e19642185971e37572eea63f0bc6cc69277c5",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim:db-maintenance-safe-opt-in": {
-      "statement": "Dactyl .decapod/config.toml opts into [governance.db_maintenance] with enabled=true and only the six safe local capabilities (db.inspect, db.verify, db.lock.diagnose, db.lock.retry, db.lock.release_own, db.backup), excluding db.recover",
-      "falsifier": "db.recover is granted in allowed, enabled is false, or any dactyl-db fmt/clippy/test check regresses",
+    "claim:cloud-allowlist-138": {
+      "statement": "Dactyl #138 extends closed Supabase allowlist codes, parses same-origin CloudRecoveryFacts (Propodus #268) without relaxing origin/redirect/DPoP-replay safety, and keeps DEFAULT_CLOUD_ORIGIN on goyxpcmxetztjlrrcwew.supabase.co while live api.decapodlabs.ai /config returns supabase project_origin",
+      "falsifier": "Any allowlist code passes untrusted dynamic strings, after_send/outcome_unknown auto-retries DPoP nonce, or DEFAULT_CLOUD_ORIGIN cuts over without live matching config",
       "status": "supported",
       "proof_refs": [
-        ".decapod/config.toml",
-        "cargo test --locked --all-features"
+        "cargo test --locked --all-features",
+        "src/http_pool.rs",
+        "tests/cloud_connector.rs",
+        "tests/supabase_rpc.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "pr-a-db-maintenance-1568",
-      "summary": "Enable narrow [governance.db_maintenance] safe allowlist (#1568) and reconcile reviewed_sources_digest",
-      "input_digest": "sha256:6c537c62fdc14a40b3c1e293ca36cf73a410dcb44d3237c622ba68cb17776dbf"
+      "id": "pr-138-allowlist-recovery-facts",
+      "summary": "Rebase #138 allowlist extension and Propodus #268 CloudRecoveryFacts onto v0.166.2 main",
+      "input_digest": "sha256:0c70ff37196dc995334486654526f0e21d5ee8c6cd3696133a72d1280a9d7ac8",
+      "proof_refs": [
+        "cargo test --locked --all-features"
+      ]
     },
     {
-      "id": "pr-a-v01662-pin",
-      "summary": "Refresh 0.166.2 entrypoints, specs manifest, and Containerfile pin for PR A (#1568)",
-      "input_digest": "sha256:d710a560b60cb092c4c9f0fbc99852406fa6aa9f3e2aa7ac0d7f28c0b0d02d00"
+      "id": "pr-138-allowlist-recovery-facts-trajectory",
+      "summary": "Record trajectory for #138 allowlist and Propodus #268 CloudRecoveryFacts",
+      "input_digest": "sha256:39512f691bb11a9c4d06926a1204ab69cdb467cdd5c3b8aba89f2067ccf9120d",
+      "proof_refs": [
+        "cargo test --locked --all-features"
+      ]
     },
     {
-      "id": "pr-a-plan-approved",
-      "summary": "Approve governed plan and recheckpoint for full decapod validate on PR A (#1568)",
-      "input_digest": "sha256:0a794babb6b536c76e7a985fd588c44e49dc1d3d6b4b385e9882d2cc7ad8c87c"
+      "id": "pr-138-spec-review",
+      "summary": "Record INTERFACES.md spec review for #138",
+      "input_digest": "sha256:1d772367de71cce4127bdf5e5ecb2e18fef0965f7ef537cb5aae592f231f810c",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "pr-138-spec-reviews-complete",
+      "summary": "Record ARCHITECTURE, INTENT, and SECURITY spec reviews for #138",
+      "input_digest": "sha256:0d6afbb5307ce03824751d39bf35ed0ab101228dc82eca4d78db2eee9c336d29",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF": {
+    "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -156,14 +174,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
+      "id": "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
-      "refined_intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
+      "raw_intent": "Extend Dactyl cloud allowlist codes for Decapod Cloud #138",
+      "refined_intent": "Extend Dactyl cloud allowlist codes for Decapod Cloud #138",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -176,38 +194,61 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
+      "intent": "Extend Dactyl cloud allowlist codes for Decapod Cloud #138",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Verified #138 allowlist_cloud_code, cloud_error_kind_for_code, parse_error_recovery, CloudRecoveryFacts, and live api.decapodlabs.ai gap in ARCHITECTURE.md against src/http_pool.rs, src/connector.rs, src/cloud.rs, and src/adapter/supabase.rs",
+          "reviewed_code_fingerprint": "149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6",
+          "spec_material_hash": "b8bb3488beed5f2beec8cac752531d9433acf4ca2461c7fe8333bc22600eb044"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Verified #138 public exports (RecoveryActionCategory, ExecutionPhase, CloudRecoveryFacts, CloudResponseMetadata::recovery) and allowlist/DEFAULT_CLOUD_ORIGIN guarantees in INTERFACES.md against src/connector.rs, src/lib.rs, src/http_pool.rs, src/cloud.rs, src/adapter/supabase.rs",
+          "reviewed_code_fingerprint": "149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6",
+          "spec_material_hash": "1cce8ab6625f034839874a6498b7bdb3eb6f80ea67f53142795a7122636976c7"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Verified #138 error.recovery uncertainty guard, DPoP replay prevention, and origin pinning in SECURITY.md",
+          "reviewed_code_fingerprint": "149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6",
+          "spec_material_hash": "86fa02b91b03856d7500d8fd52882589bb5d81b6b3a2b2e94e001f55d55dc661"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
+      "title": "Extend Dactyl cloud allowlist codes for Decapod Cloud #138",
       "todo_ids": [
-        "data_01m8d51m66zwpf29"
+        "code_01m8bemgtq8n6szc"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795744382Z"
+      "updated_at": "1795747796Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ceb412ed2bbc6b53670c155787e3fa2860533b7f257f6296e397feacebb0d0da",
+      "artifact_hash": "sha256:a92f848472c1616cb27ed45bc71df29f91b7061b09587de209433edb3787c7f8",
       "checks": [
         {
-          "name": "cargo-clippy",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
-          "name": "cargo-fmt",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "cargo-test-all-features",
+          "name": "cargo_test_all_features",
           "status": "passed"
         }
       ],
@@ -216,20 +257,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
+            "intent_id": "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
+            "intent_id": "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8D5462GR6QQ9N0V0XS2W8BZ",
+            "detail": "trajectory:branch_01M8DDZABE2S6CE5R5GBCEYW4A",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
+            "intent_id": "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -238,27 +279,37 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8D5462GR6QQ9N0V0XS2W8BZ": {
+          "branch_01M8DDZABE2S6CE5R5GBCEYW4A": {
             "evidence_only": true,
-            "id": "branch_01M8D5462GR6QQ9N0V0XS2W8BZ",
-            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
+            "id": "branch_01M8DDZABE2S6CE5R5GBCEYW4A",
+            "intent_id": "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "src/http_pool.rs",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/adapter/supabase.rs",
                   ".decapod/config.toml",
-                  ".decapod/config.toml",
+                  "src/http_pool.rs",
+                  "src/connector.rs",
+                  "src/cloud.rs",
+                  "src/adapter/supabase.rs",
+                  "src/lib.rs",
+                  "tests/cloud_connector.rs",
+                  "tests/supabase_rpc.rs",
                   ".decapod/managed/specs/INTENT.md",
                   ".decapod/managed/specs/ARCHITECTURE.md",
                   ".decapod/managed/specs/INTERFACES.md",
                   ".decapod/managed/specs/SECURITY.md",
-                  "specs.refresh + fmt + clippy + cargo test --locked --all-features passed locally"
+                  "cargo fmt --all -- --check; cargo clippy --locked --all-targets --all-features -- -D warnings; cargo test --locked --all-features (all passed)"
                 ],
                 "proof_refs": [
-                  "cargo-fmt",
-                  "cargo-clippy",
-                  "cargo-test-all-features"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "cargo_test_all_features"
                 ],
                 "scope": [
                   "root"
@@ -273,18 +324,28 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "specs.refresh + fmt + clippy + cargo test --locked --all-features passed locally"
+        "cargo fmt --all -- --check; cargo clippy --locked --all-targets --all-features -- -D warnings; cargo test --locked --all-features (all passed)"
       ],
       "inspected_files": [
-        ".decapod/config.toml"
-      ],
-      "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
-      "modified_files": [
         ".decapod/config.toml",
+        "src/adapter/supabase.rs",
+        "src/cloud.rs",
+        "src/connector.rs",
+        "src/http_pool.rs"
+      ],
+      "intent_id": "intent:change_01M8DDZA7YGKCZ1KTHY0D603DW",
+      "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
+        ".decapod/managed/specs/SECURITY.md",
+        "src/adapter/supabase.rs",
+        "src/cloud.rs",
+        "src/connector.rs",
+        "src/http_pool.rs",
+        "src/lib.rs",
+        "tests/cloud_connector.rs",
+        "tests/supabase_rpc.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -292,10 +353,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M8D5462GR6QQ9N0V0XS2W8BZ",
+      "run_id": "branch_01M8DDZABE2S6CE5R5GBCEYW4A",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "data_01m8d51m66zwpf29",
+      "task_id": "code_01m8bemgtq8n6szc",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

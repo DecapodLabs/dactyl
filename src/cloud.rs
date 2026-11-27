@@ -11,16 +11,17 @@ use crate::budget::mark_remote_uncertain;
 use crate::connector::{
     validate_canonical_path_segment, validate_dpop_nonce, validate_opaque_credential,
     AccountOperation, AuthScheme, AuthenticationSecrets, AuthenticationStart,
-    CloudResponseMetadata, EffectProvenance, EffectStatus, ObservationSource, OperationAttempt,
-    ReconciliationObservation, RequestProofSigner, ScmCredential, UserSession,
-    DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH, FIRST_PARTY_REPO_PATH_PREFIX,
+    CloudResponseMetadata, EffectProvenance, EffectStatus, ExecutionPhase, ObservationSource,
+    OperationAttempt, ReconciliationObservation, RecoveryActionCategory, RequestProofSigner,
+    ScmCredential, UserSession, DEFAULT_CLOUD_ORIGIN, FIRST_PARTY_AUTH_PATH,
+    FIRST_PARTY_REPO_PATH_PREFIX,
 };
 use crate::http_pool::{
     acquire_client, allowlisted_cloud_code, bind_response_provenance, build_attempt_headers,
-    build_auth_headers, canonical_url, effective_auth_scheme, extract_response_metadata,
-    has_dpop_nonce_challenge, in_tokio_runtime, read_bounded_body_async, with_dpop_nonce_retry,
-    with_dpop_nonce_retry_async, AsyncBodyError, AuthHeaders, HttpOutcome, ProvenanceCheckContext,
-    SharedHttpClient,
+    build_auth_headers, canonical_url, cloud_error_kind_for_code, effective_auth_scheme,
+    extract_error_recovery, extract_response_metadata, has_dpop_nonce_challenge, in_tokio_runtime,
+    read_bounded_body_async, with_dpop_nonce_retry, with_dpop_nonce_retry_async, AsyncBodyError,
+    AuthHeaders, HttpOutcome, ProvenanceCheckContext, SharedHttpClient,
 };
 use crate::{
     AdapterErrorKind, DactylError, DatastoreRoute, OperationKind, ResourceBudget, SupabaseRpcConfig,
@@ -1972,51 +1973,12 @@ fn prepare_cloud_request(
 }
 
 fn error_kind_for_cloud_status_and_code(status: u16, code: Option<&str>) -> AdapterErrorKind {
-    if let Some(code) = code {
-        match code {
-            "idempotency_conflict" => return AdapterErrorKind::IdempotencyConflict,
-            "idempotency_in_progress" => return AdapterErrorKind::IdempotencyInProgress,
-            "version_conflict" => return AdapterErrorKind::VersionConflict,
-            "transaction_aborted" => return AdapterErrorKind::TransactionAborted,
-            "storage_failure" => return AdapterErrorKind::Storage,
-            "storage_unavailable" => return AdapterErrorKind::Unavailable,
-            "quota_exceeded" | "overage_cap_exhausted" if status == 429 => {
-                return AdapterErrorKind::Quota
-            }
-            "authentication_required"
-            | "invalid_token"
-            | "bad_jwt"
-            | "session_expired"
-            | "session_revoked"
-            | "session_not_found"
-            | "expired_credential"
-            | "use_dpop_nonce"
-            | "invalid_dpop_proof"
-            | "invalid_binding"
-            | "dpop_proof_required"
-            | "missing_dpop_proof"
-            | "dpop_replay"
-            | "dpop_nonce_mismatch"
-            | "dpop_clock_skew"
-            | "dpop_ath_mismatch"
-            | "dpop_htu_mismatch"
-            | "dpop_htm_mismatch"
-            | "dpop_jkt_mismatch"
-            | "dpop_aud_mismatch"
-            | "stolen_bearer"
-            | "device_revoked"
-            | "device_key_expired"
-            | "refresh_reuse_detected"
-            | "device_not_enrolled" => return AdapterErrorKind::Authentication,
-            "grant_revoked" | "grant_expired" | "scope_denied" => {
-                return AdapterErrorKind::Authorization
-            }
-            _ => {}
-        }
+    if let Some(kind) = code.and_then(|c| cloud_error_kind_for_code(status, c)) {
+        return kind;
     }
     match status {
         400 | 401 => AdapterErrorKind::Authentication,
-        403 => AdapterErrorKind::Authorization,
+        402 | 403 => AdapterErrorKind::Authorization,
         404 => AdapterErrorKind::NotFound,
         409 => AdapterErrorKind::Conflict,
         413 => AdapterErrorKind::Quota,
@@ -2100,10 +2062,23 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
             };
             return (Err(err), Some(metadata));
         }
+        extract_error_recovery(envelope.as_ref(), origin_matches, &mut metadata);
         let prov_uncertain = metadata
             .provenance()
             .is_some_and(|p| p.status() == EffectStatus::Uncertain);
-        if prepared.is_mutating && (matches!(status_u16, 408 | 500..=599) || prov_uncertain) {
+        let recovery_outcome_unknown = metadata
+            .recovery()
+            .is_some_and(|r| r.action_category() == RecoveryActionCategory::OutcomeUnknown);
+        let recovery_after_send_retry = metadata.recovery().is_some_and(|r| {
+            r.execution_phase() == ExecutionPhase::AfterSend
+                && r.action_category() == RecoveryActionCategory::RecoverableWithinAuthority
+        });
+        if prepared.is_mutating
+            && (matches!(status_u16, 408 | 500..=599)
+                || prov_uncertain
+                || recovery_outcome_unknown
+                || recovery_after_send_retry)
+        {
             let explicit_non_commit = metadata.provenance().is_some_and(|p| {
                 matches!(
                     p.status(),
@@ -2120,6 +2095,14 @@ fn handle_cloud_response<T: for<'de> Deserialize<'de>>(
                     )),
                     Some(metadata),
                 );
+            } else if recovery_outcome_unknown {
+                let kind = error_kind_for_cloud_status_and_code(status_u16, code);
+                let err = if let Some(code) = code {
+                    DactylError::adapter_with_code(kind, code, "cloud request outcome uncertain")
+                } else {
+                    DactylError::adapter(kind, "cloud request outcome uncertain")
+                };
+                return (Err(mark_remote_uncertain(err)), Some(metadata));
             }
         }
         let kind = error_kind_for_cloud_status_and_code(status_u16, code);

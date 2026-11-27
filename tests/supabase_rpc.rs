@@ -1162,11 +1162,24 @@ fn device_gateway_routes_cloud_query_cloud_batch_and_retries_dpop_nonce_once() {
     rx.recv().unwrap();
     srv.join().unwrap();
 
-    // New Wave 2 safe codes propagate through SupabaseRpc errors (provider_disabled, device_key_expired, quota_exceeded).
+    // New Wave 2 + #138 commercial/tenant safe codes propagate through SupabaseRpc errors.
     for (status, code, kind) in [
         (403, "provider_disabled", AdapterErrorKind::Authorization),
         (401, "device_key_expired", AdapterErrorKind::Authentication),
         (429, "quota_exceeded", AdapterErrorKind::Quota),
+        (402, "payment_required", AdapterErrorKind::Authorization),
+        (
+            403,
+            "repository_access_denied",
+            AdapterErrorKind::Authorization,
+        ),
+        (403, "tenant_suspended", AdapterErrorKind::Authorization),
+        (
+            409,
+            "repository_capacity_exhausted",
+            AdapterErrorKind::Conflict,
+        ),
+        (503, "tenant_upgrading", AdapterErrorKind::Unavailable),
     ] {
         let (origin, body) = (
             code,
@@ -1182,4 +1195,33 @@ fn device_gateway_routes_cloud_query_cloud_batch_and_retries_dpop_nonce_once() {
         rx.recv().unwrap();
         srv.join().unwrap();
     }
+
+    // Propodus #268 error.recovery on gateway/RPC responses preserves recovery facts
+    // and enforces Uncertain mutation_outcome without auto-retrying after_send responses.
+    let (origin, rx, srv) = gateway_seq_server(vec![(
+        409,
+        "Retry-After: 12\r\n".into(),
+        json!({
+            "error": {
+                "code": "reconciliation_required",
+                "message": "reconciliation_required",
+                "recovery": {
+                    "version": 1,
+                    "classification": "outcome_unknown",
+                    "dispatch_phase": "after_send",
+                    "missing_fact": "uncertain_outcome",
+                    "authority_freshness": "unknown",
+                    "attempt_ref": "att-rpc-268",
+                    "retry_after_seconds": 12
+                }
+            }
+        }),
+    )]);
+    let err = open(&origin, AccessMode::ReadWrite)
+        .write("UPDATE items SET val = 1", &[])
+        .unwrap_err();
+    assert_eq!(err.adapter_code(), Some("reconciliation_required"));
+    assert_eq!(err.mutation_outcome(), MutationOutcome::Uncertain);
+    rx.recv().unwrap();
+    srv.join().unwrap();
 }

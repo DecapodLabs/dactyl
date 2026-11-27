@@ -11,7 +11,7 @@
 
 ## Cross-layer fault barrier, post-effect retry guard, and cutover origin security (issues #143, #138)
 
-- **No post-effect DPoP replay & consistent DPoP/revocation classification (`src/http_pool.rs`, `src/cloud.rs`)**: `can_retry_dpop_nonce` prevents `401 use_dpop_nonce` retry whenever `MutationOutcome::Uncertain` or `EffectStatus::{Uncertain, CommittedObserved}` provenance is present; `error_kind_for_cloud_status_and_code` maps DPoP mismatch and device/session revocation codes (such as `dpop_htu_mismatch`, `device_revoked`, `session_revoked`) to `AdapterErrorKind::Authentication` even on `403` responses without leaking bearers or DPoP proofs.
+- **No post-effect DPoP replay, `error.recovery` uncertainty guard, & consistent DPoP/revocation classification (`src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`)**: `can_retry_dpop_nonce` prevents `401 use_dpop_nonce` retry whenever `MutationOutcome::Uncertain`, `EffectStatus::{Uncertain, CommittedObserved}` provenance, or `error.recovery` (`OutcomeUnknown` / `ExecutionPhase::AfterSend`) is present; `parse_error_recovery` validates `version == 1`, bounds string lengths/characters and `retry_after_seconds <= 3600`, ignores cross-origin `error.recovery`, and redacts `attempt_ref` in `Debug`; `error_kind_for_cloud_status_and_code` maps DPoP mismatch and device/session revocation codes (such as `dpop_htu_mismatch`, `device_revoked`, `session_revoked`) to `AdapterErrorKind::Authentication` even on `403` responses without leaking bearers or DPoP proofs.
 - **Origin cutover fail-closed invariants (`#138`, `tests/transport_fault_reconciliation_143.rs`)**: Stale cross-origin `DeploymentProfile` responses (`supabase.co` <-> `api.decapodlabs.ai`), DPoP `htu` host/path mismatches, and `307`/`308` cutover redirects fail closed without following redirects, forwarding credentials, or falling back to local SQLite, while mid-flight policy-generation revocations (`grant_revoked`) produce zero unauthorized commits and correlate persisted `request_id`/`attempt_id`/`policy_generation` state via separate readback.
 
 ## Read-path mutation prevention, integer bounds, and release-skew fail-closed enforcement (issues #145, #146)
@@ -213,7 +213,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
+- Repository signal fingerprint: `149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

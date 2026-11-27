@@ -1,5 +1,10 @@
 # Interfaces
 
+## Commercial entitlement, reservation, tenancy allowlist & recovery-facts interfaces (issue #138)
+
+- **`RecoveryActionCategory`, `ExecutionPhase`, `CloudRecoveryFacts`, & `CloudResponseMetadata::recovery` (`src/connector.rs`, `src/lib.rs`)**: Unconditionally exports `RecoveryActionCategory::{RecoverableWithinAuthority, RefreshReconcileState, RequiresHumanAction, DeniedPermanentlyForScope, OutcomeUnknown}`, `ExecutionPhase::{PreDispatch, AfterSend}`, and `CloudRecoveryFacts` (`version`, `action_category`, `execution_phase`, `missing_fact`, `authority_freshness`, `grant_generation`, `session_generation`, `attempt_ref` redacted in `Debug`, `retry_after_seconds`). Populated from same-origin `error.recovery` (and `recovery` / `details.recovery`) across `src/http_pool.rs`, `src/cloud.rs`, and `src/adapter/supabase.rs`.
+- **`allowlisted_cloud_code` & `cloud_error_kind_for_code` (`src/http_pool.rs`, `src/cloud.rs`, `src/adapter/supabase.rs`)**: Preserves default/sqlite isolation (`#[cfg(feature = "supabase")]`) while allowing Propodus commercial onboarding, reservation binding, teammate access disposition, custody, tenant lifecycle, and `#268` recovery codes through `public_error_code`, `bind_response_provenance`, and `SupabaseAdapter::remote_error` (`commercial_allowlist_tests`, `tests/cloud_connector.rs`, `tests/supabase_rpc.rs`). `DEFAULT_CLOUD_ORIGIN` remains `"https://goyxpcmxetztjlrrcwew.supabase.co"` because live `GET https://api.decapodlabs.ai/functions/v1/decapod-onboarding/config` still advertises `"project_origin":"https://goyxpcmxetztjlrrcwew.supabase.co"`.
+
 ## Project database maintenance capability allowlist (Decapod #1568)
 
 - **Allowlisted local maintenance capabilities (`.decapod/config.toml`)**: Grants authenticated agents in claimed `.decapod/workspaces/*` worktrees access to `db.inspect`, `db.verify`, `db.lock.diagnose`, `db.lock.retry`, `db.lock.release_own`, and `db.backup` (bounded to `.decapod/backups/`). `db.recover` remains excluded and denied unless repository `owner` repair authority is granted separately; no `dactyl-db` public Rust API symbols are added or altered.
@@ -339,7 +344,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
+- Repository signal fingerprint: `149c2ae09770ad288f37b752887350fe01c6fcd05b43c53b546d4cd669c367f6`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
