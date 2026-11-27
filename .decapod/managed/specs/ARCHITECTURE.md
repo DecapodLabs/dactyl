@@ -1,5 +1,9 @@
 # Architecture
 
+## Local database maintenance governance configuration (Decapod #1568)
+
+- **`.decapod/config.toml` (`[governance.db_maintenance]`)**: Enables project-opted local SQLite maintenance for authenticated workspace agents via `enabled = true` and `allowed = ["db.inspect", "db.verify", "db.lock.diagnose", "db.lock.retry", "db.lock.release_own", "db.backup"]`. This policy applies strictly to Decapod's local control-plane SQLite store inside claimed isolated worktrees without modifying `dactyl-db` crate runtime behavior or exposing `db.recover`.
+
 ## Permanent trust & zero-egress boundary (issue #1944)
 
 - **Shared endpoint policy (`src/http_pool.rs`, `src/adapter/neon/mod.rs`, `src/adapter/supabase.rs`, `src/lib.rs`)**: Centralizes `validate_endpoint` in `src/http_pool.rs` so both `NeonAdapter::new_with_options_and_budget` and `SupabaseAdapter::new` (as well as `DatastoreRoute::validate` for `Datastore::Neon` and `Datastore::Supabase`) enforce HTTPS-only URLs (permitting plain `http://` solely for parsed `IpAddr::is_loopback()` literals) without embedded credentials, query strings, or fragments.
@@ -286,7 +290,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

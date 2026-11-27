@@ -1,5 +1,9 @@
 # Intent
 
+## Project-opted safe local database maintenance policy (Decapod #1568)
+
+- **Narrow `[governance.db_maintenance]` opt-in (`.decapod/config.toml`)**: Opts the `dactyl-db` repository into Decapod's project-scoped local agent database maintenance policy (`enabled = true`) with only the safe diagnostic, lock-contention, and bounded online-backup capability slice (`allowed = ["db.inspect", "db.verify", "db.lock.diagnose", "db.lock.retry", "db.lock.release_own", "db.backup"]`), explicitly omitting `db.recover` (reserved for repository `owner` repair authority under Decapod `#1590`).
+
 ## Permanent trust & zero-egress gate, advisory remediation, and Pages fix (issue #1944)
 
 - **Zero-egress local SQLite & negative-control transport gate (`#1944`)**: Formalizes and tests Dactyl's zero-egress local SQLite contract, fail-closed HTTPS/literal-loopback endpoint validation across both `NeonAdapter` and `SupabaseAdapter`, and redirect/cross-origin rejection across all HTTP adapters in `docs/trust-and-egress-inventory.md` and `tests/trust_and_egress.rs`.
@@ -249,7 +253,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
