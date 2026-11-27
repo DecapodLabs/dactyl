@@ -1,5 +1,9 @@
 # Interfaces
 
+## Project database maintenance capability allowlist (Decapod #1568)
+
+- **Allowlisted local maintenance capabilities (`.decapod/config.toml`)**: Grants authenticated agents in claimed `.decapod/workspaces/*` worktrees access to `db.inspect`, `db.verify`, `db.lock.diagnose`, `db.lock.retry`, `db.lock.release_own`, and `db.backup` (bounded to `.decapod/backups/`). `db.recover` remains excluded and denied unless repository `owner` repair authority is granted separately; no `dactyl-db` public Rust API symbols are added or altered.
+
 ## Trust, endpoint validation, and dependency bounds (issue #1944)
 
 - **`DatastoreRoute::validate` (`src/lib.rs`) & `NeonAdapter` (`src/adapter/neon/mod.rs`)**: `DatastoreRoute::validate` and `NeonAdapter::new_with_options_and_budget` now enforce the same `validate_endpoint` HTTPS/literal-loopback URL policy as `Datastore::Supabase`, rejecting `http://` non-loopback hosts, userinfo, queries, and fragments before network dispatch (`DactylError::Config`). `NeonAdapter` rejects `3xx` redirects and cross-origin responses with `AdapterErrorKind::Protocol` (`provenance_origin_mismatch`).
@@ -335,7 +339,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c`
+- Repository signal fingerprint: `405498e72ef475e01d6eabfe8989ec490853442e281ea28e6b0e8588474af536`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (31 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

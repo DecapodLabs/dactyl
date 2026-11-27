@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "0d1ac859273cc76892823a06adabd4d19eccf9c5",
+    "accepted_commit": "fa4a10b7a29879f1e80c704a0cdb042bab3903a9",
+    "release": "v0.19.1",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -112,63 +113,57 @@
     }
   },
   "change": {
-    "id": "pr-1944-security-trust-recheckpoint",
-    "base_commit": "0d1ac859273cc76892823a06adabd4d19eccf9c5",
+    "id": "change_01M8D545SJ6WM2DAG7VP1GPJEF",
+    "base_commit": "fa4a10b7a29879f1e80c704a0cdb042bab3903a9",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim:dactyl-trust-egress-and-advisory-remediation": {
-      "statement": "Dactyl #1944 enforces zero-egress local SQLite, HTTPS/literal-loopback and no-redirect fail-closed validation across Neon and Supabase, exhaustive src callsite inventory, zero-vulnerability Cargo.lock (quinn-udp 0.5.16, url 2.5.9, rustix 1.1.6), and split Pages build+deploy CI.",
-      "falsifier": "Any failure in trust_and_egress, feature matrix, fmt, clippy, cargo audit, MSRV 1.85 check, or Pages/CI workflows, or any outbound socket in sqlite mode or followed redirect.",
+    "claim:db-maintenance-safe-opt-in": {
+      "statement": "Dactyl .decapod/config.toml opts into [governance.db_maintenance] with enabled=true and only the six safe local capabilities (db.inspect, db.verify, db.lock.diagnose, db.lock.retry, db.lock.release_own, db.backup), excluding db.recover",
+      "falsifier": "db.recover is granted in allowed, enabled is false, or any dactyl-db fmt/clippy/test check regresses",
       "status": "supported",
       "proof_refs": [
-        ".github/workflows/pages.yml",
-        ".github/workflows/rust-contract.yml",
-        "Cargo.lock",
-        "docs/trust-and-egress-inventory.md",
-        "tests/trust_and_egress.rs"
+        ".decapod/config.toml",
+        "cargo test --locked --all-features"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1944-recheckpoint",
-      "summary": "Clean single-commit recheckpoint of Dactyl #1944 trust gate, advisory fixes, and Pages CI",
-      "input_digest": "sha256:1e95d6c81eedbd6d1740559bd5a987b02ad22346af1d6ca1b5d182f354006518",
-      "proof_refs": [
-        "docs/trust-and-egress-inventory.md",
-        "tests/trust_and_egress.rs"
-      ]
+      "id": "pr-a-db-maintenance-1568",
+      "summary": "Enable narrow [governance.db_maintenance] safe allowlist (#1568) and reconcile reviewed_sources_digest",
+      "input_digest": "sha256:6c537c62fdc14a40b3c1e293ca36cf73a410dcb44d3237c622ba68cb17776dbf"
     },
     {
-      "id": "cp-1944-recheckpoint-v2",
-      "summary": "Clean single-commit recheckpoint of Dactyl #1944 trust gate, advisory fixes, and Pages CI",
-      "input_digest": "sha256:8f37384f0f0a6564d9edf093d23944c4dfb171a7db3dca82d79c848b257838b9",
-      "proof_refs": [
-        "docs/trust-and-egress-inventory.md",
-        "tests/trust_and_egress.rs"
-      ]
+      "id": "pr-a-v01662-pin",
+      "summary": "Refresh 0.166.2 entrypoints, specs manifest, and Containerfile pin for PR A (#1568)",
+      "input_digest": "sha256:d710a560b60cb092c4c9f0fbc99852406fa6aa9f3e2aa7ac0d7f28c0b0d02d00"
+    },
+    {
+      "id": "pr-a-plan-approved",
+      "summary": "Approve governed plan and recheckpoint for full decapod validate on PR A (#1568)",
+      "input_digest": "sha256:0a794babb6b536c76e7a985fd588c44e49dc1d3d6b4b385e9882d2cc7ad8c87c"
     }
   ],
   "intents": {
-    "intent:run-1944-recheckpoint": {
+    "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Dactyl repo.pr-readiness.v1 candidate"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1944-recheckpoint",
+      "id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Recheckpoint Dactyl #1944 trust gate, advisory fixes, and Pages CI off 0d1ac859",
-      "refined_intent": "Clean single-commit candidate matching b9bbccc tree for repo.pr-readiness.v1 transition re-approval",
+      "raw_intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
+      "refined_intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -181,74 +176,60 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Clean single-commit recheckpoint of reviewed b9bbccc tree off origin/main (0d1ac859) for repo.pr-readiness.v1 transition re-approval.",
+      "intent": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified #1944 trust & egress inventory, dependency advisory fixes, and Pages CI specs.",
-          "reviewed_code_fingerprint": "da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c",
-          "spec_material_hash": "a3b7484ed940b10d281fd42383981df72c7dd572969eccd32d3cc815ea38b49c"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified #1944 trust & egress inventory, dependency advisory fixes, and Pages CI specs.",
-          "reviewed_code_fingerprint": "da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c",
-          "spec_material_hash": "7bdcc0e40b375f552ed625a6ec24c25cac91ffcf0a2f717efdb15bab39dbd700"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified #1944 trust & egress inventory, dependency advisory fixes, and Pages CI specs.",
-          "reviewed_code_fingerprint": "da78aa2f53ca6d657f21644802d437244efee1c302b9bc62da65c54e6ab81f0c",
-          "spec_material_hash": "73366628de8b0ea827ddff745f297eb811cc6494415f993c8622380dda30de6d"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Dactyl #1944 trust & zero-egress gate, quinn-udp/url/rustix advisory fixes, Pages CI",
+      "title": "Enable narrow [governance.db_maintenance] safe allowlist in .decapod/config.toml (#1568)",
       "todo_ids": [
-        "secu_01m88ddjrpwcjz30"
+        "data_01m8d51m66zwpf29"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795578971Z"
+      "updated_at": "1795744382Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Dactyl repo.pr-readiness.v1 candidate"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8c38a7bc1746421af8830b5044f1e7347076f0a34a856425c764ead05b610539",
+      "artifact_hash": "sha256:ceb412ed2bbc6b53670c155787e3fa2860533b7f257f6296e397feacebb0d0da",
       "checks": [
         {
-          "name": "pre_build_recheckpoint",
+          "name": "cargo-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-test-all-features",
           "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1944-recheckpoint",
+            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1944-recheckpoint",
+            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1944-recheckpoint",
+            "detail": "trajectory:branch_01M8D5462GR6QQ9N0V0XS2W8BZ",
             "event_id": "event:4",
-            "intent_id": "intent:run-1944-recheckpoint",
+            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -257,26 +238,27 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1944-recheckpoint": {
+          "branch_01M8D5462GR6QQ9N0V0XS2W8BZ": {
             "evidence_only": true,
-            "id": "run-1944-recheckpoint",
-            "intent_id": "intent:run-1944-recheckpoint",
+            "id": "branch_01M8D5462GR6QQ9N0V0XS2W8BZ",
+            "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "src/adapter/neon/mod.rs",
-                  "src/adapter/supabase.rs",
-                  "src/http_pool.rs",
-                  "src/lib.rs",
-                  "docs/trust-and-egress-inventory.md",
-                  "tests/trust_and_egress.rs"
+                  ".decapod/config.toml",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "specs.refresh + fmt + clippy + cargo test --locked --all-features passed locally"
                 ],
                 "proof_refs": [
-                  "pre_build_recheckpoint"
+                  "cargo-fmt",
+                  "cargo-clippy",
+                  "cargo-test-all-features"
                 ],
                 "scope": [
                   "root"
@@ -289,26 +271,31 @@
         }
       },
       "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "src/adapter/neon/mod.rs",
-        "src/adapter/supabase.rs",
-        "src/http_pool.rs",
-        "src/lib.rs"
+      "destination": "pull request",
+      "evidence": [
+        "specs.refresh + fmt + clippy + cargo test --locked --all-features passed locally"
       ],
-      "intent_id": "intent:run-1944-recheckpoint",
+      "inspected_files": [
+        ".decapod/config.toml"
+      ],
+      "intent_id": "intent:change_01M8D545SJ6WM2DAG7VP1GPJEF",
       "modified_files": [
-        "docs/trust-and-egress-inventory.md",
-        "tests/trust_and_egress.rs"
+        ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "run-1944-recheckpoint",
+      "run_id": "branch_01M8D5462GR6QQ9N0V0XS2W8BZ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
+      "task_id": "data_01m8d51m66zwpf29",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
