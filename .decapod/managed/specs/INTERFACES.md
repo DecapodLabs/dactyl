@@ -1,5 +1,10 @@
 # Interfaces
 
+## Guarantee matrix & released `0.21.0` qualification surfaces (issue #158)
+
+- **Preserved caller provenance & disposition contracts (`src/connector.rs`, `src/error.rs`, `tests/released_claim_qualification_158.rs`)**: No breaking API changes or new policy surfaces are added to `dactyl-db 0.21.0`; `EffectProvenance::observation_source()`, `ReconciliationObservation::{prior_client_status, provenance}`, `MutationOutcome`, and `DactylError::operational_disposition_with_context()` remain unchanged while tested against protocol-conformant inaccurate direct claims, valid-correlation non-committed responses, missing provenance, and stale/mismatched readback fields.
+- **Documentation & CI alignment (`docs/guarantee-matrix.md`, `docs/cloud-failure-conformance.md`, `tools/proof/Containerfile`)**: Documents the compact guarantee matrix, crates.io `dactyl-db 0.21.0` checksum (`0b24815ef383ab731ccfa6e6b83e2dbb62ba3b444137b973683c17324d9a19d7`) and `.cargo_vcs_info.json` commit (`0e7213a4`), and updates `tools/proof/Containerfile` to `decapod =0.166.5` for `decapod-validate.yml` parity.
+
 ## Operational disposition interface (issue #150)
 
 - **Unconditional exports (`src/lib.rs`, `src/error.rs`)**: Re-exports `OperationalAction` (`Retry`, `InspectAndDecide`, `Reconcile`, `Stop`) and `OperationalDisposition` (redacted `Debug`; accessors `action()`, `operation_kind()`, `error_kind()`, `code()`, `failure_origin()`, `mutation_outcome()`, `effect_status()`, `observation_source()`, `request_id()`, `attempt_id()`, `request_digest()`, `retry_after()`, `retry_after_seconds()`, and `recovery_facts()`) across all feature combinations (`default`, `sqlite`, `neon`, `supabase`).
@@ -349,8 +354,8 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
+- Repository signal fingerprint: `8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

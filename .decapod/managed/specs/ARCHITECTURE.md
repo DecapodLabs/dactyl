@@ -1,5 +1,10 @@
 # Architecture
 
+## Released claim qualification & guarantee matrix architecture (issue #158)
+
+- **Transport claim vs. persistence boundary (`docs/guarantee-matrix.md`, `tests/released_claim_qualification_158.rs`)**: Preserves strict architectural separation between client-observed preflight (`LocalPreflight`), authenticated server direct assertions (`DirectResponse`), separate idempotent readbacks (`ServerReadback`), and independent database state observers without modifying Dactyl's transport or adding domain/governance logic inside `dactyl-db`.
+- **Negative fixture coverage & `0.21.0` artifact alignment (`tests/released_claim_qualification_158.rs`, `tools/proof/Containerfile`)**: Verifies all 8 Cargo feature combinations (`default`, `sqlite`, `neon`, `supabase`, pairwise, `--all-features`) across local SQLite read-only observers and controlled loopback DPoP proxies, aligns `tools/proof/Containerfile` (`decapod =0.166.5`) with the evaluating controller release while leaving `tools/proof/registry_consumer.py` (`0.17.0` `#94` control baseline) intact, and pins crates.io `dactyl-db 0.21.0` archive provenance against `0e7213a4`.
+
 ## Operational disposition & typed preflight/outcome boundary (issue #150)
 
 - **`src/error.rs` (`OperationalAction`, `OperationalDisposition`, `DactylError::operational_disposition*`)**: Combines `AdapterErrorKind`, typed error codes, `FailureOrigin`, `MutationOutcome`, `OperationKind`, `OperationAttempt`, and `CloudResponseMetadata` (`EffectStatus`, `ObservationSource`, `#138` `CloudRecoveryFacts`, `request_id`, `attempt_id`/`attempt_ref`, `request_digest`, bounded `Retry-After` / `retry_after_seconds`) into a single machine-readable disposition:
@@ -304,8 +309,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a459fb3618386998f43bcf66abc12eae31ef2c0fb73de51e79fa5485e17359b`
-- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (32 files), `tools/` (3 files)
+- Repository signal fingerprint: `8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995`
+- Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
