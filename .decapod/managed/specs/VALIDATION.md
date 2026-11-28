@@ -1,5 +1,12 @@
 # Validation
 
+## Release-bound Linux controller
+
+The ARM64 proof image copies the Decapod controller from the immutable release
+image used by the managed entrypoints. CI refreshes specifications with that
+controller, so the release pin and source verification agree. The existing
+offline Rust contract still owns all required checks.
+
 ## Permanent trust & zero-egress gate and advisory CI check (issue #1944)
 
 - **`tests/trust_and_egress.rs` (`#1944`)**: Runs across every feature combination (`--no-default-features`, `--features sqlite`, `--features neon`, `--features supabase`, `--all-features`) to verify: (1) all `src/` transport/socket/env/FFI callsites are accounted for in `docs/trust-and-egress-inventory.md` and `sqlite` never pulls `reqwest`/`tokio`/`url`/`quinn`; (2) `sqlite` mode creates zero outbound TCP connections even when canary `SUPABASE_*`, `DATABASE_URL`, `DATASTORE=supabase`, and home credential files exist; and (3) `NeonAdapter`, `SupabaseAdapter`, and `CloudConnector` fail closed on non-HTTPS/non-loopback URLs, mismatched `project_origin` discovery profiles, invalid `browser_url` handoffs, and `302`/`307`/`308` redirects without contacting redirect targets or leaking tokens.
