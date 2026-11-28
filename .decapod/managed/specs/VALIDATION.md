@@ -5,7 +5,7 @@
 The ARM64 proof image copies the Decapod `v0.169.5` controller from the immutable release
 image (`ghcr.io/decapodlabs/decapod:v0.169.5-debian@sha256:9b27e7fd5ff0fc00acc8dc4a0f19d1e2d98c6929f2a9726b2ee63311bf192793`)
 used by the managed entrypoints. CI refreshes specifications with that
-controller under `[repo].backend = "cloud"`, so the release pin and source verification agree. The existing
+controller under `[repo].backend = "cloud"` and reconciled `v0.22.0` `reviewed_sources_digest` (`sha256:c245b12694b2f0c932a8aa07cd8e78eddea38495c0a57c9f9d8d44db6ea9790b`), so the release pin and source verification agree. The existing
 offline Rust contract still owns all required checks.
 
 ## Permanent trust & zero-egress gate and advisory CI check (issue #1944)

@@ -146,6 +146,11 @@
       "id": "dactyl-cloud-specs-v01695",
       "summary": "Update living specs and v0.169.5 release-bound entrypoints/Dockerfile/manifest for Decapod Cloud backend",
       "input_digest": "sha256:c8834024701d22a164e96ea7f63d6796ab212080d7f4796908d01f12ea8e1289"
+    },
+    {
+      "id": "dactyl-reconcile-v0220-digest",
+      "summary": "Reconcile reviewed_sources_digest for v0.22.0 release-please Cargo.toml/Cargo.lock bump and update VALIDATION.md",
+      "input_digest": "sha256:bdfe0ed3dd070345a8287d9240ed668304976701d441ee75b6bb61271428aebc"
     }
   ],
   "intents": {
@@ -222,10 +227,18 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:adb0cb4d1d4bc0655da1778695b2b61d02e03cd29ecf03c7de8228ad9e957ffe",
+      "artifact_hash": "sha256:8cc1b2e9ed6c9a22dd0db9c802cda2d828536cd695b94953299298138bb2c6c3",
       "checks": [
         {
+          "name": "dactyl-proof-ci-validate",
+          "status": "passed"
+        },
+        {
           "name": "decapod-pre-build",
+          "status": "passed"
+        },
+        {
+          "name": "reviewed-sources-reconciled",
           "status": "passed"
         }
       ],
@@ -251,10 +264,17 @@
             "intent_id": "intent:change_01M8H2H789D6REPPW5GWMAZSSX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8H2H7BM8WNZ2B42046H21ZJ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8H2H789D6REPPW5GWMAZSSX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8H2H7BM8WNZ2B42046H21ZJ": {
@@ -286,6 +306,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/.manifest.json"
+                ],
+                "proof_refs": [
+                  "reviewed-sources-reconciled",
+                  "dactyl-proof-ci-validate"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -306,6 +344,7 @@
       "intent_id": "intent:change_01M8H2H789D6REPPW5GWMAZSSX",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
