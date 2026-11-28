@@ -1,5 +1,5 @@
 # Match the controller to the release-bound repository entrypoints.
-FROM ghcr.io/decapodlabs/decapod:v0.169.4-debian@sha256:9a8bbd4bdcdebcf4dc8ff4b246294ba71535d9647bcde5e64c4f698b795c67cb AS decapod-release
+FROM ghcr.io/decapodlabs/decapod:v0.169.5-debian@sha256:9b27e7fd5ff0fc00acc8dc4a0f19d1e2d98c6929f2a9726b2ee63311bf192793 AS decapod-release
 FROM rust:1.96.1-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends libsqlite3-0 python3 pkg-config
 COPY --from=decapod-release /usr/local/bin/decapod /opt/decapod/bin/decapod

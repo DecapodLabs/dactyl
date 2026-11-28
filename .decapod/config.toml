@@ -125,7 +125,7 @@ reviewed_sources_digest = "sha256:70c155a3927ca17a0a871b3e046f85f916454a000dfb7b
 
 [repo]
 architecture_direction = "library"
-backend = "local"
+backend = "cloud"
 base_branch = "main"
 container_workspaces = true
 declared_capabilities = [
