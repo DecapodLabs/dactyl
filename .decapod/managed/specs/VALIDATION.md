@@ -2,9 +2,10 @@
 
 ## Release-bound Linux controller
 
-The ARM64 proof image copies the Decapod controller from the immutable release
-image used by the managed entrypoints. CI refreshes specifications with that
-controller, so the release pin and source verification agree. The existing
+The ARM64 proof image copies the Decapod `v0.169.5` controller from the immutable release
+image (`ghcr.io/decapodlabs/decapod:v0.169.5-debian@sha256:9b27e7fd5ff0fc00acc8dc4a0f19d1e2d98c6929f2a9726b2ee63311bf192793`)
+used by the managed entrypoints. CI refreshes specifications with that
+controller under `[repo].backend = "cloud"`, so the release pin and source verification agree. The existing
 offline Rust contract still owns all required checks.
 
 ## Permanent trust & zero-egress gate and advisory CI check (issue #1944)
@@ -356,7 +357,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1`
+- Repository signal fingerprint: `d5f9bc0b1e4f7b0b809df63bb3c0e0503310fee4067ef6124bdde0e22bc5e841`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

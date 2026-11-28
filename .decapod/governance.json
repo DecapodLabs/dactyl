@@ -141,6 +141,11 @@
       "id": "dactyl-cloud-config-controller",
       "summary": "Set [repo].backend = cloud in .decapod/config.toml and pin tools/proof/Containerfile to ghcr.io/decapodlabs/decapod:v0.169.5-debian linux/arm64 digest",
       "input_digest": "sha256:6db4995e2d89b6525f68640865a8869e821989d6a4dd7131b91cbaa324c660cb"
+    },
+    {
+      "id": "dactyl-cloud-specs-v01695",
+      "summary": "Update living specs and v0.169.5 release-bound entrypoints/Dockerfile/manifest for Decapod Cloud backend",
+      "input_digest": "sha256:c8834024701d22a164e96ea7f63d6796ab212080d7f4796908d01f12ea8e1289"
     }
   ],
   "intents": {
@@ -211,7 +216,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795869497Z"
+      "updated_at": "1795869525Z"
     },
     "trajectory": {
       "active_boundaries": [

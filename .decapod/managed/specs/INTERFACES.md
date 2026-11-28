@@ -1,5 +1,10 @@
 # Interfaces
 
+## Cloud Backend Configuration & v0.169.5 Proof Controller Contract
+
+- **Repository Configuration (`.decapod/config.toml`)**: Sets `[repo].backend = "cloud"` (canonical lowercase enum value for `RepoContext.backend: Option<BackendType>`); no secret, token, or service endpoint is written to `.decapod/config.toml`, and `dactyl-db` public Rust API symbols are unchanged.
+- **Proof Controller Image (`tools/proof/Containerfile`)**: Copies `/usr/local/bin/decapod` from `ghcr.io/decapodlabs/decapod:v0.169.5-debian@sha256:9b27e7fd5ff0fc00acc8dc4a0f19d1e2d98c6929f2a9726b2ee63311bf192793` while preserving offline Rust `1.96.1` + MSRV `1.85.0` contract execution.
+
 ## Guarantee matrix & released `0.21.0` qualification surfaces (issue #158)
 
 - **Preserved caller provenance & disposition contracts (`src/connector.rs`, `src/error.rs`, `tests/released_claim_qualification_158.rs`)**: No breaking API changes or new policy surfaces are added to `dactyl-db 0.21.0`; `EffectProvenance::observation_source()`, `ReconciliationObservation::{prior_client_status, provenance}`, `MutationOutcome`, and `DactylError::operational_disposition_with_context()` remain unchanged while tested against protocol-conformant inaccurate direct claims, valid-correlation non-committed responses, missing provenance, and stale/mismatched readback fields.
@@ -355,7 +360,7 @@ Generated capability obligations: `public-api` is declared for this project. The
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1`
+- Repository signal fingerprint: `d5f9bc0b1e4f7b0b809df63bb3c0e0503310fee4067ef6124bdde0e22bc5e841`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,10 @@
 # Architecture
 
+## Decapod Cloud Repository Routing & v0.169.5 Controller Alignment
+
+- **Logical Cloud Target Selection (`.decapod/config.toml`)**: Configures `[repo].backend = "cloud"` (`BackendType::Cloud`, where `effective_backend().is_cloud() == true`), ensuring the installed `decapod` crate routes `DecapodLabs/dactyl` workspace control-plane usage through Dactyl's `CloudConnector` with per-checkout private session custody (`origin + repository + sha256(main_root)`) outside Git, while keeping `dactyl-db` crate runtime code and zero-egress SQLite isolation untouched.
+- **Proof Container Parity (`tools/proof/Containerfile`)**: Pins `FROM ghcr.io/decapodlabs/decapod:v0.169.5-debian@sha256:9b27e7fd5ff0fc00acc8dc4a0f19d1e2d98c6929f2a9726b2ee63311bf192793 AS decapod-release` so `dactyl-proof` copies the exact `v0.169.5` Linux ARM64 controller used for managed entrypoint and spec verification.
+
 ## Released claim qualification & guarantee matrix architecture (issue #158)
 
 - **Transport claim vs. persistence boundary (`docs/guarantee-matrix.md`, `tests/released_claim_qualification_158.rs`)**: Preserves strict architectural separation between client-observed preflight (`LocalPreflight`), authenticated server direct assertions (`DirectResponse`), separate idempotent readbacks (`ServerReadback`), and independent database state observers without modifying Dactyl's transport or adding domain/governance logic inside `dactyl-db`.
@@ -309,7 +314,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1`
+- Repository signal fingerprint: `d5f9bc0b1e4f7b0b809df63bb3c0e0503310fee4067ef6124bdde0e22bc5e841`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

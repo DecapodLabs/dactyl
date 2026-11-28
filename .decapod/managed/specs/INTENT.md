@@ -1,5 +1,10 @@
 # Intent
 
+## Decapod Cloud Repository Backend & v0.169.5 Proof Controller
+
+- **Canonical Cloud Backend Selection (`.decapod/config.toml`)**: Sets `[repo].backend = "cloud"` so `DecapodLabs/dactyl` routes Decapod's `DbBroker` and `dactyl_db::LogicalTarget::Cloud` (`CloudConnector`) through Decapod Cloud (`DecapodLabs` organization `github-org:260842993`, active operator entitlement override) without embedding any deployment URL, credential, or token in `.decapod/config.toml`.
+- **Release-Bound Controller Pin (`tools/proof/Containerfile`)**: Advances the ARM64 proof container's immutable controller digest to `ghcr.io/decapodlabs/decapod:v0.169.5-debian@sha256:9b27e7fd5ff0fc00acc8dc4a0f19d1e2d98c6929f2a9726b2ee63311bf192793` so CI `Decapod Validate` matches the `v0.169.5` entrypoints and managed specs without drift.
+
 ## Guarantee matrix & released connector claim qualification (issue #158)
 
 - **Compact tier guarantee matrix (`docs/guarantee-matrix.md`, `docs/cloud-failure-conformance.md`)**: Separates what local SQLite (`Backend::Local`), authenticated Cloud transport (`ObservationSource::DirectResponse` via TLS, `DPoP`, correlation tokens, and server metadata), and independently reconciled effects (`ObservationSource::ServerReadback` + independent observer) do and do not establish. Documents exact `dactyl-db 0.21.0` registry-artifact vs. accepted-source (`0e7213a4`) parity, remaining endpoint trust assumptions, and honest `unavailable` non-proven classification for skipped/private PostgreSQL and hosted native profiles.
@@ -268,7 +273,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1`
+- Repository signal fingerprint: `d5f9bc0b1e4f7b0b809df63bb3c0e0503310fee4067ef6124bdde0e22bc5e841`
 - Significant implementation surfaces: `.github/` (4 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `examples/` (1 files), `src/` (19 files), `tests/` (33 files), `tools/` (3 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
