@@ -557,7 +557,7 @@ mod cloud_wire_compatibility {
         let secrets = AuthenticationSecrets::generate().unwrap();
 
         // 1. Supported additive auth_start & GoTrue v2 token + rejected unknown status / bad expiry.
-        let (origin, _rec, handle) = spawn_canned_server(vec![
+        let (origin, requests, handle) = spawn_canned_server(vec![
             CannedResponse::json(200, &doc["supported"]["auth_start_additive"]),
             CannedResponse::json(200, &doc["supported"]["gotrue_token_v2_additive"]),
             CannedResponse::json(200, &doc["rejected"]["auth_status_unknown_enum"]),
@@ -566,8 +566,23 @@ mod cloud_wire_compatibility {
             CannedResponse::json(200, &doc["rejected"]["auth_start_cross_origin_redirect"]),
         ]);
         let connector = CloudConnector::with_config(SupabaseRpcConfig::v1(&origin, KEY)).unwrap();
+        assert_eq!(
+            connector
+                .start_authentication_with_purpose(
+                    "DecapodLabs/dactyl",
+                    &secrets,
+                    Some("bad purpose")
+                )
+                .unwrap_err()
+                .adapter_kind(),
+            Some(AdapterErrorKind::Protocol)
+        );
         let start = connector
-            .start_authentication_async("DecapodLabs/dactyl", &secrets)
+            .start_authentication_with_purpose_async(
+                "DecapodLabs/dactyl",
+                &secrets,
+                Some("contributor"),
+            )
             .await
             .unwrap();
         assert_eq!(start.flow_id, "00000000-0000-4000-8000-000000000146");
@@ -607,6 +622,18 @@ mod cloud_wire_compatibility {
             Some(AdapterErrorKind::Protocol)
         );
         handle.join().unwrap();
+        {
+            let captured = requests.lock().unwrap();
+            assert_eq!(captured.len(), 6);
+            let contributor: Value = serde_json::from_slice(&captured[0].body).unwrap();
+            let legacy: Value = serde_json::from_slice(&captured[5].body).unwrap();
+            assert_eq!(contributor["purpose"], "contributor");
+            assert!(legacy.get("purpose").is_none());
+            for key in ["version", "repository", "pkce_challenge", "poll_challenge"] {
+                assert_eq!(contributor[key], legacy[key], "authentication field {key}");
+            }
+            assert!(captured[0].header("authorization").is_none());
+        }
 
         // 2. #138 first-party custom origin (`https://api.decapodlabs.ai`) URLs, DPoP htu
         //    validation, and human-bearer / device-gateway fail-closed gates (no network I/O).

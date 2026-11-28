@@ -1575,13 +1575,25 @@ impl LogicalConnector {
         repository: &str,
         secrets: &AuthenticationSecrets,
     ) -> Result<AuthenticationStart, DactylError> {
+        self.start_authentication_with_purpose(repository, secrets, None)
+    }
+
+    /// Forward a caller-declared authentication purpose to the cloud service.
+    pub fn start_authentication_with_purpose(
+        &self,
+        repository: &str,
+        secrets: &AuthenticationSecrets,
+        purpose: Option<&str>,
+    ) -> Result<AuthenticationStart, DactylError> {
         match &self.inner {
             ConnectorKind::Local { .. } => {
-                let _ = (repository, secrets);
+                let _ = (repository, secrets, purpose);
                 Err(local_cloud_capability_error())
             }
             #[cfg(feature = "supabase")]
-            ConnectorKind::Cloud(connector) => connector.start_authentication(repository, secrets),
+            ConnectorKind::Cloud(connector) => {
+                connector.start_authentication_with_purpose(repository, secrets, purpose)
+            }
         }
     }
 
@@ -1590,15 +1602,26 @@ impl LogicalConnector {
         repository: &str,
         secrets: &AuthenticationSecrets,
     ) -> Result<AuthenticationStart, DactylError> {
+        self.start_authentication_with_purpose_async(repository, secrets, None)
+            .await
+    }
+
+    /// Asynchronous counterpart to [Self::start_authentication_with_purpose].
+    pub async fn start_authentication_with_purpose_async(
+        &self,
+        repository: &str,
+        secrets: &AuthenticationSecrets,
+        purpose: Option<&str>,
+    ) -> Result<AuthenticationStart, DactylError> {
         match &self.inner {
             ConnectorKind::Local { .. } => {
-                let _ = (repository, secrets);
+                let _ = (repository, secrets, purpose);
                 Err(local_cloud_capability_error())
             }
             #[cfg(feature = "supabase")]
             ConnectorKind::Cloud(connector) => {
                 connector
-                    .start_authentication_async(repository, secrets)
+                    .start_authentication_with_purpose_async(repository, secrets, purpose)
                     .await
             }
         }

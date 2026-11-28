@@ -1,8 +1,8 @@
-# Explicit alternative for hosts where the release's workspace image is unavailable.
-# This builds the published controller from crates.io; it does not publish an image.
+# Match the controller to the release-bound repository entrypoints.
+FROM ghcr.io/decapodlabs/decapod:v0.169.4-debian@sha256:9a8bbd4bdcdebcf4dc8ff4b246294ba71535d9647bcde5e64c4f698b795c67cb AS decapod-release
 FROM rust:1.96.1-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends libsqlite3-0 python3 pkg-config
-RUN cargo install decapod --version =0.166.5 --locked --root /opt/decapod --jobs 2
+COPY --from=decapod-release /usr/local/bin/decapod /opt/decapod/bin/decapod
 RUN rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy && rustup component add rustfmt clippy --toolchain 1.96.1
 RUN mkdir -p /opt/dactyl-proof-tools && ln -s /usr/bin/aarch64-linux-gnu-as /opt/dactyl-proof-tools/as && ln -s /usr/bin/aarch64-linux-gnu-ld.bfd /opt/dactyl-proof-tools/ld
 RUN ln -s /bin/dash /opt/dactyl-proof-tools/sh
