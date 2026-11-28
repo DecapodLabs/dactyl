@@ -1075,18 +1075,19 @@ impl CloudConnector {
         repository: &str,
         secrets: &AuthenticationSecrets,
     ) -> Result<AuthenticationStart, DactylError> {
-        secrets.validate()?;
-        let response: AuthenticationStart = self.auth_request(
-            "start",
-            &serde_json::json!({
-                "version": 1,
-                "repository": repository,
-                "pkce_challenge": AuthenticationSecrets::challenge(&secrets.verifier),
-                "poll_challenge": AuthenticationSecrets::challenge(&secrets.poll_secret)
-            }),
-            None,
-            false,
-        )?;
+        self.start_authentication_with_purpose(repository, secrets, None)
+    }
+
+    /// Start managed authentication with an optional caller-declared purpose.
+    /// The service interprets the purpose and decides the resulting handoff.
+    pub fn start_authentication_with_purpose(
+        &self,
+        repository: &str,
+        secrets: &AuthenticationSecrets,
+        purpose: Option<&str>,
+    ) -> Result<AuthenticationStart, DactylError> {
+        let body = authentication_start_body(repository, secrets, purpose)?;
+        let response: AuthenticationStart = self.auth_request("start", &body, None, false)?;
         self.validate_start(&response)?;
         Ok(response)
     }
@@ -1096,20 +1097,20 @@ impl CloudConnector {
         repository: &str,
         secrets: &AuthenticationSecrets,
     ) -> Result<AuthenticationStart, DactylError> {
-        secrets.validate()?;
-        let response: AuthenticationStart = self
-            .auth_request_async(
-                "start",
-                &serde_json::json!({
-                    "version": 1,
-                    "repository": repository,
-                    "pkce_challenge": AuthenticationSecrets::challenge(&secrets.verifier),
-                    "poll_challenge": AuthenticationSecrets::challenge(&secrets.poll_secret)
-                }),
-                None,
-                false,
-            )
-            .await?;
+        self.start_authentication_with_purpose_async(repository, secrets, None)
+            .await
+    }
+
+    /// Asynchronous counterpart to [Self::start_authentication_with_purpose].
+    pub async fn start_authentication_with_purpose_async(
+        &self,
+        repository: &str,
+        secrets: &AuthenticationSecrets,
+        purpose: Option<&str>,
+    ) -> Result<AuthenticationStart, DactylError> {
+        let body = authentication_start_body(repository, secrets, purpose)?;
+        let response: AuthenticationStart =
+            self.auth_request_async("start", &body, None, false).await?;
         self.validate_start(&response)?;
         Ok(response)
     }
@@ -1571,6 +1572,32 @@ struct TokenResponse {
     expires_in: u64,
     #[serde(default)]
     provider_token: Option<String>,
+}
+
+fn authentication_start_body(
+    repository: &str,
+    secrets: &AuthenticationSecrets,
+    purpose: Option<&str>,
+) -> Result<serde_json::Value, DactylError> {
+    secrets.validate()?;
+    let mut body = serde_json::json!({
+        "version": 1,
+        "repository": repository,
+        "pkce_challenge": AuthenticationSecrets::challenge(&secrets.verifier),
+        "poll_challenge": AuthenticationSecrets::challenge(&secrets.poll_secret)
+    });
+    if let Some(purpose) = purpose {
+        if purpose.is_empty()
+            || purpose.len() > 64
+            || !purpose
+                .bytes()
+                .all(|ch| ch.is_ascii_lowercase() || ch == b'_')
+        {
+            return Err(protocol("invalid authentication purpose"));
+        }
+        body["purpose"] = purpose.into();
+    }
+    Ok(body)
 }
 
 fn finalize_token_response(response: TokenResponse) -> Result<UserSession, DactylError> {

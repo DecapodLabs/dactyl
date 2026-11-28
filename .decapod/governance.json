@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "0e7213a40d1a3106276f0a5c124bd59c57757053",
-    "release": "v0.21.0",
+    "accepted_commit": "aa58d481fde4f76879592fe85ca397a0ac483f44",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -113,31 +112,40 @@
     }
   },
   "change": {
-    "id": "change_01M8E441X96S6MRT8DV92JDJN6",
-    "base_commit": "0e7213a40d1a3106276f0a5c124bd59c57757053",
+    "id": "change_01M8G1CA1WKKP19XD0C325TGWH",
+    "base_commit": "aa58d481fde4f76879592fe85ca397a0ac483f44",
     "target_base": "origin/main"
   },
   "claims": {
-    "claim:released-021-claim-qualification": {
-      "statement": "Local SQLite observers, DirectResponse transport claims, and ServerReadback reconciliation remain strictly separated across dactyl-db 0.21.0 and clean crates.io consumers without elevating unpersisted claims or silently escalating uncertain mutations; hosted_supabase/local_postgres remain unavailable without fixtures.",
-      "falsifier": "Any inaccurate DirectResponse claim elevates to persisted/ServerReadback, valid-correlation accepted_not_committed succeeds or blindly retries, stale/mismatched readback escalates, or clean 0.21.0 consumer fails against disposable SQLite/Cloud observers.",
-      "status": "supported",
+    "cloud-auth-purpose-transport": {
+      "statement": "A caller can opt into purpose on both auth transports without changing challenges or handling identity policy.",
+      "falsifier": "Legacy requests change shape, a malformed token is sent, or matching configured origin validation weakens.",
+      "status": "open",
       "proof_refs": [
-        "docs/guarantee-matrix.md",
-        "https://crates.io/crates/dactyl-db/0.21.0",
-        "tests/released_claim_qualification_158.rs"
+        "tests/wire_compatibility.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_dactyl_158_initial",
-      "summary": "Add #158 guarantee matrix, negative qualification fixtures, clean 0.21.0 registry verification, and v0.166.5 proof alignment",
-      "input_digest": "sha256:6bc9a7cf36ae0bdf11591e9fa928a57e87f67e063d4f9f91d35602fced3cbeb1"
+      "id": "contributor-auth-purpose",
+      "summary": "Forward bounded managed auth purpose with explicit legacy wire compatibility proof",
+      "input_digest": "sha256:c032d706702489e8cc55666a7e92a32e2d59f2d99eccec317301d4d771950294",
+      "proof_refs": [
+        "tests/wire_compatibility.rs"
+      ]
+    },
+    {
+      "id": "contributor-auth-review",
+      "summary": "Review transport architecture and auth security at the current candidate",
+      "input_digest": "sha256:379ddd3a1efa19e0c9fcade30274c7142b7c1644209f91fea0a9c88a6be65d24",
+      "proof_refs": [
+        "tests/wire_compatibility.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M8E441X96S6MRT8DV92JDJN6": {
+    "intent:change_01M8G1CA1WKKP19XD0C325TGWH": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -147,14 +155,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
+      "id": "intent:change_01M8G1CA1WKKP19XD0C325TGWH",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
-      "refined_intent": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
+      "raw_intent": "Carry declared OAuth purpose through Dactyl (GH #135)\n\nPreserve the first-purchaser handoff, and support a contributor-only flow without client authorization policy. Exercise the public connector wire.",
+      "refined_intent": "Carry declared OAuth purpose through Dactyl (GH #135)\n\nPreserve the first-purchaser handoff, and support a contributor-only flow without client authorization policy. Exercise the public connector wire.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -167,173 +175,88 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
+      "intent": "Forward a bounded optional auth purpose in every supported connector entry point. Preserve existing auth requests and repository scope.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Wire compatibility fixture must see contributor purpose, unchanged legacy shape, and no secret or bearer dispatch."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Added #158 guarantee matrix and released 0.21.0 qualification architecture",
-          "reviewed_code_fingerprint": "8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995",
+          "reason": "The new optional purpose uses the existing CloudConnector managed auth request and does not add a transport, service, or authority owner.",
+          "reviewed_code_fingerprint": "b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1",
           "spec_material_hash": "6766d5b25958d7920307353e7942b60dcd1d5a1f331e0b36123d727a16cd24b0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented #158 guarantee matrix, 0.21.0 provenance parity, and Containerfile alignment",
-          "reviewed_code_fingerprint": "8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995",
-          "spec_material_hash": "b34e12632049e132beb50c633cb0a67320eb836fedb9de349a21ef82cf8abb5c"
+          "reason": "Describe release-compatible wire contract, caller ownership and origin binding.",
+          "reviewed_code_fingerprint": "b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1",
+          "spec_material_hash": "561817d00412ccf55e94350d975b31e9a41898580b2314e3fcbc92bdfb9da4e4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No runtime transport or policy changes beyond docs/guarantee-matrix.md and negative tests",
-          "reviewed_code_fingerprint": "8ad16a18113dd7a0c6454ab6e653bbb32193d808bdf1a931bbd3398f7b614995",
+          "reason": "Bounded optional purpose carries no credential, uses the existing unauthenticated start request, and preserves same-origin handoff validation and challenges.",
+          "reviewed_code_fingerprint": "b25bff633ce4a13345804569812a9db0e5e02a92c620f883da63628423448fa1",
           "spec_material_hash": "86fa02b91b03856d7500d8fd52882589bb5d81b6b3a2b2e94e001f55d55dc661"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Qualify released dactyl-db 0.21.0 connector claims against actual transport and backend effects (#158)",
+      "title": "Carry client authentication purpose",
       "todo_ids": [
-        "bend_01m8e43nr49kvs3k"
+        "secu_01m8g1ar18gpy9kg"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795770952Z"
+      "updated_at": "1795835020Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a9f9f6ea043e9dc24abf86da104bae823863575d24d93957dd6f0d71ca805525",
-      "checks": [
-        {
-          "name": "clippy_all_targets",
-          "status": "passed"
-        },
-        {
-          "name": "fmt",
-          "status": "passed"
-        },
-        {
-          "name": "local_postgres_and_hosted_native",
-          "status": "unavailable"
-        },
-        {
-          "name": "operational_disposition_150",
-          "status": "passed"
-        },
-        {
-          "name": "registry_021_msrv_185",
-          "status": "passed"
-        },
-        {
-          "name": "released_claim_qualification_158_all_8_features",
-          "status": "passed"
-        },
-        {
-          "name": "trust_and_egress",
-          "status": "passed"
-        }
-      ],
+      "artifact_hash": "sha256:121794fcbdf858990a982805a0c7a9104b3fe21cf2510fd32f28205a54703719",
+      "checks": [],
       "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
+            "intent_id": "intent:change_01M8G1CA1WKKP19XD0C325TGWH",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
+            "intent_id": "intent:change_01M8G1CA1WKKP19XD0C325TGWH",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M8E4420EHR8DJTJ6KNTX8PBV",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 3,
         "schema_version": "1.1.0",
-        "trajectories": {
-          "branch_01M8E4420EHR8DJTJ6KNTX8PBV": {
-            "evidence_only": true,
-            "id": "branch_01M8E4420EHR8DJTJ6KNTX8PBV",
-            "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "command": "cargo test --locked --all-features --test released_claim_qualification_158",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/connector.rs",
-                  "src/http_pool.rs",
-                  "src/cloud.rs",
-                  "src/error.rs",
-                  "docs/guarantee-matrix.md",
-                  "docs/cloud-failure-conformance.md",
-                  "tests/released_claim_qualification_158.rs",
-                  "tools/proof/Containerfile"
-                ],
-                "proof_refs": [
-                  "released_claim_qualification_158_all_8_features",
-                  "registry_021_msrv_185",
-                  "trust_and_egress",
-                  "operational_disposition_150",
-                  "clippy_all_targets",
-                  "fmt",
-                  "local_postgres_and_hosted_native"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
-      "declared_commands": [
-        "cargo test --locked --all-features --test released_claim_qualification_158"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [
-        "src/cloud.rs",
-        "src/connector.rs",
-        "src/error.rs",
-        "src/http_pool.rs"
-      ],
-      "intent_id": "intent:change_01M8E441X96S6MRT8DV92JDJN6",
-      "modified_files": [
-        "docs/cloud-failure-conformance.md",
-        "docs/guarantee-matrix.md",
-        "tests/released_claim_qualification_158.rs",
-        "tools/proof/Containerfile"
-      ],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M8G1CA1WKKP19XD0C325TGWH",
+      "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M8E4420EHR8DJTJ6KNTX8PBV",
+      "run_id": "branch_01M8G1CA7ZP70ERSHBFW68R7CT",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bend_01m8e43nr49kvs3k",
+      "task_id": "secu_01m8g1ar18gpy9kg",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
