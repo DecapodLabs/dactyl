@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0](https://github.com/DecapodLabs/dactyl/compare/v0.21.0...v0.22.0) (2026-11-28)
+
+
+### Features
+
+* **cloud:** forward an optional managed authentication purpose ([7f450b5](https://github.com/DecapodLabs/dactyl/commit/7f450b5caa333258ab1f4fcce87fdfcd39bd587c))
+
+
+### Bug Fixes
+
+* **ci:** use the release-bound Decapod proof controller ([2458edb](https://github.com/DecapodLabs/dactyl/commit/2458edb6970d735b6e2f9b5b191cf95eb7bdce77))
+
 ## [0.21.0](https://github.com/DecapodLabs/dactyl/compare/v0.20.0...v0.21.0) (2026-11-27)
 
 
