@@ -142,6 +142,11 @@
       "proof_refs": [
         "tests/wire_compatibility.rs"
       ]
+    },
+    {
+      "id": "latest-release-native-proof",
+      "summary": "Refresh release-bound files for Decapod v0.169.4 and use a Linux-native temporary filesystem for the existing recovery contract.",
+      "input_digest": "sha256:42ffdfe6d7a0fd299e48d6a1565fcbe55668c7e77dfe0a1f3090fa39938f3f8e"
     }
   ],
   "intents": {
